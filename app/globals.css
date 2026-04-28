@@ -1,26 +1,422 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* =========================================================================
+   GROOMR DESIGN SYSTEM — globals.css
+   CSS custom-property tokens + Tailwind v4 theme + utility classes.
+   ========================================================================= */
+
+/* ── Local variable fonts (served from /public/fonts) ─────────────────── */
+
+@font-face {
+  font-family: 'Fredoka';
+  src: url('/fonts/Fredoka-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('/fonts/Fredoka-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 300 700;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
 }
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/fonts/Nunito-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/fonts/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 1000;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ── CSS Custom Properties ─────────────────────────────────────────────── */
+
+:root {
+  /* CORE BRAND PALETTE */
+  --groomr-gold:       #eae45c;
+  --deep-slate:        #2c3e50;
+  --sage-leaf:         #88a096;
+  --pebble-grey:       #95a5a6;
+  --alabaster-cream:   #f9f8f4;
+  --muted-terracotta:  #c87964;
+
+  /* Tints */
+  --sage-leaf-10:      rgba(136, 160, 150, 0.10);
+  --sage-leaf-20:      rgba(136, 160, 150, 0.20);
+  --sage-leaf-30:      rgba(136, 160, 150, 0.30);
+  --pebble-grey-10:    rgba(149, 165, 166, 0.10);
+  --pebble-grey-20:    rgba(149, 165, 166, 0.20);
+  --pebble-grey-30:    rgba(149, 165, 166, 0.30);
+  --gold-20:           rgba(234, 228, 92, 0.20);
+  --terracotta-10:     rgba(200, 121, 100, 0.10);
+  --terracotta-20:     rgba(200, 121, 100, 0.20);
+
+  /* SEMANTIC TOKENS */
+  --bg-canvas:         var(--alabaster-cream);
+  --bg-surface:        #ffffff;
+  --bg-muted:          var(--sage-leaf-10);
+  --bg-inverse:        var(--deep-slate);
+
+  --fg-primary:        var(--deep-slate);
+  --fg-secondary:      rgba(44, 62, 80, 0.80);
+  --fg-tertiary:       var(--pebble-grey);
+  --fg-onDark:         var(--alabaster-cream);
+  --fg-link:           var(--sage-leaf);
+  --fg-link-hover:     var(--muted-terracotta);
+
+  --border-subtle:     rgba(149, 165, 166, 0.20);
+  --border-default:    rgba(149, 165, 166, 0.30);
+  --border-strong:     var(--deep-slate);
+
+  --accent-primary:    var(--groomr-gold);
+  --accent-secondary:  var(--muted-terracotta);
+  --accent-quiet:      var(--sage-leaf);
+
+  --focus-ring:        var(--groomr-gold);
+  --selection-bg:      var(--groomr-gold);
+  --selection-fg:      var(--deep-slate);
+
+  /* TYPE FAMILIES */
+  --font-display: 'Fredoka', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body:    'Nunito',  system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* WEIGHTS */
+  --weight-regular:    400;
+  --weight-medium:     500;
+  --weight-bold:       700;
+  --weight-extrabold:  800;
+
+  /* TYPE SCALE */
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 16px;
+  --text-md:   18px;
+  --text-lg:   22px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  36px;
+  --text-4xl:  48px;
+  --text-5xl:  64px;
+  --text-6xl:  80px;
+
+  --leading-tight:    1.1;
+  --leading-snug:     1.25;
+  --leading-normal:   1.5;
+  --leading-relaxed:  1.65;
+
+  --tracking-tight:   -0.01em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.05em;
+  --tracking-widest:  0.15em;
+
+  /* SPACING */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* RADII */
+  --radius-sm:    4px;
+  --radius-md:    8px;
+  --radius-lg:    12px;
+  --radius-xl:    16px;
+  --radius-2xl:   24px;
+  --radius-3xl:   32px;
+  --radius-pill:  9999px;
+
+  /* SHADOWS */
+  --shadow-subtle: 0 4px 6px -1px rgba(149, 165, 166, 0.10),
+                   0 2px 4px -1px rgba(149, 165, 166, 0.06);
+  --shadow-lift:   0 10px 15px -3px rgba(149, 165, 166, 0.40),
+                   0 4px 6px -2px rgba(149, 165, 166, 0.20);
+  --shadow-modal:  0 25px 50px -12px rgba(44, 62, 80, 0.25);
+
+  /* MOTION */
+  --duration-fast:    150ms;
+  --duration-normal:  300ms;
+  --easing-standard:  cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* FOCUS RING */
+  --ring-focus: 0 0 0 3px var(--focus-ring);
+}
+
+/* ── Tailwind v4 Theme ─────────────────────────────────────────────────── */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Brand colours — exposes bg-groomr-gold, text-deep-slate, etc. */
+  --color-groomr-gold:      var(--groomr-gold);
+  --color-deep-slate:       var(--deep-slate);
+  --color-sage-leaf:        var(--sage-leaf);
+  --color-pebble-grey:      var(--pebble-grey);
+  --color-alabaster-cream:  var(--alabaster-cream);
+  --color-muted-terracotta: var(--muted-terracotta);
+
+  /* Semantic colour aliases */
+  --color-bg-canvas:   var(--bg-canvas);
+  --color-bg-surface:  var(--bg-surface);
+  --color-bg-inverse:  var(--bg-inverse);
+  --color-fg-primary:  var(--fg-primary);
+
+  /* Font families — exposes font-fredoka, font-nunito */
+  --font-fredoka: var(--font-display);
+  --font-nunito:  var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base Styles ───────────────────────────────────────────────────────── */
+
+html, body {
+  background-color: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-fg);
+}
+
+/* ── Typography classes ────────────────────────────────────────────────── */
+
+.display, .h1, h1 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-primary);
+}
+
+.h2, h2 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
+  line-height: var(--leading-snug);
+  color: var(--fg-primary);
+}
+
+.h3, h3 {
+  font-family: var(--font-body);
+  font-weight: var(--weight-extrabold);
+  font-size: clamp(var(--text-md), 1.6vw, var(--text-lg));
+  line-height: var(--leading-snug);
+  color: var(--fg-primary);
+}
+
+.body, p {
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--fg-primary);
+}
+
+.lead {
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  color: var(--fg-secondary);
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--accent-quiet);
+}
+
+.tagline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-weight: var(--weight-bold);
+  color: var(--accent-quiet);
+}
+
+.meta {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--fg-tertiary);
+}
+
+.button-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-base);
+  letter-spacing: 0;
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}
+
+/* ── Component Utilities ───────────────────────────────────────────────── */
+
+/* Primary button — Groomr Gold fill, Deep Slate text */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--groomr-gold);
+  color: var(--deep-slate);
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-pill);
+  transition: background-color var(--duration-normal) var(--easing-standard),
+              box-shadow var(--duration-normal) var(--easing-standard),
+              transform var(--duration-fast) var(--easing-standard);
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+.btn-primary:hover {
+  background-color: #d4ce4a;
+  box-shadow: var(--shadow-lift);
+}
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Secondary button — outlined, Deep Slate */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--deep-slate);
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--deep-slate);
+  transition: background-color var(--duration-normal) var(--easing-standard),
+              color var(--duration-normal) var(--easing-standard);
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-secondary:hover {
+  background-color: var(--deep-slate);
+  color: var(--alabaster-cream);
+}
+
+/* Gold button on dark backgrounds */
+.btn-gold-on-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--groomr-gold);
+  color: var(--deep-slate);
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-pill);
+  border: none;
+  transition: background-color var(--duration-normal) var(--easing-standard);
+  cursor: pointer;
+}
+.btn-gold-on-dark:hover {
+  background-color: #d4ce4a;
+}
+
+/* Card with lift-on-hover */
+.card-lift {
+  transition: transform var(--duration-normal) var(--easing-standard),
+              box-shadow var(--duration-normal) var(--easing-standard);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lift);
+}
+
+/* Focus ring — 3px solid Groomr Gold */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  box-shadow: var(--ring-focus);
+  outline: none;
+}
+
+/* Link style */
+.text-link {
+  color: var(--fg-link);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--easing-standard);
+}
+.text-link:hover {
+  color: var(--fg-link-hover);
+}
+
+/* Input / form field */
+.field {
+  display: block;
+  width: 100%;
+  background-color: #ffffff;
+  border: 2px solid rgba(149, 165, 166, 0.30);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--deep-slate);
+  transition: border-color var(--duration-fast) var(--easing-standard),
+              box-shadow var(--duration-fast) var(--easing-standard);
+  outline: none;
+}
+.field::placeholder {
+  color: var(--pebble-grey);
+}
+.field:focus {
+  border-color: var(--deep-slate);
+  box-shadow: var(--ring-focus);
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  background-color: rgba(44, 62, 80, 0.50);
+  backdrop-filter: blur(4px);
+}
+
+/* Shadow utilities (supplement Tailwind) */
+.shadow-subtle { box-shadow: var(--shadow-subtle); }
+.shadow-lift    { box-shadow: var(--shadow-lift);   }
+.shadow-modal   { box-shadow: var(--shadow-modal);  }
+
+/* Page fade-in */
+.page-fade {
+  animation: pageFadeIn 0.35s var(--easing-standard) both;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast slide-in */
+.toast-in {
+  animation: toastIn 0.25s var(--easing-standard) both;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }

@@ -1,0 +1,75 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Search, Calendar } from "lucide-react";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+import { Badge } from "@/components/ui/Badge";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Dashboard — Groomr",
+};
+
+export default async function OwnerDashboardPage() {
+  const user = await currentUser();
+  if (!user) redirect("/sign-in");
+
+  const firstName = user.firstName ?? "there";
+
+  return (
+    <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-12 max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="mb-10 space-y-2">
+        <Eyebrow>Dog owner</Eyebrow>
+        <h1 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
+          Hey, {firstName} 👋
+        </h1>
+        <p className="text-pebble-grey font-nunito">
+          Your Groomr dashboard is on its way. Here&apos;s a sneak peek of what&apos;s coming.
+        </p>
+      </div>
+
+      {/* Coming-soon cards */}
+      <div className="grid md:grid-cols-2 gap-5 mb-10">
+        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center">
+            <Calendar size={24} className="text-deep-slate" />
+          </div>
+          <h3 className="font-fredoka text-xl text-deep-slate">Upcoming bookings</h3>
+          <p className="text-pebble-grey text-sm font-nunito">
+            See all your upcoming appointments in one place — including reminders and groomer
+            details.
+          </p>
+          <Badge tone="grey">Coming soon</Badge>
+        </div>
+
+        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center">
+            <Search size={24} className="text-deep-slate" />
+          </div>
+          <h3 className="font-fredoka text-xl text-deep-slate">Find a groomer</h3>
+          <p className="text-pebble-grey text-sm font-nunito">
+            Browse verified groomers near you, check availability, and book instantly.
+          </p>
+          <Badge tone="grey">Coming soon</Badge>
+        </div>
+      </div>
+
+      {/* CTA for groomers */}
+      <div className="bg-deep-slate text-alabaster-cream rounded-[24px] p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+        <div className="flex-1">
+          <p className="font-fredoka text-2xl mb-1">Are you also a groomer?</p>
+          <p className="text-sage-leaf text-sm font-nunito">
+            List your services and start taking bookings — it&apos;s free.
+          </p>
+        </div>
+        <Link
+          href="/register/groomer"
+          className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring whitespace-nowrap shrink-0 inline-flex items-center"
+        >
+          Become a Groomr
+        </Link>
+      </div>
+    </div>
+  );
+}

@@ -166,9 +166,14 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 **Supabase Project ID:** `fvbxjwfxcbhjoidrmzgv`
 
-### Custom Types
+### Custom Types (public schema)
 ```sql
-CREATE TYPE user_role AS ENUM ('owner', 'groomer', 'admin');
+CREATE TYPE user_role         AS ENUM ('owner', 'groomer', 'admin');
+CREATE TYPE appointment_status AS ENUM ('pending', 'confirmed', 'completed', 'cancelled', 'no_show');
+CREATE TYPE dog_size          AS ENUM ('small', 'medium', 'large', 'giant');
+CREATE TYPE coat_type         AS ENUM ('short', 'medium', 'long', 'curly', 'double', 'wire');
+CREATE TYPE payout_status     AS ENUM ('pending', 'paid', 'failed');
+CREATE TYPE refund_status     AS ENUM ('none', 'requested', 'approved', 'rejected', 'processed');
 ```
 
 ### Tables
@@ -176,193 +181,234 @@ CREATE TYPE user_role AS ENUM ('owner', 'groomer', 'admin');
 #### `profiles`
 The central user table. Every Clerk user gets a row here on sign-up.
 ```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-clerk_id      text UNIQUE NOT NULL   -- Clerk's userId (e.g. user_2abc123)
-email         text UNIQUE NOT NULL
-full_name     text
-avatar_url    text
-roles         user_role[] DEFAULT '{owner}'
-is_admin      boolean DEFAULT false
-created_at    timestamptz DEFAULT now()
-updated_at    timestamptz DEFAULT now()
+id          uuid        PRIMARY KEY DEFAULT gen_random_uuid()
+clerk_id    text        UNIQUE NOT NULL   -- Clerk's userId (e.g. user_2abc123)
+full_name   text
+phone       text
+avatar_url  text
+roles       user_role[] DEFAULT '{owner}'
+is_admin    boolean     DEFAULT false
+is_active   boolean     DEFAULT true
+created_at  timestamptz DEFAULT now()
+updated_at  timestamptz DEFAULT now()
 ```
-> Note: No FK to `auth.users` — intentionally removed. Clerk is the auth source of truth.
+> No FK to `auth.users` — intentionally removed. Clerk is the auth source of truth.
+> No `email` column — email is held in Clerk and fetched via the Clerk SDK when needed.
 
 #### `groomer_profiles`
 Extended profile for users with the `groomer` role.
 ```sql
-id                uuid PRIMARY KEY DEFAULT gen_random_uuid()
-profile_id        uuid REFERENCES profiles(id) ON DELETE CASCADE
-business_name     text
-bio               text
-location          text
-lat               numeric
-lng               numeric
-postcode          text
-profile_photo_url text
-is_verified       boolean DEFAULT false
-is_active         boolean DEFAULT true
-created_at        timestamptz DEFAULT now()
-updated_at        timestamptz DEFAULT now()
+id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid()
+user_id               uuid        REFERENCES profiles(id) ON DELETE CASCADE
+business_name         text
+bio                   text
+years_experience      smallint
+qualifications        text
+insurance_provider    text
+insurance_policy_ref  text
+address_line_1        text
+address_line_2        text
+city                  text
+postcode              text
+location              geography   -- PostGIS point (lng/lat) for proximity queries
+travel_radius_miles   smallint
+is_mobile             boolean
+is_verified           boolean     DEFAULT false
+is_listed             boolean     DEFAULT true
+stripe_account_id     text
+average_rating        numeric
+total_reviews         integer
+created_at            timestamptz DEFAULT now()
+updated_at            timestamptz DEFAULT now()
 ```
+> `location` is a PostGIS `geography` column. Use `ST_MakePoint(lng, lat)::geography` to insert.
+> `average_rating` and `total_reviews` are denormalised — update via trigger or server function when a review is added/edited.
 
 #### `dogs`
 Owned by dog owners.
 ```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-owner_id      uuid REFERENCES profiles(id) ON DELETE CASCADE
-name          text NOT NULL
-breed         text
-age_years     integer
-weight_kg     numeric
-is_neutered   boolean        -- nullable: true=yes, false=no, null=unknown/not provided
-notes         text           -- behavioural notes, medical flags, etc.
-photo_url     text
-created_at    timestamptz DEFAULT now()
-updated_at    timestamptz DEFAULT now()
+id                  uuid       PRIMARY KEY DEFAULT gen_random_uuid()
+owner_id            uuid       REFERENCES profiles(id) ON DELETE CASCADE
+name                text       NOT NULL
+breed               text
+date_of_birth       date
+size                dog_size   -- small | medium | large | giant
+is_neutered         boolean    -- nullable: true=yes, false=no, null=unknown
+coat_type           coat_type  -- short | medium | long | curly | double | wire
+coat_notes          text
+temperament_notes   text
+health_notes        text
+vaccination_doc_url text
+profile_image_url   text
+created_at          timestamptz DEFAULT now()
+updated_at          timestamptz DEFAULT now()
 ```
 
 #### `services`
 Services offered by a groomer (e.g. "Full Groom", "Bath & Dry").
 ```sql
-id                uuid PRIMARY KEY DEFAULT gen_random_uuid()
-groomer_id        uuid REFERENCES groomer_profiles(id) ON DELETE CASCADE
-name              text NOT NULL
+id                uuid       PRIMARY KEY DEFAULT gen_random_uuid()
+groomer_profile_id uuid      REFERENCES groomer_profiles(id) ON DELETE CASCADE
+name              text       NOT NULL
 description       text
-duration_minutes  integer
-price_pence       integer NOT NULL   -- stored in pence to avoid float issues
-is_active         boolean DEFAULT true
+duration_minutes  smallint
+price_pence       integer    NOT NULL   -- stored in pence to avoid float issues
+deposit_pence     integer
+applicable_sizes  dog_size[]            -- which dog sizes this service applies to
+is_active         boolean    DEFAULT true
+sort_order        smallint
 created_at        timestamptz DEFAULT now()
 updated_at        timestamptz DEFAULT now()
 ```
-> Price stored in **pence** (integer) — always convert to pounds in the UI (`price_pence / 100`). Avoids floating point hell with Stripe.
+> Prices stored in **pence** — always divide by 100 for display. Pass as integer to Stripe.
 
 #### `availability`
 Recurring weekly availability windows for a groomer.
 ```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-groomer_id    uuid REFERENCES groomer_profiles(id) ON DELETE CASCADE
-day_of_week   integer NOT NULL   -- 0=Sunday, 1=Monday ... 6=Saturday
-start_time    time NOT NULL
-end_time      time NOT NULL
-created_at    timestamptz DEFAULT now()
+id                 uuid       PRIMARY KEY DEFAULT gen_random_uuid()
+groomer_profile_id uuid       REFERENCES groomer_profiles(id) ON DELETE CASCADE
+day_of_week        smallint   NOT NULL   -- 0=Sunday … 6=Saturday
+start_time         time       NOT NULL
+end_time           time       NOT NULL
+is_active          boolean    DEFAULT true
+created_at         timestamptz DEFAULT now()
+updated_at         timestamptz DEFAULT now()
 ```
 
 #### `availability_overrides`
 One-off exceptions to regular availability (e.g. holidays, sick days, special hours).
 ```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-groomer_id    uuid REFERENCES groomer_profiles(id) ON DELETE CASCADE
-override_date date NOT NULL
-is_unavailable boolean DEFAULT false   -- true = blocked out entirely
-start_time    time                      -- null if is_unavailable = true
-end_time      time
-reason        text
-created_at    timestamptz DEFAULT now()
+id                 uuid       PRIMARY KEY DEFAULT gen_random_uuid()
+groomer_profile_id uuid       REFERENCES groomer_profiles(id) ON DELETE CASCADE
+override_date      date       NOT NULL
+is_available       boolean    DEFAULT false   -- false = blocked out entirely
+start_time         time                       -- null if is_available = false
+end_time           time
+reason             text
+created_at         timestamptz DEFAULT now()
+updated_at         timestamptz DEFAULT now()
 ```
+> Note: column is `is_available` (not `is_unavailable`) — `false` means the groomer is blocked that day.
 
 #### `appointments`
 The core transactional table.
 ```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-owner_id      uuid REFERENCES profiles(id)
-groomer_id    uuid REFERENCES groomer_profiles(id)
-dog_id        uuid REFERENCES dogs(id)
-service_id    uuid REFERENCES services(id)
-start_time    timestamptz NOT NULL
-end_time      timestamptz NOT NULL
-status        text DEFAULT 'pending'   -- pending | confirmed | cancelled | completed | no_show
-notes         text
-created_at    timestamptz DEFAULT now()
-updated_at    timestamptz DEFAULT now()
+id                        uuid               PRIMARY KEY DEFAULT gen_random_uuid()
+owner_id                  uuid               REFERENCES profiles(id)
+groomer_profile_id        uuid               REFERENCES groomer_profiles(id)
+dog_id                    uuid               REFERENCES dogs(id)
+service_id                uuid               REFERENCES services(id)
+service_snapshot_name     text               -- copied at booking time in case service changes
+service_snapshot_duration smallint
+service_snapshot_price    integer
+scheduled_at              timestamptz        NOT NULL
+status                    appointment_status DEFAULT 'pending'
+cancelled_by              uuid               REFERENCES profiles(id)
+cancellation_reason       text
+groomer_notes             text
+owner_notes               text
+created_at                timestamptz DEFAULT now()
+updated_at                timestamptz DEFAULT now()
 ```
+> Service snapshot columns freeze the service details at booking time — groomers can later edit their services without changing historical appointment records.
 
 #### `payments`
-Payment records, linked to Stripe.
+Payment records, linked to Stripe. No direct `owner_id`/`groomer_id` — resolved via `appointment_id`.
 ```sql
-id                    uuid PRIMARY KEY DEFAULT gen_random_uuid()
-appointment_id        uuid REFERENCES appointments(id)
-owner_id              uuid REFERENCES profiles(id)
-groomer_id            uuid REFERENCES groomer_profiles(id)
-amount_pence          integer NOT NULL
-platform_fee_pence    integer NOT NULL   -- Groomr's cut (8% or 5%)
-stripe_payment_intent text
-stripe_transfer_id    text
-status                text DEFAULT 'pending'   -- pending | paid | refunded | failed
-created_at            timestamptz DEFAULT now()
-updated_at            timestamptz DEFAULT now()
+id                          uuid          PRIMARY KEY DEFAULT gen_random_uuid()
+appointment_id              uuid          REFERENCES appointments(id)
+stripe_payment_intent_id    text
+deposit_amount_pence        integer
+deposit_paid_at             timestamptz
+deposit_status              text
+full_payment_intent_id      text
+full_amount_pence           integer
+full_payment_paid_at        timestamptz
+platform_fee_pence          integer
+platform_fee_pct            numeric       -- e.g. 0.08 for 8%
+groomer_payout_amount_pence integer
+stripe_transfer_id          text
+payout_status               payout_status DEFAULT 'pending'
+payout_initiated_at         timestamptz
+refund_status               refund_status DEFAULT 'none'
+refund_amount_pence         integer
+stripe_refund_id            text
+refunded_at                 timestamptz
+currency                    char(3)       DEFAULT 'gbp'
+created_at                  timestamptz   DEFAULT now()
 ```
+> INSERT/UPDATE handled exclusively by `supabaseAdmin` via Stripe webhook server logic — no client-side writes.
 
 #### `reviews`
 Left by dog owners after a completed appointment.
 ```sql
-id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
-appointment_id  uuid REFERENCES appointments(id) UNIQUE   -- one review per appointment
-owner_id        uuid REFERENCES profiles(id)
-groomer_id      uuid REFERENCES groomer_profiles(id)
-rating          integer NOT NULL CHECK (rating >= 1 AND rating <= 5)
-comment         text
-is_visible      boolean DEFAULT true
-created_at      timestamptz DEFAULT now()
-updated_at      timestamptz DEFAULT now()
+id                 uuid       PRIMARY KEY DEFAULT gen_random_uuid()
+appointment_id     uuid       UNIQUE REFERENCES appointments(id)   -- one review per appointment
+owner_id           uuid       REFERENCES profiles(id)
+groomer_profile_id uuid       REFERENCES groomer_profiles(id)
+rating             smallint   NOT NULL CHECK (rating >= 1 AND rating <= 5)
+body               text
+is_visible         boolean    DEFAULT true
+groomer_reply      text
+groomer_replied_at timestamptz
+created_at         timestamptz DEFAULT now()
+updated_at         timestamptz DEFAULT now()
 ```
 
 #### `messages`
-In-app messaging between owners and groomers.
+In-app messaging scoped to an appointment thread. No separate `recipient_id` — both participants are derived from the appointment.
 ```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-sender_id     uuid REFERENCES profiles(id)
-recipient_id  uuid REFERENCES profiles(id)
-appointment_id uuid REFERENCES appointments(id)   -- optional context
-content       text NOT NULL
-is_read       boolean DEFAULT false
-created_at    timestamptz DEFAULT now()
+id             uuid        PRIMARY KEY DEFAULT gen_random_uuid()
+appointment_id uuid        REFERENCES appointments(id)
+sender_id      uuid        REFERENCES profiles(id)
+body           text        NOT NULL
+is_system      boolean     DEFAULT false   -- true for automated status messages
+read_at        timestamptz                 -- null = unread
+created_at     timestamptz DEFAULT now()
+updated_at     timestamptz DEFAULT now()
 ```
+> Message visibility is determined by appointment participation (owner or groomer), not a recipient column.
 
 ---
 
 ## 8. Row Level Security (RLS)
 
-RLS is **enabled on all 10 tables**. No policies have been written yet — this is the immediate next step.
+RLS is **enabled on all 10 tables**. Policies are live.
 
 ### The Core Problem: Clerk + RLS
-Supabase's built-in RLS functions (like `auth.uid()`) reference Supabase Auth users. Since we're using Clerk, we need a different approach.
+Supabase's built-in RLS functions (like `auth.uid()`) reference Supabase Auth users. Since we're using Clerk, we use a custom helper instead.
 
-### Solution: Helper Function
-We need a Postgres helper function that extracts the Clerk `userId` from the JWT:
-
+### Helper Function
 ```sql
 CREATE OR REPLACE FUNCTION get_clerk_user_id()
-RETURNS text
-LANGUAGE sql STABLE
-AS $$
-  SELECT nullif(
-    current_setting('request.jwt.claims', true)::json->>'sub',
-    ''
-  )
+RETURNS text LANGUAGE sql STABLE AS $$
+  SELECT nullif(current_setting('request.jwt.claims', true)::json->>'sub', '')
 $$;
 ```
+The `sub` claim in a Clerk JWT is the Clerk user ID (e.g. `user_2abc123`). All RLS policies use this function to identify the current user.
 
-> The `sub` claim in a Clerk JWT contains the Clerk user ID (e.g. `user_2abc123`).
-> This function is then used in all RLS policies to identify the current user.
+### Policy Summary
 
-### Planned RLS Policies (not yet written)
+| Table | SELECT | INSERT | UPDATE | DELETE |
+|---|---|---|---|---|
+| `profiles` | Own row + admin | — (webhook via supabaseAdmin) | Own row | — |
+| `groomer_profiles` | Public | Own (via `user_id`) | Own | Own |
+| `dogs` | Own + admin | Own | Own | Own |
+| `services` | Public | Own groomer | Own groomer | Own groomer |
+| `availability` | Public | Own groomer | Own groomer | Own groomer |
+| `availability_overrides` | Public | Own groomer | Own groomer | Own groomer |
+| `appointments` | Own as owner or groomer + admin | Owner only | Owner + groomer (separate policies) | — |
+| `payments` | Via appointment join + admin | — (supabaseAdmin only) | — (supabaseAdmin only) | — |
+| `reviews` | Public (visible=true) + own + admin | Owner | Owner (body) + groomer (reply) | — |
+| `messages` | Appointment participants | Participant + sender | Appointment participants | — |
 
-| Table | Rules |
-|---|---|
-| `profiles` | Users read/update their own row (`clerk_id = get_clerk_user_id()`). Admins read all. |
-| `groomer_profiles` | Public read. Groomers update their own (via join to `profiles`). Admins full access. |
-| `dogs` | Owners CRUD their own dogs. Admins read all. |
-| `services` | Public read. Groomers CRUD their own (via groomer_profile join). Admins full access. |
-| `availability` | Public read. Groomers manage their own. |
-| `availability_overrides` | Public read. Groomers manage their own. |
-| `appointments` | Owners see their own. Groomers see their own. Admins see all. |
-| `payments` | Owners see their own. Groomers see their own. Admins see all. |
-| `reviews` | Public read. Owners create/edit their own. Admins full access. |
-| `messages` | Users only see conversations where they are sender OR recipient. |
+Every table also has an **`admin_all`** policy granting full access (`FOR ALL`) to any user where `is_admin = true`.
+
+### Important: Use Anon Client for Admin UI
+For the admin dashboard, use the **anon-key client** (not `supabaseAdmin`) — this ensures the `admin_all` policy fires and admin actions are attributable. `supabaseAdmin` bypasses everything silently.
 
 ### GRANT Permissions
-`GRANT` permissions have been added for `service_role` on the public schema. This allows `supabaseAdmin` to bypass RLS and operate on any table — required for the webhook handler and any admin-level operations.
+`GRANT` permissions have been added for `service_role` on the public schema. This allows `supabaseAdmin` to bypass RLS and operate on any table — required for the webhook handler and Stripe webhook server logic.
 
 ---
 
@@ -435,7 +481,7 @@ fontFamily: {
 | `auth.uid()` doesn't work in RLS | `auth.uid()` references Supabase Auth, which we're not using | Use the `get_clerk_user_id()` helper function instead |
 | Price as integer | `price_pence` and `amount_pence` stored as integers | Always divide by 100 for display. Pass as integer to Stripe. |
 | `supabaseAdmin` bypasses RLS | The service role client skips all RLS policies | Only use in server-side code (`app/api/`, server components, route handlers). Never import in client components. |
-| RLS not yet written | All 10 tables have RLS enabled but no policies defined | **Next step** — data is currently only accessible via `supabaseAdmin` |
+| Admin dashboard must use anon client | `supabaseAdmin` bypasses RLS silently — admin policies won't fire | Use the anon-key `supabase` client for admin UI so `admin_all` policies are enforced |
 
 ---
 
@@ -459,10 +505,10 @@ fontFamily: {
 - Clerk webhook → auto-creates `profiles` row on `user.created`
 - `supabaseAdmin` client (service role, server-side only)
 - Andrew (`andrew@groomr.uk`) set as admin
+- RLS policies written for all 10 tables (role-based + `admin_all` on every table)
 
 ### 🔜 Next Up
-1. **Write RLS policies** for all 10 tables using `get_clerk_user_id()` helper
-2. **User onboarding flow** — role selection after sign-up (owner vs groomer)
+1. **User onboarding flow** — role selection after sign-up (owner vs groomer)
 3. **Groomer profile creation** — `groomer_profiles` form, Cloudinary upload
 4. **Search page** — location-based groomer discovery (Google Maps)
 5. **Booking flow** — service selection → availability calendar → checkout
@@ -523,4 +569,4 @@ git add . && git commit -m "your message" && git push origin main
 
 ---
 
-*Last updated: April 2026 — update this doc as decisions are made.*
+*Last updated: 27 April 2026 — update this doc as decisions are made.*

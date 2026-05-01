@@ -1,0 +1,546 @@
+/* Wireframe sketch styles - napkin/marker energy */
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Kalam:wght@300;400;700&family=Architects+Daughter&display=swap');
+
+:root {
+  --paper: #f9f8f4;          /* alabaster cream */
+  --paper-2: #f1efe6;
+  --ink: #2c3e50;            /* deep slate */
+  --ink-soft: #4a5568;
+  --ink-faint: #95a5a6;      /* pebble */
+  --rule: #cbc7b8;
+  --accent: #eae45c;         /* gold */
+  --accent-2: #c87964;       /* terracotta */
+  --sage: #88a096;
+  --note: #fff8a8;           /* sticky note */
+  --shadow: 0 2px 0 rgba(44,62,80,.08), 0 8px 18px rgba(44,62,80,.06);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Kalam', 'Architects Daughter', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle paper texture using layered backgrounds */
+body {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(149,165,166,.05) 0, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(136,160,150,.04) 0, transparent 40%);
+  min-height: 100vh;
+}
+
+/* ----------- Typography ------------- */
+.h-display { font-family: 'Caveat', cursive; font-weight: 700; letter-spacing: .5px; }
+.h-hand    { font-family: 'Kalam', cursive; }
+.h-arch    { font-family: 'Architects Daughter', cursive; }
+
+h1, h2, h3, h4 { font-family: 'Caveat', cursive; font-weight: 700; margin: 0; line-height: 1.05; }
+
+/* ---------- App chrome ---------- */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  border-bottom: 1.5px solid var(--ink);
+  padding: 18px 28px 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar .brand { display: flex; align-items: baseline; gap: 14px; }
+.topbar .brand .logo {
+  font-family: 'Caveat', cursive;
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.topbar .brand .logo .dot {
+  display: inline-block; width: 14px; height: 14px; background: var(--accent);
+  border: 1.5px solid var(--ink); border-radius: 50%; margin: 0 2px;
+  transform: translateY(-2px);
+}
+.topbar .brand .sub {
+  font-family: 'Kalam', cursive;
+  font-size: 14px;
+  color: var(--ink-soft);
+  border-left: 1.5px solid var(--rule);
+  padding-left: 14px;
+}
+.topbar .right { font-family: 'Kalam'; font-size: 13px; color: var(--ink-soft); }
+.topbar .right b { color: var(--ink); }
+
+/* ---------- Tabs ---------- */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 14px 28px 0;
+  border-bottom: 1.5px solid var(--ink);
+  background: var(--paper);
+  overflow-x: auto;
+  position: sticky;
+  top: 81px;
+  z-index: 40;
+}
+.tab {
+  font-family: 'Kalam', cursive;
+  font-size: 16px;
+  padding: 10px 16px 12px;
+  border: 1.5px solid var(--ink);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  top: 1.5px;
+  transform: rotate(-.3deg);
+  transition: background .15s;
+}
+.tab:nth-child(2n) { transform: rotate(.4deg); }
+.tab:nth-child(3n) { transform: rotate(-.2deg); }
+.tab:hover { background: #ede9d9; color: var(--ink); }
+.tab.active {
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom: 2px solid var(--paper);
+  z-index: 2;
+}
+.tab.active::before {
+  content: '';
+  position: absolute; left: 8px; right: 8px; top: 4px; height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ---------- Stage ---------- */
+.stage {
+  flex: 1;
+  padding: 32px 28px 80px;
+}
+.stage > .screen-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 24px; margin-bottom: 22px; flex-wrap: wrap;
+}
+.stage > .screen-head h2 {
+  font-size: 44px;
+  display: flex; align-items: baseline; gap: 14px;
+}
+.stage > .screen-head h2 .num {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 22px; color: var(--ink-faint);
+  border: 1.5px solid var(--ink-faint);
+  padding: 4px 10px; border-radius: 50%;
+}
+.stage > .screen-head .desc {
+  font-family: 'Kalam'; font-size: 15px; color: var(--ink-soft);
+  max-width: 520px; line-height: 1.4;
+}
+
+/* ---------- Variation row ---------- */
+.variations {
+  display: grid;
+  gap: 28px;
+}
+
+.variations.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 1400px) {
+  .variations.cols-3 { grid-template-columns: 1fr; }
+}
+
+.variation {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.variation > .vlabel {
+  display: flex; align-items: baseline; gap: 12px; padding-bottom: 8px;
+  border-bottom: 1.5px dashed var(--rule);
+}
+.variation > .vlabel .v-num {
+  font-family: 'Architects Daughter';
+  font-size: 14px; color: var(--ink); font-weight: 700;
+  background: var(--accent); padding: 4px 10px; border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  transform: rotate(-3deg);
+}
+.variation > .vlabel .v-title {
+  font-family: 'Caveat'; font-weight: 700; font-size: 26px;
+}
+.variation > .vlabel .v-tag {
+  font-family: 'Kalam'; font-size: 12px; color: var(--ink-soft);
+  margin-left: auto; text-transform: uppercase; letter-spacing: 1px;
+}
+.variation > .vsub {
+  font-family: 'Kalam'; font-size: 13px; color: var(--ink-soft);
+  margin-top: -8px; line-height: 1.4;
+}
+
+/* ---------- Sketch frame (the wireframe canvas itself) ---------- */
+.frame {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  padding: 14px;
+  position: relative;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.frame.mobile {
+  max-width: 280px;
+  margin: 0 auto;
+}
+.frame .frame-bar {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Kalam'; font-size: 11px; color: var(--ink-faint);
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--rule);
+  margin-bottom: 12px;
+}
+.frame .frame-bar .dots { display: flex; gap: 5px; }
+.frame .frame-bar .dots span {
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 1.2px solid var(--ink);
+}
+.frame .frame-bar .url {
+  flex: 1; padding: 3px 10px;
+  border: 1.2px solid var(--rule); border-radius: 999px;
+  background: var(--paper-2); color: var(--ink-soft);
+  font-size: 11px;
+}
+.frame .frame-bar .device {
+  font-family: 'Caveat'; font-size: 14px; color: var(--ink);
+  font-weight: 700;
+}
+
+/* ---------- Sketch primitives ---------- */
+.sk-box {
+  border: 1.6px solid var(--ink);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--paper);
+  position: relative;
+}
+.sk-box.dashed { border-style: dashed; }
+.sk-box.tilt-l { transform: rotate(-.4deg); }
+.sk-box.tilt-r { transform: rotate(.4deg); }
+.sk-box.fill-paper-2 { background: var(--paper-2); }
+.sk-box.fill-gold { background: var(--accent); }
+.sk-box.fill-gold-soft { background: rgba(234,228,92,.35); }
+.sk-box.fill-terra-soft { background: rgba(200,121,100,.18); }
+.sk-box.fill-sage-soft { background: rgba(136,160,150,.18); }
+.sk-box.note-yellow { background: var(--note); border-color: var(--ink); }
+
+/* Image placeholder: box with diagonal slash */
+.sk-img {
+  border: 1.6px solid var(--ink);
+  border-radius: 10px;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), var(--ink-faint) 50%, transparent calc(50% + 1px)),
+    linear-gradient(to top left, transparent calc(50% - 1px), var(--ink-faint) 50%, transparent calc(50% + 1px)),
+    var(--paper-2);
+  position: relative;
+  min-height: 60px;
+}
+.sk-img::after {
+  content: attr(data-label);
+  position: absolute; bottom: 6px; left: 8px;
+  font-family: 'Kalam'; font-size: 10px;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.sk-img.round { border-radius: 50%; }
+
+/* Squiggle line for body text */
+.sk-line {
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink-faint) 0 8px,
+    transparent 8px 12px
+  );
+  border-radius: 3px;
+  margin: 4px 0;
+}
+.sk-line.short { width: 60%; }
+.sk-line.shorter { width: 40%; }
+.sk-line.dark {
+  background: repeating-linear-gradient(
+    90deg, var(--ink) 0 12px, transparent 12px 16px
+  );
+}
+.sk-line.thick { height: 10px; }
+
+/* Heading placeholder - thicker scribble */
+.sk-head {
+  height: 14px;
+  background: repeating-linear-gradient(
+    90deg, var(--ink) 0 18px, transparent 18px 22px
+  );
+  border-radius: 3px;
+  width: 70%;
+  margin: 2px 0 6px;
+}
+.sk-head.full { width: 100%; }
+.sk-head.short { width: 45%; }
+.sk-head.bigger { height: 18px; }
+
+/* Pill button */
+.sk-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border: 1.6px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  font-family: 'Kalam'; font-size: 13px; font-weight: 700;
+  color: var(--ink);
+}
+.sk-btn.primary { background: var(--accent); }
+.sk-btn.terra   { background: rgba(200,121,100,.4); }
+.sk-btn.ghost   { background: transparent; }
+.sk-btn.sm      { padding: 3px 10px; font-size: 11px; }
+.sk-btn.lg      { padding: 9px 22px; font-size: 15px; }
+
+/* Pill chip */
+.sk-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border: 1.4px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  font-family: 'Kalam'; font-size: 11px;
+  color: var(--ink-soft);
+}
+.sk-chip.active { background: var(--ink); color: var(--paper); }
+.sk-chip.sage { background: rgba(136,160,150,.25); color: var(--ink); }
+
+/* Checkbox / radio */
+.sk-check {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  display: inline-block;
+  vertical-align: middle;
+  background: var(--paper);
+  flex-shrink: 0;
+}
+.sk-check.on {
+  background: var(--accent);
+  position: relative;
+}
+.sk-check.on::after {
+  content: '✓'; font-family: 'Caveat'; font-weight: 700;
+  font-size: 16px; color: var(--ink);
+  position: absolute; top: -4px; left: 2px;
+}
+.sk-radio {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.sk-radio.on {
+  background: radial-gradient(circle, var(--ink) 40%, var(--paper) 45%);
+}
+
+/* Star */
+.sk-star {
+  display: inline-block;
+  width: 12px; height: 12px;
+  background: var(--accent);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.sk-star.empty { background: var(--ink-faint); opacity: .3; }
+
+/* ---------- Annotation note (sticky/handwritten) ---------- */
+.note {
+  position: absolute;
+  font-family: 'Caveat', cursive;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--ink);
+  background: var(--note);
+  padding: 6px 10px 7px;
+  border: 1.2px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 2px 2px 0 rgba(44,62,80,.15);
+  line-height: 1.15;
+  max-width: 200px;
+  z-index: 5;
+}
+.note.tape::before {
+  content: '';
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(-3deg);
+  width: 36px; height: 14px;
+  background: rgba(255,255,255,.6);
+  border: 1px solid rgba(0,0,0,.1);
+}
+.note.no-bg {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 2px 4px;
+}
+.note.tilt-l { transform: rotate(-2deg); }
+.note.tilt-r { transform: rotate(2deg); }
+
+/* Annotation arrow (drawn) - generic line + arrowhead via SVG inline use ::after */
+.ann-arrow {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* ---------- Workflow lane ---------- */
+.flow-row {
+  display: flex; align-items: stretch; gap: 0;
+  overflow-x: auto;
+  padding: 6px 0 14px;
+}
+.flow-step {
+  flex: 0 0 200px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 14px 12px;
+  background: var(--paper);
+  position: relative;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.flow-arrow {
+  flex: 0 0 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Caveat'; font-size: 36px; color: var(--ink);
+  font-weight: 700;
+}
+
+/* ---------- Helpers ---------- */
+.row { display: flex; gap: 8px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+.gap-2 { gap: 6px; }
+.gap-3 { gap: 10px; }
+.gap-4 { gap: 14px; }
+.gap-5 { gap: 18px; }
+.between { justify-content: space-between; }
+.center { justify-content: center; }
+.middle { align-items: center; }
+.start { align-items: flex-start; }
+.end { align-items: flex-end; }
+.wrap { flex-wrap: wrap; }
+.grow { flex: 1; }
+.text-soft { color: var(--ink-soft); font-family: 'Kalam'; font-size: 12px; }
+.text-faint { color: var(--ink-faint); font-family: 'Kalam'; font-size: 11px; }
+.text-eye { font-family: 'Architects Daughter'; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
+.text-hand-sm { font-family: 'Kalam'; font-size: 12px; color: var(--ink); }
+.text-hand { font-family: 'Kalam'; font-size: 14px; color: var(--ink); }
+.text-cv { font-family: 'Caveat'; font-size: 22px; font-weight: 700; }
+.text-cv-sm { font-family: 'Caveat'; font-size: 17px; font-weight: 600; }
+
+.scribble-divider {
+  height: 4px;
+  background: repeating-linear-gradient(135deg, var(--ink) 0 5px, transparent 5px 10px);
+  border-radius: 2px;
+  margin: 8px 0;
+  opacity: .6;
+}
+
+.tag-corner {
+  position: absolute;
+  top: -10px; right: 14px;
+  background: var(--accent);
+  border: 1.2px solid var(--ink);
+  font-family: 'Architects Daughter'; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 4px;
+  transform: rotate(2deg);
+}
+
+/* Density helpers */
+.tight > * + * { margin-top: 8px; }
+.compact .sk-box { padding: 8px 10px; }
+
+/* Hide annotations toggle */
+body.no-annotations .note,
+body.no-annotations .ann-arrow { display: none; }
+
+/* Empty state hidden by default */
+.empty-only { display: none; }
+body.empty-state .populated-only { display: none; }
+body.empty-state .empty-only { display: block; }
+body.empty-state .sk-line, body.empty-state .sk-head { opacity: .3; }
+body.empty-state .placeholder-text { opacity: .35; font-style: italic; }
+body.empty-state .sk-img::before {
+  content: 'empty';
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Caveat'; font-size: 16px; color: var(--ink-faint);
+}
+
+/* ---------- Cover screen ---------- */
+.cover { padding: 40px 28px 80px; max-width: 1180px; margin: 0 auto; }
+.cover h1 {
+  font-size: 84px;
+  line-height: .95;
+  margin-bottom: 12px;
+}
+.cover .lede {
+  font-family: 'Kalam'; font-size: 19px; max-width: 640px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.cover-grid {
+  margin-top: 36px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 900px) { .cover-grid { grid-template-columns: 1fr; } }
+.cover-card {
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  padding: 18px;
+  background: var(--paper);
+  position: relative;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.cover-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+.cover-card .num {
+  font-family: 'Architects Daughter'; font-size: 14px;
+  width: 32px; height: 32px; border: 1.5px solid var(--ink); border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent);
+  margin-bottom: 10px;
+}
+.cover-card h3 { font-size: 30px; margin-bottom: 4px; }
+.cover-card p { font-family: 'Kalam'; font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.4; }
+
+/* Section legend for the cover */
+.legend {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1.5px dashed var(--rule);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 900px) { .legend { grid-template-columns: 1fr; } }
+.legend h4 { font-size: 24px; margin-bottom: 6px; }
+.legend p { font-family: 'Kalam'; font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.4; }

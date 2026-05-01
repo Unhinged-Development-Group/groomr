@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Viability Report: UK Dog Groomer Marketplace</title>
+    
+    <!-- Favicon: Standalone Logo Mark -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
+    
+    <!-- Google Fonts: Fredoka & Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'groomr-gold': '#eae45c',
+                        'deep-slate': '#2c3e50',
+                        'sage-leaf': '#88a096',
+                        'pebble-grey': '#95a5a6',
+                        'alabaster-cream': '#f9f8f4',
+                        'muted-terracotta': '#c87964',
+                    },
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                        'nunito': ['Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'hover-lift': '0 10px 15px -3px rgba(149, 165, 166, 0.3), 0 4px 6px -2px rgba(149, 165, 166, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f9f8f4; /* Alabaster Cream */
+            color: #2c3e50; /* Deep Slate */
+            font-family: 'Nunito', sans-serif;
+            line-height: 1.7;
+            scroll-behavior: smooth;
+        }
+        
+        h1, h2, h3, .font-fredoka { font-family: 'Fredoka', sans-serif; }
+        
+        /* Sidebar Link Styles */
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        .sidebar-link.active {
+            color: #c87964; /* Muted Terracotta */
+            font-weight: 800;
+        }
+        .sidebar-link:not(.active):hover {
+            color: #c87964;
+            padding-left: 0.25rem;
+        }
+        
+        /* Card Hover Lift */
+        .card-lift {
+            transition: all 0.3s ease;
+        }
+        .card-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(149, 165, 166, 0.2);
+        }
+
+        /* Buttons & Focus */
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px #eae45c;
+        }
+
+        /* Table Styling */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(149, 165, 166, 0.2);
+        }
+        th {
+            background-color: #2c3e50; /* Deep Slate */
+            color: #f9f8f4; /* Alabaster Cream */
+            text-align: left;
+            padding: 16px;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+        }
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(149, 165, 166, 0.2);
+            background-color: #ffffff;
+        }
+        tr:last-child td { border-bottom: none; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-groomr-gold selection:text-deep-slate">
+
+    <!-- Header -->
+    <header class="bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50 shadow-sm backdrop-blur-sm bg-opacity-90">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
+                <div class="h-8 w-px bg-pebble-grey/30 hidden md:block"></div>
+                <p class="hidden md:block text-xs text-pebble-grey font-bold tracking-widest uppercase mt-1">Project Viability Report</p>
+            </div>
+            <div>
+                <span class="bg-sage-leaf/20 text-deep-slate text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 border border-sage-leaf/30">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf"></span>
+                    STATUS: HIGHLY VIABLE
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 py-12 flex gap-12">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar w-64 flex-shrink-0 sticky top-32 h-fit">
+            <nav class="space-y-3 font-nunito font-bold text-sm tracking-wide text-deep-slate">
+                <p class="text-xs text-pebble-grey uppercase tracking-widest mb-6">Contents</p>
+                <a href="#summary" class="sidebar-link block py-1">Executive Summary</a>
+                <a href="#market" class="sidebar-link block py-1">1. Market Size</a>
+                <a href="#painpoints" class="sidebar-link block py-1">2. Industry Pain Points</a>
+                <a href="#competitors" class="sidebar-link block py-1">3. Competitor Analysis</a>
+                <a href="#viability" class="sidebar-link block py-1">4. Supply-Side Viability</a>
+                <a href="#recommendations" class="sidebar-link block py-1">5. Strategic Recommendations</a>
+                <a href="#sources" class="sidebar-link block py-1">6. Sources & References</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 space-y-16 max-w-4xl">
+            
+            <!-- Executive Summary -->
+            <section id="summary" class="scroll-mt-32">
+                <h1 class="text-4xl md:text-5xl font-fredoka text-deep-slate mb-8 font-bold">Project Viability Report: UK Dog Groomer Marketplace</h1>
+                
+                <div class="bg-white p-8 rounded-2xl border-l-4 border-muted-terracotta shadow-sm mb-8 card-lift">
+                    <p class="font-nunito font-bold text-muted-terracotta uppercase tracking-widest text-xs mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        Important Conclusion
+                    </p>
+                    <p class="text-2xl font-fredoka font-bold text-deep-slate leading-tight">Building a UK dog groomer marketplace presents a highly viable and lucrative opportunity.</p>
+                </div>
+
+                <div class="text-lg leading-relaxed space-y-4">
+                    <p>
+                        This report analyzes the viability of launching a dedicated online marketplace for dog groomers in the UK. The goal of the platform is to solve the pervasive scheduling and discovery issues faced by both pet owners and independent groomers. 
+                    </p>
+                    <p>
+                        The market is currently fragmented; while SaaS booking tools exist, a definitive, household-name consumer marketplace for dog grooming (akin to what Treatwell is for human salons or JustEat for food) has not yet fully saturated the market.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 1. Market Size -->
+            <section id="market" class="scroll-mt-32">
+                <h2 class="text-3xl font-fredoka text-deep-slate mb-6 font-bold border-b border-pebble-grey/20 pb-4">1. Market Size & Demographics</h2>
+                <p class="text-lg mb-8">The UK pet care market is massive and has seen sustained growth.</p>
+                
+                <div class="mb-8 overflow-x-auto shadow-sm rounded-xl">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Data Point</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="hover:bg-alabaster-cream transition-colors">
+                                <td class="font-bold text-deep-slate">Dog Population (UK)</td>
+                                <td class="font-bold text-muted-terracotta">~13.5 Million</td>
+                                <td>36% of all UK households own a dog (2024).</td>
+                            </tr>
+                            <tr class="hover:bg-alabaster-cream transition-colors">
+                                <td class="font-bold text-deep-slate">Groomer Population</td>
+                                <td class="font-bold text-muted-terracotta">10,600 - 15,000</td>
+                                <td>~13,600 are independent/single-owner operations.</td>
+                            </tr>
+                            <tr class="hover:bg-alabaster-cream transition-colors">
+                                <td class="font-bold text-deep-slate">Grooming Frequency</td>
+                                <td class="font-bold text-muted-terracotta">6 - 8 times/year</td>
+                                <td>Varies by breed (every 6-8 weeks for medium/long coats).</td>
+                            </tr>
+                            <tr class="hover:bg-alabaster-cream transition-colors">
+                                <td class="font-bold text-deep-slate">Average Spend</td>
+                                <td class="font-bold text-muted-terracotta">£43 - £60</td>
+                                <td>Scales from £25 (small breeds) to £100+ (large poodles).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-sage-leaf/10 border border-sage-leaf/30 p-8 rounded-2xl flex flex-col md:flex-row items-center gap-6 card-lift">
+                    <div class="bg-white p-4 rounded-xl shadow-sm text-deep-slate font-fredoka font-bold text-3xl">
+                        £1.8B
+                    </div>
+                    <div>
+                        <p class="font-nunito font-bold text-sage-leaf uppercase tracking-widest text-xs mb-2">Note: Total Addressable Market (TAM)</p>
+                        <p class="text-deep-slate font-medium text-lg">
+                            Assuming 50% of the 13.5m dogs are professionally groomed 6 times a year at £45 per groom, the UK dog grooming industry represents roughly a <strong>£1.8 Billion annual market.</strong>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Pain Points -->
+            <section id="painpoints" class="scroll-mt-32 space-y-10">
+                <h2 class="text-3xl font-fredoka text-deep-slate mb-6 font-bold border-b border-pebble-grey/20 pb-4">2. Industry Pain Points & Trends</h2>
+                
+                <!-- Supply Side -->
+                <div class="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-groomr-gold rounded-full flex items-center justify-center text-deep-slate">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-fredoka font-bold text-deep-slate">Groomer Pain Points</h3>
+                            <p class="text-sm font-bold text-pebble-grey uppercase tracking-widest">The Supply Side</p>
+                        </div>
+                    </div>
+                    <p class="mb-6 text-lg">Independent groomers face severe administrative burdens. Research from UK grooming forums (like r/doggrooming and The Groomers Forum) highlights several critical pain points:</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span><strong>Scheduling Chaos:</strong> Groomers are overwhelmed by appointment requests coming from multiple scattered channels (Instagram DMs, WhatsApp, SMS, phone calls). Managing these feels like a second full-time job.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span><strong>No-Shows and Cancellations:</strong> Without automated reminders and upfront deposits, groomers frequently suffer lost revenue from no-shows.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span><strong>Waitlist Management:</strong> Successful groomers have long waitlists but lack the tools to efficiently fill sudden cancellations.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span><strong>Admin Overhead:</strong> Most groomers got into the business to work with animals, not to be receptionists. Manual scheduling directly impacts their mental health and daily grooming capacity.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Demand Side -->
+                <div class="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-sage-leaf rounded-full flex items-center justify-center text-white">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24">
+                                <circle cx="12" cy="16" r="6" fill="#c87964" opacity="0.55" />
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="9" cy="7" r="4" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-fredoka font-bold text-deep-slate">Generational Changes</h3>
+                            <p class="text-sm font-bold text-pebble-grey uppercase tracking-widest">The Demand Side</p>
+                        </div>
+                    </div>
+                    <p class="mb-6 text-lg">Millennials and Gen Z are now the primary drivers of pet ownership in the UK.</p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start gap-3">
+                            <span class="text-sage-leaf mt-1">•</span>
+                            <span><strong>"Pets as Family" (Humanization):</strong> Younger generations view pets as children and are willing to spend premium amounts on their care.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-sage-leaf mt-1">•</span>
+                            <span><strong>App-First Mentality:</strong> These consumers expect seamless, 24/7 digital experiences. They do not want to call a business during working hours to check availability or engage in back-and-forth DMs to find a slot. They want instant booking visibility, verified reviews, and secure online payments.</span>
+                        </li>
+                    </ul>
+                    
+                    <div class="bg-alabaster-cream p-6 rounded-xl border border-pebble-grey/20">
+                        <p class="text-deep-slate font-medium"><strong>Conclusion:</strong> There is a distinct mismatch between the modern consumer's desire for instant digital booking and the average independent groomer's reliance on manual, fragmented communication.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Competitor Analysis -->
+            <section id="competitors" class="scroll-mt-32 space-y-10">
+                <h2 class="text-3xl font-fredoka text-deep-slate font-bold border-b border-pebble-grey/20 pb-4">3. Competitor Analysis</h2>
+                <p class="text-lg">The landscape contains a mix of direct marketplace competitors and indirect SaaS booking systems.</p>
+                
+                <h3 class="text-2xl font-bold mt-8 mb-4">Direct Competitor Comparison</h3>
+                <div class="overflow-x-auto shadow-sm rounded-xl mb-10">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Competitor</th>
+                                <th>Platform Type</th>
+                                <th>Business Model</th>
+                                <th>Key Weakness / Vulnerability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="hover:bg-alabaster-cream">
+                                <td class="font-bold">Tuft</td>
+                                <td>Dedicated Grooming App</td>
+                                <td>Subscription for groomers (£33/mo) + £1.25 fee for consumers.</td>
+                                <td>App-only (high discovery friction). Forces "request appointment" rather than instant booking.</td>
+                            </tr>
+                            <tr class="hover:bg-alabaster-cream">
+                                <td class="font-bold">PetBookr & BookMyGroomer</td>
+                                <td>Web Directories</td>
+                                <td>Commissions</td>
+                                <td>Poor UI/UX, lack of brand penetration, missing deep B2B SaaS features.</td>
+                            </tr>
+                            <tr class="hover:bg-alabaster-cream">
+                                <td class="font-bold">Booksy / Fresha</td>
+                                <td>General Beauty Apps</td>
+                                <td>Subscriptions / Commissions</td>
+                                <td>Not pet-specific. Missing dog breed profiles, coat conditions, and recurring breed cycle prompts.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-deep-slate text-alabaster-cream p-8 md:p-12 rounded-2xl shadow-sm relative overflow-hidden">
+                    <h3 class="text-2xl font-fredoka font-bold mb-4 relative z-10 text-groomr-gold">Deep Dive: Tuft App</h3>
+                    <p class="text-lg mb-6 relative z-10">Tuft is the primary direct competitor in the UK, offering both consumer and groomer apps.</p>
+                    <p class="mb-8 relative z-10"><strong>Scale:</strong> Founded in 2021, raised ~£1.5M - £2M, reported £3.5m GMV in 2024 with over 83,000 active users.</p>
+                    
+                    <h4 class="font-bold text-sage-leaf uppercase tracking-widest text-sm mb-4 relative z-10">Pain Points & Brand Weaknesses:</h4>
+                    <div class="grid md:grid-cols-2 gap-6 relative z-10">
+                        <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10">
+                            <h5 class="font-bold text-groomr-gold mb-2">App-Only Friction</h5>
+                            <p class="text-sm leading-relaxed">Tuft uses separated native apps instead of web, creating massive top-of-funnel drop-off for discovering local groomers.</p>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10">
+                            <h5 class="font-bold text-groomr-gold mb-2">The "Request" Hurdle</h5>
+                            <p class="text-sm leading-relaxed">Despite marketing "instant booking," many appointments still require manual groomer approval.</p>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10">
+                            <h5 class="font-bold text-groomr-gold mb-2">Consumer Fee Backlash</h5>
+                            <p class="text-sm leading-relaxed">Pet owners are noticeably frustrated by the £1.25 "Platform Fee" added to their checkout just for booking a service.</p>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10">
+                            <h5 class="font-bold text-groomr-gold mb-2">Prohibitive B2B Pricing</h5>
+                            <p class="text-sm leading-relaxed">Their £32.99/month (or £46+ for multi-staff) subscription is difficult to justify for brand-new or small-scale independent groomers compared to a commission-only or purely free-to-list model.</p>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10 md:col-span-2">
+                            <h5 class="font-bold text-groomr-gold mb-2">Corporate Branding Focus</h5>
+                            <p class="text-sm leading-relaxed">Their brand identity feels very "commercial tech startup" rather than a warm, localised, community-driven pet service. Pet owners prioritize trust and local connection; a highly corporate, VC-backed SaaS brand struggles to project that intimacy.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-white/20 relative z-10">
+                        <p class="text-lg"><strong>Strategic Opportunity:</strong> Their rapid £3.5m GMV growth proves immense consumer demand exists in spite of these frustrating UI/UX barriers and fees. A frictionless, web-based platform with community-centric branding and a fairer pricing model could rapidly acquire their dissatisfied users.</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                        <h4 class="text-xl font-bold mb-3 text-deep-slate">Indirect Competitors<br><span class="text-sm font-normal text-pebble-grey">(SaaS / Booking Software)</span></h4>
+                        <p class="text-deep-slate mb-4"><strong>GroomerBooker, Reservio, MoeGo, SmartBooker:</strong> These provide phenomenal backend scheduling software for groomers.</p>
+                        <p class="text-deep-slate"><strong>Weaknesses:</strong> They are not consumer discovery marketplaces. A consumer cannot go to "MoeGo.com" to search for local groomers. Groomers must still do all their own marketing to get clients to use their personal booking links.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                        <h4 class="text-xl font-bold mb-3 text-deep-slate">Tangential Competitors</h4>
+                        <p class="text-deep-slate mb-4"><strong>Rover / Wag! / PetBacker:</strong> Massive marketplaces, but primarily focused on dog walking and sitting.</p>
+                        <p class="text-deep-slate">While some groomers might list there, grooming is an afterthought on these platforms.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Supply-Side Viability -->
+            <section id="viability" class="scroll-mt-32 space-y-8">
+                <h2 class="text-3xl font-fredoka text-deep-slate font-bold border-b border-pebble-grey/20 pb-4">4. Supply-Side Viability: The Groomer Administrative Burden</h2>
+                <p class="text-lg">To succeed, a marketplace must solve problems for both the consumer and the supplier. While pet owners want seamless booking, independent groomers are desperate for comprehensive business management tools.</p>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-pebble-grey/20">
+                    <h3 class="text-2xl font-bold mb-6">The Current Outdated Reality:</h3>
+                    <p class="mb-6 text-lg">Industry forums (like r/doggrooming) are filled with complaints regarding the current, highly fragmented method of managing a business. For a solo groomer, managing requests across Instagram DMs, WhatsApp, SMS, and phone calls takes essentially another part-time job.</p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="w-16 h-16 flex-shrink-0 bg-alabaster-cream rounded-xl flex items-center justify-center font-fredoka font-bold text-2xl text-muted-terracotta border border-pebble-grey/20">
+                                24%
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg">Time Wasted</h4>
+                                <p>Small business owners, including independent groomers, typically waste up to 24% of their working week on administrative tasks and email/web communication. This translates to roughly 1 to 2 hours a day lost to manual scheduling, chasing payments, and sending reminder texts—time that could be spent grooming an additional dog (equivalent to £45-£60 lost revenue daily).</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-16 h-16 flex-shrink-0 bg-alabaster-cream rounded-xl flex items-center justify-center text-muted-terracotta border border-pebble-grey/20">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg">Burnout</h4>
+                                <p>The constant ping of DMs from clients arguing over slots, failing to read policies, or cancelling last minute leads to severe groomer burnout. They want to be with dogs, not acting as full-time receptionists.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-sage-leaf/10 p-8 md:p-12 rounded-2xl border border-sage-leaf/20 card-lift">
+                    <h3 class="text-2xl font-bold mb-4">The B2B SaaS Opportunity:</h3>
+                    <p class="text-lg mb-6">There is immense, validated demand from groomers for an all-in-one, modern web platform. B2B software like MoeGo, Gingr, and Groomsoft prove that groomers will actively use (and pay for) comprehensive back-end tools.</p>
+                    
+                    <p class="font-bold mb-4">By offering a web-based ecosystem that includes:</p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
+                            <span class="text-sage-leaf"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>
+                            <span>Fully Automated, True "Instant" Booking (removing the back-and-forth DM negotiation)</span>
+                        </li>
+                        <li class="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
+                            <span class="text-sage-leaf"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>
+                            <span>Integrated Financials & Automated Payments (upfront deposits to eradicate no-shows, and clear revenue dashboards)</span>
+                        </li>
+                        <li class="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
+                            <span class="text-sage-leaf"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>
+                            <span>Centralised Customer Messaging (one inbox to rule them all)</span>
+                        </li>
+                        <li class="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
+                            <span class="text-sage-leaf"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>
+                            <span>Detailed Pet Profiles (storing coat types, vet history, and temperament notes)</span>
+                        </li>
+                        <li class="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
+                            <span class="text-sage-leaf"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>
+                            <span>Review Management</span>
+                        </li>
+                    </ul>
+
+                    <p class="text-xl font-bold font-fredoka text-deep-slate leading-relaxed border-l-4 border-sage-leaf pl-6 py-2">
+                        ...you are not just providing a "marketplace listing." You are providing a <strong>Business-in-a-Box.</strong> If you can provide these essential B2B tools while simultaneously driving net-new clients to them via the consumer marketplace, the value proposition to the groomer becomes undeniable.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 5. Strategic Recommendations -->
+            <section id="recommendations" class="scroll-mt-32 space-y-8">
+                <h2 class="text-3xl font-fredoka text-deep-slate font-bold border-b border-pebble-grey/20 pb-4">5. Conclusion & Strategic Recommendations</h2>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-sage-leaf card-lift">
+                    <p class="font-nunito font-bold text-sage-leaf uppercase tracking-widest text-xs mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        Tip
+                    </p>
+                    <h3 class="text-2xl font-bold mb-4">The Verdict:</h3>
+                    <p class="text-lg mb-4">The project is highly viable. The demand for digital convenience is validated by competitors, but the execution of current market leaders relies on high-friction native apps.</p>
+                    <p class="text-lg">The UK dog grooming market is a massive, fragmented sector that is ripe for consumer-facing technological aggregation. The supply side (groomers) is desperate to reduce administrative burden and eliminate no-shows, while the demand side (Millennial/Gen Z owners) is actively demanding seamless, 24/7 app-based booking.</p>
+                </div>
+
+                <div class="space-y-6 mt-8">
+                    <h3 class="text-2xl font-bold">Recommendations for Differentiation:</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                            <h4 class="font-bold text-xl mb-3 flex items-center gap-2 text-deep-slate">
+                                <span class="bg-groomr-gold w-3 h-3 rounded-full inline-block"></span>
+                                Hyper-Focus on Pet-Specific UI/UX
+                            </h4>
+                            <p>Do not build a generic booking app. Build features specific to dogs—allow users to create profiles for their dogs detailing breed, temperament, coat type, and vaccination status.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                            <h4 class="font-bold text-xl mb-3 flex items-center gap-2 text-deep-slate">
+                                <span class="bg-groomr-gold w-3 h-3 rounded-full inline-block"></span>
+                                Frictionless Web Onboarding
+                            </h4>
+                            <p>Disrupt competitors like Tuft by offering a zero-subscription-fee entry tier for groomers. Monetize via a small percentage commission on net-new bookings generated by the marketplace. Disrupt Tuft's app-download barrier with a highly responsive, mobile-first web app accessible immediately via browser.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                            <h4 class="font-bold text-xl mb-3 flex items-center gap-2 text-deep-slate">
+                                <span class="bg-groomr-gold w-3 h-3 rounded-full inline-block"></span>
+                                Mandatory Deposit System
+                            </h4>
+                            <p>To instantly win the loyalty of groomers, build a robust, un-bypassable deposit or cancellation fee system to eradicate their biggest pain point: the no-show.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-pebble-grey/20 card-lift">
+                            <h4 class="font-bold text-xl mb-3 flex items-center gap-2 text-deep-slate">
+                                <span class="bg-groomr-gold w-3 h-3 rounded-full inline-block"></span>
+                                Breed-Specific Recurring Prompts
+                            </h4>
+                            <p>Implement smart CRM features that remind owners to rebook based on their specific dog's breed. This increases lifetime value for both the platform and the groomer.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-muted-terracotta text-alabaster-cream p-10 rounded-2xl shadow-sm text-center card-lift mt-12">
+                    <p class="font-bold uppercase tracking-widest text-xs mb-4">Important Conclusion</p>
+                    <p class="text-2xl font-fredoka font-bold leading-relaxed">
+                        The window of opportunity to become the definitive "Treatwell for Dogs" in the UK is currently open. Speed to market with a superior, friction-free supply-side onboarding process is critical.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 6. Sources -->
+            <section id="sources" class="scroll-mt-32 space-y-8 pb-12">
+                <h2 class="text-3xl font-fredoka text-deep-slate font-bold border-b border-pebble-grey/20 pb-4">6. Sources & References</h2>
+                
+                <div class="space-y-10 text-deep-slate">
+                    <div>
+                        <h4 class="font-bold text-xl mb-4 flex items-center gap-2">Market Data & Demographics:</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>UK Pet Food:</strong> 2024 Pet Population Data (13.5m dogs)</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>PDSA:</strong> 2024 PAW Report (Pet Wellbeing and Ownership Statistics)</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>Dogs Trust:</strong> 2024 National Dog Survey</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>Global Pet Industry:</strong> 2023/2024 Reports on UK Grooming Business Demographics (10,600 - 15,000 groomers)</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>NimbleFins & Bark.com:</strong> UK Dog Grooming Average Costs Analysis</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-xl mb-4 flex items-center gap-2">Industry Pain Points & Groomer Sentiment:</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>Reddit (r/doggrooming) & The Groomers Forum:</strong> Direct qualitative feedback from professional groomers regarding burnout, manual scheduling friction, DM fatigue, and "Request Appointment" workflows.</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>Total Grooming Magazine:</strong> Industry articles on the financial impact of no-shows and administrative burden.</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>Agility PR / General Small Business Surveys:</strong> Data on average administrative time overhead for solo business operators (up to 24% of the working week).</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-xl mb-4 flex items-center gap-2">Competitor Analysis (Tuft & B2B SaaS):</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>Tuft Corporate Site (tuftapp.com):</strong> Direct analysis of their pricing tiers, feature sets, and consumer platform fees.</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>PitchBook / TechRound / Startup Networks:</strong> Financial data regarding Tuft’s funding journey (£690k+ recent seeds, £1.2m+ prior funding, app launch timeline in June 2021).</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>App Store & Google Play Reviews (Tuft, PetBookr):</strong> Consumer feedback regarding UX friction and the requirement to download an app before searching.</li>
+                            <li class="flex items-start gap-3"><span class="text-pebble-grey mt-1">•</span> <strong>MoeGo, Gingr, Groomsoft, Reservio:</strong> Product analysis of the features demanded by groomers for B2B backend management (financials, automated payments, recurring bookings).</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full bg-deep-slate text-alabaster-cream py-12 text-center mt-12">
+        <div class="max-w-4xl mx-auto px-6">
+            <h3 class="font-fredoka text-3xl mb-8">Your dog deserves a regular.</h3>
+            <div class="h-px w-full bg-sage-leaf/40 max-w-lg mx-auto my-8"></div>
+            <div class="flex flex-col items-center gap-6">
+                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 w-auto object-contain opacity-50">
+                <p class="text-xs text-pebble-grey opacity-50">© 2026 Groomr Market Viability Research. Confidential & Proprietary.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth highlighting for active section in sidebar
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.sidebar-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 180) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

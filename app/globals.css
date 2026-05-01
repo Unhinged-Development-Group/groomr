@@ -179,97 +179,99 @@
 
 /* ── Base Styles ───────────────────────────────────────────────────────── */
 
-html, body {
-  background-color: var(--bg-canvas);
-  color: var(--fg-primary);
-  font-family: var(--font-body);
-  font-weight: var(--weight-regular);
-  font-size: var(--text-base);
-  line-height: var(--leading-normal);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
+@layer base {
+  html, body {
+    background-color: var(--bg-canvas);
+    color: var(--fg-primary);
+    font-family: var(--font-body);
+    font-weight: var(--weight-regular);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
 
-::selection {
-  background: var(--selection-bg);
-  color: var(--selection-fg);
-}
+  ::selection {
+    background: var(--selection-bg);
+    color: var(--selection-fg);
+  }
 
-/* ── Typography classes ────────────────────────────────────────────────── */
+  /* ── Typography classes ──────────────────────────────────────────────── */
 
-.display, .h1, h1 {
-  font-family: var(--font-display);
-  font-weight: var(--weight-bold);
-  font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-  color: var(--fg-primary);
-}
+  .display, .h1, h1 {
+    font-family: var(--font-display);
+    font-weight: var(--weight-bold);
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--fg-primary);
+  }
 
-.h2, h2 {
-  font-family: var(--font-display);
-  font-weight: var(--weight-bold);
-  font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
-  line-height: var(--leading-snug);
-  color: var(--fg-primary);
-}
+  .h2, h2 {
+    font-family: var(--font-display);
+    font-weight: var(--weight-bold);
+    font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
+    line-height: var(--leading-snug);
+    color: var(--fg-primary);
+  }
 
-.h3, h3 {
-  font-family: var(--font-body);
-  font-weight: var(--weight-extrabold);
-  font-size: clamp(var(--text-md), 1.6vw, var(--text-lg));
-  line-height: var(--leading-snug);
-  color: var(--fg-primary);
-}
+  .h3, h3 {
+    font-family: var(--font-body);
+    font-weight: var(--weight-extrabold);
+    font-size: clamp(var(--text-md), 1.6vw, var(--text-lg));
+    line-height: var(--leading-snug);
+    color: var(--fg-primary);
+  }
 
-.body, p {
-  font-family: var(--font-body);
-  font-weight: var(--weight-regular);
-  font-size: var(--text-base);
-  line-height: var(--leading-relaxed);
-  color: var(--fg-primary);
-}
+  .body, p {
+    font-family: var(--font-body);
+    font-weight: var(--weight-regular);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--fg-primary);
+  }
 
-.lead {
-  font-family: var(--font-body);
-  font-weight: var(--weight-regular);
-  font-size: var(--text-md);
-  line-height: var(--leading-relaxed);
-  color: var(--fg-secondary);
-}
+  .lead {
+    font-family: var(--font-body);
+    font-weight: var(--weight-regular);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--fg-secondary);
+  }
 
-.eyebrow {
-  font-family: var(--font-body);
-  font-weight: var(--weight-bold);
-  font-size: var(--text-xs);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
-  color: var(--accent-quiet);
-}
+  .eyebrow {
+    font-family: var(--font-body);
+    font-weight: var(--weight-bold);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--accent-quiet);
+  }
 
-.tagline {
-  font-family: var(--font-body);
-  font-style: italic;
-  font-weight: var(--weight-bold);
-  color: var(--accent-quiet);
-}
+  .tagline {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-weight: var(--weight-bold);
+    color: var(--accent-quiet);
+  }
 
-.meta {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--fg-tertiary);
-}
+  .meta {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--fg-tertiary);
+  }
 
-.button-label {
-  font-family: var(--font-body);
-  font-weight: var(--weight-bold);
-  font-size: var(--text-base);
-  letter-spacing: 0;
-}
+  .button-label {
+    font-family: var(--font-body);
+    font-weight: var(--weight-bold);
+    font-size: var(--text-base);
+    letter-spacing: 0;
+  }
 
-code, .mono {
-  font-family: var(--font-mono);
-  font-size: 0.95em;
+  code, .mono {
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+  }
 }
 
 /* ── Component Utilities ───────────────────────────────────────────────── */

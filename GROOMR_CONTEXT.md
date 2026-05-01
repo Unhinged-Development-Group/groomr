@@ -52,16 +52,24 @@
 ### Core Framework
 | Tool | Version | Purpose | Why |
 |---|---|---|---|
-| **Next.js** | 15 | Full-stack React framework | App Router, Server Components, API routes, Turbopack dev speed |
+| **Next.js** | **16.2.4** | Full-stack React framework | App Router, Server Components, API routes, Turbopack dev speed |
 | **TypeScript** | Latest | Type safety across the board | Catch errors before they become 2am incidents |
-| **Tailwind CSS** | v4 | Styling | Utility-first, consistent, fast |
-| **Turbopack** | Built into Next 15 | Dev bundler | Significantly faster HMR than Webpack |
+| **Tailwind CSS** | **v4** | Styling | Utility-first, consistent, fast. v4 uses `@import "tailwindcss"` — no tailwind.config.ts required |
+| **Turbopack** | Built into Next 16 | Dev bundler | Significantly faster HMR than Webpack |
+
+> ⚠️ **Next.js 16.2.4 has breaking changes** from v13/14/15 — APIs, conventions, and file structure may differ from common training data. Read `node_modules/next/dist/docs/` before writing Next.js code. Uses `proxy.ts` (not `middleware.ts`).
 
 ### Backend / Database
 | Tool | Purpose | Notes |
 |---|---|---|
 | **Supabase** | Postgres database + realtime + storage | Project ID: `fvbxjwfxcbhjoidrmzgv`. Using service role key for all server-side ops. NOT using Supabase Auth — Clerk handles auth entirely |
-| **Clerk** | Authentication & user management | Email + Google sign-in. Webhooks sync new users into Supabase `profiles` table |
+| **Clerk** | Authentication & user management | `@clerk/nextjs` v7.2.7. Email + Google sign-in. Webhooks sync new users into Supabase `profiles` table |
+
+### Clerk API Usage in Next.js 16
+- **`currentUser()`** — use in Server Components (makes a network call to Clerk)
+- **`auth()`** — use in Server Actions (reads from JWT, no network call — preferred for server actions)
+- **`SignInButton` / `SignUpButton`** — take exactly one child element (wrap text in `<button>`)
+- **`clerkClient()`** — for backend writes to Clerk user data
 
 ### Payments
 | Tool | Purpose | Notes |
@@ -74,9 +82,9 @@
 | **Vercel** | Hosting + deployments | Auto-deploys from `main` branch on GitHub |
 | **Resend** | Transactional email | Booking confirmations, reminders, etc. Not yet implemented |
 | **Google Maps API** | Location search + groomer map display | Not yet implemented |
-| **Cloudinary** | Image hosting (logos, groomer profile photos, dog photos) | Already used in brand assets. CDN URL: `res.cloudinary.com/dr8adq7nl` |
+| **Cloudinary** | Image hosting (logos, groomer profile photos, dog photos) | CDN URL: `res.cloudinary.com/dr8adq7nl`. Configured in `next.config.ts` `remotePatterns` |
 | **PostHog** | Product analytics + feature flags | Not yet implemented |
-| **ngrok** | Local webhook tunnelling | **Important:** `localhost` tunnels (e.g. via VS Code port forwarding) are too slow for Clerk webhooks — always use ngrok instead |
+| **ngrok** | Local webhook tunnelling | **Important:** `localhost` tunnels are too slow for Clerk webhooks — always use ngrok |
 
 ### Dev Environment
 - **OS:** WSL2 + Ubuntu on Windows
@@ -93,28 +101,180 @@
 - **GitHub:** `github.com/andyyhughes/groomr`
 - **Local path:** `~/projects/groomr`
 
-### Key Files & What They Do
+### Full File Map (current state)
 
 ```
 groomr/
-├── proxy.ts                          # Clerk middleware — defines public vs protected routes
-├── .env.local                        # All secrets — never commit this
-├── lib/
-│   └── supabase.ts                   # Exports two clients:
-│                                     #   `supabase` — anon key (client-side / public reads)
-│                                     #   `supabaseAdmin` — service role key (server-side, bypasses RLS)
-└── app/
-    └── api/
-        └── webhooks/
-            └── clerk/
-                └── route.ts          # Clerk webhook handler
-                                      # Listens for `user.created` event
-                                      # Auto-creates a row in `profiles` table using supabaseAdmin
+├── proxy.ts                              # Clerk middleware — defines public vs protected routes
+├── next.config.ts                        # remotePatterns: Unsplash + Cloudinary
+├── .env.local                            # All secrets — never commit this
+│
+├── public/
+│   ├── fonts/
+│   │   ├── Fredoka-VariableFont_wdth_wght.ttf
+│   │   ├── Nunito-VariableFont_wght.ttf
+│   │   └── Nunito-Italic-VariableFont_wght.ttf
+│   └── assets/
+│       ├── horizontal-lockup-deep-slate.png   # Used in site header
+│       └── horizontal-lockup-groomr-gold.png  # Used in site footer
+│
+├── app/
+│   ├── icon.png                          # Favicon (Groomr mark, Deep Slate)
+│   ├── globals.css                       # Full design system tokens + Tailwind v4
+│   ├── layout.tsx                        # Root layout: SiteHeader, SiteFooter, ClerkProvider
+│   ├── page.tsx                          # Landing page
+│   │
+│   ├── _components/
+│   │   ├── HeaderAuthButtons.tsx         # "use client" — Clerk sign-in/sign-up buttons
+│   │   ├── SiteFooter.tsx               # Global footer (Deep Slate bg, gold logo)
+│   │   ├── FooterCTA.tsx                # "use client" — CTA in footer (modal sign-up or /search link)
+│   │   ├── SearchPillWrapper.tsx        # "use client" — search pill on landing hero
+│   │   └── BecomeGroomerCTA.tsx         # "use client" — CTA button for become-a-groomer page
+│   │
+│   ├── founder/
+│   │   └── page.tsx                     # Founder profile page (Andrew Hughes + Murphy)
+│   │
+│   ├── become-a-groomer/
+│   │   ├── page.tsx                     # ForGroomers marketing page
+│   │   └── _components/
+│   │       ├── CalculatorWidget.tsx     # "use client" — interactive earnings calculator
+│   │       └── FaqAccordion.tsx         # "use client" — FAQ expand/collapse
+│   │
+│   ├── register/
+│   │   └── groomer/
+│   │       ├── page.tsx                 # Auth-gated wrapper for registration wizard
+│   │       └── _components/
+│   │           └── GroomerWizard.tsx    # "use client" — 5-step groomer registration wizard
+│   │
+│   ├── dashboard/
+│   │   ├── page.tsx                     # Role router: checks Supabase roles → redirects
+│   │   ├── owner/
+│   │   │   ├── page.tsx                 # Server component — passes Clerk data to OwnerDashboard
+│   │   │   └── _components/
+│   │   │       └── OwnerDashboard.tsx   # "use client" — full owner dashboard with 5 modals
+│   │   └── groomer/
+│   │       └── page.tsx                 # Placeholder groomer dashboard (coming soon)
+│   │
+│   ├── actions/
+│   │   └── groomer-registration.ts      # Server action for groomer registration form submission
+│   │
+│   └── api/
+│       └── webhooks/
+│           └── clerk/
+│               └── route.ts            # Clerk webhook: user.created → creates profiles row
+│
+├── components/
+│   └── ui/
+│       ├── Button.tsx                   # PrimaryButton, SecondaryButton, GhostButton
+│       ├── Badge.tsx                    # Tone variants: sage, gold, terra, grey
+│       ├── Chip.tsx                     # Toggle chip (active = Deep Slate fill)
+│       ├── Eyebrow.tsx                  # Uppercase Sage Leaf label
+│       ├── SearchPill.tsx               # Rounded search input with embedded CTA
+│       ├── GroomerCard.tsx              # Card: photo, name, rating, distance, next slot, price
+│       ├── Modal.tsx                    # Escape-to-close, scroll-lock modal shell
+│       ├── Toast.tsx                    # Slim bottom-centre notification
+│       └── StarRow.tsx                  # Star rating display
+│
+└── lib/
+    ├── supabase.ts                      # Two clients: `supabase` (anon) + `supabaseAdmin` (service role)
+    └── utils.ts                         # Shared utility functions
 ```
 
 ---
 
-## 5. Environment Variables (`.env.local`)
+## 5. Pages & Routes
+
+### Public Routes (no auth required)
+| Route | File | Description |
+|---|---|---|
+| `/` | `app/page.tsx` | Landing page |
+| `/founder` | `app/founder/page.tsx` | Founder profile (Andrew Hughes + Murphy) |
+| `/become-a-groomer` | `app/become-a-groomer/page.tsx` | Groomer marketing page |
+| `/sign-in` | Clerk-hosted | Sign in |
+| `/sign-up` | Clerk-hosted | Sign up |
+| `/api/webhooks/clerk` | `app/api/webhooks/clerk/route.ts` | Clerk webhook receiver |
+
+### Protected Routes (auth required — enforced in `proxy.ts`)
+| Route | File | Description |
+|---|---|---|
+| `/dashboard` | `app/dashboard/page.tsx` | Role router → redirects to `/dashboard/owner` or `/dashboard/groomer` |
+| `/dashboard/owner` | `app/dashboard/owner/page.tsx` | Dog owner dashboard |
+| `/dashboard/groomer` | `app/dashboard/groomer/page.tsx` | Groomer dashboard (placeholder) |
+| `/register/groomer` | `app/register/groomer/page.tsx` | 5-step groomer registration wizard |
+
+### Post-Auth Redirects (set in `.env.local`)
+```
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
+```
+
+---
+
+## 6. Page Details
+
+### Landing Page (`app/page.tsx`)
+Full marketing page. Sections:
+1. **Hero** (2-col desktop): Fredoka H1 with gold underline highlight, `SearchPillWrapper`, popular tag pills (E8, Hackney, Bethnal Green, Mobile only), trust badges. Right col: rotated photo collage (Unsplash) + floating "Marlow's next groom" confirmation card.
+2. **How It Works** (3 cards): Search/Calendar/Heart icons with 01/02/03 Fredoka numbering.
+3. **Groomer Strip** (alabaster bg, no border): Mock booking widget + stats (2,400+, 38hrs, £0) + "Become a Groomr" CTA.
+4. **Testimonials** (3 cards): Gold Fredoka quote mark, flex-col layout, `flex-1` blockquote for aligned footer across cards.
+
+### Founder Page (`app/founder/page.tsx`)
+Personal letter-format page. Sections:
+1. **Letterhead**: Groomr mark (Cloudinary) + italic tagline
+2. **Hero**: Circular Andrew photo (Cloudinary), opening hospitality quote
+3. **2-col split**: "The Journey" (Murphy story) + "Meet Murphy" white card (Cloudinary photo, sage-leaf eyebrow, large)
+4. **From Hospitality to Hub**: Sage-leaf/20 rounded section
+5. **My Lifetime Commitment**: Signature (Cloudinary), "free of charge for life" in `text-muted-terracotta font-extrabold` (no underline)
+
+Cloudinary URLs used on this page:
+- Groomr mark: `https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png`
+- Andrew photo: `https://res.cloudinary.com/dr8adq7nl/image/upload/v1774800795/Gemini_Generated_Image_ym8cypym8cypym8c_saonpr.png`
+- Murphy photo: `https://res.cloudinary.com/dr8adq7nl/image/upload/v1774800794/Gemini_Generated_Image_riff5mriff5mriff_cwvncg.png`
+- Signature: `https://res.cloudinary.com/dr8adq7nl/image/upload/v1775260142/SignatureGroomrGold_lxgo1l.png`
+
+### Become a Groomer (`app/become-a-groomer/page.tsx`)
+Full marketing page for groomer acquisition. Sections: Hero + mock widget, Benefits (4 cards), Steps (4 col, alabaster), interactive `CalculatorWidget` (bookings/week + avg price sliders → live take-home), Groomer testimonials, `FaqAccordion` (4 questions), Final CTA → `/register/groomer`.
+
+### Groomer Registration Wizard (`app/register/groomer/`)
+5-step wizard. Protected route. Left sidebar progress rail + right panel form.
+| Step | Fields |
+|---|---|
+| 1 · About you | Full name, phone |
+| 2 · Your business | Trading name, type (Mobile/Studio/Home), postcode, radius slider |
+| 3 · Services & prices | Checkbox list (Bath & Brush, Full Groom, Hand-Strip, Puppy First, Nail Clip) + price per service |
+| 4 · Availability | Day toggles (Mon–Sun), lead time |
+| 5 · Verify & launch | Insurance/bank placeholders + "we'll email you next steps" message |
+
+On submit: server action (`app/actions/groomer-registration.ts`) adds `groomer` role to `profiles.roles`, inserts `groomer_profiles` row (`is_listed: false`, `is_verified: false`), inserts `services` and `availability` rows, redirects to `/dashboard/groomer`.
+
+### Owner Dashboard (`app/dashboard/owner/`)
+Server component (`page.tsx`) fetches Clerk user data → passes `firstName`, `fullName`, `email` as props to `OwnerDashboard.tsx`.
+
+`OwnerDashboard.tsx` is a full `"use client"` component. Layout: `grid grid-cols-1 lg:grid-cols-3 gap-10`.
+
+**Left col (`lg:col-span-2`):**
+- Welcome header + search bar
+- Upcoming Appointments card (Oct 14, "The Standard Groom", Sarah's Grooming Room) with "View Details" + "Reschedule / Cancel"
+- Previous Grooms (2 rows with Rebook buttons)
+- Favourite Groomers (2 cards with Unsplash photos)
+
+**Right col:**
+- My Dogs (sage-leaf/10, paw SVG, dog list, dashed Add Dog button)
+- My Details (name/email from Clerk props, Update Details button)
+
+**Five modals:**
+| Modal | Purpose |
+|---|---|
+| `AppointmentDetailsModal` | Groomer card, service summary with extras (Teeth Cleaning +£10, Blueberry Facial +£5), when/where, notes textarea |
+| `ManageAppointmentModal` | Reschedule (date + time inputs), cancel section with muted-terracotta deposit forfeiture warning |
+| `RebookModal` | Service recap, dog selector, date/time, payment summary (33% deposit) |
+| `AddDogModal` | Name, breed select (40 breeds), age, sex, DOB, neutered checkbox, photo upload placeholder, medical notes → pushes to dogs state |
+| `EditDogModal` | Same fields pre-filled; uses `useEffect` to sync state when `dog` prop changes |
+
+---
+
+## 7. Environment Variables (`.env.local`)
 
 > ⚠️ Never commit this file. Never paste actual values here. This is a reference for what keys are needed and what they're for.
 
@@ -129,6 +289,10 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=  # Safe to expose client-side
 CLERK_SECRET_KEY=                   # Server-side only
 CLERK_WEBHOOK_SECRET=               # Used to verify webhook signatures in route.ts
 
+# Post-auth redirects
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
+
 # (Future — not yet configured)
 STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
@@ -140,7 +304,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 ---
 
-## 6. Authentication Architecture
+## 8. Authentication Architecture
 
 ### How it works
 1. **Clerk** handles ALL authentication (email + Google OAuth)
@@ -162,7 +326,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 ---
 
-## 7. Database Schema
+## 9. Database Schema
 
 **Supabase Project ID:** `fvbxjwfxcbhjoidrmzgv`
 
@@ -225,16 +389,15 @@ updated_at            timestamptz DEFAULT now()
 > `average_rating` and `total_reviews` are denormalised — update via trigger or server function when a review is added/edited.
 
 #### `dogs`
-Owned by dog owners.
 ```sql
 id                  uuid       PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id            uuid       REFERENCES profiles(id) ON DELETE CASCADE
 name                text       NOT NULL
 breed               text
 date_of_birth       date
-size                dog_size   -- small | medium | large | giant
-is_neutered         boolean    -- nullable: true=yes, false=no, null=unknown
-coat_type           coat_type  -- short | medium | long | curly | double | wire
+size                dog_size
+is_neutered         boolean
+coat_type           coat_type
 coat_notes          text
 temperament_notes   text
 health_notes        text
@@ -245,7 +408,6 @@ updated_at          timestamptz DEFAULT now()
 ```
 
 #### `services`
-Services offered by a groomer (e.g. "Full Groom", "Bath & Dry").
 ```sql
 id                uuid       PRIMARY KEY DEFAULT gen_random_uuid()
 groomer_profile_id uuid      REFERENCES groomer_profiles(id) ON DELETE CASCADE
@@ -254,7 +416,7 @@ description       text
 duration_minutes  smallint
 price_pence       integer    NOT NULL   -- stored in pence to avoid float issues
 deposit_pence     integer
-applicable_sizes  dog_size[]            -- which dog sizes this service applies to
+applicable_sizes  dog_size[]
 is_active         boolean    DEFAULT true
 sort_order        smallint
 created_at        timestamptz DEFAULT now()
@@ -263,7 +425,6 @@ updated_at        timestamptz DEFAULT now()
 > Prices stored in **pence** — always divide by 100 for display. Pass as integer to Stripe.
 
 #### `availability`
-Recurring weekly availability windows for a groomer.
 ```sql
 id                 uuid       PRIMARY KEY DEFAULT gen_random_uuid()
 groomer_profile_id uuid       REFERENCES groomer_profiles(id) ON DELETE CASCADE
@@ -276,7 +437,6 @@ updated_at         timestamptz DEFAULT now()
 ```
 
 #### `availability_overrides`
-One-off exceptions to regular availability (e.g. holidays, sick days, special hours).
 ```sql
 id                 uuid       PRIMARY KEY DEFAULT gen_random_uuid()
 groomer_profile_id uuid       REFERENCES groomer_profiles(id) ON DELETE CASCADE
@@ -288,17 +448,15 @@ reason             text
 created_at         timestamptz DEFAULT now()
 updated_at         timestamptz DEFAULT now()
 ```
-> Note: column is `is_available` (not `is_unavailable`) — `false` means the groomer is blocked that day.
 
 #### `appointments`
-The core transactional table.
 ```sql
 id                        uuid               PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id                  uuid               REFERENCES profiles(id)
 groomer_profile_id        uuid               REFERENCES groomer_profiles(id)
 dog_id                    uuid               REFERENCES dogs(id)
 service_id                uuid               REFERENCES services(id)
-service_snapshot_name     text               -- copied at booking time in case service changes
+service_snapshot_name     text
 service_snapshot_duration smallint
 service_snapshot_price    integer
 scheduled_at              timestamptz        NOT NULL
@@ -310,10 +468,8 @@ owner_notes               text
 created_at                timestamptz DEFAULT now()
 updated_at                timestamptz DEFAULT now()
 ```
-> Service snapshot columns freeze the service details at booking time — groomers can later edit their services without changing historical appointment records.
 
 #### `payments`
-Payment records, linked to Stripe. No direct `owner_id`/`groomer_id` — resolved via `appointment_id`.
 ```sql
 id                          uuid          PRIMARY KEY DEFAULT gen_random_uuid()
 appointment_id              uuid          REFERENCES appointments(id)
@@ -325,7 +481,7 @@ full_payment_intent_id      text
 full_amount_pence           integer
 full_payment_paid_at        timestamptz
 platform_fee_pence          integer
-platform_fee_pct            numeric       -- e.g. 0.08 for 8%
+platform_fee_pct            numeric
 groomer_payout_amount_pence integer
 stripe_transfer_id          text
 payout_status               payout_status DEFAULT 'pending'
@@ -337,13 +493,11 @@ refunded_at                 timestamptz
 currency                    char(3)       DEFAULT 'gbp'
 created_at                  timestamptz   DEFAULT now()
 ```
-> INSERT/UPDATE handled exclusively by `supabaseAdmin` via Stripe webhook server logic — no client-side writes.
 
 #### `reviews`
-Left by dog owners after a completed appointment.
 ```sql
 id                 uuid       PRIMARY KEY DEFAULT gen_random_uuid()
-appointment_id     uuid       UNIQUE REFERENCES appointments(id)   -- one review per appointment
+appointment_id     uuid       UNIQUE REFERENCES appointments(id)
 owner_id           uuid       REFERENCES profiles(id)
 groomer_profile_id uuid       REFERENCES groomer_profiles(id)
 rating             smallint   NOT NULL CHECK (rating >= 1 AND rating <= 5)
@@ -356,27 +510,25 @@ updated_at         timestamptz DEFAULT now()
 ```
 
 #### `messages`
-In-app messaging scoped to an appointment thread. No separate `recipient_id` — both participants are derived from the appointment.
 ```sql
 id             uuid        PRIMARY KEY DEFAULT gen_random_uuid()
 appointment_id uuid        REFERENCES appointments(id)
 sender_id      uuid        REFERENCES profiles(id)
 body           text        NOT NULL
-is_system      boolean     DEFAULT false   -- true for automated status messages
-read_at        timestamptz                 -- null = unread
+is_system      boolean     DEFAULT false
+read_at        timestamptz
 created_at     timestamptz DEFAULT now()
 updated_at     timestamptz DEFAULT now()
 ```
-> Message visibility is determined by appointment participation (owner or groomer), not a recipient column.
 
 ---
 
-## 8. Row Level Security (RLS)
+## 10. Row Level Security (RLS)
 
-RLS is **enabled on all 10 tables**. Policies are live.
+RLS is **enabled on all 10 tables**.
 
 ### The Core Problem: Clerk + RLS
-Supabase's built-in RLS functions (like `auth.uid()`) reference Supabase Auth users. Since we're using Clerk, we use a custom helper instead.
+Supabase's `auth.uid()` references Supabase Auth users. Since we're using Clerk, we use a custom helper instead.
 
 ### Helper Function
 ```sql
@@ -385,10 +537,9 @@ RETURNS text LANGUAGE sql STABLE AS $$
   SELECT nullif(current_setting('request.jwt.claims', true)::json->>'sub', '')
 $$;
 ```
-The `sub` claim in a Clerk JWT is the Clerk user ID (e.g. `user_2abc123`). All RLS policies use this function to identify the current user.
+The `sub` claim in a Clerk JWT is the Clerk user ID. All RLS policies use this function.
 
 ### Policy Summary
-
 | Table | SELECT | INSERT | UPDATE | DELETE |
 |---|---|---|---|---|
 | `profiles` | Own row + admin | — (webhook via supabaseAdmin) | Own row | — |
@@ -402,46 +553,52 @@ The `sub` claim in a Clerk JWT is the Clerk user ID (e.g. `user_2abc123`). All R
 | `reviews` | Public (visible=true) + own + admin | Owner | Owner (body) + groomer (reply) | — |
 | `messages` | Appointment participants | Participant + sender | Appointment participants | — |
 
-Every table also has an **`admin_all`** policy granting full access (`FOR ALL`) to any user where `is_admin = true`.
+Every table also has an **`admin_all`** policy (`FOR ALL`) for any user where `is_admin = true`.
 
 ### Important: Use Anon Client for Admin UI
-For the admin dashboard, use the **anon-key client** (not `supabaseAdmin`) — this ensures the `admin_all` policy fires and admin actions are attributable. `supabaseAdmin` bypasses everything silently.
-
-### GRANT Permissions
-`GRANT` permissions have been added for `service_role` on the public schema. This allows `supabaseAdmin` to bypass RLS and operate on any table — required for the webhook handler and Stripe webhook server logic.
+For the admin dashboard, use the **anon-key client** (not `supabaseAdmin`) — this ensures the `admin_all` policy fires. `supabaseAdmin` bypasses everything silently.
 
 ---
 
-## 9. Brand Guidelines
+## 11. Brand Guidelines
 
 ### Colours
-| Name | Hex | Usage |
-|---|---|---|
-| **Groomr Gold** | `#eae45c` | CTAs, buttons, accents, highlights. **Never for text.** |
-| **Deep Slate** | `#2c3e50` | Headings (H1–H3), body text, footer background |
-| **Sage Leaf** | `#88a096` | Alternating section backgrounds, secondary text, structure |
-| **Pebble Grey** | `#95a5a6` | Borders, outlines, subtle alternating backgrounds |
-| **Alabaster Cream** | `#f9f8f4` | Primary page background / canvas |
-| **Muted Terracotta** | `#c87964` | Error states, warnings, destructive actions. Don't layer on Sage Leaf. |
+| Name | Hex | Tailwind class | Usage |
+|---|---|---|---|
+| **Groomr Gold** | `#eae45c` | `groomr-gold` | CTAs, buttons, accents, highlights. **Never for text.** |
+| **Deep Slate** | `#2c3e50` | `deep-slate` | Headings, body text, footer background |
+| **Sage Leaf** | `#88a096` | `sage-leaf` | Section accents, secondary text, eyebrows |
+| **Pebble Grey** | `#95a5a6` | `pebble-grey` | Borders, subtle backgrounds, meta text |
+| **Alabaster Cream** | `#f9f8f4` | `alabaster-cream` | Primary page background / canvas |
+| **Muted Terracotta** | `#c87964` | `muted-terracotta` | Errors, warnings, destructive actions |
 
 ### Typography
 | Font | Usage |
 |---|---|
-| **Fredoka Bold** | Hero headers, campaign headlines, big brand moments. Not for body or UI copy. |
-| **Nunito** | Everything else — body text, UI labels, nav, buttons. The workhorse. |
+| **Fredoka** (variable, wdth+wght) | Hero headers, section headlines, big brand numbers. NOT for body text. |
+| **Nunito** (variable, wght + italic) | Everything else — body, UI labels, nav, buttons |
 
-### Button Behaviour
-- Primary button: Groomr Gold background → fades to Muted Terracotta on hover over 0.3s
-- Focus state: crisp 3px solid Groomr Gold outline ring
-- Card hover: `translateY(-4px)` with soft Pebble Grey shadow
+Fonts are **local variable TTFs** in `public/fonts/`. Declared via `@font-face` in `globals.css`. Do NOT use Google Fonts.
 
-### Logo Assets (Cloudinary CDN)
+### Logo & Brand Assets
+
+**Local (in `public/assets/`):**
+| File | Used in |
+|---|---|
+| `horizontal-lockup-deep-slate.png` | Site header |
+| `horizontal-lockup-groomr-gold.png` | Site footer |
+
+**Cloudinary (`res.cloudinary.com/dr8adq7nl`):**
 | Asset | URL |
 |---|---|
-| Standalone Mark (Deep Slate) | `https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png` |
-| Horizontal Lockup (Deep Slate) | `https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png` |
-| Wordmark only (Deep Slate) | `https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753299/groomr_-_DEEP_SLATE_zzlqvi.png` |
-| Horizontal Lockup (Gold) | `https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png` |
+| Groomr mark (Deep Slate) | `.../v1774753273/DEEP_SLATE_auun2o.png` |
+| Horizontal Lockup (Deep Slate) | `.../v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png` |
+| Horizontal Lockup (Gold) | `.../v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png` |
+| Andrew Hughes photo | `.../v1774800795/Gemini_Generated_Image_ym8cypym8cypym8c_saonpr.png` |
+| Murphy photo | `.../v1774800794/Gemini_Generated_Image_riff5mriff5mriff_cwvncg.png` |
+| Andrew's signature (Gold) | `.../v1775260142/SignatureGroomrGold_lxgo1l.png` |
+
+**Favicon:** `app/icon.png` (Groomr mark, Deep Slate). The `favicon.ico` was deleted — if it exists it takes precedence over `icon.png`. Explicit `icons` metadata in `app/layout.tsx`.
 
 ### Voice & Tone
 - Warm, direct, community-first
@@ -449,112 +606,184 @@ For the admin dashboard, use the **anon-key client** (not `supabaseAdmin`) — t
 - Never corporate or sterile
 - Dogs are family members, not pets
 
+### Button Behaviour
+- Primary: Groomr Gold bg → fades to Muted Terracotta on hover (0.3s)
+- Focus: 3px solid Groomr Gold outline ring
+- Card hover: `translateY(-4px)` with soft shadow
+
 ---
 
-## 10. Tailwind Config (Reference)
+## 12. Styling Architecture (Tailwind v4 + CSS Tokens)
 
-The brand colours are registered as Tailwind custom colours in `tailwind.config.ts`:
+### Setup
+Tailwind v4 is imported with:
+```css
+@import "tailwindcss";
+```
+There is **no `tailwind.config.ts`**. Brand tokens and font families are registered via `@theme inline` in `app/globals.css`.
 
-```js
-colors: {
-  'groomr-gold':      '#eae45c',
-  'deep-slate':       '#2c3e50',
-  'sage-leaf':        '#88a096',
-  'pebble-grey':      '#95a5a6',
-  'alabaster-cream':  '#f9f8f4',
-  'muted-terracotta': '#c87964',
-},
-fontFamily: {
-  'fredoka': ['Fredoka', 'sans-serif'],
-  'nunito':  ['Nunito', 'sans-serif'],
+### `globals.css` Structure
+```css
+@import "tailwindcss";
+
+@theme inline {
+  --color-groomr-gold: #eae45c;
+  --color-deep-slate: #2c3e50;
+  --color-sage-leaf: #88a096;
+  --color-pebble-grey: #95a5a6;
+  --color-alabaster-cream: #f9f8f4;
+  --color-muted-terracotta: #c87964;
+  --font-fredoka: "Fredoka", sans-serif;
+  --font-nunito: "Nunito", sans-serif;
+}
+
+@font-face { /* Fredoka variable */ }
+@font-face { /* Nunito variable */ }
+@font-face { /* Nunito Italic variable */ }
+
+@layer base {
+  html, body { background-color: ...; color: ...; font-family: Nunito; }
+  h1, h2, h3 { font-family: Fredoka; color: var(--deep-slate); }
+  /* All typography utilities: .eyebrow, .tagline, .lead, .meta, .display */
+}
+
+@layer utilities {
+  /* btn-primary, btn-secondary, btn-gold-on-dark */
+  /* card-lift, focus-ring, shadow-lift, shadow-modal, shadow-subtle */
+  /* page-fade, field, modal-backdrop */
 }
 ```
 
+### ⚠️ Critical CSS Cascade Rule
+**All base/typography styles must be in `@layer base`**, not unlayered. If `h1`/`h2`/`p`/`body` have `color:` set as unlayered CSS, it beats Tailwind's `@layer utilities` in the cascade — meaning `text-groomr-gold`, `text-sage-leaf`, etc. silently have no effect on those elements. This was a resolved bug; keep everything in `@layer base`.
+
 ---
 
-## 11. Known Issues & Gotchas
+## 13. Known Issues & Gotchas
 
 | Issue | Detail | Resolution |
 |---|---|---|
 | `localhost` tunnel too slow for webhooks | VS Code port forwarding / localhost tunnels have too much latency for Clerk webhook delivery | Always use **ngrok** (`ngrok http 3000`) for local webhook testing |
 | No FK to `auth.users` | Supabase expects FKs to `auth.users` by default. We removed this constraint. | Intentional — Clerk is auth. `profiles.clerk_id` is the user identifier. |
-| `auth.uid()` doesn't work in RLS | `auth.uid()` references Supabase Auth, which we're not using | Use the `get_clerk_user_id()` helper function instead |
+| `auth.uid()` doesn't work in RLS | References Supabase Auth, which we're not using | Use the `get_clerk_user_id()` helper function instead |
 | Price as integer | `price_pence` and `amount_pence` stored as integers | Always divide by 100 for display. Pass as integer to Stripe. |
 | `supabaseAdmin` bypasses RLS | The service role client skips all RLS policies | Only use in server-side code (`app/api/`, server components, route handlers). Never import in client components. |
 | Admin dashboard must use anon client | `supabaseAdmin` bypasses RLS silently — admin policies won't fire | Use the anon-key `supabase` client for admin UI so `admin_all` policies are enforced |
+| CSS cascade layers | Unlayered CSS always beats `@layer utilities` | Wrap ALL base/typography rules in `@layer base` in `globals.css` |
+| Favicon priority | `app/favicon.ico` takes precedence over `app/icon.png` | Delete `favicon.ico`; add explicit `icons` metadata to `layout.tsx` |
+| `EditDogModal` state sync | Calling `setState` during render is an anti-pattern | Use `useEffect` to sync state when the `dog` prop changes |
+| Clerk `SignInButton` / `SignUpButton` | These take exactly one child | Wrap the label in a `<button>` element as the single child |
+| Cloudinary images in Next.js | `next/image` requires allowed domains | `res.cloudinary.com` is in `remotePatterns` in `next.config.ts` |
+| Next.js 16 middleware file | Uses `proxy.ts` not `middleware.ts` | All route protection logic lives in `proxy.ts` |
 
 ---
 
-## 12. Build Roadmap
+## 14. Build Roadmap
 
 ### ✅ Done
+
+**Infrastructure & Foundation**
 - WSL2 + Ubuntu + VS Code + Node.js setup
-- Next.js 15 project (TypeScript, Tailwind, App Router, Turbopack)
+- Next.js 16.2.4 project (TypeScript, Tailwind v4, App Router, Turbopack)
 - Dev server on `localhost:3000`
 - GitHub repo: `github.com/andyyhughes/groomr`
 - `.env.local` configured (Supabase, Clerk, service role)
-- Supabase project created
-- Full 10-table database schema built
-- `user_role` enum (`owner`, `groomer`, `admin`)
-- `profiles` table with `clerk_id`, `roles`, `is_admin`
-- FK to `auth.users` removed (Clerk is auth)
-- `GRANT` permissions for `service_role` on public schema
-- RLS enabled on all tables
-- Clerk auth (email + Google)
-- `proxy.ts` middleware with public routes
+- Supabase project created, full 10-table database schema
+- RLS enabled on all tables with Clerk-compatible policies
+- Clerk auth (email + Google OAuth)
+- `proxy.ts` middleware with public/protected route config
 - Clerk webhook → auto-creates `profiles` row on `user.created`
 - `supabaseAdmin` client (service role, server-side only)
-- Andrew (`andrew@groomr.uk`) set as admin
-- RLS policies written for all 10 tables (role-based + `admin_all` on every table)
+- Andrew set as admin in Supabase
 
-### 🔜 Next Up
-1. **User onboarding flow** — role selection after sign-up (owner vs groomer)
-3. **Groomer profile creation** — `groomer_profiles` form, Cloudinary upload
-4. **Search page** — location-based groomer discovery (Google Maps)
-5. **Booking flow** — service selection → availability calendar → checkout
-6. **Stripe Connect** — groomer onboarding, payment processing, commission split
+**Design System**
+- Local variable fonts in `public/fonts/` (Fredoka, Nunito, Nunito Italic)
+- Full CSS token set in `globals.css` via `@theme inline`
+- All base styles wrapped in `@layer base` (cascade fix)
+- Utility classes: `btn-primary`, `btn-secondary`, `btn-gold-on-dark`, `card-lift`, `focus-ring`, `page-fade`, `field`, `modal-backdrop`, shadow utilities
+- UI component library: `Button`, `Badge`, `Chip`, `Eyebrow`, `SearchPill`, `GroomerCard`, `Modal`, `Toast`, `StarRow`
 
-### 👤 Owner Dashboard
-- Upcoming & past appointments
-- Dog profiles (add/edit/delete dogs)
-- Favourite groomers
-- Review history
-- **Raise a dispute / issue** — owners can flag problems with appointments or groomers to the Groomr team (stored in `disputes` table, visible to admins)
-- Account settings
+**Global Layout**
+- Sticky branded header with logo image (horizontal lockup, Deep Slate)
+- `HeaderAuthButtons`: signed-out shows Sign In / Sign Up; signed-in shows avatar + My Dashboard + Log Out
+- Global `SiteFooter`: Deep Slate bg, 8px Groomr Gold top border, gold logo, nav links (Our Founder, For Groomers, Privacy, Terms, Support), copyright
+- `FooterCTA`: signed-out → Clerk modal sign-up; signed-in → /search link
+- `app/icon.png` favicon (Groomr mark)
 
-### ✂️ Groomer Dashboard
+**Public Pages**
+- Landing page (`/`) — hero, how it works, groomer strip, testimonials
+- Founder page (`/founder`) — Andrew Hughes + Murphy, Cloudinary assets
+- Become a Groomer (`/become-a-groomer`) — full marketing page with interactive calculator + FAQ accordion
+
+**Authenticated Pages**
+- Dashboard role router (`/dashboard`) — checks Supabase `roles` → redirects
+- Owner dashboard (`/dashboard/owner`) — upcoming/past appointments, dog profiles (add/edit), favourite groomers, 5 modals
+- Groomer dashboard (`/dashboard/groomer`) — placeholder
+- Groomer registration wizard (`/register/groomer`) — 5-step wizard + server action
+
+### 🔜 Next Up (Phase 2)
+
+1. **Search page** (`/search`) — location-based groomer discovery
+   - Postcode/town search → geocode via Google Maps API
+   - Groomer cards grid + map panel (Google Maps embed)
+   - Filters: mobile/studio, price range, day availability, dog size
+   - Results from `groomer_profiles` WHERE `is_listed = true` ordered by proximity
+
+2. **Public groomer profiles** (`/groomers/[slug]`)
+   - Business name, bio, photos, services + prices
+   - Availability calendar
+   - Reviews section
+   - "Book Now" CTA → booking flow
+
+3. **Booking flow**
+   - Service selection → date/time picker → dog selection → checkout
+   - 33% deposit via Stripe (Stripe Connect not yet set up — Phase 3)
+
+4. **Groomer dashboard** (full build)
+   - Schedule / calendar view
+   - Booking management
+   - Service management
+   - Availability settings
+   - Earnings overview
+
+5. **Stripe Connect**
+   - Groomer onboarding as Connected Accounts
+   - Commission split at checkout (`application_fee_amount`)
+   - Payout tracking
+
+### 👤 Owner Dashboard — Future Enhancements
+- Connect to live Supabase data (currently static/mock)
+- Real dog profile CRUD (save to `dogs` table)
+- Real appointment data from `appointments` table
+- Review submission after completed appointment
+- In-app messaging
+- Account settings (update name/phone via Clerk)
+
+### ✂️ Groomer Dashboard (Full Build)
 - Schedule / calendar view
 - Booking management (confirm, cancel, mark complete)
-- Earnings overview + payout history (Stripe Connect)
-- Service management (add/edit/delete services)
-- Availability settings (weekly schedule + overrides)
-- Profile editing
-- Review management (read-only)
-- Account settings
+- Earnings overview + payout history (Stripe)
+- Service management (add/edit/delete)
+- Availability settings (weekly + overrides)
+- Profile editing (bio, photos, postcode)
+- Review management (read, reply)
 
-### 🛠️ Admin / Groomr Dashboard
-- Full overview of all users (owners + groomers)
-- All appointments across the platform
-- All payments + commission tracking
-- Groomer verification management (approve/reject/flag groomers)
-- **Disputes queue** — view and manage all issues raised by owners (status: open / in review / resolved)
-- Review moderation (hide/show reviews)
-- Platform analytics (PostHog integration)
-- Manual admin actions (refunds, account suspension, etc.)
+### 🛠️ Admin Dashboard
+- All users, appointments, payments
+- Groomer verification queue
+- Disputes queue
+- Review moderation
+- Platform analytics (PostHog)
 
 ### 📬 Supporting Features
-- **Messaging** — in-app owner ↔ groomer chat
-- **Resend** — transactional emails (booking confirmations, reminders, cancellations, dispute updates)
+- **Messaging** — in-app owner ↔ groomer chat (scoped to appointment thread)
+- **Resend** — transactional emails (confirmations, reminders, cancellations)
 - **PostHog** — analytics + feature flags
+- **`disputes` table** — needs adding to schema: `id`, `owner_id`, `groomer_id`, `appointment_id`, `subject`, `description`, `status` (open/in_review/resolved), `admin_notes`, `created_at`, `updated_at`
 
 ---
 
-> **Note on `disputes` table:** Needs to be added to the schema. Suggested columns:
-> `id`, `owner_id`, `groomer_id`, `appointment_id`, `subject`, `description`, `status` (open/in_review/resolved), `admin_notes`, `created_at`, `updated_at`
-
----
-
-## 13. Useful Commands
+## 15. Useful Commands
 
 ```bash
 # Start dev server
@@ -569,4 +798,4 @@ git add . && git commit -m "your message" && git push origin main
 
 ---
 
-*Last updated: 27 April 2026 — update this doc as decisions are made.*
+*Last updated: 30 April 2026 — update this doc as decisions are made.*

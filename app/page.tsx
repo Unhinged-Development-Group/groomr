@@ -9,12 +9,12 @@ const HOW_IT_WORKS = [
   {
     Icon: Search,
     title: "Find your match",
-    body: "Search by postcode. See real availability, prices, and reviews from neighbours.",
+    body: "Search by location. See real availability, prices, and reviews from neighbours.",
   },
   {
     Icon: Calendar,
     title: "Book in seconds",
-    body: "No back-and-forth texts. Pick a slot, pay, done.",
+    body: "No back-and-forth DM's. Pick a slot, pay deposit, done.",
   },
   {
     Icon: Heart,
@@ -47,7 +47,7 @@ export default function LandingPage() {
     <div className="page-fade">
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        <div className="w-full px-6 lg:px-12 xl:px-20 pt-16 pb-20 md:pt-24 md:pb-32 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="w-full px-6 lg:px-12 xl:px-20 pt-10 pb-20 md:pt-16 md:pb-32 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-7 max-w-xl">
             <Eyebrow>Local · Independent · Loved</Eyebrow>
 
@@ -107,7 +107,7 @@ export default function LandingPage() {
             </div>
             <div className="absolute bottom-12 left-0 w-64 h-72 rounded-[24px] overflow-hidden shadow-lift -rotate-[4deg]">
               <Image
-                src="https://images.unsplash.com/photo-1591768793355-74d04bb6608f?auto=format&fit=crop&w=600&q=70"
+                src="https://images.unsplash.com/photo-1611173622933-91942d394b04?auto=format&fit=crop&w=600&q=70"
                 alt="Happy groomed dog"
                 fill
                 className="object-cover"
@@ -167,15 +167,15 @@ export default function LandingPage() {
       </section>
 
       {/* ── GROOMER STRIP ────────────────────────────────────────────── */}
-      <section className="bg-alabaster-cream border-y border-pebble-grey/15 py-20 md:py-24">
+      <section className="bg-alabaster-cream py-20 md:py-24">
         <div className="w-full px-6 lg:px-12 xl:px-20 grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-5">
             <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-              Spend less time admin-ing. More time grooming.
+              Are you a dog groomer?
             </h2>
             <p className="text-pebble-grey text-lg leading-relaxed font-nunito">
               Online booking, automatic reminders, payments, and a profile that shows up where dog
-              owners actually look. Free to list. No commission on existing clients — ever.
+              owners actually look. Free to list.
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <Link
@@ -254,12 +254,12 @@ export default function LandingPage() {
           {TESTIMONIALS.map((t, i) => (
             <figure
               key={i}
-              className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 card-lift relative"
+              className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 card-lift relative flex flex-col"
             >
               <div className="absolute -top-4 left-7 text-6xl font-fredoka text-groomr-gold leading-none">
                 &ldquo;
               </div>
-              <blockquote className="text-deep-slate font-nunito text-lg leading-relaxed pt-4">
+              <blockquote className="text-deep-slate font-nunito text-lg leading-relaxed pt-4 flex-1">
                 {t.text}
               </blockquote>
               <figcaption className="mt-5 pt-5 border-t border-pebble-grey/10 flex items-center gap-3">

@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { StarIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
 
 interface StarRowProps {
@@ -14,7 +14,7 @@ export function StarRow({ rating, count, size = 14, className }: StarRowProps) {
       <div className="flex items-center gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => (
           <span key={i} style={{ opacity: i < Math.round(rating) ? 1 : 0.25 }}>
-            <Star size={size} className="fill-groomr-gold stroke-groomr-gold" />
+            <StarIcon size={size} />
           </span>
         ))}
       </div>

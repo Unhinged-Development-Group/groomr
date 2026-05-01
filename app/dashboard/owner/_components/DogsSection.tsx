@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle } from "lucide-react";
+import { PlusIcon } from "@/components/ui/GroomrIcons";
 import { DogCard } from "./DogCard";
 import { AddDogModal } from "./AddDogModal";
 import { deleteDog } from "@/app/actions/dogs";
@@ -53,7 +53,7 @@ export function DogsSection({ initialDogs }: DogsSectionProps) {
           onClick={openAdd}
           className="inline-flex items-center gap-2 text-sm font-nunito font-bold text-sage-leaf hover:text-deep-slate transition-colors focus-ring rounded px-2 py-1"
         >
-          <PlusCircle size={18} />
+          <PlusIcon size={18} />
           Add dog
         </button>
       </div>

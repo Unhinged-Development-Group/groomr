@@ -2,7 +2,8 @@
 
 import { useState, useRef, useTransition } from "react";
 import Image from "next/image";
-import { Camera, ChevronDown, ChevronUp } from "lucide-react";
+import { Camera } from "lucide-react";
+import { ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
 import { addDog, updateDog, getCloudinarySignature } from "@/app/actions/dogs";
@@ -267,7 +268,7 @@ export function AddDogModal({ open, onClose, onSaved, editing }: AddDogModalProp
           onClick={() => setShowNotes(v => !v)}
           className="flex items-center gap-1.5 text-sm font-nunito font-semibold text-pebble-grey hover:text-deep-slate transition-colors focus-ring rounded"
         >
-          {showNotes ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          <ChevronDownIcon size={16} className={cn("transition-transform", showNotes && "rotate-180")} />
           {showNotes ? "Hide" : "Add"} notes
         </button>
 

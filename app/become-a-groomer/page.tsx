@@ -1,4 +1,4 @@
-import { Calendar, Scissors, Shield, Heart } from "lucide-react";
+import { CalendarIcon, ScissorsIcon, ShieldIcon, FavoritesIcon } from "@/components/ui/GroomrIcons";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { CalculatorWidget } from "./_components/CalculatorWidget";
@@ -14,22 +14,22 @@ export const metadata: Metadata = {
 
 const BENEFITS = [
   {
-    Icon: Calendar,
+    Icon: CalendarIcon,
     title: "Real-time online booking",
     body: "Show your live availability. Stop the back-and-forth texts.",
   },
   {
-    Icon: Scissors,
+    Icon: ScissorsIcon,
     title: "Built for the way you work",
     body: "Mobile, studio, or home — set your area, services, and prices in minutes.",
   },
   {
-    Icon: Shield,
+    Icon: ShieldIcon,
     title: "You own your clients",
     body: "Take your regulars with you. We never charge commission on rebookings.",
   },
   {
-    Icon: Heart,
+    Icon: FavoritesIcon,
     title: "Reviews that bring referrals",
     body: "Verified reviews from real bookings — the kind word-of-mouth used to do alone.",
   },

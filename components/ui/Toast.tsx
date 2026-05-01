@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { CheckIcon } from "@/components/ui/GroomrIcons";
 import { useEffect } from "react";
 
 interface ToastProps {
@@ -20,7 +20,7 @@ export function Toast({ message, onDismiss }: ToastProps) {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[120] toast-in">
       <div className="bg-deep-slate text-alabaster-cream font-bold px-5 py-3 rounded-full shadow-modal flex items-center gap-2 border-t-2 border-groomr-gold">
-        <Check size={16} />
+        <CheckIcon size={16} />
         <span className="text-sm">{message}</span>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { SearchIcon } from "@/components/ui/GroomrIcons";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,7 @@ export function SearchPill({
     >
       <div className="bg-white rounded-full p-2 flex items-center shadow-subtle border border-pebble-grey/20 focus-within:ring-2 focus-within:ring-groomr-gold transition-shadow">
         <div className="pl-4 text-pebble-grey">
-          <Search size={iconSize} />
+          <SearchIcon size={iconSize} />
         </div>
         <input
           type="text"

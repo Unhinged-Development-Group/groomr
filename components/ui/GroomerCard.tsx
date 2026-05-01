@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { Heart, MapPin, Star } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { HeartIcon, StarIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
 
 interface Groomer {
@@ -36,12 +37,10 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
         aria-label={saved ? "Remove from favourites" : "Save to favourites"}
         className="absolute top-3 right-3 z-10 bg-white/95 hover:bg-white rounded-full p-2 shadow-subtle transition-colors focus-ring"
       >
-        <Heart
+        <HeartIcon
           size={18}
-          className={cn(
-            "transition-colors",
-            saved ? "fill-muted-terracotta stroke-muted-terracotta" : "stroke-pebble-grey"
-          )}
+          filled={saved}
+          className={cn("transition-colors", saved ? "text-muted-terracotta" : "text-pebble-grey")}
         />
       </button>
 
@@ -64,7 +63,7 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
               )}
             </div>
             <div className="flex items-center gap-1 bg-groomr-gold/20 px-2 py-1 rounded-full shrink-0">
-              <Star size={14} className="fill-deep-slate stroke-deep-slate" />
+              <StarIcon size={14} />
               <span className="text-xs font-bold text-deep-slate">{groomer.rating}</span>
             </div>
           </div>

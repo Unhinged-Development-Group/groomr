@@ -1,23 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Search, Calendar, Heart, Shield } from "lucide-react";
+import { SearchIcon, CalendarIcon, FavoritesIcon, ShieldIcon } from "@/components/ui/GroomrIcons";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { SearchPillWrapper } from "./_components/SearchPillWrapper";
 
 const HOW_IT_WORKS = [
   {
-    Icon: Search,
+    Icon: SearchIcon,
     title: "Find your match",
     body: "Search by location. See real availability, prices, and reviews from neighbours.",
   },
   {
-    Icon: Calendar,
+    Icon: CalendarIcon,
     title: "Book in seconds",
     body: "No back-and-forth DM's. Pick a slot, pay deposit, done.",
   },
   {
-    Icon: Heart,
+    Icon: FavoritesIcon,
     title: "Build a routine",
     body: "Rebook your favourite groomer in two taps.",
     tagline: '"Your dog deserves a regular."',
@@ -84,11 +84,11 @@ export default function LandingPage() {
 
             <div className="flex items-center gap-6 pt-3 text-sm font-bold text-pebble-grey">
               <div className="flex items-center gap-2">
-                <Shield size={20} />
+                <ShieldIcon size={20} />
                 Verified groomers
               </div>
               <div className="flex items-center gap-2">
-                <Calendar size={20} />
+                <CalendarIcon size={20} />
                 Real-time booking
               </div>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { CloseIcon } from "@/components/ui/GroomrIcons";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +53,7 @@ export function Modal({ open, onClose, children, size = "md" }: ModalProps) {
           aria-label="Close"
           className="absolute top-5 right-5 text-pebble-grey hover:text-muted-terracotta transition-colors focus-ring rounded-full p-2 bg-white shadow-subtle border border-pebble-grey/10"
         >
-          <X size={18} />
+          <CloseIcon size={18} />
         </button>
         {children}
       </div>

@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Search, Calendar } from "lucide-react";
+import { SearchIcon, CalendarIcon } from "@/components/ui/GroomrIcons";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { DogsSection } from "./_components/DogsSection";
@@ -80,7 +80,7 @@ export default async function OwnerDashboardPage() {
       <div className="grid md:grid-cols-2 gap-5 mb-10">
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center">
-            <Calendar size={24} className="text-deep-slate" />
+            <CalendarIcon size={24} className="text-deep-slate" />
           </div>
           <h3 className="font-fredoka text-xl text-deep-slate">Upcoming bookings</h3>
           <p className="text-pebble-grey text-sm font-nunito">
@@ -92,7 +92,7 @@ export default async function OwnerDashboardPage() {
 
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center">
-            <Search size={24} className="text-deep-slate" />
+            <SearchIcon size={24} className="text-deep-slate" />
           </div>
           <h3 className="font-fredoka text-xl text-deep-slate">Find a groomer</h3>
           <p className="text-pebble-grey text-sm font-nunito">

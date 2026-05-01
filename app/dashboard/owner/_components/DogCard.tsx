@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Trash2 } from "lucide-react";
+import { PencilIcon, TrashIcon } from "@/components/ui/GroomrIcons";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import type { Dog } from "@/app/actions/dogs";
@@ -22,7 +22,7 @@ interface DogCardProps {
 export function DogCard({ dog, onEdit, onDelete }: DogCardProps) {
   return (
     <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 flex gap-4 items-start group">
-      <div className="relative w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-alabaster-cream border border-pebble-grey/15">
+      <div className="relative w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-alabaster-cream border border-pebble-grey/15 group-hover:ring-2 group-hover:ring-groomr-gold/30 transition-all">
         {dog.profile_image_url ? (
           <Image
             src={dog.profile_image_url}
@@ -58,14 +58,14 @@ export function DogCard({ dog, onEdit, onDelete }: DogCardProps) {
           aria-label={`Edit ${dog.name}`}
           className="p-2 rounded-xl text-pebble-grey hover:text-deep-slate hover:bg-alabaster-cream transition-colors focus-ring"
         >
-          <Pencil size={16} />
+          <PencilIcon size={16} />
         </button>
         <button
           onClick={() => onDelete(dog.id)}
           aria-label={`Delete ${dog.name}`}
           className="p-2 rounded-xl text-pebble-grey hover:text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors focus-ring"
         >
-          <Trash2 size={16} />
+          <TrashIcon size={16} />
         </button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
 
 interface Faq {
@@ -28,7 +28,7 @@ export function FaqAccordion({ faqs }: FaqAccordionProps) {
             className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 focus-ring"
           >
             <span className="font-fredoka text-lg text-deep-slate">{faq.q}</span>
-            <ChevronDown
+            <ChevronDownIcon
               size={18}
               className={cn(
                 "text-pebble-grey shrink-0 transition-transform duration-300",

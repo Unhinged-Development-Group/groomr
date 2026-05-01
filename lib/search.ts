@@ -7,6 +7,7 @@ const PLACEHOLDER_IMAGE =
 interface RawProfile {
   id: string;
   business_name: string;
+  tagline: string | null;
   bio: string | null;
   city: string | null;
   postcode: string | null;
@@ -68,7 +69,7 @@ function buildGroomerMap(
     return {
       id: p.id,
       name: p.business_name,
-      tagline: p.bio ? p.bio.slice(0, 80) : undefined,
+      tagline: p.tagline ?? undefined,
       bio: p.bio ?? undefined,
       image: PLACEHOLDER_IMAGE,
       rating: p.average_rating ?? 0,
@@ -103,7 +104,7 @@ async function fetchTextSearch(q: string): Promise<GroomerResult[]> {
   const { data, error } = await supabase
     .from("groomer_profiles")
     .select(
-      "id, business_name, bio, city, postcode, is_mobile, average_rating, total_reviews, is_listed, is_verified"
+      "id, business_name, tagline, bio, city, postcode, is_mobile, average_rating, total_reviews, is_listed, is_verified"
     )
     .eq("is_listed", true)
     .eq("is_verified", true)

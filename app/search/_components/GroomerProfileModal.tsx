@@ -152,6 +152,9 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                   <h2 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
                     {groomer.name}
                   </h2>
+                  {groomer.tagline && (
+                    <p className="text-base text-sage-leaf font-bold">{groomer.tagline}</p>
+                  )}
 
                   <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-pebble-grey">
                     {groomer.rating > 0 && (

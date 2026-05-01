@@ -365,6 +365,7 @@ Extended profile for users with the `groomer` role.
 id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid()
 user_id               uuid        REFERENCES profiles(id) ON DELETE CASCADE
 business_name         text
+tagline               text        -- Short punchy descriptor shown beneath business name on cards
 bio                   text
 years_experience      smallint
 qualifications        text

@@ -28,7 +28,7 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
   return (
     <div
       className={cn(
-        "text-left bg-white rounded-xl overflow-hidden border border-pebble-grey/20 card-lift block w-full relative group",
+        "flex flex-col text-left bg-white rounded-xl overflow-hidden border border-pebble-grey/20 card-lift w-full relative group",
         className
       )}
     >
@@ -44,8 +44,8 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
         />
       </button>
 
-      <button onClick={() => onView?.(groomer)} className="block w-full text-left focus-ring">
-        <div className="aspect-[4/3] bg-sage-leaf/20 overflow-hidden relative">
+      <button onClick={() => onView?.(groomer)} className="flex flex-col w-full h-full text-left focus-ring">
+        <div className="aspect-[4/3] bg-sage-leaf/20 overflow-hidden relative w-full shrink-0">
           <Image
             src={groomer.image}
             alt={groomer.name}
@@ -54,7 +54,7 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
-        <div className="p-5 space-y-3">
+        <div className="p-5 flex flex-col flex-1 gap-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-fredoka text-xl text-deep-slate leading-tight">{groomer.name}</h3>
@@ -67,6 +67,8 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
               <span className="text-xs font-bold text-deep-slate">{groomer.rating}</span>
             </div>
           </div>
+
+          <div className="flex-1" />
 
           {(groomer.distance != null || groomer.location) && (
             <div className="flex items-center gap-2 text-xs text-pebble-grey font-bold">

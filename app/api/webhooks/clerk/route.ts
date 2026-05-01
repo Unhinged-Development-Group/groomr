@@ -39,18 +39,46 @@ export async function POST(req: Request) {
   console.log('Webhook received:', evt.type)
 
   if (evt.type === 'user.created') {
-    const { id, first_name, last_name } = evt.data
-    console.log('Creating profile for:', id, first_name, last_name)
+    const { id, first_name, last_name, email_addresses } = evt.data
+    const email = email_addresses?.[0]?.email_address ?? null
 
     const { data, error } = await supabaseAdmin.from('profiles').insert({
       id: crypto.randomUUID(),
       clerk_id: id,
       full_name: `${first_name ?? ''} ${last_name ?? ''}`.trim(),
+      email,
       is_admin: false,
       roles: '{owner}',
     })
 
-    console.log('Insert result:', data, error)
+    console.log('user.created — profile insert:', data, error)
+  }
+
+  if (evt.type === 'user.deleted') {
+    const { id } = evt.data
+
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('clerk_id', id)
+
+    console.log('user.deleted — profile delete:', error ?? 'ok')
+  }
+
+  if (evt.type === 'user.updated') {
+    const { id, first_name, last_name, email_addresses } = evt.data
+    const email = email_addresses?.[0]?.email_address ?? null
+
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        full_name: `${first_name ?? ''} ${last_name ?? ''}`.trim(),
+        email,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('clerk_id', id)
+
+    console.log('user.updated — profile sync:', error ?? 'ok')
   }
 
   return new Response('OK', { status: 200 })

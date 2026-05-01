@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { SignUp } from "@clerk/nextjs";
 import { Check, Upload, Shield, Plus, X, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -24,11 +25,11 @@ interface CustomService {
 }
 
 interface FormState {
-  // Step 1
+  // Step 2 (was Step 1)
   fullName: string;
   phone: string;
   email: string;
-  // Step 2
+  // Step 3 (was Step 2)
   biz: string;
   type: BizType;
   addressLine1: string;
@@ -36,11 +37,11 @@ interface FormState {
   city: string;
   postcode: string;
   radius: number;
-  // Step 3
+  // Step 4 (was Step 3)
   selectedServices: string[];
   servicePrices: Record<string, number>;
   customServices: CustomService[];
-  // Step 4
+  // Step 5 (was Step 4)
   days: Record<DayKey, DaySlot>;
   lead: number;
 }
@@ -48,11 +49,12 @@ interface FormState {
 /* ── Constants ────────────────────────────────────────────────────────── */
 
 const STEPS = [
-  { id: "you",      t: "About you",         s: "Name, email, phone." },
-  { id: "biz",      t: "Your business",     s: "Trading name, type, address." },
-  { id: "services", t: "Services & prices", s: "What you offer, what you charge." },
-  { id: "avail",    t: "Availability",      s: "When you work, lead time." },
-  { id: "verify",   t: "Verify & launch",   s: "Insurance & payout." },
+  { id: "account",  t: "Create account",     s: "Email and password." },
+  { id: "you",      t: "About you",          s: "Name, email, phone." },
+  { id: "biz",      t: "Your business",      s: "Trading name, type, address." },
+  { id: "services", t: "Services & prices",  s: "What you offer, what you charge." },
+  { id: "avail",    t: "Availability",       s: "When you work, lead time." },
+  { id: "verify",   t: "Verify & launch",    s: "Insurance & payout." },
 ];
 
 const PRESET_SERVICES = [
@@ -88,11 +90,16 @@ const DAY_LABELS: Record<DayKey, string> = {
 export function GroomerWizard({
   initialName = "",
   initialEmail = "",
+  startAuthenticated = false,
 }: {
   initialName?: string;
   initialEmail?: string;
+  startAuthenticated?: boolean;
 }) {
-  const [step, setStep] = useState(0);
+  // Step 0 = Create account (skipped when already signed in)
+  // Steps 1–5 = groomer wizard (original steps 0–4)
+  const firstStep = startAuthenticated ? 1 : 0;
+  const [step, setStep] = useState(firstStep);
   const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState<FormState>({
@@ -203,20 +210,25 @@ export function GroomerWizard({
               <div className="h-2 bg-pebble-grey/15 rounded-full overflow-hidden">
                 <div className="h-full bg-groomr-gold transition-all duration-500" style={{ width: `${progress}%` }} />
               </div>
-              <p className="text-xs text-pebble-grey font-bold mt-2">Step {step + 1} of {STEPS.length}</p>
+              <p className="text-xs text-pebble-grey font-bold mt-2">
+                Step {step + 1} of {STEPS.length}
+              </p>
             </div>
             <div className="mt-1">
               {STEPS.map((s, i) => {
-                const done = i < step;
+                // When already authenticated, step 0 always shows as done
+                const done = startAuthenticated && i === 0 ? true : i < step;
                 const active = i === step;
+                // Allow clicking back to step 1 minimum when authenticated (not step 0)
+                const minStep = startAuthenticated ? 1 : 0;
                 return (
                   <button key={s.id}
-                    onClick={() => i <= step && setStep(i)}
-                    disabled={i > step}
+                    onClick={() => i <= step && i >= minStep && setStep(i)}
+                    disabled={i > step || (startAuthenticated && i === 0)}
                     className={cn(
                       "w-full text-left flex items-start gap-3 p-3 rounded-xl transition-colors focus-ring",
                       active ? "bg-alabaster-cream" : "hover:bg-alabaster-cream/60",
-                      i > step && "opacity-50 cursor-not-allowed"
+                      (i > step || (startAuthenticated && i === 0)) && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <div className={cn(
@@ -239,11 +251,30 @@ export function GroomerWizard({
         {/* ── Step body ── */}
         <div className="bg-white border border-pebble-grey/20 rounded-[24px] p-8 md:p-10 shadow-subtle space-y-6">
 
-          {/* ── STEP 1: About you ── */}
+          {/* ── STEP 0: Create account ── */}
           {step === 0 && (
             <>
               <header className="space-y-2">
                 <Eyebrow>Step 1</Eyebrow>
+                <h2 className="font-fredoka text-3xl text-deep-slate">Create your account.</h2>
+                <p className="text-pebble-grey text-sm font-nunito">
+                  Already have an account?{" "}
+                  <a href="/sign-in?redirect_url=/register/groomer" className="text-sage-leaf font-bold hover:underline">
+                    Sign in instead
+                  </a>
+                </p>
+              </header>
+              <div className="flex justify-center">
+                <SignUp routing="hash" forceRedirectUrl="/register/groomer" />
+              </div>
+            </>
+          )}
+
+          {/* ── STEP 1: About you ── */}
+          {step === 1 && (
+            <>
+              <header className="space-y-2">
+                <Eyebrow>Step 2</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">Tell us who you are.</h2>
               </header>
               <div className="grid md:grid-cols-2 gap-4">
@@ -264,10 +295,10 @@ export function GroomerWizard({
           )}
 
           {/* ── STEP 2: Business ── */}
-          {step === 1 && (
+          {step === 2 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 2</Eyebrow>
+                <Eyebrow>Step 3</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">About your business.</h2>
               </header>
 
@@ -353,10 +384,10 @@ export function GroomerWizard({
           )}
 
           {/* ── STEP 3: Services & prices ── */}
-          {step === 2 && (
+          {step === 3 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 3</Eyebrow>
+                <Eyebrow>Step 4</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">Services &amp; prices.</h2>
               </header>
               <p className="text-pebble-grey text-sm">
@@ -375,7 +406,6 @@ export function GroomerWizard({
                         on ? "bg-alabaster-cream border-deep-slate" : "bg-white border-pebble-grey/20"
                       )}
                     >
-                      {/* Checkbox */}
                       <button onClick={() => toggleService(name)} aria-pressed={on}
                         className={cn(
                           "w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors focus-ring",
@@ -384,11 +414,7 @@ export function GroomerWizard({
                       >
                         {on && <Check size={14} />}
                       </button>
-
-                      {/* Name */}
                       <p className="font-bold text-deep-slate flex-1 text-sm">{name}</p>
-
-                      {/* Price — always rendered to prevent layout jump */}
                       <div className={cn("flex items-center gap-1.5 shrink-0", !on && "invisible pointer-events-none")}>
                         <span className="text-pebble-grey font-bold text-sm">£</span>
                         <input type="number"
@@ -406,31 +432,24 @@ export function GroomerWizard({
                 })}
               </div>
 
-              {/* Custom / additional services */}
+              {/* Custom services */}
               <div className="space-y-2">
                 <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
                   Additional services
                 </p>
-
-                {/* Existing custom rows — styled identically to preset rows */}
                 {form.customServices.map((svc) => (
                   <div key={svc.id}
                     className="flex items-center gap-3 p-4 rounded-2xl border-2 bg-alabaster-cream border-deep-slate"
                   >
-                    {/* Always-checked indicator — matches active preset style */}
                     <div className="w-6 h-6 rounded-md bg-deep-slate border-2 border-deep-slate flex items-center justify-center shrink-0">
                       <Check size={14} className="text-alabaster-cream" />
                     </div>
-
-                    {/* Inline name input — transparent bg so it reads like bold text */}
                     <input
                       className="flex-1 bg-transparent font-bold text-deep-slate text-sm outline-none border-none placeholder-pebble-grey/50 min-w-0"
                       value={svc.name}
                       onChange={(e) => updateCustomService(svc.id, "name", e.target.value)}
                       placeholder="Service name"
                     />
-
-                    {/* Price */}
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-pebble-grey font-bold text-sm">£</span>
                       <input
@@ -443,8 +462,6 @@ export function GroomerWizard({
                         aria-label="Custom service price"
                       />
                     </div>
-
-                    {/* Remove */}
                     <button
                       onClick={() => removeCustomService(svc.id)}
                       className="text-pebble-grey hover:text-muted-terracotta transition-colors focus-ring rounded p-1 shrink-0"
@@ -454,8 +471,6 @@ export function GroomerWizard({
                     </button>
                   </div>
                 ))}
-
-                {/* Add row — dashed, looks like a new preset slot waiting to be filled */}
                 <button
                   onClick={addCustomService}
                   className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-pebble-grey/30 hover:border-deep-slate hover:bg-alabaster-cream/60 transition-colors focus-ring group"
@@ -472,14 +487,13 @@ export function GroomerWizard({
           )}
 
           {/* ── STEP 4: Availability ── */}
-          {step === 3 && (
+          {step === 4 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 4</Eyebrow>
+                <Eyebrow>Step 5</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">When are you working?</h2>
               </header>
 
-              {/* Day toggles */}
               <div>
                 <p className="text-xs font-bold text-deep-slate uppercase tracking-wider mb-3">
                   Working days
@@ -503,7 +517,6 @@ export function GroomerWizard({
                 </div>
               </div>
 
-              {/* Per-day times */}
               {activeDays.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
@@ -538,7 +551,6 @@ export function GroomerWizard({
                 </div>
               )}
 
-              {/* Lead time */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-deep-slate uppercase tracking-wider">
@@ -576,10 +588,10 @@ export function GroomerWizard({
           )}
 
           {/* ── STEP 5: Verify & launch ── */}
-          {step === 4 && (
+          {step === 5 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 5 — last one</Eyebrow>
+                <Eyebrow>Step 6 — last one</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">Verify &amp; get paid.</h2>
               </header>
 
@@ -615,21 +627,25 @@ export function GroomerWizard({
             </>
           )}
 
-          {/* Navigation */}
-          <div className="flex justify-between gap-4 pt-4 border-t border-pebble-grey/15">
-            <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}
-              className="btn-secondary font-nunito font-bold px-6 py-3 rounded-full focus-ring disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => isLast ? handleLaunch() : setStep(step + 1)}
-              disabled={isPending}
-              className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle disabled:opacity-70"
-            >
-              {isPending ? "Launching…" : isLast ? "Launch My Profile" : "Continue"}
-            </button>
-          </div>
+          {/* Navigation — hidden on step 0 (Clerk handles its own submit) */}
+          {step > 0 && (
+            <div className="flex justify-between gap-4 pt-4 border-t border-pebble-grey/15">
+              <button
+                onClick={() => setStep(Math.max(firstStep, step - 1))}
+                disabled={step <= firstStep}
+                className="btn-secondary font-nunito font-bold px-6 py-3 rounded-full focus-ring disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => isLast ? handleLaunch() : setStep(step + 1)}
+                disabled={isPending}
+                className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle disabled:opacity-70"
+              >
+                {isPending ? "Launching…" : isLast ? "Launch My Profile" : "Continue"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

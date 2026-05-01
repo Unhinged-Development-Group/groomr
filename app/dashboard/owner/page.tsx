@@ -4,17 +4,61 @@ import Link from "next/link";
 import { Search, Calendar } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
+import { DogsSection } from "./_components/DogsSection";
+import { supabaseAdmin } from "@/lib/supabase";
+import type { Dog } from "@/app/actions/dogs";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "My Dashboard — Groomr",
 };
 
+async function getOrCreateProfile(clerkId: string, firstName: string | null, email: string | null) {
+  const { data: existing } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkId)
+    .maybeSingle();
+
+  if (existing) return existing;
+
+  const { data: created } = await supabaseAdmin
+    .from("profiles")
+    .insert({
+      id: crypto.randomUUID(),
+      clerk_id: clerkId,
+      full_name: firstName ?? "",
+      email,
+      roles: "{owner}",
+      is_admin: false,
+    })
+    .select("id")
+    .single();
+
+  return created;
+}
+
+async function fetchDogs(clerkId: string, firstName: string | null, email: string | null): Promise<Dog[]> {
+  const profile = await getOrCreateProfile(clerkId, firstName, email);
+
+  if (!profile) return [];
+
+  const { data } = await supabaseAdmin
+    .from("dogs")
+    .select("*")
+    .eq("owner_id", profile.id)
+    .order("created_at", { ascending: true });
+
+  return (data ?? []) as Dog[];
+}
+
 export default async function OwnerDashboardPage() {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
   const firstName = user.firstName ?? "there";
+  const email = user.emailAddresses?.[0]?.emailAddress ?? null;
+  const dogs = await fetchDogs(user.id, user.firstName ?? null, email);
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-12 max-w-5xl mx-auto">
@@ -28,6 +72,9 @@ export default async function OwnerDashboardPage() {
           Your Groomr dashboard is on its way. Here&apos;s a sneak peek of what&apos;s coming.
         </p>
       </div>
+
+      {/* Dogs */}
+      <DogsSection initialDogs={dogs} />
 
       {/* Coming-soon cards */}
       <div className="grid md:grid-cols-2 gap-5 mb-10">

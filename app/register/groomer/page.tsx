@@ -1,5 +1,4 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { GroomerWizard } from "./_components/GroomerWizard";
 import type { Metadata } from "next";
 
@@ -11,19 +10,16 @@ export const metadata: Metadata = {
 export default async function RegisterGroomerPage() {
   const user = await currentUser();
 
-  if (!user) {
-    redirect("/sign-in?redirect_url=/register/groomer");
-  }
-
-  const fullName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ") ?? "";
-  const email =
-    user.emailAddresses?.[0]?.emailAddress ?? "";
+  const fullName = user
+    ? [user.firstName, user.lastName].filter(Boolean).join(" ")
+    : "";
+  const email = user?.emailAddresses?.[0]?.emailAddress ?? "";
 
   return (
     <GroomerWizard
       initialName={fullName}
       initialEmail={email}
+      startAuthenticated={!!user}
     />
   );
 }

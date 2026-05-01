@@ -12,6 +12,7 @@ interface SearchBarProps {
 
 export function SearchBar({ initialQuery, isGeoSearch, filteredCount }: SearchBarProps) {
   const router = useRouter();
+  const [query, setQuery] = useState(isGeoSearch ? "" : initialQuery);
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
@@ -49,7 +50,8 @@ export function SearchBar({ initialQuery, isGeoSearch, filteredCount }: SearchBa
           {/* Search input */}
           <div className="w-full md:max-w-lg">
             <SearchPill
-              value={isGeoSearch ? "" : initialQuery}
+              value={query}
+              onChange={setQuery}
               placeholder={
                 isGeoSearch ? "Searching near your location..." : "Postcode, town, or city..."
               }

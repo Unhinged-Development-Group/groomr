@@ -69,6 +69,7 @@ function buildGroomerMap(
       id: p.id,
       name: p.business_name,
       tagline: p.bio ? p.bio.slice(0, 80) : undefined,
+      bio: p.bio ?? undefined,
       image: PLACEHOLDER_IMAGE,
       rating: p.average_rating ?? 0,
       reviewCount: p.total_reviews ?? 0,

@@ -2,6 +2,7 @@ export interface GroomerResult {
   id: string;
   name: string;
   tagline?: string;
+  bio?: string;
   image: string;
   rating: number;
   reviewCount: number;

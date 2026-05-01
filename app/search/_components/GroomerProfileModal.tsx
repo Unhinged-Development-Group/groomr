@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Modal } from "@/components/ui/Modal";
 import { Toast } from "@/components/ui/Toast";
 import { StarRow } from "@/components/ui/StarRow";
 import { supabase } from "@/lib/supabase";
@@ -58,13 +57,15 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
   const [services, setServices] = useState<Service[]>([]);
   const [availability, setAvailability] = useState<AvailabilityRow[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [svcRes, availRes, revRes] = await Promise.all([
+      const [svcRes, availRes, revRes, galleryRes] = await Promise.all([
         supabase
           .from("services")
           .select("id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, sort_order")
@@ -84,15 +85,33 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
           .eq("is_visible", true)
           .order("created_at", { ascending: false })
           .limit(10),
+        supabase
+          .from("groomer_profiles")
+          .select("gallery_images")
+          .eq("id", groomer.id)
+          .single(),
       ]);
 
       setServices((svcRes.data ?? []) as Service[]);
       setAvailability((availRes.data ?? []) as AvailabilityRow[]);
       setReviews((revRes.data ?? []) as Review[]);
+      setGalleryImages((galleryRes.data as { gallery_images: string[] | null } | null)?.gallery_images ?? []);
       setLoading(false);
     }
     load();
   }, [groomer.id]);
+
+  // Close lightbox on Escape
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxIndex(null);
+      if (e.key === "ArrowRight") setLightboxIndex((i) => i === null ? null : (i + 1) % galleryImages.length);
+      if (e.key === "ArrowLeft") setLightboxIndex((i) => i === null ? null : (i - 1 + galleryImages.length) % galleryImages.length);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxIndex, galleryImages.length]);
 
   return (
     <>
@@ -176,6 +195,36 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                   </button>
                 </div>
               </div>
+
+              {/* Gallery */}
+              {galleryImages.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4">
+                    Photos
+                  </h3>
+                  <div
+                    className="flex gap-3 overflow-x-auto pb-1"
+                    style={{ scrollbarWidth: "none" }}
+                  >
+                    {galleryImages.map((url, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setLightboxIndex(i)}
+                        className="flex-shrink-0 w-52 h-40 rounded-2xl overflow-hidden focus-ring hover:opacity-90 transition-opacity"
+                        aria-label={`View photo ${i + 1}`}
+                      >
+                        <Image
+                          src={url}
+                          alt={`${groomer.name} photo ${i + 1}`}
+                          width={208}
+                          height={160}
+                          className="object-cover w-full h-full"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Services + Hours/About */}
               <div className="grid lg:grid-cols-3 gap-10">
@@ -272,6 +321,71 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
       </div>
 
       <Toast message={toast} onDismiss={() => setToast(null)} />
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && galleryImages.length > 0 && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85"
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setLightboxIndex(null)}
+            aria-label="Close photo"
+            className="absolute top-5 right-5 text-white/80 hover:text-white transition-colors bg-white/10 rounded-full p-2"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Image */}
+          <div
+            className="relative max-w-3xl w-full mx-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative rounded-2xl overflow-hidden" style={{ maxHeight: "80vh" }}>
+              <Image
+                src={galleryImages[lightboxIndex]}
+                alt={`${groomer.name} photo ${lightboxIndex + 1}`}
+                width={900}
+                height={675}
+                className="object-contain w-full"
+                style={{ maxHeight: "80vh" }}
+              />
+            </div>
+
+            {/* Counter */}
+            <p className="text-center text-white/60 text-sm mt-3 font-bold">
+              {lightboxIndex + 1} / {galleryImages.length}
+            </p>
+          </div>
+
+          {/* Prev / Next */}
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + galleryImages.length) % galleryImages.length); }}
+                aria-label="Previous photo"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % galleryImages.length); }}
+                aria-label="Next photo"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </>
   );
 }

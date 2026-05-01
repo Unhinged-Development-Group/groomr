@@ -101,18 +101,9 @@ async function fetchServicesForIds(ids: string[]): Promise<RawService[]> {
 }
 
 async function fetchTextSearch(q: string): Promise<GroomerResult[]> {
-  const { data, error } = await supabase
-    .from("groomer_profiles")
-    .select(
-      "id, business_name, tagline, bio, city, postcode, is_mobile, average_rating, total_reviews, is_listed, is_verified"
-    )
-    .eq("is_listed", true)
-    .eq("is_verified", true)
-    .or(
-      `business_name.ilike.%${q}%,city.ilike.%${q}%,postcode.ilike.%${q}%`
-    )
-    .order("average_rating", { ascending: false, nullsFirst: false })
-    .limit(100);
+  const { data, error } = await supabase.rpc("search_groomers_by_text", {
+    query: q,
+  });
 
   if (error) {
     console.error("Text search error:", error.message);

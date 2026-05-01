@@ -41,10 +41,53 @@ interface Props {
   businessName: string;
   ownerName: string;
   unrespondedReviews?: number;
+  initialAppointments: any[];
+  initialReviews: any[];
+  initialPayments: any[];
+  profileData: {
+    profile: any;
+    services: any[];
+    team: any[];
+  };
 }
 
-export function GroomerDashboardClient({ businessName, ownerName, unrespondedReviews = 3 }: Props) {
+export function GroomerDashboardClient({
+  businessName,
+  ownerName,
+  unrespondedReviews = 0,
+  initialAppointments,
+  initialReviews,
+  initialPayments,
+  profileData
+}: Props) {
   const [tab, setTab] = useState<Tab>("bookings");
+
+  // Calculate real stats for the strip
+  const now = new Date();
+  
+  // 1. Today's Bookings
+  const todayAppointments = initialAppointments.filter(a => {
+    const d = new Date(a.scheduled_at);
+    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && a.status !== "cancelled";
+  });
+  const todayHours = todayAppointments.reduce((sum, a) => sum + (a.service_snapshot_duration || 0), 0) / 60;
+  
+  // 2. This Week's Revenue
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); // Monday
+  weekStart.setHours(0,0,0,0);
+  const weekPayments = initialPayments.filter(p => new Date(p.date) >= weekStart);
+  const weekRevenue = weekPayments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
+  
+  // 3. Next Payout (dummy calculation based on upcoming appointments value, or just raw total)
+  const nextPayout = weekRevenue; // Simulating next payout as this week's revenue
+  
+  // 4. Repeat Rate
+  const uniqueClients = new Set(initialAppointments.map(a => a.owner_id));
+  const repeatClients = Array.from(uniqueClients).filter(ownerId => {
+    return initialAppointments.filter(a => a.owner_id === ownerId && a.status === 'completed').length > 1;
+  });
+  const repeatRate = uniqueClients.size > 0 ? Math.round((repeatClients.length / uniqueClients.size) * 100) : 0;
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
@@ -78,10 +121,10 @@ export function GroomerDashboardClient({ businessName, ownerName, unrespondedRev
 
       {/* Stat strip */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Today"       value="5"    sub="bookings · 6.5 hrs"            tone="gold" />
-        <StatCard label="This week"   value="£742" sub="14 bookings · +12% vs last"    tone="sage" />
-        <StatCard label="Next payout" value="£742" sub="Auto-deposit Mon 27 Apr"        tone="terra" />
-        <StatCard label="Repeat rate" value="78%"  sub="of clients booked again"        tone="slate" />
+        <StatCard label="Today"       value={todayAppointments.length.toString()} sub={`bookings · ${todayHours.toFixed(1)} hrs`} tone="gold" />
+        <StatCard label="This week"   value={`£${weekRevenue.toFixed(0)}`} sub={`${weekPayments.length} payments this week`} tone="sage" />
+        <StatCard label="Next payout" value={`£${nextPayout.toFixed(0)}`} sub="Estimated" tone="terra" />
+        <StatCard label="Repeat rate" value={`${repeatRate}%`} sub="of clients booked again" tone="slate" />
       </section>
 
       {/* Tab nav */}
@@ -109,11 +152,11 @@ export function GroomerDashboardClient({ businessName, ownerName, unrespondedRev
       </nav>
 
       {/* Tab content */}
-      {tab === "bookings" && <BookingsView />}
-      {tab === "clients"  && <ClientsView />}
-      {tab === "earnings" && <EarningsView />}
-      {tab === "reviews"  && <ReviewsView />}
-      {tab === "profile"  && <ProfileEditor />}
+      {tab === "bookings" && <BookingsView appointments={initialAppointments} />}
+      {tab === "clients"  && <ClientsView appointments={initialAppointments} />}
+      {tab === "earnings" && <EarningsView payments={initialPayments} />}
+      {tab === "reviews"  && <ReviewsView reviews={initialReviews} />}
+      {tab === "profile"  && <ProfileEditor profileData={profileData} />}
     </div>
   );
 }

@@ -5,7 +5,11 @@ import { SearchIcon, CalendarIcon } from "@/components/ui/GroomrIcons";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { DogsSection } from "./_components/DogsSection";
+import { AppointmentsSection } from "./_components/AppointmentsSection";
+import { FavouriteGroomersSection } from "./_components/FavouriteGroomersSection";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getOwnerAppointments } from "@/app/actions/appointments";
+import { getFavouriteGroomers } from "@/app/actions/favourites";
 import type { Dog } from "@/app/actions/dogs";
 import type { Metadata } from "next";
 
@@ -59,6 +63,8 @@ export default async function OwnerDashboardPage() {
   const firstName = user.firstName ?? "there";
   const email = user.emailAddresses?.[0]?.emailAddress ?? null;
   const dogs = await fetchDogs(user.id, user.firstName ?? null, email);
+  const appointments = await getOwnerAppointments();
+  const favourites = await getFavouriteGroomers();
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-12 max-w-5xl mx-auto">
@@ -76,20 +82,12 @@ export default async function OwnerDashboardPage() {
       {/* Dogs */}
       <DogsSection initialDogs={dogs} />
 
+      <AppointmentsSection initialAppointments={appointments} />
+
+      <FavouriteGroomersSection initialFavourites={favourites} />
+
       {/* Coming-soon cards */}
       <div className="grid md:grid-cols-2 gap-5 mb-10">
-        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center">
-            <CalendarIcon size={24} className="text-deep-slate" />
-          </div>
-          <h3 className="font-fredoka text-xl text-deep-slate">Upcoming bookings</h3>
-          <p className="text-pebble-grey text-sm font-nunito">
-            See all your upcoming appointments in one place — including reminders and groomer
-            details.
-          </p>
-          <Badge tone="grey">Coming soon</Badge>
-        </div>
-
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center">
             <SearchIcon size={24} className="text-deep-slate" />

@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groomr | Comprehensive Brand Guidelines 2026</title>
+    
+    <!-- Favicon: Standalone Logo Mark -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
+    
+    <!-- Google Fonts: Fredoka & Nunito -->
+    <!-- Note: For production, use local variable TTF fonts as outlined in the typography guidelines. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Nunito:ital,wght@0,400;0,700;0,800;1,700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'groomr-gold': '#eae45c',
+                        'deep-slate': '#2c3e50',
+                        'sage-leaf': '#88a096',
+                        'pebble-grey': '#95a5a6',
+                        'alabaster-cream': '#f9f8f4',
+                        'muted-terracotta': '#c87964',
+                        // Semantic UI colors mapped for documentation
+                        'canvas': '#f9f8f4',
+                        'surface': '#ffffff',
+                    },
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                        'nunito': ['Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'subtle': '0 4px 6px -1px rgba(149, 165, 166, 0.10), 0 2px 4px -1px rgba(149, 165, 166, 0.06)',
+                        'hover-lift': '0 10px 15px -3px rgba(149, 165, 166, 0.40), 0 4px 6px -2px rgba(149, 165, 166, 0.20)',
+                        'modal': '0 25px 50px -12px rgba(44, 62, 80, 0.25)',
+                    },
+                    transitionTimingFunction: {
+                        'standard': 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f9f8f4; /* Alabaster Cream */
+            color: #2c3e50; /* Deep Slate */
+            scroll-behavior: smooth;
+        }
+        
+        h1, h2, .font-fredoka { font-family: 'Fredoka', sans-serif; }
+        h3, p, span, div, .font-nunito { font-family: 'Nunito', sans-serif; }
+        
+        /* Specific Focus States */
+        .focus-ring:focus, .focus-ring-active {
+            outline: none;
+            box-shadow: 0 0 0 3px #eae45c; /* Crisp 3px solid outline in Groomr Gold */
+            border-color: #eae45c;
+        }
+
+        /* Card Hover Lift */
+        .card-lift {
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(149, 165, 166, 0.10), 0 2px 4px -1px rgba(149, 165, 166, 0.06);
+        }
+        .card-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(149, 165, 166, 0.40), 0 4px 6px -2px rgba(149, 165, 166, 0.20); /* Soft shadow using Pebble Grey */
+            border-color: #88a096;
+        }
+
+        .icon-card {
+            transition: all 0.3s ease;
+        }
+        .icon-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(149, 165, 166, 0.4);
+            border-color: #88a096;
+        }
+    </style>
+</head>
+<body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col md:flex-row min-h-screen">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-64 bg-alabaster-cream border-r border-pebble-grey/20 md:sticky md:top-0 h-auto md:h-screen flex flex-col justify-between z-50 p-8 shrink-0 overflow-y-auto">
+        <div>
+            <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-10 w-auto object-contain mb-12">
+            <ul class="space-y-4 font-nunito font-bold text-sm uppercase tracking-wide text-deep-slate">
+                <li><a href="#about" class="hover:text-muted-terracotta transition-colors">Brand Story</a></li>
+                <li><a href="#colours" class="hover:text-muted-terracotta transition-colors">Colour Palette</a></li>
+                <li><a href="#dos-and-donts" class="hover:text-muted-terracotta transition-colors">Do's & Don'ts</a></li>
+                <li><a href="#logo" class="hover:text-muted-terracotta transition-colors">Logo & Usage</a></li>
+                <li><a href="#typography" class="hover:text-muted-terracotta transition-colors">Typography</a></li>
+                <li><a href="#voice" class="hover:text-muted-terracotta transition-colors">Voice & Messaging</a></li>
+                <li><a href="#iconography" class="hover:text-muted-terracotta transition-colors">Iconography</a></li>
+                <li><a href="#application" class="hover:text-muted-terracotta transition-colors">UI & Components</a></li>
+            </ul>
+        </div>
+        <div class="mt-8 hidden md:block">
+            <p class="text-[10px] text-pebble-grey uppercase tracking-widest font-bold">Confidential & Proprietary</p>
+            <p class="text-[10px] text-pebble-grey uppercase tracking-widest font-bold">Brand Guidelines · 2026</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-5xl mx-auto px-6 md:px-12 py-16 space-y-32 w-full overflow-hidden">
+
+        <!-- Header -->
+        <header class="text-center space-y-8 py-12">
+            <p class="uppercase tracking-widest text-sage-leaf font-bold text-sm">Design System & Brand Guidelines</p>
+            <h1 class="text-5xl md:text-7xl font-bold text-deep-slate flex justify-center items-center gap-4 flex-wrap">
+                Meet
+                <span class="bg-deep-slate px-6 py-4 rounded-2xl inline-block -rotate-2 shadow-sm">
+                    <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-10 md:h-14 w-auto object-contain">
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-deep-slate max-w-2xl mx-auto leading-relaxed pt-4">
+                This document defines the Groomr brand — how it looks, sounds, and behaves. It is our single source of truth for interfaces, marketing, and brand expressions.
+            </p>
+        </header>
+
+        <!-- What Groomr Is -->
+        <section id="about" class="space-y-12">
+            <h2 class="text-4xl font-bold border-b-2 border-pebble-grey/30 pb-4">What Groomr is.</h2>
+            
+            <div class="space-y-6">
+                <span class="text-sage-leaf uppercase font-extrabold tracking-widest text-xs">The Brand Story</span>
+                <h3 class="font-fredoka text-4xl md:text-5xl leading-tight">Everything starts with the dog.</h3>
+                <div class="space-y-4 text-lg leading-relaxed max-w-3xl">
+                    <p>Groomr is a consumer-first marketplace connecting dog owners with trusted local groomers — and giving those groomers the tools to run a brilliant business. Instant booking, verified reviews, and a powerful dashboard. Better for owners. Better for groomers.</p>
+                    <p>Groomr started with a simple frustration — finding a great local groomer shouldn't be this hard. After one too many dead ends searching for someone trustworthy to look after Murphy, our long-haired chihuahua, we knew there had to be a better way.</p>
+                    <p>So we built one. A place where dog owners can find, book, and trust a local groomer — and where independent groomers get the tools and visibility they deserve.</p>
+                </div>
+            </div>
+
+            <div class="bg-pebble-grey/10 p-6 rounded-xl border border-pebble-grey/20 max-w-3xl">
+                <h4 class="text-lg font-bold mb-2">Products in this system</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><strong class="text-deep-slate">Consumer Website:</strong> Landing page, search results, groomer profiles, customer dashboard. Public, conversion-driven.</li>
+                    <li><strong class="text-deep-slate">Groomer Dashboard:</strong> Appointment management, client list, business tools. Authenticated.</li>
+                    <li class="text-pebble-grey italic mt-2">Note: A native mobile app is not currently planned. Our web products are fully mobile-responsive.</li>
+                </ul>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 mt-12">
+                <div class="bg-sage-leaf p-8 rounded-xl shadow-subtle border border-pebble-grey/20 space-y-4">
+                    <h3 class="text-2xl font-extrabold text-deep-slate">Mission Statement</h3>
+                    <p class="text-lg leading-relaxed text-deep-slate">To make dog grooming effortless for owners and rewarding for groomers — by connecting local communities through a platform built on trust, simplicity, and a genuine love of dogs.</p>
+                </div>
+                <div class="bg-muted-terracotta p-8 rounded-xl shadow-subtle border border-pebble-grey/20 space-y-4 text-alabaster-cream">
+                    <h3 class="text-2xl font-extrabold">Vision Statement</h3>
+                    <p class="text-lg font-fredoka leading-relaxed">A world where every dog has a groomer they love, and every groomer has a business they're proud of.</p>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <h3 class="text-2xl font-extrabold border-b-2 border-pebble-grey/30 pb-4">Core Values</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+                    <div class="space-y-4">
+                        <div class="relative inline-block">
+                            <svg class="w-12 h-12 relative z-10" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                <circle cx="15" cy="11" r="7.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="M9 12l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl mb-2 text-deep-slate">Trust first.</h4>
+                            <p class="text-sm text-deep-slate leading-relaxed">We only feature groomers we'd trust with our own dogs.</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="relative inline-block">
+                            <svg class="w-12 h-12 relative z-10" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                <circle cx="12" cy="16" r="6" fill="#c87964" stroke="none" opacity="0.55" />
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 010 7.75"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl mb-2 text-deep-slate">Community over competition.</h4>
+                            <p class="text-sm text-deep-slate leading-relaxed">We champion independent groomers, not corporate chains.</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="relative inline-block">
+                            <svg class="w-12 h-12 relative z-10" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                <circle cx="16" cy="8" r="8" fill="#eae45c" stroke="none" opacity="0.55" />
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                <path d="M9 16l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl mb-2 text-deep-slate">Simple by design.</h4>
+                            <p class="text-sm text-deep-slate leading-relaxed">Booking a groom should take seconds, not a Sunday afternoon.</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="relative inline-block">
+                            <svg class="w-12 h-12 relative z-10" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                <circle cx="9" cy="9" r="7.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                                <path d="M12 21.5c-3.5 0-6-2-6-5 0-2 1.5-3.5 3.5-3.5h5c2 0 3.5 1.5 3.5 3.5 0 3-2.5 5-6 5z" />
+                                <circle cx="5.5" cy="9.5" r="1.5" />
+                                <circle cx="9.5" cy="5.5" r="1.5" />
+                                <circle cx="14.5" cy="5.5" r="1.5" />
+                                <circle cx="18.5" cy="9.5" r="1.5" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl mb-2 text-deep-slate">Dogs at the centre.</h4>
+                            <p class="text-sm text-deep-slate leading-relaxed">Every decision we make starts with what's best for the dog.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Colour Palette -->
+        <section id="colours" class="space-y-12">
+            <h2 class="text-4xl font-bold border-b-2 border-pebble-grey/30 pb-4">Colour Palette</h2>
+            <p class="text-lg leading-relaxed max-w-3xl">The whole system runs on six colours. <strong>Alabaster Cream does the heavy lifting</strong>; everything else is an accent. We never use pure black or white for major structural elements.</p>
+            
+            <div class="space-y-8">
+                <h3 class="text-2xl font-extrabold">Primary Colours</h3>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Groomr Gold -->
+                    <div class="space-y-4">
+                        <div class="h-[90px] bg-groomr-gold rounded-xl flex flex-col justify-end p-4 shadow-subtle border border-pebble-grey/20 text-deep-slate">
+                            <span class="font-fredoka font-bold text-[14px]">Groomr Gold</span>
+                            <span class="font-nunito font-bold text-[11px] tracking-wider opacity-85 mt-0.5 uppercase">#EAE45C</span>
+                        </div>
+                        <div>
+                            <p class="text-sm">Accents, CTAs & highlights. Primary button colour. <strong>Never use for text.</strong></p>
+                        </div>
+                    </div>
+                    <!-- Deep Slate -->
+                    <div class="space-y-4">
+                        <div class="h-[90px] bg-deep-slate rounded-xl flex flex-col justify-end p-4 shadow-subtle text-alabaster-cream border border-pebble-grey/20">
+                            <span class="font-fredoka font-bold text-[14px]">Deep Slate</span>
+                            <span class="font-nunito font-bold text-[11px] tracking-wider opacity-85 mt-0.5 uppercase">#2C3E50</span>
+                        </div>
+                        <div>
+                            <p class="text-sm">Headings (H1 - H3), body text, footer background. Avoid as a general background.</p>
+                        </div>
+                    </div>
+                    <!-- Sage Leaf -->
+                    <div class="space-y-4">
+                        <div class="h-[90px] bg-sage-leaf rounded-xl flex flex-col justify-end p-4 shadow-subtle text-deep-slate border border-pebble-grey/20">
+                            <span class="font-fredoka font-bold text-[14px]">Sage Leaf</span>
+                            <span class="font-nunito font-bold text-[11px] tracking-wider opacity-85 mt-0.5 uppercase">#88A096</span>
+                        </div>
+                        <div>
+                            <p class="text-sm">Adds structure without shouting. Use for alternating backgrounds and secondary text.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <h3 class="text-2xl font-extrabold">Secondary Colours</h3>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Pebble Grey -->
+                    <div class="space-y-4">
+                        <div class="h-[90px] bg-pebble-grey rounded-xl flex flex-col justify-end p-4 shadow-subtle text-deep-slate border border-pebble-grey/20">
+                            <span class="font-fredoka font-bold text-[14px]">Pebble Grey</span>
+                            <span class="font-nunito font-bold text-[11px] tracking-wider opacity-85 mt-0.5 uppercase">#95A5A6</span>
+                        </div>
+                        <div>
+                            <p class="text-sm">Subtle borders, outlines and alternating backgrounds. The quiet one in the room.</p>
+                        </div>
+                    </div>
+                    <!-- Alabaster Cream -->
+                    <div class="space-y-4">
+                        <div class="h-[90px] bg-alabaster-cream rounded-xl flex flex-col justify-end p-4 shadow-subtle text-deep-slate border border-pebble-grey/30">
+                            <span class="font-fredoka font-bold text-[14px]">Alabaster Cream</span>
+                            <span class="font-nunito font-bold text-[11px] tracking-wider opacity-85 mt-0.5 uppercase">#F9F8F4</span>
+                        </div>
+                        <div>
+                            <p class="text-sm">Primary canvas. Every page starts here. Space is a designer's best friend.</p>
+                        </div>
+                    </div>
+                    <!-- Muted Terracotta -->
+                    <div class="space-y-4">
+                        <div class="h-[90px] bg-muted-terracotta rounded-xl flex flex-col justify-end p-4 shadow-subtle text-alabaster-cream border border-pebble-grey/20">
+                            <span class="font-fredoka font-bold text-[14px]">Muted Terracotta</span>
+                            <span class="font-nunito font-bold text-[11px] tracking-wider opacity-85 mt-0.5 uppercase">#C87964</span>
+                        </div>
+                        <div>
+                            <p class="text-sm">Warm accents and secondary CTAs. Primary button hover state. Use in smaller doses.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Semantic Mapping -->
+            <div class="bg-white p-8 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                <h3 class="text-xl font-bold mb-6">Semantic Tokens Mapping</h3>
+                <div class="grid md:grid-cols-2 gap-x-12 gap-y-4 text-[13px]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg shrink-0 border border-pebble-grey/20 bg-alabaster-cream"></div>
+                        <div><div class="font-bold text-deep-slate">bg-canvas</div><div class="text-[11px] tracking-[0.1em] uppercase text-pebble-grey font-bold">Page bg</div></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg shrink-0 border border-pebble-grey/20 bg-deep-slate"></div>
+                        <div><div class="font-bold text-deep-slate">fg-primary</div><div class="text-[11px] tracking-[0.1em] uppercase text-pebble-grey font-bold">Body text</div></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg shrink-0 border border-pebble-grey/20 bg-groomr-gold"></div>
+                        <div><div class="font-bold text-deep-slate">accent-primary</div><div class="text-[11px] tracking-[0.1em] uppercase text-pebble-grey font-bold">CTA fill</div></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg shrink-0 border border-pebble-grey/20 bg-muted-terracotta"></div>
+                        <div><div class="font-bold text-deep-slate">accent-secondary</div><div class="text-[11px] tracking-[0.1em] uppercase text-pebble-grey font-bold">CTA hover</div></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg shrink-0 border border-pebble-grey/20 bg-sage-leaf"></div>
+                        <div><div class="font-bold text-deep-slate">accent-quiet</div><div class="text-[11px] tracking-[0.1em] uppercase text-pebble-grey font-bold">Structure</div></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg shrink-0 border border-pebble-grey/20 bg-pebble-grey"></div>
+                        <div><div class="font-bold text-deep-slate">fg-tertiary</div><div class="text-[11px] tracking-[0.1em] uppercase text-pebble-grey font-bold">Meta / Placeholder</div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Do's and Don'ts & Imagery -->
+        <section id="dos-and-donts" class="space-y-12">
+            <h2 class="text-4xl font-bold border-b-2 border-pebble-grey/30 pb-4">Do's, Don'ts & Imagery</h2>
+            <div class="grid md:grid-cols-2 gap-12 bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-extrabold text-deep-slate flex items-center gap-2">
+                        <svg class="w-6 h-6 text-sage-leaf" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+                        The "Do's"
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <span class="text-sage-leaf mt-1">•</span>
+                            <span><strong>Do let the Cream breathe:</strong> Use Alabaster Cream generously as your primary background. Empty space is a designer's best friend.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-sage-leaf mt-1">•</span>
+                            <span><strong>Do rely on Deep Slate:</strong> Heavy lifting for headings, body text, primary icons. High contrast without the harshness of pure black.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-sage-leaf mt-1">•</span>
+                            <span><strong>Do use Gold to drive action:</strong> Reserve it for your most critical interaction points. Used sparingly, it immediately draws the eye.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-sage-leaf mt-1">•</span>
+                            <span><strong>Do use real imagery:</strong> Warm, naturally lit, candid photography of dogs and groomers. Crop tight on faces, fur texture, and expression.</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-extrabold text-muted-terracotta flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                        The "Don't" Checklist
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span>Don't use Groomr Gold for typography.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span>Don't layer Muted Terracotta directly on Sage Leaf — it vibrates and strains the eyes.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span>Don't make everything colourful. Let Alabaster Cream do the heavy lifting.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span>Don't use gradients, textures, or patterns. No hand-drawn illustrations or glassmorphism overlays.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-muted-terracotta mt-1">•</span>
+                            <span><strong>No AI-generated dogs.</strong> Ever. Real dogs, real people.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logo & Usage -->
+        <section id="logo" class="space-y-12">
+            <h2 class="text-4xl font-bold border-b-2 border-pebble-grey/30 pb-4">Logo & Usage</h2>
+            
+            <div class="space-y-8 bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                <h3 class="text-2xl font-extrabold mb-6">Primary Lockups & Orientations</h3>
+                
+                <div class="grid md:grid-cols-2 gap-12">
+                    <!-- Light BG -->
+                    <div class="space-y-6">
+                        <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm mb-4">On Light Backgrounds</h4>
+                        <div class="grid grid-cols-2 gap-6 items-end">
+                            <div class="col-span-2 flex flex-col items-center gap-2 bg-alabaster-cream border border-pebble-grey/20 p-6 rounded-xl">
+                                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Horizontal Logo" class="h-12 w-auto object-contain">
+                                <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Horizontal (Primary)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2 bg-alabaster-cream border border-pebble-grey/20 p-6 rounded-xl">
+                                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753221/Vertical_-_DEEP_SLATE_qxacdc.png" alt="Groomr Vertical Logo" class="h-16 w-auto object-contain">
+                                <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Vertical</span>
+                            </div>
+                            <div class="flex flex-col gap-6">
+                                <div class="flex flex-col items-center gap-2 bg-alabaster-cream border border-pebble-grey/20 py-4 px-2 rounded-xl">
+                                    <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753299/groomr_-_DEEP_SLATE_zzlqvi.png" alt="Standalone Wordmark" class="h-6 w-auto object-contain">
+                                    <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Wordmark</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-2 bg-alabaster-cream border border-pebble-grey/20 py-4 px-2 rounded-xl">
+                                    <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png" alt="Standalone Mark" class="h-10 w-auto object-contain">
+                                    <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Mark</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dark BG -->
+                    <div class="space-y-6">
+                        <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm mb-4">On Dark Backgrounds</h4>
+                        <div class="grid grid-cols-2 gap-6 items-end">
+                            <div class="col-span-2 flex flex-col items-center gap-2 bg-deep-slate border border-deep-slate p-6 rounded-xl shadow-inner">
+                                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Primary Dark Logo" class="h-12 w-auto object-contain">
+                                <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Horizontal (Primary)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2 bg-deep-slate border border-deep-slate p-6 rounded-xl shadow-inner">
+                                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753221/Vertical_-_GROOMR_GOLD_faqsjs.png" alt="Vertical Lockup Dark" class="h-16 w-auto object-contain">
+                                <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Vertical</span>
+                            </div>
+                            <div class="flex flex-col gap-6">
+                                <div class="flex flex-col items-center gap-2 bg-deep-slate border border-deep-slate py-4 px-2 rounded-xl shadow-inner">
+                                    <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753299/groomr_-_GROOMR_GOLD_h9tkph.png" alt="Wordmark Dark" class="h-6 w-auto object-contain">
+                                    <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Wordmark</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-2 bg-deep-slate border border-deep-slate py-4 px-2 rounded-xl shadow-inner">
+                                    <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/Logo_-_GROOMR_GOLD_wkvajq.png" alt="Standalone Mark Dark" class="h-10 w-auto object-contain">
+                                    <span class="font-nunito font-bold text-[10px] text-pebble-grey tracking-[0.1em] uppercase mt-2">Mark</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rules -->
+            <div class="grid md:grid-cols-3 gap-8 pt-4">
+                <div class="space-y-2">
+                    <h4 class="font-bold">Minimum Size</h4>
+                    <p class="text-sm">Digital: no smaller than 120px wide for the full lockup, 32px for the standalone mark. Print: no smaller than 30mm wide.</p>
+                </div>
+                <div class="space-y-2">
+                    <h4 class="font-bold">Clear Space</h4>
+                    <p class="text-sm">Maintain a minimum clear space equal to the height of the "g" in the wordmark. Nothing should enter this zone.</p>
+                </div>
+                <div class="space-y-2">
+                    <h4 class="font-bold text-muted-terracotta">Improper Usage</h4>
+                    <p class="text-sm">Never stretch, rotate, randomly recolour outside official colorways, place over busy backgrounds, or add effects like shadows.</p>
+                </div>
+            </div>
+
+            <!-- Text vs Logo Card -->
+            <div class="bg-sage-leaf p-8 rounded-2xl shadow-subtle border border-pebble-grey/20 mt-8 flex flex-col lg:flex-row gap-8 items-center">
+                <div class="flex-1 space-y-3">
+                    <h4 class="text-2xl font-extrabold text-deep-slate">Text vs. Logo</h4>
+                    <p class="text-base text-deep-slate leading-relaxed">When referring to the brand in body copy, headlines, or general text, always type it out as <strong>Groomr</strong> (capital G). Never use the logo graphic inline as a replacement for the written word.</p>
+                </div>
+                <div class="flex-1 grid md:grid-cols-2 gap-4 w-full">
+                    <div class="bg-alabaster-cream/90 p-5 rounded-xl border border-sage-leaf/30 space-y-3 shadow-sm">
+                        <span class="text-sage-leaf text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> 
+                            Do
+                        </span>
+                        <p class="text-sm text-deep-slate leading-relaxed">Welcome to the new <strong>Groomr</strong> dashboard.</p>
+                    </div>
+                    <div class="bg-alabaster-cream/90 p-5 rounded-xl border border-sage-leaf/30 space-y-3 shadow-sm">
+                        <span class="text-muted-terracotta text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg> 
+                            Don't
+                        </span>
+                        <p class="text-sm text-deep-slate leading-relaxed">Welcome to the new <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753299/groomr_-_DEEP_SLATE_zzlqvi.png" alt="Groomr Wordmark" class="h-2.5 w-auto object-contain inline-block align-baseline translate-y-px mx-0.5"> dashboard.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section id="typography" class="space-y-12">
+            <h2 class="text-4xl font-bold border-b-2 border-pebble-grey/30 pb-4">Typography</h2>
+            
+            <div class="grid md:grid-cols-2 gap-12">
+                <div class="space-y-8">
+                    <div class="space-y-2">
+                        <h3 class="text-sm tracking-widest uppercase font-bold text-sage-leaf">Primary Typeface</h3>
+                        <div class="font-fredoka text-5xl font-bold">Fredoka Bold</div>
+                        <p class="text-sm text-pebble-grey max-w-sm mt-2">Reserved for major moments — H1 and H2. Hero headers, campaign headlines, and big brand expressions. Soft, rounded, warm.</p>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-sm tracking-widest uppercase font-bold text-sage-leaf">Secondary Typeface</h3>
+                        <div class="font-nunito text-4xl font-bold">Nunito</div>
+                        <p class="text-sm text-pebble-grey max-w-sm mt-2">The workhorse (H3, body, UI). Use for all body text, subheadings, UI labels, and anything that needs to be read rather than felt.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-subtle border border-pebble-grey/20 space-y-6">
+                    <h3 class="text-xl font-bold mb-4">Technical & Casing Rules</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li><strong class="text-deep-slate">Webfonts:</strong> Both ship as local variable TTFs (`fonts/Fredoka-VariableFont...`). No Google Fonts dependency in production.</li>
+                        <li><strong class="text-deep-slate">Brand Name:</strong> Always written as <strong>Groomr</strong> — capital G, no full stop.</li>
+                        <li><strong class="text-deep-slate">Headings (H1 & H2):</strong> Title Case — capitalise every major word.</li>
+                        <li><strong class="text-deep-slate">Body text & H3:</strong> Sentence case — first word and proper nouns only.</li>
+                        <li><strong class="text-deep-slate">Eyebrows / Meta labels:</strong> UPPERCASE with `0.10em` or `0.15em` letter-spacing.</li>
+                        <li><strong class="text-deep-slate">Buttons:</strong> Title Case for a confident feel (e.g., "Sign Up Now").</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Hierarchy Showcase -->
+            <div class="mt-12 bg-white rounded-2xl shadow-subtle border border-pebble-grey/20 overflow-hidden">
+                <div class="bg-pebble-grey/10 px-8 py-4 border-b border-pebble-grey/20">
+                    <h3 class="font-bold">Typographic Hierarchy & Scale</h3>
+                </div>
+                <div class="p-8 space-y-8">
+                    <div class="grid md:grid-cols-3 gap-4 items-baseline border-b border-pebble-grey/10 pb-6">
+                        <div class="text-sm text-pebble-grey font-bold tracking-widest uppercase text-[11px]">Heading 1 (H1)<br><span class="font-normal tracking-normal normal-case">Fredoka Bold | 36px-48px</span></div>
+                        <div class="md:col-span-2 font-fredoka font-bold text-4xl text-deep-slate">Our Grooming Services</div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 items-baseline border-b border-pebble-grey/10 pb-6">
+                        <div class="text-sm text-pebble-grey font-bold tracking-widest uppercase text-[11px]">Heading 2 (H2)<br><span class="font-normal tracking-normal normal-case">Fredoka Bold | 24px-32px</span></div>
+                        <div class="md:col-span-2 font-fredoka font-bold text-2xl text-deep-slate">Find a Local Groomer</div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 items-baseline border-b border-pebble-grey/10 pb-6">
+                        <div class="text-sm text-pebble-grey font-bold tracking-widest uppercase text-[11px]">Heading 3 (H3)<br><span class="font-normal tracking-normal normal-case">Nunito Extra-Bold | 18px-22px</span></div>
+                        <div class="md:col-span-2 font-nunito font-extrabold text-xl text-deep-slate">Nail Clipping & Filing</div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 items-baseline border-b border-pebble-grey/10 pb-6">
+                        <div class="text-sm text-pebble-grey font-bold tracking-widest uppercase text-[11px]">Body Text<br><span class="font-normal tracking-normal normal-case">Nunito Regular | 16px</span></div>
+                        <div class="md:col-span-2 font-nunito text-base text-deep-slate">We genuinely care about dogs and the people who look after them. That warmth comes through in every word we write.</div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 items-center border-b border-pebble-grey/10 pb-6">
+                        <div class="text-sm text-pebble-grey font-bold tracking-widest uppercase text-[11px]">Buttons & UI<br><span class="font-normal tracking-normal normal-case">Nunito Bold | 16px / 12px</span></div>
+                        <div class="md:col-span-2 flex items-center gap-4">
+                            <button class="bg-groomr-gold text-deep-slate font-nunito font-bold py-2 px-6 rounded-full text-base border-none">Book Appointment</button>
+                            <span class="font-nunito font-bold text-xs text-pebble-grey tracking-widest uppercase">Requires 24h notice.</span>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 items-baseline">
+                        <div class="text-sm text-pebble-grey font-bold tracking-widest uppercase text-[11px]">Eyebrow Label<br><span class="font-normal tracking-normal normal-case">Nunito Bold | 12px</span></div>
+                        <div class="md:col-span-2 font-nunito font-bold text-xs text-sage-leaf tracking-[0.15em] uppercase">Brand Guidelines · 2026</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Voice & Messaging -->
+        <section id="voice" class="space-y-12">
+            <h2 class="text-4xl font-bold border-b-2 border-pebble-grey/30 pb-4">Voice & Messaging</h2>
+            
+            <p class="text-xl max-w-3xl">The Groomr voice is <strong class="text-sage-leaf">warm</strong>, <strong class="text-sage-leaf">direct</strong>, and <strong class="text-sage-leaf">quietly confident</strong>. We're the tool that connects dog owners with local experts who care as much as they do.</p>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+                <div class="bg-sage-leaf p-6 rounded-xl shadow-subtle border border-sage-leaf/20 text-deep-slate">
+                    <h4 class="font-bold text-lg mb-2 text-deep-slate">1. Warm & Approachable</h4>
+                    <p class="text-sm">We speak to users like a knowledgeable local friend, not a faceless tech company.</p>
+                </div>
+                <div class="bg-sage-leaf p-6 rounded-xl shadow-subtle border border-sage-leaf/20 text-deep-slate">
+                    <h4 class="font-bold text-lg mb-2 text-deep-slate">2. Direct & Simple</h4>
+                    <p class="text-sm">Booking should be effortless. We use short sentences, clear actions, and zero jargon.</p>
+                </div>
+                <div class="bg-sage-leaf p-6 rounded-xl shadow-subtle border border-sage-leaf/20 text-deep-slate">
+                    <h4 class="font-bold text-lg mb-2 text-deep-slate">3. Quietly Confident</h4>
+                    <p class="text-sm">We don't need to shout. We let the quality of our platform and our trusted groomers do the talking.</p>
+                </div>
+                <div class="bg-sage-leaf p-6 rounded-xl shadow-subtle border border-sage-leaf/20 text-deep-slate">
+                    <h4 class="font-bold text-lg mb-2 text-deep-slate">4. Dog-Obsessed</h4>
+                    <p class="text-sm">We genuinely care. Every message we write ultimately comes back to the dog's wellbeing and happiness.</p>
+                </div>
+            </div>
+
+            <!-- Grammar Rules -->
+            <div class="bg-white p-8 rounded-2xl shadow-subtle border border-pebble-grey/20 mt-8">
+                <h3 class="text-xl font-bold mb-4">Grammar & Phrasing Rules</h3>
+                <div class="grid md:grid-cols-2 gap-8 text-sm">
+                    <ul class="space-y-3">
+                        <li><strong class="text-deep-slate">Voice (You / We):</strong> Speak in <em>first-person plural</em> ("we built this", "we care") for brand-led copy. Address users in <em>second-person</em> ("your dog", "you'll get") for product copy. Never say "the user" or "consumers".</li>
+                        <li><strong class="text-deep-slate">Punctuation:</strong> British English spellings throughout (colour, centre, realise). Em dashes (—) are used minimally in marketing copy. Contractions are encouraged (don't, we're).</li>
+                    </ul>
+                    <ul class="space-y-3">
+                        <li><strong class="text-deep-slate">Brand Name:</strong> Always written as <strong>Groomr</strong> (capital G, no full stop). Never use the logo graphic inline as a replacement.</li>
+                        <li><strong class="text-deep-slate text-muted-terracotta">No Emoji:</strong> Emoji are not part of the brand. They feel inconsistent with the considered voice.</li>
+                        <li><strong class="text-deep-slate">Puns:</strong> One pun is plenty. Avoid "fur baby" or "pawsome". Do not undermine credibility.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 pt-4">
+                <!-- Example 1 -->
+                <div class="bg-white p-6 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                    <h4 class="font-bold text-sage-leaf flex items-center gap-2 mb-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Write This</h4>
+                    <p class="italic mb-2 text-deep-slate">"Find a local groomer in minutes. Real availability, instant confirmation — no phone tag."</p>
+                    <p class="text-xs text-sage-leaf">Direct, specific, solves a real problem. Mentions the pain point without dwelling on it.</p>
+                </div>
+                <div class="bg-pebble-grey/10 p-6 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                    <h4 class="font-bold text-muted-terracotta flex items-center gap-2 mb-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg> Not This</h4>
+                    <p class="italic mb-2 text-deep-slate opacity-75">"Welcome to Groomr, your premier destination for professional canine grooming services..."</p>
+                    <p class="text-xs text-muted-terracotta">Corporate, vague, zero personality. Reads like a terms page.</p>
+                </div>
+
+                <!-- Example 2 -->
+                <div class="bg-white p-6 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                    <h4 class="font-bold text-sage-leaf flex items-center gap-2 mb-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Write This</h4>
+                    <p class="italic mb-2 text-deep-slate">"Your dog deserves a regular. Someone who knows their name, their coat, and exactly how they like their ears done."</p>
+                    <p class="text-xs text-sage-leaf">Emotionally true, specific, earns the tagline rather than just stating it.</p>
+                </div>
+                <div class="bg-pebble-grey/10 p-6 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                    <h4 class="font-bold text-muted-terracotta flex items-center gap-2 mb-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg> Not This</h4>
+                    <p class="italic mb-2 text-deep-slate opacity-75">"Our amazing groomers are pawsome professionals who will make your fur baby look their absolute best!"</p>
+                    <p class="text-xs text-muted-terracotta">Trying too hard. "Fur baby" undermines credibility. One pun is plenty.</p>
+                </div>
+
+                <!-- Example 3 -->
+                <div class="bg-white p-6 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                    <h4 class="font-bold text-sage-leaf flex items-center gap-2 mb-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg> Write This</h4>
+                    <p class="italic mb-2 text-deep-slate">"Oops! Something went wrong. Let's try that again."</p>
+                    <p class="text-xs text-sage-leaf">Human, not panicked. Acknowledges the error without drama.</p>
+                </div>
+                <div class="bg-pebble-grey/10 p-6 rounded-2xl shadow-subtle border border-pebble-grey/20">
+                    <h4 class="font-bold text-muted-terracotta flex items-center gap-2 mb-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg> Not This</h4>
+                    <p class="italic mb-2 text-deep-slate opacity-75">"An unexpected error has occurred. Please contact support."</p>
+                    <p class="text-xs text-muted-terracotta">Cold, corporate. Passive voice. Puts the burden on the user.</p>
+                </div>
+            </div>
+
+            <!-- Tagline Dark Block -->
+            <div class="bg-deep-slate text-alabaster-cream rounded-2xl p-12 text-center space-y-6 mt-12 shadow-subtle border-t-8 border-groomr-gold">
+                <p class="text-sm uppercase tracking-widest font-bold text-groomr-gold">The Tagline</p>
+                <h3 class="font-fredoka text-4xl md:text-5xl italic">"Your dog deserves a regular."</h3>
+                <div class="max-w-2xl mx-auto space-y-4 pt-2">
+                    <p class="text-sage-leaf font-bold tracking-wide">Always Quoted. Always Italics. Always Full Stop. Never Paraphrased.</p>
+                    <p class="opacity-90 leading-relaxed text-sm">A "regular" isn't just a booking; it's a relationship. It's the comfort of a groomer who knows your dog by name, understands their unique coat, and always has their favourite treat waiting. Every time we use these words, we are promising that personal bond.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Iconography Library -->
+        <section id="iconography" class="space-y-12">
+            <div class="space-y-4 border-b-2 border-pebble-grey/30 pb-4">
+                <h2 class="text-4xl font-bold">Iconography Library</h2>
+                <p class="text-lg leading-relaxed max-w-3xl">Groomr uses a custom inline-SVG icon system. It is the brand's most distinctive UI signature. Below is the complete collection of 30 standard icons built with our consistent circular splash logic.</p>
+            </div>
+
+            <!-- Rules -->
+            <div class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20 mb-8">
+                <h3 class="text-2xl font-bold mb-6">Construction Guidelines</h3>
+                <div class="grid md:grid-cols-2 gap-12">
+                    <div class="space-y-4 text-deep-slate">
+                        <p class="text-sm leading-relaxed mb-4">Each icon is composed of <strong>two layers</strong>: an offset coloured "splash" circle behind the glyph, and a Deep Slate stroke glyph on top.</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="text-sage-leaf font-bold text-lg leading-none">•</span>
+                                <span><strong>Stroke Rules:</strong> STRICTLY use a <code class="bg-pebble-grey/10 px-1 rounded text-sm text-muted-terracotta">stroke-width="1.5"</code> with <code class="bg-pebble-grey/10 px-1 rounded text-sm">stroke-linecap="round"</code> & <code class="bg-pebble-grey/10 px-1 rounded text-sm">stroke-linejoin="round"</code> in Deep Slate.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-sage-leaf font-bold text-lg leading-none">•</span>
+                                <span><strong>The Splash Shape:</strong> Always use a perfect circle. No exceptions.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-sage-leaf font-bold text-lg leading-none">•</span>
+                                <span><strong>Size & Offset:</strong> The circle's radius and offset vary organically to add character, but must not exceed the viewBox.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-sage-leaf font-bold text-lg leading-none">•</span>
+                                <span><strong>Splash Colors:</strong> Alternate between Groomr Gold (<code class="bg-pebble-grey/10 px-1 rounded text-sm">#eae45c</code>) and Muted Terracotta (<code class="bg-pebble-grey/10 px-1 rounded text-sm">#c87964</code>) at <code class="bg-pebble-grey/10 px-1 rounded text-sm">opacity="0.55"</code>.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-sage-leaf/10 p-8 rounded-xl border border-sage-leaf/30 flex items-center justify-center flex-col gap-6 text-center">
+                        <div class="relative inline-block scale-150 transform">
+                            <svg class="w-16 h-16 relative z-10" fill="none" viewBox="0 0 24 24">
+                                <circle cx="9" cy="9" r="7.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                                <path stroke="#2c3e50" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21.5c-3.5 0-6-2-6-5 0-2 1.5-3.5 3.5-3.5h5c2 0 3.5 1.5 3.5 3.5 0 3-2.5 5-6 5z" />
+                                <circle cx="5.5" cy="9.5" r="1.5" stroke="#2c3e50" stroke-width="1.5" />
+                                <circle cx="9.5" cy="5.5" r="1.5" stroke="#2c3e50" stroke-width="1.5" />
+                                <circle cx="14.5" cy="5.5" r="1.5" stroke="#2c3e50" stroke-width="1.5" />
+                                <circle cx="18.5" cy="9.5" r="1.5" stroke="#2c3e50" stroke-width="1.5" />
+                            </svg>
+                        </div>
+                        <div class="text-sm font-bold text-deep-slate bg-white px-4 py-2 rounded-full shadow-subtle">
+                            Organic Circle Splash
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Library Grid (30 Icons) -->
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-y-10 gap-x-4">
+                
+                <!-- 1. Pets (Paw) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="9" r="7.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M12 21.5c-3.5 0-6-2-6-5 0-2 1.5-3.5 3.5-3.5h5c2 0 3.5 1.5 3.5 3.5 0 3-2.5 5-6 5z" />
+                        <circle cx="5.5" cy="9.5" r="1.5" />
+                        <circle cx="9.5" cy="5.5" r="1.5" />
+                        <circle cx="14.5" cy="5.5" r="1.5" />
+                        <circle cx="18.5" cy="9.5" r="1.5" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Pets</span>
+                </div>
+                
+                <!-- 2. Services (Scissors) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="15" cy="16" r="6.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <circle cx="6" cy="6" r="3" />
+                        <circle cx="6" cy="18" r="3" />
+                        <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                        <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                        <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Services</span>
+                </div>
+
+                <!-- 3. Booking (Calendar) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="16" cy="7" r="7" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                        <path d="M9 16l2 2 4-4" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Booking</span>
+                </div>
+
+                <!-- 4. Local (Map Pin) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="10" cy="9" r="6.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Local</span>
+                </div>
+
+                <!-- 5. Trust (Shield) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="14" cy="10" r="7.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <path d="M9 12l2 2 4-4" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Trust</span>
+                </div>
+
+                <!-- 6. Community (Users) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="16" r="6" fill="#c87964" stroke="none" opacity="0.55" />
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                        <path d="M16 3.13a4 4 0 010 7.75" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Community</span>
+                </div>
+
+                <!-- 7. Reviews (Star) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="14" cy="14" r="8" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Reviews</span>
+                </div>
+
+                <!-- 8. Financials (Wallet) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="14" cy="10" r="7.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <path d="M6 12h.01M18 12h.01" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Financials</span>
+                </div>
+
+                <!-- 9. Settings (Sliders) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="13" cy="15" r="7" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3" />
+                        <path d="M2 14h4M10 8h4M18 16h4" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Settings</span>
+                </div>
+
+                <!-- 10. Account (Badge) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="10" cy="13" r="6.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <rect x="3" y="4" width="18" height="16" rx="2" ry="2" />
+                        <circle cx="9" cy="10" r="2" />
+                        <path d="M5 16c0-1.5 1.5-2 4-2s4 .5 4 2" />
+                        <path d="M15 10h4M15 14h4" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Account</span>
+                </div>
+
+                <!-- 11. Profile (User) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="15" cy="10" r="8" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Profile</span>
+                </div>
+
+                <!-- 12. Dashboard (Home) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="11" r="6" fill="#c87964" stroke="none" opacity="0.55" />
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Dashboard</span>
+                </div>
+
+                <!-- 13. Messages (Chat) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="17" cy="7" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Messages</span>
+                </div>
+
+                <!-- 14. Gallery (Image) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="14" cy="15" r="7" fill="#c87964" stroke="none" opacity="0.55" />
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Gallery</span>
+                </div>
+
+                <!-- 15. Alerts (Bell) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="17" cy="9" r="4.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Alerts</span>
+                </div>
+
+                <!-- 16. Analytics (Chart) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="15" cy="9" r="6" fill="#c87964" stroke="none" opacity="0.55" />
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Analytics</span>
+                </div>
+
+                <!-- 17. Favorites (Heart) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="16" cy="8" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Favorites</span>
+                </div>
+
+                <!-- 18. Search (Magnifying Glass) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="13" cy="11" r="5.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Search</span>
+                </div>
+
+                <!-- 19. Menu (Hamburger) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Menu</span>
+                </div>
+
+                <!-- 20. Close (X) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Close</span>
+                </div>
+
+                <!-- 21. Edit (Pencil) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="6" r="4.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Edit</span>
+                </div>
+
+                <!-- 22. Delete (Trash) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="13" r="6" fill="#c87964" stroke="none" opacity="0.55" />
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Delete</span>
+                </div>
+
+                <!-- 23. Success (Check) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Success</span>
+                </div>
+
+                <!-- 24. Warning (Alert Triangle) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="14" r="5.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Warning</span>
+                </div>
+
+                <!-- 25. Logout (Exit) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="16" cy="12" r="4.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Logout</span>
+                </div>
+
+                <!-- 26. Media (Camera) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="13" r="6" fill="#c87964" stroke="none" opacity="0.55" />
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Media</span>
+                </div>
+
+                <!-- 27. Time (Clock) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="14" cy="10" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Time</span>
+                </div>
+
+                <!-- 28. Payment (Credit Card) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="16" r="4.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Payment</span>
+                </div>
+
+                <!-- 29. Share (Nodes) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="16" cy="12" r="6" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Share</span>
+                </div>
+
+                <!-- 30. Filter (Funnel) -->
+                <div class="flex flex-col items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="10" r="5.5" fill="#c87964" stroke="none" opacity="0.55" />
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                    </svg>
+                    <span class="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.1em]">Filter</span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- UI Application & Components -->
+        <section id="application" class="space-y-16">
+            <div class="space-y-4 border-b-2 border-pebble-grey/30 pb-4">
+                <h2 class="text-4xl font-bold">UI Application & Components</h2>
+            </div>
+            
+            <!-- Spacing, Radii & Shadows -->
+            <div class="space-y-12">
+                <h3 class="text-2xl font-extrabold">Spacing, Radii & Shadows</h3>
+                
+                <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-4 rounded-xl text-sm text-deep-slate leading-relaxed w-full shadow-sm">
+                    <strong class="font-extrabold uppercase tracking-widest text-xs block mb-1">Technical Specifications</strong>
+                    Use Alabaster Cream to let elements breathe. Spacing should follow a strict 4px/8px baseline grid. Border radii are scaled semantically: 12px for standard cards, full pills for primary buttons. Shadows are subtle and use Pebble Grey (#95a5a6) with low opacity to avoid muddying the interface.
+                </div>
+
+                <!-- Spacing Scale -->
+                <div class="space-y-4 pt-4">
+                    <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Spacing Scale</h4>
+                    <div class="flex flex-wrap gap-4 items-end">
+                        <div class="flex flex-col items-center gap-2"><div class="w-4 h-4 bg-sage-leaf/30 border border-sage-leaf/50"></div><div class="text-[11px] font-bold text-pebble-grey tracking-[0.05em]"><b class="text-deep-slate">4</b> · 16px</div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-6 h-6 bg-sage-leaf/30 border border-sage-leaf/50"></div><div class="text-[11px] font-bold text-pebble-grey tracking-[0.05em]"><b class="text-deep-slate">6</b> · 24px</div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-8 h-8 bg-sage-leaf/30 border border-sage-leaf/50"></div><div class="text-[11px] font-bold text-pebble-grey tracking-[0.05em]"><b class="text-deep-slate">8</b> · 32px</div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-10 h-10 bg-sage-leaf/30 border border-sage-leaf/50"></div><div class="text-[11px] font-bold text-pebble-grey tracking-[0.05em]"><b class="text-deep-slate">10</b> · 40px</div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-12 h-12 bg-sage-leaf/30 border border-sage-leaf/50"></div><div class="text-[11px] font-bold text-pebble-grey tracking-[0.05em]"><b class="text-deep-slate">12</b> · 48px</div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-16 h-16 bg-sage-leaf/30 border border-sage-leaf/50"></div><div class="text-[11px] font-bold text-pebble-grey tracking-[0.05em]"><b class="text-deep-slate">16</b> · 64px</div></div>
+                    </div>
+                </div>
+
+                <!-- Border Radii -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Border Radii</h4>
+                    <div class="flex flex-wrap gap-4 items-end">
+                        <div class="flex flex-col items-center gap-2"><div class="w-20 h-16 bg-white border border-pebble-grey/30 rounded-[4px]"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em]">sm <span class="text-pebble-grey font-normal">4px</span></div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-20 h-16 bg-white border border-pebble-grey/30 rounded-[8px]"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em]">md <span class="text-pebble-grey font-normal">8px</span></div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-20 h-16 bg-white border border-pebble-grey/30 rounded-[12px]"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em]">lg <span class="text-pebble-grey font-normal">12px</span></div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-20 h-16 bg-white border border-pebble-grey/30 rounded-[16px]"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em]">xl <span class="text-pebble-grey font-normal">16px</span></div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-20 h-16 bg-white border border-pebble-grey/30 rounded-[24px]"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em]">2xl <span class="text-pebble-grey font-normal">24px</span></div></div>
+                        <div class="flex flex-col items-center gap-2"><div class="w-20 h-16 bg-white border border-pebble-grey/30 rounded-full"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em]">pill <span class="text-pebble-grey font-normal">9999px</span></div></div>
+                    </div>
+                </div>
+
+                <!-- Shadows -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Shadows</h4>
+                    <div class="flex flex-wrap gap-8 items-end">
+                        <div class="flex flex-col items-center gap-3"><div class="w-[120px] h-16 bg-white rounded-[12px] border border-pebble-grey/10 shadow-subtle"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em] text-center">SHADOW-SUBTLE<span class="block text-pebble-grey font-normal mt-0.5 lowercase">resting cards</span></div></div>
+                        <div class="flex flex-col items-center gap-3"><div class="w-[120px] h-16 bg-white rounded-[12px] border border-pebble-grey/10 shadow-hover-lift"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em] text-center">SHADOW-LIFT<span class="block text-pebble-grey font-normal mt-0.5 lowercase">hover state</span></div></div>
+                        <div class="flex flex-col items-center gap-3"><div class="w-[120px] h-16 bg-white rounded-[12px] border border-pebble-grey/10 shadow-modal"></div><div class="text-[11px] font-bold text-deep-slate tracking-[0.05em] text-center">SHADOW-MODAL<span class="block text-pebble-grey font-normal mt-0.5 lowercase">overlays</span></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons Demo -->
+            <div class="space-y-6 pt-6 border-t border-pebble-grey/20">
+                <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Buttons & CTAs</h4>
+                
+                <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-4 rounded-xl text-sm text-deep-slate leading-relaxed w-full shadow-sm">
+                    <strong class="font-extrabold uppercase tracking-widest text-xs block mb-1">Technical Specifications</strong>
+                    Fully rounded (pill-shaped) borders. Transition backgrounds smoothly over <strong>0.3 seconds</strong>. Active/Focus states should feature a crisp <strong>3px solid outline in Groomr Gold</strong>. Primary buttons transition from Groomr Gold to Muted Terracotta on hover.
+                </div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-subtle border border-pebble-grey/20 flex flex-wrap gap-4 items-center">
+                    <button class="bg-groomr-gold text-deep-slate hover:bg-muted-terracotta hover:text-alabaster-cream transition-all duration-300 font-nunito font-bold text-[15px] px-[26px] py-[11px] rounded-full border-none cursor-pointer focus-ring shadow-subtle">Book Appointment</button>
+                    <button class="bg-transparent border-2 border-deep-slate text-deep-slate hover:bg-deep-slate hover:text-alabaster-cream transition-all duration-300 font-nunito font-bold text-[15px] px-[24px] py-[9px] rounded-full cursor-pointer focus-ring">View Profile</button>
+                    <button class="bg-transparent border-none text-pebble-grey hover:text-deep-slate transition-all duration-300 font-nunito font-bold text-[15px] px-[26px] py-[11px] rounded-full cursor-pointer focus-ring">Cancel</button>
+                    <button class="bg-groomr-gold text-deep-slate border-none font-nunito font-bold text-[15px] px-[26px] py-[11px] rounded-full cursor-pointer focus-ring-active shadow-subtle">Focused</button>
+                </div>
+            </div>
+
+            <!-- Badges Demo -->
+            <div class="space-y-6">
+                <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Badges & Pills</h4>
+
+                <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-4 rounded-xl text-sm text-deep-slate leading-relaxed w-full shadow-sm">
+                    <strong class="font-extrabold uppercase tracking-widest text-xs block mb-1">Technical Specifications</strong>
+                    Pills are purely informational and not interactive. Use a 10% or 20% opacity background of the semantic color, matched with a slightly darker (30% to 40% opacity) border and fully solid text.
+                </div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-subtle border border-pebble-grey/20 flex flex-wrap gap-3 items-center">
+                    <span class="font-nunito font-bold text-[13px] px-[14px] py-[6px] rounded-full border inline-flex items-center gap-1.5 bg-groomr-gold/20 text-deep-slate border-groomr-gold/40">CONFIRMED</span>
+                    <span class="font-nunito font-bold text-[13px] px-[14px] py-[6px] rounded-full border inline-flex items-center gap-1.5 bg-sage-leaf/10 text-sage-leaf border-sage-leaf/30">★ 4.8+ Rating</span>
+                    <span class="font-nunito font-bold text-[13px] px-[14px] py-[6px] rounded-full border inline-flex items-center gap-1.5 bg-muted-terracotta/10 text-muted-terracotta border-muted-terracotta/30">4 Groomers Found</span>
+                    <span class="font-nunito font-bold text-[13px] px-[14px] py-[6px] rounded-full border inline-flex items-center gap-1.5 bg-deep-slate/10 text-deep-slate border-deep-slate/20">Full Groom</span>
+                    <span class="font-nunito font-bold text-[13px] px-[14px] py-[6px] rounded-full border inline-flex items-center gap-1.5 bg-sage-leaf/10 text-sage-leaf border-sage-leaf/30">Free to use</span>
+                </div>
+            </div>
+
+            <!-- UI Showcase Grid -->
+            <div class="grid md:grid-cols-2 gap-16 items-start mt-12">
+                <!-- Cards & Hover -->
+                <div class="space-y-6">
+                    <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Interactive Cards & Hover Lifts</h4>
+
+                    <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-4 rounded-xl mb-6 text-sm text-deep-slate leading-relaxed shadow-sm w-full">
+                        <strong class="font-extrabold uppercase tracking-widest text-xs block mb-1">Technical Specifications</strong>
+                        Soften container corners with <strong>8px to 12px</strong> border radii. On hover, lift the card vertically by a few pixels (-4px translateY) and cast a soft, satisfying shadow using Pebble Grey (#95a5a6) to make the interface feel alive.
+                    </div>
+
+                    <!-- App Horizontal Card Example -->
+                    <div class="bg-white border border-pebble-grey/20 rounded-[12px] p-6 shadow-subtle flex gap-4 items-center card-lift cursor-pointer max-w-sm w-full">
+                        <div class="w-14 h-14 rounded-full bg-groomr-gold/55 shrink-0 flex items-center justify-center">
+                            <svg class="w-[30px] h-[30px]" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="M9 12l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-fredoka font-bold text-[20px] text-deep-slate m-0 mb-1">Trust first.</h3>
+                            <p class="m-0 text-[14px] text-deep-slate/80 leading-[1.5]">Only groomers we'd trust with our own dogs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forms & Inputs -->
+                <div class="space-y-6">
+                    <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Forms & Semantic Feedback</h4>
+                    
+                    <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-4 rounded-xl mb-6 text-sm text-deep-slate leading-relaxed shadow-sm w-full">
+                        <strong class="font-extrabold uppercase tracking-widest text-xs block mb-1">Technical Specifications</strong>
+                        Use <strong>Sage Leaf (#88a096) backgrounds with Deep Slate text</strong> for success messages. Use <strong>Muted Terracotta (#c87964) with Alabaster Cream text</strong> for errors. Input fields must utilize the crisp 3px Groomr Gold focus ring.
+                    </div>
+
+                    <div class="bg-white p-8 rounded-xl border border-pebble-grey/20 space-y-5 shadow-subtle flex flex-col">
+                        <!-- Standard Field Example -->
+                        <div class="flex flex-col gap-1.5">
+                            <label class="font-bold text-[13px] text-deep-slate">Email Address</label>
+                            <input type="email" placeholder="you@example.com" class="font-nunito text-[15px] px-4 py-[11px] rounded-[12px] border border-pebble-grey/30 bg-white text-deep-slate outline-none shadow-[0_1px_2px_rgba(149,165,166,0.10)] focus-ring w-full">
+                            <!-- Simulated Error State -->
+                            <p class="text-sm text-muted-terracotta font-bold inline-block rounded mt-1">Please enter a valid email.</p>
+                        </div>
+
+                        <!-- Pill Search Combined -->
+                        <div class="flex items-center gap-2 bg-white border border-pebble-grey/20 rounded-full py-1.5 pl-4 pr-1.5 shadow-sm focus-within:ring-[3px] focus-within:ring-groomr-gold focus-within:border-groomr-gold transition-all w-full mt-2">
+                            <span class="text-pebble-grey opacity-70">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                            </span>
+                            <input placeholder="Enter your postcode..." class="border-none flex-1 py-2 outline-none bg-transparent font-nunito text-[15px] text-deep-slate min-w-0 shadow-none focus:shadow-none focus:ring-0">
+                            <button class="bg-groomr-gold text-deep-slate border-none rounded-full px-[22px] py-[9px] font-bold font-nunito text-[14px] cursor-pointer hover:bg-muted-terracotta hover:text-alabaster-cream transition-colors duration-300 whitespace-nowrap shadow-subtle">Search</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Header Demo -->
+            <div class="space-y-8 pt-6 border-t border-pebble-grey/20 mt-12">
+                <div class="flex flex-col gap-2 mb-6">
+                    <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm">Page Header</h4>
+                </div>
+
+                <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-4 rounded-xl text-sm text-deep-slate leading-relaxed w-full shadow-sm">
+                    <strong class="font-extrabold uppercase tracking-widest text-xs block mb-1">Technical Specifications</strong>
+                    Sticky navigation system utilizing Alabaster Cream as the base. Includes two distinct layout modes based on user authentication status. Links trigger a 0.3s transition to Muted Terracotta.
+                </div>
+
+                <!-- Logged Out State Mockup -->
+                <div class="space-y-3 pt-4">
+                    <h5 class="font-bold text-pebble-grey uppercase tracking-wider text-[11px]">Variant: Logged Out (Public)</h5>
+                    <div class="border border-pebble-grey/30 rounded-xl overflow-hidden bg-pebble-grey/5 shadow-inner">
+                        <!-- Header Component Container -->
+                        <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 relative">
+                            <div class="w-full px-6 lg:px-12 py-4 flex justify-between items-center">
+                                <button class="focus-ring rounded-lg inline-block transition-opacity hover:opacity-80 border-none bg-transparent cursor-pointer">
+                                    <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" class="h-8 md:h-10 w-auto object-contain"/>
+                                </button>
+                                
+                                <div class="hidden md:flex items-center space-x-6">
+                                    <button class="font-nunito font-bold text-deep-slate hover:text-muted-terracotta transition-colors focus-ring rounded px-2 py-1 border-none bg-transparent cursor-pointer">
+                                        Log In
+                                    </button>
+                                    <button class="bg-groomr-gold text-deep-slate hover:bg-muted-terracotta hover:text-alabaster-cream transition-all duration-300 font-nunito font-bold px-6 py-2.5 rounded-full text-sm focus-ring border-none cursor-pointer shadow-subtle">
+                                        Sign Up
+                                    </button>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="h-24 w-full flex items-center justify-center text-pebble-grey text-xs">
+                            Page Content Flowing Beneath
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logged In State Mockup -->
+                <div class="space-y-3 pt-6 border-t border-pebble-grey/10">
+                    <h5 class="font-bold text-pebble-grey uppercase tracking-wider text-[11px]">Variant: Logged In (Authenticated)</h5>
+                    <div class="border border-pebble-grey/30 rounded-xl overflow-visible bg-pebble-grey/5 shadow-inner relative z-10 pb-32">
+                        <!-- Header Component Container -->
+                        <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 relative">
+                            <div class="w-full px-6 lg:px-12 py-4 flex justify-between items-center">
+                                <button class="focus-ring rounded-lg inline-block transition-opacity hover:opacity-80 border-none bg-transparent cursor-pointer">
+                                    <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" class="h-8 md:h-10 w-auto object-contain"/>
+                                </button>
+                                
+                                <div class="flex items-center space-x-6">
+                                    <!-- Messages CTA -->
+                                    <button class="hidden md:inline-flex font-nunito font-bold text-deep-slate hover:text-muted-terracotta transition-colors focus-ring rounded px-2 py-1 relative border-none bg-transparent cursor-pointer">
+                                        Messages
+                                        <span class="absolute top-1 -right-1.5 w-2 h-2 bg-muted-terracotta rounded-full shadow-sm"></span>
+                                    </button>
+                                    
+                                    <!-- Avatar Dropdown (Hover State Simulated) -->
+                                    <div class="relative group cursor-pointer">
+                                        <button class="flex items-center gap-3 focus-ring rounded-full pl-2 pr-4 py-1.5 border border-pebble-grey/30 bg-white shadow-sm transition-colors cursor-pointer">
+                                            <div class="w-8 h-8 bg-sage-leaf text-white rounded-full flex items-center justify-center font-bold font-fredoka shadow-sm text-sm">
+                                                J
+                                            </div>
+                                            <span class="font-nunito font-bold text-sm text-deep-slate">Jane Doe</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-deep-slate"><path d="m6 9 6 6 6-6"/></svg>
+                                        </button>
+                                        
+                                        <!-- Open Dropdown Menu (Forced visible for styling reference) -->
+                                        <div class="absolute right-0 mt-2 w-44 bg-white border border-pebble-grey/20 rounded-xl shadow-lg z-50 overflow-hidden transition-all duration-200">
+                                            <button class="w-full text-left block px-4 py-3 text-sm font-bold text-deep-slate hover:bg-alabaster-cream transition-colors border-none bg-transparent cursor-pointer">My Profile</button>
+                                            <button class="w-full text-left block px-4 py-3 text-sm font-bold text-deep-slate hover:bg-alabaster-cream transition-colors border-none bg-transparent cursor-pointer">Settings</button>
+                                            <div class="border-t border-pebble-grey/10"></div>
+                                            <button class="w-full text-left block px-4 py-3 text-sm font-bold text-muted-terracotta hover:bg-alabaster-cream transition-colors border-none bg-transparent cursor-pointer">Log Out</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </header>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Demo -->
+            <div class="mt-16">
+                <h4 class="font-bold text-pebble-grey uppercase tracking-wider text-sm mb-4">Footer Structure Demo</h4>
+                
+                <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-4 rounded-xl mb-6 text-sm text-deep-slate leading-relaxed w-full shadow-sm">
+                    <strong class="font-extrabold uppercase tracking-widest text-xs block mb-1">Technical Specifications</strong>
+                    Anchored with a Deep Slate (#2c3e50) background and Alabaster Cream text. The top edge of the footer requires an <strong>8px Groomr Gold accent border</strong> as a brand signature. Use a 40% opacity Sage Leaf horizontal line to separate the main CTA from the sub-navigation. Opacity classes (50%) are used to properly mute the bottom copyright text and text-logo.
+                </div>
+
+                <div class="w-full bg-deep-slate text-alabaster-cream rounded-b-2xl p-8 md:p-12 text-center space-y-8 shadow-subtle relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
+                    <h3 class="font-fredoka text-4xl pt-4">Ready to look your best?</h3>
+                    <button class="bg-groomr-gold text-deep-slate hover:bg-muted-terracotta hover:text-alabaster-cream transition-all duration-300 font-nunito font-bold px-[26px] py-[11px] rounded-full border-none shadow-subtle cursor-pointer focus-ring">Get Started</button>
+                    <div class="h-px w-full bg-sage-leaf/40 max-w-4xl mx-auto my-8"></div>
+                    <div class="flex flex-col md:flex-row justify-between items-center max-w-4xl mx-auto gap-6">
+                        <div>
+                            <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-10 w-auto object-contain">
+                        </div>
+                        <div class="flex gap-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
+                            <a href="#" class="hover:text-groomr-gold transition-colors">Privacy</a>
+                            <a href="#" class="hover:text-groomr-gold transition-colors">Terms</a>
+                            <a href="#" class="hover:text-groomr-gold transition-colors">Support</a>
+                        </div>
+                    </div>
+                    <p class="text-xs text-pebble-grey pt-8 opacity-50">© 2026 Groomr. All rights reserved.</p>
+                </div>
+            </div>
+
+        </section>
+        
+        <!-- Bottom padding for breathing room -->
+        <div class="h-12"></div>
+    </main>
+
+</body>
+</html>

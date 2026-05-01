@@ -3,38 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { PlusIcon, PencilIcon, TrashIcon, StarIcon } from "@/components/ui/GroomrIcons";
+import { PlusIcon, PencilIcon, TrashIcon, StarIcon, CheckIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  since: string;
-  avatar: string;
-  rating: number;
-  reviews: number;
-  link: string;
-}
-
-interface Service {
-  name: string;
-  duration: number;
-  price: number;
-}
-
-const INITIAL_TEAM: TeamMember[] = [
-  { id:"t1", name:"Lola García",  role:"Owner & lead groomer",         since:"2017", avatar:"L", rating:4.9, reviews:142, link:"groomr.co/lola-at-wagington" },
-  { id:"t2", name:"Marcus Eze",   role:"Senior groomer",               since:"2021", avatar:"M", rating:4.8, reviews:38,  link:"groomr.co/marcus-at-wagington" },
-  { id:"t3", name:"Hannah Reid",  role:"Apprentice (puppy specialist)", since:"2024", avatar:"H", rating:4.9, reviews:4,   link:"groomr.co/hannah-at-wagington" },
-];
-
-const INITIAL_SERVICES: Service[] = [
-  { name:"Bath & Brush", duration:45,  price:38 },
-  { name:"Full Groom",   duration:90,  price:58 },
-  { name:"Hand-Strip",   duration:120, price:80 },
-  { name:"Nail Clip",    duration:15,  price:15 },
-];
+import { saveGroomerProfile, saveServices, saveTeamMembers } from "@/app/actions/groomer";
 
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -45,14 +16,78 @@ function FieldGroup({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-export function ProfileEditor() {
-  const [team, setTeam] = useState<TeamMember[]>(INITIAL_TEAM);
-  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
-  const [businessMode, setBusinessMode] = useState<"mobile" | "studio">("mobile");
-  const [radius, setRadius] = useState(5);
-  const [bio, setBio] = useState("We're a husband-and-wife team running a fully-mobile grooming van across East London. Eight years in, we know every quirky cocker spaniel coat, every nervous rescue, and every dog who genuinely loves bath time.");
+export function ProfileEditor({ profileData }: { profileData: any }) {
+  const profile = profileData?.profile || {};
+  const initialServices = profileData?.services || [];
+  const initialTeam = profileData?.team || [];
+
+  const [team, setTeam] = useState<any[]>(initialTeam.map((t: any) => ({
+    id: t.id,
+    name: t.name,
+    role: t.role,
+    since: t.since_year ? String(t.since_year) : new Date().getFullYear().toString(),
+    avatar: t.name.charAt(0).toUpperCase(),
+    rating: t.average_rating || 0,
+    reviews: t.total_reviews || 0,
+    link: `groomr.co/${t.public_slug || t.name.toLowerCase().replace(/[^a-z]/g,"-")}`
+  })));
+  
+  const [services, setServices] = useState<any[]>(initialServices.map((s: any) => ({
+    name: s.name,
+    duration: s.duration_minutes,
+    price: s.price_pence ? s.price_pence / 100 : 0
+  })));
+
+  const [businessMode, setBusinessMode] = useState<"mobile" | "studio">(profile.is_mobile ? "mobile" : "studio");
+  const [radius, setRadius] = useState(profile.service_radius || 5);
+  const [bio, setBio] = useState(profile.bio || "");
+  const [businessName, setBusinessName] = useState(profile.business_name || "");
+  const [addressLine1, setAddressLine1] = useState(profile.address_line_1 || "");
+  const [postcode, setPostcode] = useState(profile.postcode || "");
+  
   const [adding, setAdding] = useState(false);
   const [newMember, setNewMember] = useState({ name: "", role: "" });
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  async function handleSave() {
+    setIsSaving(true);
+    setSaveSuccess(false);
+
+    const profileUpdates = {
+      business_name: businessName,
+      bio,
+      is_mobile: businessMode === "mobile",
+      is_studio: businessMode === "studio",
+      service_radius: businessMode === "mobile" ? radius : null,
+      address_line_1: businessMode === "studio" ? addressLine1 : null,
+      postcode: businessMode === "studio" ? postcode : null,
+    };
+
+    const serviceUpdates = services.map(s => ({
+      name: s.name,
+      duration_minutes: s.duration,
+      price_pence: Math.round(s.price * 100)
+    }));
+
+    const teamUpdates = team.map(t => ({
+      name: t.name,
+      role: t.role,
+      since_year: parseInt(t.since) || new Date().getFullYear(),
+      public_slug: t.link.split('groomr.co/')[1] || null
+    }));
+
+    await Promise.all([
+      saveGroomerProfile(profileUpdates),
+      saveServices(serviceUpdates),
+      saveTeamMembers(teamUpdates)
+    ]);
+
+    setIsSaving(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  }
 
   function addMember() {
     if (!newMember.name.trim()) return;
@@ -72,20 +107,30 @@ export function ProfileEditor() {
   }
 
   return (
-    <section className="grid lg:grid-cols-[1fr_360px] gap-6">
-      <div className="space-y-6 min-w-0">
-        {/* Business basics */}
-        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Eyebrow>Business basics</Eyebrow>
-            <button className="text-xs font-bold text-deep-slate text-link">Preview public profile →</button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <FieldGroup label="Business name"><input className="field" defaultValue="Wagington & Co." /></FieldGroup>
-            <FieldGroup label="Owner / lead"><input className="field" defaultValue="Lola García" /></FieldGroup>
-            <FieldGroup label="Email"><input className="field" defaultValue="lola@wagington.co.uk" /></FieldGroup>
-            <FieldGroup label="Phone"><input className="field" defaultValue="+44 7700 900 014" /></FieldGroup>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white border border-pebble-grey/20 rounded-[20px] p-4 lg:px-6">
+        <p className="text-sm font-bold text-deep-slate">Manage your public profile and settings</p>
+        <button 
+          onClick={handleSave} 
+          disabled={isSaving}
+          className="btn-primary font-nunito font-bold px-6 py-2 rounded-full text-sm focus-ring flex items-center gap-2"
+        >
+          {isSaving ? "Saving..." : saveSuccess ? <><CheckIcon size={16} /> Saved</> : "Save changes"}
+        </button>
+      </div>
+
+      <section className="grid lg:grid-cols-[1fr_360px] gap-6">
+        <div className="space-y-6 min-w-0">
+          {/* Business basics */}
+          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Eyebrow>Business basics</Eyebrow>
+              <button className="text-xs font-bold text-deep-slate text-link">Preview public profile →</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <FieldGroup label="Business name"><input className="field" value={businessName} onChange={e => setBusinessName(e.target.value)} /></FieldGroup>
+              <FieldGroup label="Owner / lead"><input className="field" defaultValue={profileData?.profile?.user_id || "Owner"} disabled /></FieldGroup>
+            </div>
           <div className="mt-4">
             <FieldGroup label="Bio (max 280 chars)">
               <textarea value={bio} onChange={e => setBio(e.target.value.slice(0, 280))} className="field min-h-[100px]" />
@@ -121,8 +166,8 @@ export function ProfileEditor() {
           )}
           {businessMode === "studio" && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <FieldGroup label="Studio address"><input className="field" defaultValue="14 Mare Street, Hackney, E8" /></FieldGroup>
-              <FieldGroup label="Postcode"><input className="field" defaultValue="E8 4RP" /></FieldGroup>
+              <FieldGroup label="Studio address"><input className="field" value={addressLine1} onChange={e => setAddressLine1(e.target.value)} placeholder="14 Mare Street, E8" /></FieldGroup>
+              <FieldGroup label="Postcode"><input className="field" value={postcode} onChange={e => setPostcode(e.target.value)} placeholder="E8 4RP" /></FieldGroup>
             </div>
           )}
         </div>
@@ -256,5 +301,6 @@ export function ProfileEditor() {
         </div>
       </aside>
     </section>
+    </div>
   );
 }

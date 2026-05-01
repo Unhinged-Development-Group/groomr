@@ -17,7 +17,17 @@ export default async function SearchPage({
     mapCentre = { lat: parseFloat(params.lat), lng: parseFloat(params.lng) };
   } else if (params.q?.trim()) {
     const geocoded = await geocodeQuery(params.q.trim());
-    if (geocoded) mapCentre = geocoded;
+    if (geocoded) {
+      mapCentre = geocoded;
+    } else {
+      // Fallback: derive centre from the groomer coordinates themselves
+      const withCoords = groomers.filter((g) => g.lat !== undefined && g.lng !== undefined);
+      if (withCoords.length > 0) {
+        const avgLat = withCoords.reduce((s, g) => s + g.lat!, 0) / withCoords.length;
+        const avgLng = withCoords.reduce((s, g) => s + g.lng!, 0) / withCoords.length;
+        mapCentre = { lat: avgLat, lng: avgLng };
+      }
+    }
   }
 
   return (

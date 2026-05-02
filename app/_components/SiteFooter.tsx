@@ -26,6 +26,7 @@ export function SiteFooter() {
               height={28}
               width={105}
               className="h-7 w-auto object-contain opacity-90"
+              style={{ width: "auto" }}
             />
           </Link>
 

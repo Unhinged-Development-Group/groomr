@@ -42,6 +42,7 @@ function SiteHeader() {
             height={32}
             width={120}
             className="h-8 w-auto object-contain"
+            style={{ width: "auto" }}
             priority
           />
         </Link>

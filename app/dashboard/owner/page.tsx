@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { DogsSection } from "./_components/DogsSection";
 import { AppointmentsSection } from "./_components/AppointmentsSection";
 import { FavouriteGroomersSection } from "./_components/FavouriteGroomersSection";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getOwnerAppointments } from "@/app/actions/appointments";
 import { getFavouriteGroomers } from "@/app/actions/favourites";
 import type { Dog } from "@/app/actions/dogs";

@@ -163,6 +163,19 @@ groomr/
 │           └── clerk/
 │               └── route.ts            # Clerk webhook: user.created → creates profiles row
 │
+├── app/
+│   │
+│   ├── search/
+│   │   ├── page.tsx                     # Async server component — reads params, fetches groomers, geocodes query
+│   │   ├── loading.tsx                  # Skeleton loading state (auto-used by Next.js)
+│   │   └── _components/
+│   │       ├── SearchPageClient.tsx     # "use client" — root wrapper, holds filter state + filteredCount
+│   │       ├── SearchBar.tsx            # "use client" — search input + Near Me geolocation button + stat badges
+│   │       ├── FilterBar.tsx            # "use client" — 4 filter dropdowns (service, price, payment, rating)
+│   │       ├── ResultsSection.tsx       # "use client" — list/map toggle, client-side filter logic, GroomerCard grid
+│   │       ├── MapView.tsx              # "use client" — Google Maps (@vis.gl/react-google-maps), dynamic import ssr:false
+│   │       └── GroomerProfileModal.tsx  # "use client" — profile modal: services, hours, reviews, Book Now stub
+│
 ├── components/
 │   └── ui/
 │       ├── Button.tsx                   # PrimaryButton, SecondaryButton, GhostButton
@@ -177,7 +190,11 @@ groomr/
 │
 └── lib/
     ├── supabase.ts                      # Two clients: `supabase` (anon) + `supabaseAdmin` (service role)
+    ├── search.ts                        # Supabase search queries (text + PostGIS geo), geocoding, normalisation
     └── utils.ts                         # Shared utility functions
+
+types/
+└── search.ts                            # Shared TypeScript types: GroomerResult, SearchParams, ActiveFilters, MapCentre
 ```
 
 ---
@@ -190,6 +207,7 @@ groomr/
 | `/` | `app/page.tsx` | Landing page |
 | `/founder` | `app/founder/page.tsx` | Founder profile (Andrew Hughes + Murphy) |
 | `/become-a-groomer` | `app/become-a-groomer/page.tsx` | Groomer marketing page |
+| `/search` | `app/search/page.tsx` | Groomer search results (text or geo) |
 | `/sign-in` | Clerk-hosted | Sign in |
 | `/sign-up` | Clerk-hosted | Sign up |
 | `/api/webhooks/clerk` | `app/api/webhooks/clerk/route.ts` | Clerk webhook receiver |
@@ -293,12 +311,15 @@ CLERK_WEBHOOK_SECRET=               # Used to verify webhook signatures in route
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
 
+# Google Maps (Maps JavaScript API + Geocoding API must be enabled in GCP)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=  # Client-side: used by @vis.gl/react-google-maps for map display
+GOOGLE_MAPS_API_KEY=              # Server-side only: used for geocoding text queries to a map centre lat/lng
+
 # (Future — not yet configured)
 STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
 RESEND_API_KEY=
-GOOGLE_MAPS_API_KEY=
 NEXT_PUBLIC_POSTHOG_KEY=
 ```
 
@@ -676,6 +697,10 @@ There is **no `tailwind.config.ts`**. Brand tokens and font families are registe
 | Clerk `SignInButton` / `SignUpButton` | These take exactly one child | Wrap the label in a `<button>` element as the single child |
 | Cloudinary images in Next.js | `next/image` requires allowed domains | `res.cloudinary.com` is in `remotePatterns` in `next.config.ts` |
 | Next.js 16 middleware file | Uses `proxy.ts` not `middleware.ts` | All route protection logic lives in `proxy.ts` |
+| PostGIS queries can't use `ST_X`/`ST_Y` via Supabase JS `.select()` | The Supabase JS client's column selector doesn't support function calls | Use a Postgres `LANGUAGE sql` RPC function (e.g. `search_groomers_near`) and call via `.rpc()` |
+| `@vis.gl/react-google-maps` must be client-only | Google Maps accesses `window` during import — throws on SSR | Import via `next/dynamic` with `{ ssr: false }` in the parent component |
+| Supabase join returns array, not object | `.select('*, profiles(full_name)')` returns `profiles` as `{ full_name }[]`, not `{ full_name }` | Type the joined field as an array (`profiles: { full_name: string \| null }[] \| null`) |
+| Google Maps needs two separate env vars | Map display (client) and geocoding (server) use different env var prefixes | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` for browser; `GOOGLE_MAPS_API_KEY` for server-side geocoding |
 
 ---
 
@@ -722,32 +747,36 @@ There is **no `tailwind.config.ts`**. Brand tokens and font families are registe
 - Groomer dashboard (`/dashboard/groomer`) — placeholder
 - Groomer registration wizard (`/register/groomer`) — 5-step wizard + server action
 
+**Search & Discovery**
+- Search page (`/search`) — text search (ILIKE on business_name/city/postcode) + Near Me (PostGIS `ST_DWithin`)
+- Filters: service type, price range, payment, rating — all client-side, no refetch
+- Google Maps view (`@vis.gl/react-google-maps`) with gold pin markers, info window, "View Profile"
+- Groomer profile modal — fetches services, availability, reviews from Supabase on open
+- Geocoding: server-side call to Google Maps Geocoding API to centre the map on text queries
+- `search_groomers_near` PostGIS RPC function applied to Supabase (`lib/search.ts`)
+
 ### 🔜 Next Up (Phase 2)
 
-1. **Search page** (`/search`) — location-based groomer discovery
-   - Postcode/town search → geocode via Google Maps API
-   - Groomer cards grid + map panel (Google Maps embed)
-   - Filters: mobile/studio, price range, day availability, dog size
-   - Results from `groomer_profiles` WHERE `is_listed = true` ordered by proximity
-
-2. **Public groomer profiles** (`/groomers/[slug]`)
+1. **Public groomer profiles** (`/groomers/[slug]`)
+   - Dedicated page (profile modal exists on /search but full page needed for SEO + deep linking)
    - Business name, bio, photos, services + prices
    - Availability calendar
    - Reviews section
    - "Book Now" CTA → booking flow
+   - Add `profile_image_url` and `banner_image_url` columns to `groomer_profiles` (currently placeholder Unsplash image)
 
-3. **Booking flow**
+2. **Booking flow**
    - Service selection → date/time picker → dog selection → checkout
    - 33% deposit via Stripe (Stripe Connect not yet set up — Phase 3)
 
-4. **Groomer dashboard** (full build)
+3. **Groomer dashboard** (full build)
    - Schedule / calendar view
    - Booking management
    - Service management
    - Availability settings
    - Earnings overview
 
-5. **Stripe Connect**
+4. **Stripe Connect**
    - Groomer onboarding as Connected Accounts
    - Commission split at checkout (`application_fee_amount`)
    - Payout tracking
@@ -799,4 +828,4 @@ git add . && git commit -m "your message" && git push origin main
 
 ---
 
-*Last updated: 30 April 2026 — update this doc as decisions are made.*
+*Last updated: 01 May 2026 — update this doc as decisions are made.*

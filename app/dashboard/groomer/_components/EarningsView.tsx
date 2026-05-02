@@ -1,8 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { useState, useMemo } from "react";
-import type { Payment } from "@/app/actions/groomer";
+import { Badge } from "@/components/ui/Badge";
+
+type Period = "week" | "12w" | "3m" | "ytd";
+
+const SERIES: Record<Period, {
+  label: string; total: number; change: number; bookings: number; avg: number;
+  data: number[]; xlabels: string[];
+}> = {
+  week: { label: "This week",     total: 742,   change: 12,  bookings: 14,  avg: 53, data: [60,80,140,90,210,162,0], xlabels: ["M","T","W","T","F","S","S"] },
+  "12w":{ label: "Last 12 weeks", total: 8420,  change: 8,   bookings: 162, avg: 52, data: [610,580,640,720,690,710,790,810,760,830,870,742], xlabels: Array.from({length:12},(_,i)=>`${i+1}`) },
+  "3m": { label: "Last 3 months", total: 11620, change: 15,  bookings: 224, avg: 52, data: [3120,3480,3960,4280,4520,4780,3650,3320,3900,4200,3800,3900], xlabels: ["W1","W2","W3","W4","W5","W6","W7","W8","W9","W10","W11","W12"] },
+  ytd:  { label: "Year to date",  total: 35610, change: 18,  bookings: 933, avg: 52, data: [3120,3480,3960,4280,4520,4780,3650,3320,3900,4200], xlabels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct"] },
+};
 
 interface StatCardProps { label: string; value: string | number; sub: string; tone?: "gold" | "sage" | "terra" | "slate" }
 
@@ -20,138 +32,90 @@ function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
   );
 }
 
-export function EarningsView({ payments }: { payments: Payment[] }) {
-  const [range, setRange] = useState<"7d"|"30d"|"ytd" | "all">("all");
-
-  const { totalRevenue, totalBookings, chartData, recentHistory } = useMemo(() => {
-    const now = new Date();
-    let filteredPayments = payments;
-    
-    if (range === "7d") {
-      const d = new Date(); d.setDate(d.getDate() - 7);
-      filteredPayments = payments.filter(p => new Date(p.date) >= d);
-    } else if (range === "30d") {
-      const d = new Date(); d.setDate(d.getDate() - 30);
-      filteredPayments = payments.filter(p => new Date(p.date) >= d);
-    } else if (range === "ytd") {
-      const d = new Date(now.getFullYear(), 0, 1);
-      filteredPayments = payments.filter(p => new Date(p.date) >= d);
-    }
-
-    const tRev = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
-    const tBook = new Set(filteredPayments.map(p => p.appointment_id)).size;
-
-    const grouped = new Map<string, number>();
-    
-    filteredPayments.forEach(p => {
-      const d = new Date(p.date);
-      let key = "";
-      if (range === "7d" || range === "30d") {
-        key = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-      } else {
-        key = d.toLocaleDateString('en-GB', { month: 'short' });
-      }
-      grouped.set(key, (grouped.get(key) || 0) + (p.amount || 0) / 100);
-    });
-
-    const seriesData = Array.from(grouped.entries()).sort((a, b) => {
-      if (range === "7d" || range === "30d") {
-         return new Date(a[0] + " " + now.getFullYear()).getTime() - new Date(b[0] + " " + now.getFullYear()).getTime();
-      } else {
-         const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-         return m.indexOf(a[0]) - m.indexOf(b[0]);
-      }
-    });
-
-    const history = [...filteredPayments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 50);
-
-    return { totalRevenue: tRev, totalBookings: tBook, chartData: seriesData, recentHistory: history };
-  }, [payments, range]);
-
-  const avgValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
-  const maxVal = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function EarningsView({ scope: _scope }: { scope?: string } = {}) {
+  const [period, setPeriod] = useState<Period>("week");
+  const s = SERIES[period];
+  const max = Math.max(...s.data);
 
   return (
-    <section className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <section className="space-y-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
           <Eyebrow>Earnings</Eyebrow>
-          <h2 className="font-fredoka text-2xl text-deep-slate mt-1">Payment overview</h2>
+          <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{s.label}</h2>
         </div>
         <div className="flex items-center gap-2 bg-white border border-pebble-grey/20 rounded-full p-1.5">
-          {([["7d","Last 7d"],["30d","Last 30d"],["ytd","YTD"],["all","All time"]] as const).map(([k, l]) => (
-            <button key={k} onClick={() => setRange(k)}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors focus-ring ${range === k ? "bg-deep-slate text-alabaster-cream" : "text-deep-slate hover:bg-pebble-grey/10"}`}>
+          {([["week","This week"],["12w","12W"],["3m","3M"],["ytd","YTD"]] as const).map(([k, l]) => (
+            <button key={k} onClick={() => setPeriod(k as Period)}
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors focus-ring ${period === k ? "bg-deep-slate text-alabaster-cream" : "text-deep-slate hover:bg-pebble-grey/10"}`}>
               {l}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <section className="lg:col-span-2 space-y-6">
-          <div className="flex flex-wrap gap-4 items-baseline justify-between">
-            <div>
-              <p className="font-fredoka text-5xl text-deep-slate leading-none">£{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-              <p className="text-pebble-grey font-bold mt-2">Gross revenue</p>
-            </div>
-            <div className="flex gap-6 text-right">
-              <div>
-                <p className="font-fredoka text-2xl text-deep-slate">{totalBookings}</p>
-                <p className="text-xs font-bold text-pebble-grey mt-1">Bookings</p>
-              </div>
-              <div>
-                <p className="font-fredoka text-2xl text-deep-slate">£{avgValue.toFixed(0)}</p>
-                <p className="text-xs font-bold text-pebble-grey mt-1">Avg value</p>
-              </div>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Earned"       value={`£${s.total.toLocaleString()}`} sub={`+${s.change}% vs prior`}       tone="gold" />
+        <StatCard label="Bookings"     value={s.bookings}                     sub={`Avg £${s.avg} / booking`}       tone="sage" />
+        <StatCard label="Next payout"  value="£742"                           sub="Mon 27 Apr · auto-deposit"        tone="terra" />
+        <StatCard label="Tips"         value="£68"                            sub="14 dogs tipped this period"       tone="slate" />
+      </div>
 
-          <div className="h-64 flex items-end gap-2 mt-8">
-            {chartData.length === 0 ? (
-              <div className="w-full h-full flex items-center justify-center text-pebble-grey font-bold text-sm">
-                No earning data for this period
-              </div>
-            ) : chartData.map((d, i) => {
-              const pct = d[1] / maxVal;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="w-full bg-pebble-grey/10 rounded-t-lg relative transition-colors group-hover:bg-pebble-grey/20" style={{ height: `${Math.max(5, pct * 100)}%` }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-groomr-gold/80 to-groomr-gold rounded-t-lg opacity-80 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-deep-slate text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                      £{d[1].toFixed(0)}
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-pebble-grey">{d[0]}</span>
+      <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
+        <div className="flex items-end gap-2 h-44">
+          {s.data.map((v, i) => {
+            const h = max ? (v / max) * 100 : 0;
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full flex items-end h-full">
+                  <div className="w-full rounded-t-md bg-sage-leaf hover:bg-deep-slate transition-colors cursor-pointer" style={{ height: `${h}%`, minHeight: v ? 2 : 0 }} title={`£${v}`} />
                 </div>
-              );
-            })}
-          </div>
-        </section>
+                <span className="text-[10px] font-bold text-pebble-grey">{s.xlabels[i]}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-        <aside className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 flex flex-col h-[500px]">
-          <div className="flex items-center justify-between mb-4">
-            <Eyebrow>Recent activity</Eyebrow>
+      <div className="grid lg:grid-cols-[1fr_360px] gap-6">
+        <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden">
+          <div className="px-5 py-4 border-b border-pebble-grey/15 flex items-center justify-between">
+            <Eyebrow>Recent payouts</Eyebrow>
+            <button className="text-xs font-bold text-deep-slate text-link">Download all</button>
           </div>
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2">
-            {recentHistory.length === 0 ? (
-              <p className="text-sm text-pebble-grey">No recent payment history.</p>
-            ) : recentHistory.map(h => (
-              <div key={h.id} className="flex justify-between items-center text-sm border-b border-pebble-grey/10 pb-4 last:border-0 last:pb-0">
-                <div>
-                  <p className="font-bold text-deep-slate">{h.status === "Deposit" ? "Deposit Payment" : "Full Payment"}</p>
-                  <p className="text-xs text-pebble-grey mt-0.5">{new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                </div>
-                <div className="text-right">
-                  <p className={`font-bold ${h.status === "Deposit" ? "text-sage-leaf" : "text-deep-slate"}`}>
-                    +£{(h.amount / 100).toFixed(2)}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-wide font-bold text-pebble-grey mt-0.5">{h.status}</p>
-                </div>
+          {[
+            { d:"20 Apr", amt: 712, n: 13, status:"Paid" },
+            { d:"13 Apr", amt: 689, n: 12, status:"Paid" },
+            { d:"06 Apr", amt: 745, n: 14, status:"Paid" },
+            { d:"30 Mar", amt: 802, n: 15, status:"Paid" },
+          ].map((p, i) => (
+            <div key={i} className={`grid grid-cols-[100px_1fr_auto_auto] gap-3 px-5 py-3 items-center ${i ? "border-t border-pebble-grey/10" : ""}`}>
+              <span className="font-bold text-sm text-deep-slate">{p.d}</span>
+              <span className="text-sm text-pebble-grey font-bold">{p.n} bookings</span>
+              <Badge tone="sage">{p.status}</Badge>
+              <span className="font-fredoka text-deep-slate">£{p.amt}</span>
+            </div>
+          ))}
+        </div>
+
+        <aside className="bg-alabaster-cream border border-pebble-grey/15 rounded-[20px] p-5 space-y-3">
+          <Eyebrow>Top services</Eyebrow>
+          {([
+            ["Full Groom", 62, "#eae45c"],
+            ["Bath & Brush", 22, "#88a096"],
+            ["Hand-Strip", 12, "#c87964"],
+            ["Nail Clip", 4, "#95a5a6"],
+          ] as [string, number, string][]).map(([name, pct, color]) => (
+            <div key={name}>
+              <div className="flex justify-between text-xs font-bold text-deep-slate mb-1">
+                <span>{name}</span><span>{pct}%</span>
               </div>
-            ))}
-          </div>
-          <button className="w-full mt-4 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors py-2 focus-ring">View all history</button>
+              <div className="h-2 bg-white rounded-full overflow-hidden">
+                <div className="h-full rounded-full" style={{ background: color, width: `${pct}%` }} />
+              </div>
+            </div>
+          ))}
         </aside>
       </div>
     </section>

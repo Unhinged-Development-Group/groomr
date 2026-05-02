@@ -39,19 +39,58 @@ export async function POST(req: Request) {
   console.log('Webhook received:', evt.type)
 
   if (evt.type === 'user.created') {
-    const { id, first_name, last_name, email_addresses } = evt.data
+    const { id, first_name, last_name, email_addresses, public_metadata } = evt.data
     const email = email_addresses?.[0]?.email_address ?? null
 
-    const { data, error } = await supabaseAdmin.from('profiles').insert({
-      id: crypto.randomUUID(),
-      clerk_id: id,
-      full_name: `${first_name ?? ''} ${last_name ?? ''}`.trim(),
-      email,
-      is_admin: false,
-      roles: '{owner}',
-    })
+    const { data: profileData, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: crypto.randomUUID(),
+        clerk_id: id,
+        full_name: `${first_name ?? ''} ${last_name ?? ''}`.trim(),
+        email,
+        is_admin: false,
+        roles: '{owner}',
+      })
+      .select('id')
+      .single()
 
-    console.log('user.created — profile insert:', data, error)
+    console.log('user.created — profile insert:', profileData?.id, profileError)
+
+    // If this sign-up was triggered by a team invite, link the team_members row
+    const meta = public_metadata as Record<string, unknown> | undefined
+    const isTeamInvite = meta?.groomr_team_invite === true
+    const groomerProfileId = meta?.groomer_profile_id as string | undefined
+
+    if (isTeamInvite && groomerProfileId && profileData && email) {
+      const { data: teamMember } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('groomer_profile_id', groomerProfileId)
+        .eq('email', email)
+        .eq('invite_status', 'pending')
+        .maybeSingle()
+
+      if (teamMember) {
+        await Promise.all([
+          supabaseAdmin
+            .from('team_members')
+            .update({
+              user_id: profileData.id,
+              invite_status: 'accepted',
+              accepted_at: new Date().toISOString(),
+            })
+            .eq('id', teamMember.id),
+          // Grant groomer role so the dashboard router sends them to /dashboard/groomer
+          supabaseAdmin
+            .from('profiles')
+            .update({ roles: '{owner,groomer}' })
+            .eq('id', profileData.id),
+        ])
+
+        console.log('user.created — team invite accepted for', teamMember.id)
+      }
+    }
   }
 
   if (evt.type === 'user.deleted') {

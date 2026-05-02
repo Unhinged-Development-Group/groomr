@@ -62,11 +62,16 @@ export async function inviteTeamMember(
     });
     clerkInvitationId = invitation.id;
   } catch (err: any) {
-    const clerkErrors = err?.errors?.[0];
-    const msg = clerkErrors
-      ? `Clerk: ${clerkErrors.message} (${clerkErrors.code})`
-      : err instanceof Error ? err.message : "Failed to send invite email";
-    return { error: msg };
+    const clerkError = err?.errors?.[0];
+    if (clerkError?.code === "duplicate_record") {
+      // Clerk already has a pending invite for this email (e.g. from a previous failed attempt).
+      // The email was already sent — continue to save the DB record without re-sending.
+    } else {
+      const msg = clerkError
+        ? `${clerkError.message} (${clerkError.code})`
+        : err instanceof Error ? err.message : "Failed to send invite email";
+      return { error: msg };
+    }
   }
 
   const slug = input.name

@@ -3,17 +3,25 @@
 import type { ActiveFilters } from "@/types/search";
 
 interface FilterBarProps {
-  initialFilters: ActiveFilters;
+  filters: ActiveFilters;
   onFiltersChange: (filters: ActiveFilters) => void;
 }
 
 const selectClass =
   "bg-alabaster-cream border border-pebble-grey/20 text-deep-slate text-sm rounded-full focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold block px-4 py-2 outline-none font-bold cursor-pointer transition-shadow";
 
-export function FilterBar({ initialFilters, onFiltersChange }: FilterBarProps) {
+const CLEAR_FILTERS: ActiveFilters = { service: "all", price: "all", payment: "all", rating: "all" };
+
+export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   const update = (key: keyof ActiveFilters, value: string) => {
-    onFiltersChange({ ...initialFilters, [key]: value });
+    onFiltersChange({ ...filters, [key]: value });
   };
+
+  const hasActiveFilter =
+    filters.service !== "all" ||
+    filters.price !== "all" ||
+    filters.payment !== "all" ||
+    filters.rating !== "all";
 
   return (
     <div className="w-full bg-white border-b border-pebble-grey/10">
@@ -37,7 +45,7 @@ export function FilterBar({ initialFilters, onFiltersChange }: FilterBarProps) {
           </span>
 
           <select
-            value={initialFilters.service}
+            value={filters.service}
             onChange={(e) => update("service", e.target.value)}
             className={selectClass}
           >
@@ -49,7 +57,7 @@ export function FilterBar({ initialFilters, onFiltersChange }: FilterBarProps) {
           </select>
 
           <select
-            value={initialFilters.price}
+            value={filters.price}
             onChange={(e) => update("price", e.target.value)}
             className={selectClass}
           >
@@ -60,7 +68,7 @@ export function FilterBar({ initialFilters, onFiltersChange }: FilterBarProps) {
           </select>
 
           <select
-            value={initialFilters.payment}
+            value={filters.payment}
             onChange={(e) => update("payment", e.target.value)}
             className={selectClass}
           >
@@ -70,7 +78,7 @@ export function FilterBar({ initialFilters, onFiltersChange }: FilterBarProps) {
           </select>
 
           <select
-            value={initialFilters.rating}
+            value={filters.rating}
             onChange={(e) => update("rating", e.target.value)}
             className={selectClass}
           >
@@ -79,6 +87,15 @@ export function FilterBar({ initialFilters, onFiltersChange }: FilterBarProps) {
             <option value="4.8">4.8+ Stars</option>
             <option value="5.0">5.0 Stars</option>
           </select>
+
+          {hasActiveFilter && (
+            <button
+              onClick={() => onFiltersChange(CLEAR_FILTERS)}
+              className="ml-auto text-sm font-bold text-muted-terracotta hover:underline focus-ring rounded px-2 py-1 transition-colors"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       </div>
     </div>

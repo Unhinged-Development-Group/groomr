@@ -26,6 +26,8 @@ interface RegisterGroomerInput {
   postcode: string;
   radiusMiles: number;
   services: ServiceInput[];
+  depositType: 'none' | 'percentage' | 'full';
+  depositPercentage: number | null;
   days: Record<string, DaySlotInput>;
   leadHours: number;
 }
@@ -75,6 +77,8 @@ export async function registerGroomer(input: RegisterGroomerInput) {
     travel_radius_miles: input.bizType === "mobile" ? input.radiusMiles : null,
     is_listed: false,
     is_verified: false,
+    deposit_type: input.depositType,
+    deposit_percentage: input.depositPercentage,
   };
 
   const { data: existing } = await supabaseAdmin

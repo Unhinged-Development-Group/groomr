@@ -41,6 +41,8 @@ interface FormState {
   selectedServices: string[];
   servicePrices: Record<string, number>;
   customServices: CustomService[];
+  depositType: 'none' | 'percentage' | 'full';
+  depositPercentage: number;
   // Step 5 (was Step 4)
   days: Record<DayKey, DaySlot>;
   lead: number;
@@ -63,6 +65,18 @@ const PRESET_SERVICES = [
   "Hand-Strip",
   "Puppy First",
   "Nail Clip",
+  "De-shed Treatment",
+  "Anal Gland Expression",
+  "Teeth Cleaning",
+  "Ear Cleaning",
+  "Paw Trim & Balm",
+  "De-mat & Tidy",
+  "Mini Groom / Tidy Up",
+  "Blueberry Facial",
+  "Flea & Tick Treatment",
+  "Bandana / Bow Finish",
+  "Senior Dog Groom",
+  "Show Trim / Breed Standard",
 ];
 
 const BIZ_TYPES: { id: BizType; t: string; d: string }[] = [
@@ -116,6 +130,8 @@ export function GroomerWizard({
     selectedServices: [],
     servicePrices: {},
     customServices: [],
+    depositType: 'none',
+    depositPercentage: 10,
     days: DEFAULT_DAYS,
     lead: 24,
   });
@@ -185,6 +201,8 @@ export function GroomerWizard({
         postcode: form.postcode,
         radiusMiles: form.type === "mobile" ? form.radius : 0,
         services: allServices,
+        depositType: form.depositType,
+        depositPercentage: form.depositType === "percentage" ? form.depositPercentage : null,
         days: Object.fromEntries(
           (Object.keys(form.days) as DayKey[]).map((k) => [k, form.days[k]])
         ),
@@ -482,6 +500,51 @@ export function GroomerWizard({
                     Add a service
                   </span>
                 </button>
+              </div>
+
+              {/* Deposit policy */}
+              <div className="space-y-3 pt-2">
+                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
+                  Deposit policy
+                </p>
+                <p className="text-sm text-pebble-grey">
+                  Set a single policy for all bookings. You can change this any time from your dashboard.
+                </p>
+                <div className="grid sm:grid-cols-3 gap-2">
+                  {([
+                    { k: "none" as const,       t: "No deposit",       d: "Pay in full on the day" },
+                    { k: "percentage" as const, t: "% Deposit",        d: "Take a percentage upfront" },
+                    { k: "full" as const,       t: "Full pre-payment", d: "Pay 100% at booking" },
+                  ]).map((o) => (
+                    <button key={o.k} type="button" onClick={() => set("depositType", o.k)}
+                      className={cn(
+                        "text-left p-4 rounded-2xl border-2 transition-colors focus-ring",
+                        form.depositType === o.k
+                          ? "bg-alabaster-cream border-deep-slate"
+                          : "bg-white border-pebble-grey/20 hover:border-deep-slate"
+                      )}
+                    >
+                      <p className="font-fredoka text-lg text-deep-slate">{o.t}</p>
+                      <p className="text-xs text-pebble-grey">{o.d}</p>
+                    </button>
+                  ))}
+                </div>
+                {form.depositType === "percentage" && (
+                  <div className="flex items-center gap-3 pt-1">
+                    <label className="text-xs font-bold text-deep-slate uppercase tracking-wider whitespace-nowrap">
+                      Deposit %
+                    </label>
+                    <select
+                      value={form.depositPercentage}
+                      onChange={(e) => set("depositPercentage", Number(e.target.value))}
+                      className="bg-alabaster-cream border border-pebble-grey/20 text-deep-slate text-sm rounded-full focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold px-4 py-2 outline-none font-bold cursor-pointer"
+                    >
+                      {[10, 15, 20, 25, 30, 33, 50].map((pct) => (
+                        <option key={pct} value={pct}>{pct}%</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </>
           )}

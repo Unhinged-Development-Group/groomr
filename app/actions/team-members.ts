@@ -54,7 +54,7 @@ export async function inviteTeamMember(
     const clerk = await clerkClient();
     const invitation = await clerk.invitations.createInvitation({
       emailAddress: input.email,
-      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/dashboard`,
+      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/dashboard`,
       publicMetadata: {
         groomr_team_invite: true,
         groomer_profile_id: groomerProfileId,

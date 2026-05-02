@@ -10,6 +10,7 @@ import { EarningsView } from "./EarningsView";
 import { ReviewsView } from "./ReviewsView";
 import { ProfileEditor } from "./ProfileEditor";
 import { cn } from "@/lib/utils";
+import type { ProfileEditorInitialData, TeamMemberRow } from "@/types/groomer-dashboard";
 
 type Tab = "bookings" | "clients" | "earnings" | "reviews" | "profile";
 
@@ -37,6 +38,35 @@ function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
   );
 }
 
+function ScopeSelector({
+  team,
+  scope,
+  onScopeChange,
+}: {
+  team: TeamMemberRow[];
+  scope: string;
+  onScopeChange: (s: string) => void;
+}) {
+  const accepted = team.filter((m) => m.inviteStatus === "accepted");
+  if (accepted.length === 0) return null;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider whitespace-nowrap">Viewing:</span>
+      <select
+        value={scope}
+        onChange={(e) => onScopeChange(e.target.value)}
+        className="bg-white border border-pebble-grey/20 text-deep-slate text-sm rounded-full px-4 py-2 font-bold outline-none focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold cursor-pointer"
+      >
+        <option value="all">Full salon</option>
+        <option value="own">My data</option>
+        {accepted.map((m) => (
+          <option key={m.id} value={m.id}>{m.name}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 interface Props {
   businessName: string;
   ownerName: string;
@@ -44,11 +74,7 @@ interface Props {
   initialAppointments: any[];
   initialReviews: any[];
   initialPayments: any[];
-  profileData: {
-    profile: any;
-    services: any[];
-    team: any[];
-  };
+  editorData: ProfileEditorInitialData;
 }
 
 export function GroomerDashboardClient({
@@ -58,35 +84,39 @@ export function GroomerDashboardClient({
   initialAppointments,
   initialReviews,
   initialPayments,
-  profileData
+  editorData,
 }: Props) {
   const [tab, setTab] = useState<Tab>("bookings");
+  const [scope, setScope] = useState<string>("all");
 
-  // Calculate real stats for the strip
+  const { viewerRole, teamMemberId, team } = editorData;
+  const effectiveScope = viewerRole === "team_member" ? (teamMemberId ?? "own") : scope;
+
+  // Filter appointments by scope
+  const scopedAppointments = effectiveScope === "all"
+    ? initialAppointments
+    : effectiveScope === "own"
+    ? initialAppointments.filter((a) => !a.assigned_to_team_member_id)
+    : initialAppointments.filter((a) => a.assigned_to_team_member_id === effectiveScope);
+
+  // Real stat calculations
   const now = new Date();
-  
-  // 1. Today's Bookings
-  const todayAppointments = initialAppointments.filter(a => {
+  const todayAppointments = scopedAppointments.filter((a) => {
     const d = new Date(a.scheduled_at);
     return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && a.status !== "cancelled";
   });
   const todayHours = todayAppointments.reduce((sum, a) => sum + (a.service_snapshot_duration || 0), 0) / 60;
-  
-  // 2. This Week's Revenue
+
   const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); // Monday
-  weekStart.setHours(0,0,0,0);
-  const weekPayments = initialPayments.filter(p => new Date(p.date) >= weekStart);
+  weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+  weekStart.setHours(0, 0, 0, 0);
+  const weekPayments = initialPayments.filter((p) => new Date(p.date) >= weekStart);
   const weekRevenue = weekPayments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
-  
-  // 3. Next Payout (dummy calculation based on upcoming appointments value, or just raw total)
-  const nextPayout = weekRevenue; // Simulating next payout as this week's revenue
-  
-  // 4. Repeat Rate
-  const uniqueClients = new Set(initialAppointments.map(a => a.owner_id));
-  const repeatClients = Array.from(uniqueClients).filter(ownerId => {
-    return initialAppointments.filter(a => a.owner_id === ownerId && a.status === 'completed').length > 1;
-  });
+
+  const uniqueClients = new Set(scopedAppointments.map((a) => a.owner_id));
+  const repeatClients = Array.from(uniqueClients).filter(
+    (ownerId) => scopedAppointments.filter((a) => a.owner_id === ownerId && a.status === "completed").length > 1
+  );
   const repeatRate = uniqueClients.size > 0 ? Math.round((repeatClients.length / uniqueClients.size) * 100) : 0;
 
   return (
@@ -106,7 +136,10 @@ export function GroomerDashboardClient({
             {ownerName} · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">4.9 (184 reviews)</span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {viewerRole === "owner" && (
+            <ScopeSelector team={team} scope={scope} onScopeChange={setScope} />
+          )}
           <button className="btn-secondary font-nunito font-bold px-5 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2">
             <CalendarIcon size={16} /> Block time
           </button>
@@ -122,15 +155,15 @@ export function GroomerDashboardClient({
       {/* Stat strip */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Today"       value={todayAppointments.length.toString()} sub={`bookings · ${todayHours.toFixed(1)} hrs`} tone="gold" />
-        <StatCard label="This week"   value={`£${weekRevenue.toFixed(0)}`} sub={`${weekPayments.length} payments this week`} tone="sage" />
-        <StatCard label="Next payout" value={`£${nextPayout.toFixed(0)}`} sub="Estimated" tone="terra" />
-        <StatCard label="Repeat rate" value={`${repeatRate}%`} sub="of clients booked again" tone="slate" />
+        <StatCard label="This week"   value={`£${weekRevenue.toFixed(0)}`}        sub={`${weekPayments.length} payments this week`} tone="sage" />
+        <StatCard label="Next payout" value={`£${weekRevenue.toFixed(0)}`}        sub="Estimated" tone="terra" />
+        <StatCard label="Repeat rate" value={`${repeatRate}%`}                    sub="of clients booked again" tone="slate" />
       </section>
 
       {/* Tab nav */}
       <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
-          {TABS.map(t => {
+          {TABS.map((t) => {
             const active = tab === t.id;
             const showDot = t.id === "reviews" && unrespondedReviews > 0;
             return (
@@ -152,11 +185,19 @@ export function GroomerDashboardClient({
       </nav>
 
       {/* Tab content */}
-      {tab === "bookings" && <BookingsView appointments={initialAppointments} />}
-      {tab === "clients"  && <ClientsView appointments={initialAppointments} />}
+      {tab === "bookings" && <BookingsView appointments={scopedAppointments} />}
+      {tab === "clients"  && <ClientsView appointments={scopedAppointments} />}
       {tab === "earnings" && <EarningsView payments={initialPayments} />}
       {tab === "reviews"  && <ReviewsView reviews={initialReviews} />}
-      {tab === "profile"  && <ProfileEditor profileData={profileData} />}
+      {tab === "profile"  && (
+        <ProfileEditor
+          groomerProfileId={editorData.groomerProfileId}
+          initialProfile={editorData.profile}
+          initialServices={editorData.services}
+          initialTeam={editorData.team}
+          viewerRole={editorData.viewerRole}
+        />
+      )}
     </div>
   );
 }

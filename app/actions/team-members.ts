@@ -61,8 +61,11 @@ export async function inviteTeamMember(
       },
     });
     clerkInvitationId = invitation.id;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to send invite email";
+  } catch (err: any) {
+    const clerkErrors = err?.errors?.[0];
+    const msg = clerkErrors
+      ? `Clerk: ${clerkErrors.message} (${clerkErrors.code})`
+      : err instanceof Error ? err.message : "Failed to send invite email";
     return { error: msg };
   }
 

@@ -174,7 +174,6 @@ export async function saveProfile(
         business_name: data.businessName,
         bio: data.bio,
         is_mobile: data.businessMode === "mobile",
-        is_studio: data.businessMode === "studio",
         travel_radius_miles: data.businessMode === "mobile" ? data.radius : null,
         address_line_1: data.businessMode === "studio" ? data.addressLine1 : null,
         address_line_2: data.businessMode === "studio" ? (data.addressLine2 || null) : null,

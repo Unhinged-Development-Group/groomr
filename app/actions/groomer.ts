@@ -9,7 +9,6 @@ export interface GroomerProfileDetails {
   business_name: string;
   bio: string | null;
   is_mobile: boolean;
-  is_studio: boolean;
   service_radius: number | null;
   address_line_1: string | null;
   postcode: string | null;

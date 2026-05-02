@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { StarRow } from "@/components/ui/StarRow";
 import { cn } from "@/lib/utils";
+import { replyToReview } from "@/app/actions/groomer";
+import type { Review as DBReview } from "@/app/actions/groomer";
 
 interface Review {
   id: string;
@@ -17,22 +19,27 @@ interface Review {
   response?: string;
 }
 
-const INITIAL_REVIEWS: Review[] = [
-  { id:"r1", name:"Sarah Khan",   dog:"Murphy",  rating:5, when:"2 days ago",  svc:"Bath & Brush", text:"Lola is a wizard with anxious dogs. Murphy used to shake the whole way to the old groomers — now he walks straight to the van. Worth every penny.", responded:false },
-  { id:"r2", name:"Daniel Reid",  dog:"Pippa",   rating:5, when:"1 week ago",  svc:"Full Groom",   text:"We've been with Wagington for two years now. Always on time, always brilliant. Pippa comes home looking like a show dog and smelling amazing.", responded:true, response:"Thank you Daniel — Pippa's such a star. See you in 6!" },
-  { id:"r3", name:"Imogen Tate",  dog:"Otis",    rating:5, when:"2 weeks ago", svc:"Hand-Strip",   text:"Best hand-stripping in East London, hands down. Otis's coat has never looked better.", responded:false },
-  { id:"r4", name:"Ben Holloway", dog:"Roxy",    rating:4, when:"1 month ago", svc:"Full Groom",   text:"Roxy was nervous her first time but Lola took it slow. Came back a calm, shiny pup. Booking was the easiest part.", responded:false },
-  { id:"r5", name:"Anya P.",      dog:"Bonnie",  rating:3, when:"5 weeks ago", svc:"Bath & Brush", text:"Cut was fine but van ran 25 minutes late and there was no message until I called. Felt a bit chaotic.", responded:false },
-  { id:"r6", name:"Marcus Eze",   dog:"Ziggy",   rating:5, when:"6 weeks ago", svc:"Full Groom",   text:"Booking was instant, payment was painless, and Ziggy came home wagging. What more could you ask?", responded:true, response:"Thanks Marcus, give Ziggy a chin scratch from us." },
-];
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ReviewsView({ scope: _scope }: { scope?: string } = {}) {
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+export function ReviewsView({ reviews: dbReviews }: { reviews: DBReview[] }) {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  
+  useEffect(() => {
+    const formatted = dbReviews.map(r => ({
+      id: r.id,
+      name: r.appointments?.profiles ? `${r.appointments.profiles.first_name} ${r.appointments.profiles.last_name?.charAt(0)}.` : "Owner",
+      dog: r.appointments?.dogs?.name || "Dog",
+      rating: r.rating,
+      when: new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+      svc: r.appointments?.service_snapshot_name || "Service",
+      text: r.comment || "",
+      responded: !!r.groomer_reply,
+      response: r.groomer_reply || undefined
+    }));
+    setReviews(formatted);
+  }, [dbReviews]);
   const [filter, setFilter] = useState("All");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+  const avg = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
   const dist = [5,4,3,2,1].map(s => ({ stars: s, count: reviews.filter(r => r.rating === s).length }));
 
   const visible = reviews.filter(r =>
@@ -42,11 +49,16 @@ export function ReviewsView({ scope: _scope }: { scope?: string } = {}) {
     r.rating === 5
   );
 
-  function submit(id: string) {
+  async function submit(id: string) {
     const txt = (drafts[id] ?? "").trim();
     if (!txt) return;
+    
+    // Optimistic update
     setReviews(rs => rs.map(r => r.id === id ? { ...r, responded: true, response: txt } : r));
     setDrafts(d => { const n = { ...d }; delete n[id]; return n; });
+    
+    // Server action
+    await replyToReview(id, txt);
   }
 
   return (

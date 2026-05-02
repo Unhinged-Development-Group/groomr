@@ -19,6 +19,8 @@ interface RawProfile {
   distance_metres?: number | null;
   lat?: number | null;
   lng?: number | null;
+  deposit_type?: string | null;
+  deposit_percentage?: number | null;
 }
 
 interface RawService {
@@ -77,7 +79,9 @@ function buildGroomerMap(
       distance: distMiles,
       location: p.city ?? p.postcode ?? "UK",
       priceFrom: svc?.minPricePence != null ? svc.minPricePence / 100 : undefined,
-      requiresDeposit: svc?.requiresDeposit ?? false,
+      requiresDeposit: p.deposit_type ? p.deposit_type !== 'none' : (svc?.requiresDeposit ?? false),
+      depositType: (p.deposit_type as 'none' | 'percentage' | 'full') ?? 'none',
+      depositPercentage: p.deposit_percentage ?? null,
       serviceNames: svc?.names ?? [],
       lat: p.lat ?? undefined,
       lng: p.lng ?? undefined,

@@ -53,6 +53,8 @@ export function ProfileEditor() {
   const [bio, setBio] = useState("We're a husband-and-wife team running a fully-mobile grooming van across East London. Eight years in, we know every quirky cocker spaniel coat, every nervous rescue, and every dog who genuinely loves bath time.");
   const [adding, setAdding] = useState(false);
   const [newMember, setNewMember] = useState({ name: "", role: "" });
+  const [depositType, setDepositType] = useState<'none' | 'percentage' | 'full'>('none');
+  const [depositPercentage, setDepositPercentage] = useState(10);
 
   function addMember() {
     if (!newMember.name.trim()) return;
@@ -160,6 +162,43 @@ export function ProfileEditor() {
                 </button>
               </div>
             ))}
+          </div>
+
+          {/* Deposit policy */}
+          <div className="mt-5 pt-4 border-t border-pebble-grey/15 space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Deposit policy</p>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { k: "none" as const,       l: "No deposit",       sub: "Pay on the day" },
+                { k: "percentage" as const, l: "% Deposit",        sub: "Upfront %"      },
+                { k: "full" as const,       l: "Full pre-payment", sub: "100% at booking"},
+              ]).map((opt) => (
+                <button key={opt.k} onClick={() => setDepositType(opt.k)}
+                  className={cn(
+                    "text-left rounded-2xl p-3 border-2 transition-colors focus-ring",
+                    depositType === opt.k
+                      ? "border-deep-slate bg-alabaster-cream"
+                      : "border-pebble-grey/20 hover:border-deep-slate"
+                  )}
+                >
+                  <p className="font-fredoka text-base text-deep-slate">{opt.l}</p>
+                  <p className="text-[10px] text-pebble-grey font-bold mt-0.5">{opt.sub}</p>
+                </button>
+              ))}
+            </div>
+            {depositType === "percentage" && (
+              <div className="flex items-center gap-3">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey whitespace-nowrap">
+                  Deposit %
+                </label>
+                <select value={depositPercentage} onChange={e => setDepositPercentage(Number(e.target.value))}
+                  className="bg-alabaster-cream border border-pebble-grey/20 text-deep-slate text-sm rounded-full focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold px-4 py-2 outline-none font-bold cursor-pointer">
+                  {[10, 15, 20, 25, 30, 33, 50].map(pct => (
+                    <option key={pct} value={pct}>{pct}%</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 

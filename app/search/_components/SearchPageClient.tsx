@@ -34,7 +34,7 @@ export function SearchPageClient({
         filteredCount={filteredCount}
       />
       <FilterBar
-        initialFilters={initialFilters}
+        filters={activeFilters}
         onFiltersChange={setActiveFilters}
       />
       <ResultsSection

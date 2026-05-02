@@ -10,6 +10,8 @@ export interface GroomerResult {
   location: string;
   priceFrom?: number;
   requiresDeposit: boolean;
+  depositType: 'none' | 'percentage' | 'full';
+  depositPercentage: number | null;
   serviceNames: string[];
   lat?: number;
   lng?: number;

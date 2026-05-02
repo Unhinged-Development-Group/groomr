@@ -58,6 +58,10 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
   const [availability, setAvailability] = useState<AvailabilityRow[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [depositPolicy, setDepositPolicy] = useState<{
+    type: 'none' | 'percentage' | 'full';
+    percentage: number | null;
+  }>({ type: 'none', percentage: null });
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -87,7 +91,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
           .limit(10),
         supabase
           .from("groomer_profiles")
-          .select("gallery_images")
+          .select("gallery_images, deposit_type, deposit_percentage")
           .eq("id", groomer.id)
           .single(),
       ]);
@@ -95,7 +99,17 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
       setServices((svcRes.data ?? []) as Service[]);
       setAvailability((availRes.data ?? []) as AvailabilityRow[]);
       setReviews((revRes.data ?? []) as Review[]);
-      setGalleryImages((galleryRes.data as { gallery_images: string[] | null } | null)?.gallery_images ?? []);
+
+      const profileData = galleryRes.data as {
+        gallery_images: string[] | null;
+        deposit_type: string | null;
+        deposit_percentage: number | null;
+      } | null;
+      setGalleryImages(profileData?.gallery_images ?? []);
+      setDepositPolicy({
+        type: (profileData?.deposit_type as 'none' | 'percentage' | 'full') ?? 'none',
+        percentage: profileData?.deposit_percentage ?? null,
+      });
       setLoading(false);
     }
     load();
@@ -244,7 +258,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                   ) : (
                     <div className="space-y-4">
                       {services.map((svc) => (
-                        <ServiceCard key={svc.id} service={svc} />
+                        <ServiceCard key={svc.id} service={svc} depositPolicy={depositPolicy} />
                       ))}
                     </div>
                   )}
@@ -390,7 +404,21 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
   );
 }
 
-function ServiceCard({ service }: { service: Service }) {
+function ServiceCard({
+  service,
+  depositPolicy,
+}: {
+  service: Service;
+  depositPolicy: { type: 'none' | 'percentage' | 'full'; percentage: number | null };
+}) {
+  let depositDisplay: string | null = null;
+  if (depositPolicy.type === 'percentage' && depositPolicy.percentage != null) {
+    const depositPounds = Math.round(service.price_pence * depositPolicy.percentage / 100 / 100);
+    depositDisplay = `${depositPolicy.percentage}% deposit (£${depositPounds})`;
+  } else if (depositPolicy.type === 'full') {
+    depositDisplay = 'Full pre-payment required';
+  }
+
   return (
     <div className="bg-white rounded-xl border border-pebble-grey/10 p-5 flex justify-between items-start gap-4">
       <div className="flex-1 min-w-0">
@@ -418,10 +446,8 @@ function ServiceCard({ service }: { service: Service }) {
         <span className="font-fredoka text-2xl text-deep-slate">
           £{(service.price_pence / 100).toFixed(0)}
         </span>
-        {service.deposit_pence != null && service.deposit_pence > 0 && (
-          <p className="text-xs text-pebble-grey mt-0.5">
-            £{(service.deposit_pence / 100).toFixed(0)} deposit
-          </p>
+        {depositDisplay && (
+          <p className="text-xs text-pebble-grey mt-0.5">{depositDisplay}</p>
         )}
       </div>
     </div>

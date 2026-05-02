@@ -26,7 +26,8 @@ const INITIAL_REVIEWS: Review[] = [
   { id:"r6", name:"Marcus Eze",   dog:"Ziggy",   rating:5, when:"6 weeks ago", svc:"Full Groom",   text:"Booking was instant, payment was painless, and Ziggy came home wagging. What more could you ask?", responded:true, response:"Thanks Marcus, give Ziggy a chin scratch from us." },
 ];
 
-export function ReviewsView() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function ReviewsView({ scope: _scope }: { scope?: string } = {}) {
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
   const [filter, setFilter] = useState("All");
   const [drafts, setDrafts] = useState<Record<string, string>>({});

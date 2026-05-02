@@ -139,7 +139,8 @@ function ClientModal({ client, onClose }: { client: Client | null; onClose: () =
   );
 }
 
-export function ClientsView() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function ClientsView({ scope: _scope }: { scope?: string } = {}) {
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "last", dir: "desc" });

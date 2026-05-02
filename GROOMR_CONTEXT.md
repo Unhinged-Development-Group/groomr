@@ -153,10 +153,19 @@ groomr/
 │   │   │   └── _components/
 │   │   │       └── OwnerDashboard.tsx   # "use client" — full owner dashboard with 5 modals
 │   │   └── groomer/
-│   │       └── page.tsx                 # Placeholder groomer dashboard (coming soon)
+│   │       ├── page.tsx                 # Server component — loads full profile data, passes to client
+│   │       └── _components/
+│   │           ├── GroomerDashboardClient.tsx  # "use client" — 5-tab dashboard, scope selector
+│   │           ├── ProfileEditor.tsx           # "use client" — profile/services/team editor with save bar
+│   │           ├── BookingsView.tsx            # "use client" — bookings (mock data, scope prop wired)
+│   │           ├── ClientsView.tsx             # "use client" — clients (mock data, scope prop wired)
+│   │           ├── EarningsView.tsx            # "use client" — earnings (mock data, scope prop wired)
+│   │           └── ReviewsView.tsx             # "use client" — reviews (mock data, scope prop wired)
 │   │
 │   ├── actions/
-│   │   └── groomer-registration.ts      # Server action for groomer registration form submission
+│   │   ├── groomer-registration.ts      # Server action for groomer registration wizard
+│   │   ├── profile-editor.ts            # loadProfileEditorData(), saveProfile(), saveServices()
+│   │   └── team-members.ts             # inviteTeamMember(), removeTeamMember()
 │   │
 │   └── api/
 │       └── webhooks/
@@ -174,6 +183,10 @@ groomr/
 │       ├── Modal.tsx                    # Escape-to-close, scroll-lock modal shell
 │       ├── Toast.tsx                    # Slim bottom-centre notification
 │       └── StarRow.tsx                  # Star rating display
+│
+├── types/
+│   ├── groomer-dashboard.ts         # ProfileFormData, ServiceRow, TeamMemberRow, ProfileEditorInitialData
+│   └── search.ts                    # Search-related types
 │
 └── lib/
     ├── supabase.ts                      # Two clients: `supabase` (anon) + `supabaseAdmin` (service role)
@@ -199,7 +212,7 @@ groomr/
 |---|---|---|
 | `/dashboard` | `app/dashboard/page.tsx` | Role router → redirects to `/dashboard/owner` or `/dashboard/groomer` |
 | `/dashboard/owner` | `app/dashboard/owner/page.tsx` | Dog owner dashboard |
-| `/dashboard/groomer` | `app/dashboard/groomer/page.tsx` | Groomer dashboard (placeholder) |
+| `/dashboard/groomer` | `app/dashboard/groomer/page.tsx` | Groomer dashboard |
 | `/register/groomer` | `app/register/groomer/page.tsx` | 5-step groomer registration wizard |
 
 ### Post-Auth Redirects (set in `.env.local`)
@@ -289,6 +302,9 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=  # Safe to expose client-side
 CLERK_SECRET_KEY=                   # Server-side only
 CLERK_WEBHOOK_SECRET=               # Used to verify webhook signatures in route.ts
 
+# App base URL (used in invite redirect links)
+NEXT_PUBLIC_APP_URL=                # e.g. https://groomr.co or https://your-ngrok-url.ngrok.io
+
 # Post-auth redirects
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
@@ -318,7 +334,8 @@ NEXT_PUBLIC_POSTHOG_KEY=
 - Must be exposed via **ngrok** during local dev (localhost is too slow — confirmed issue)
 - ngrok command: `ngrok http 3000`
 - The HTTPS forwarding URL goes in Clerk Dashboard → Webhooks
-- Events subscribed to: `user.created` (add more as needed: `user.updated`, `user.deleted`)
+- Events subscribed to: `user.created`, `user.updated`, `user.deleted`
+- `user.created` handler also links team member rows: if `public_metadata.groomr_team_invite === true`, finds the pending `team_members` row by email + `groomer_profile_id`, sets `user_id` + `invite_status = accepted`, grants `groomer` role
 
 ### Admin User
 - `andrew@groomr.uk` has `is_admin = true` in the `profiles` table
@@ -348,6 +365,7 @@ The central user table. Every Clerk user gets a row here on sign-up.
 id          uuid        PRIMARY KEY DEFAULT gen_random_uuid()
 clerk_id    text        UNIQUE NOT NULL   -- Clerk's userId (e.g. user_2abc123)
 full_name   text
+email       text
 phone       text
 avatar_url  text
 roles       user_role[] DEFAULT '{owner}'
@@ -357,7 +375,7 @@ created_at  timestamptz DEFAULT now()
 updated_at  timestamptz DEFAULT now()
 ```
 > No FK to `auth.users` — intentionally removed. Clerk is the auth source of truth.
-> No `email` column — email is held in Clerk and fetched via the Clerk SDK when needed.
+> `email` is synced from Clerk on `user.created` / `user.updated` webhooks and stored here for DB-side queries.
 
 #### `groomer_profiles`
 Extended profile for users with the `groomer` role.
@@ -466,6 +484,7 @@ cancelled_by              uuid               REFERENCES profiles(id)
 cancellation_reason       text
 groomer_notes             text
 owner_notes               text
+assigned_to_team_member_id uuid        REFERENCES team_members(id) ON DELETE SET NULL
 created_at                timestamptz DEFAULT now()
 updated_at                timestamptz DEFAULT now()
 ```
@@ -522,11 +541,34 @@ created_at     timestamptz DEFAULT now()
 updated_at     timestamptz DEFAULT now()
 ```
 
+#### `team_members`
+Staff groomers linked to a salon. Supports invite-based sign-up via Clerk.
+```sql
+id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid()
+groomer_profile_id   uuid        REFERENCES groomer_profiles(id) ON DELETE CASCADE
+name                 text        NOT NULL
+role                 text        NOT NULL
+since_year           smallint
+public_slug          text        UNIQUE
+average_rating       numeric     DEFAULT 0.0
+total_reviews        integer     DEFAULT 0
+email                text                    -- invite destination
+user_id              uuid        REFERENCES profiles(id) ON DELETE SET NULL  -- set after invite accepted
+invite_status        text        NOT NULL DEFAULT 'pending'  -- pending | accepted | revoked
+clerk_invitation_id  text                    -- Clerk invitation ID for revocation
+invited_at           timestamptz DEFAULT now()
+accepted_at          timestamptz
+created_at           timestamptz DEFAULT now()
+updated_at           timestamptz DEFAULT now()
+```
+> `invite_status` constraint: `CHECK (invite_status IN ('pending','accepted','revoked'))`
+> `user_id` is null until the invited team member completes sign-up via Clerk.
+
 ---
 
 ## 10. Row Level Security (RLS)
 
-RLS is **enabled on all 10 tables**.
+RLS is **enabled on all 11 tables** (`team_members` added with invite-scope policies).
 
 ### The Core Problem: Clerk + RLS
 Supabase's `auth.uid()` references Supabase Auth users. Since we're using Clerk, we use a custom helper instead.
@@ -549,10 +591,11 @@ The `sub` claim in a Clerk JWT is the Clerk user ID. All RLS policies use this f
 | `services` | Public | Own groomer | Own groomer | Own groomer |
 | `availability` | Public | Own groomer | Own groomer | Own groomer |
 | `availability_overrides` | Public | Own groomer | Own groomer | Own groomer |
-| `appointments` | Own as owner or groomer + admin | Owner only | Owner + groomer (separate policies) | — |
+| `appointments` | Own as owner/groomer + team member (assigned) + admin | Owner only | Owner + groomer + team member (assigned) | — |
 | `payments` | Via appointment join + admin | — (supabaseAdmin only) | — (supabaseAdmin only) | — |
 | `reviews` | Public (visible=true) + own + admin | Owner | Owner (body) + groomer (reply) | — |
 | `messages` | Appointment participants | Participant + sender | Appointment participants | — |
+| `team_members` | Salon owner (all) + self (own row) | Salon owner | Salon owner | Salon owner |
 
 Every table also has an **`admin_all`** policy (`FOR ALL`) for any user where `is_admin = true`.
 
@@ -719,8 +762,19 @@ There is **no `tailwind.config.ts`**. Brand tokens and font families are registe
 **Authenticated Pages**
 - Dashboard role router (`/dashboard`) — checks Supabase `roles` → redirects
 - Owner dashboard (`/dashboard/owner`) — upcoming/past appointments, dog profiles (add/edit), favourite groomers, 5 modals
-- Groomer dashboard (`/dashboard/groomer`) — placeholder
+- Groomer dashboard (`/dashboard/groomer`) — full profile editor, team management, scope selector
 - Groomer registration wizard (`/register/groomer`) — 5-step wizard + server action
+
+**Groomer Dashboard — Profile & Team (May 2026)**
+- Profile editor wired to live DB (`groomer_profiles`, `services`, `profiles`)
+- Owner/Lead field shows real `profiles.full_name` (read-only, managed via Clerk)
+- Dirty-state tracking — sticky save bar only appears when there are unsaved changes
+- Standard service quick-add chips (9 templates; already-added greyed out)
+- Save profile + save services server actions (`profile-editor.ts`)
+- Team member invite flow: name + role + email → Clerk invitation email → webhook links `user_id` on sign-up
+- Team member dashboard scoping: all 5 tabs, data filtered by `assigned_to_team_member_id`
+- Salon owner scope selector: Full salon / My data / any individual team member
+- Team member delete (owner-only) with Clerk invitation revocation for pending invites
 
 ### 🔜 Next Up (Phase 2)
 
@@ -740,12 +794,13 @@ There is **no `tailwind.config.ts`**. Brand tokens and font families are registe
    - Service selection → date/time picker → dog selection → checkout
    - 33% deposit via Stripe (Stripe Connect not yet set up — Phase 3)
 
-4. **Groomer dashboard** (full build)
+4. **Groomer dashboard** (continued)
+   - Wire Bookings/Clients/Earnings/Reviews tabs to live Supabase data
+   - Assign bookings to specific team members (`assigned_to_team_member_id`)
    - Schedule / calendar view
-   - Booking management
-   - Service management
-   - Availability settings
-   - Earnings overview
+   - Availability settings (weekly + overrides)
+   - Cover photo + portfolio management (Cloudinary)
+   - Account health section (insurance expiry, Stripe status)
 
 5. **Stripe Connect**
    - Groomer onboarding as Connected Accounts
@@ -760,13 +815,13 @@ There is **no `tailwind.config.ts`**. Brand tokens and font families are registe
 - In-app messaging
 - Account settings (update name/phone via Clerk)
 
-### ✂️ Groomer Dashboard (Full Build)
-- Schedule / calendar view
+### ✂️ Groomer Dashboard (Remaining)
+- Wire Bookings/Clients/Earnings/Reviews tabs to live data (currently mock)
 - Booking management (confirm, cancel, mark complete)
+- Assign bookings to team members at booking time
 - Earnings overview + payout history (Stripe)
-- Service management (add/edit/delete)
 - Availability settings (weekly + overrides)
-- Profile editing (bio, photos, postcode)
+- Cover photo + portfolio upload (Cloudinary)
 - Review management (read, reply)
 
 ### 🛠️ Admin Dashboard
@@ -799,4 +854,4 @@ git add . && git commit -m "your message" && git push origin main
 
 ---
 
-*Last updated: 30 April 2026 — update this doc as decisions are made.*
+*Last updated: 02 May 2026 — update this doc as decisions are made.*

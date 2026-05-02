@@ -32,7 +32,8 @@ function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
   );
 }
 
-export function EarningsView() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function EarningsView({ scope: _scope }: { scope?: string } = {}) {
   const [period, setPeriod] = useState<Period>("week");
   const s = SERIES[period];
   const max = Math.max(...s.data);

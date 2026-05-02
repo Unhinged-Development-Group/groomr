@@ -313,7 +313,8 @@ function YearView() {
 
 type BookingSubView = "today" | "week" | "month" | "year";
 
-export function BookingsView() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function BookingsView({ scope: _scope }: { scope?: string } = {}) {
   const [view, setView] = useState<BookingSubView>("today");
   return (
     <section className="space-y-5">

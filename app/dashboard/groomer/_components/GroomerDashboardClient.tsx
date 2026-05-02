@@ -10,6 +10,7 @@ import { EarningsView } from "./EarningsView";
 import { ReviewsView } from "./ReviewsView";
 import { ProfileEditor } from "./ProfileEditor";
 import { cn } from "@/lib/utils";
+import type { ProfileEditorInitialData, TeamMemberRow } from "@/types/groomer-dashboard";
 
 type Tab = "bookings" | "clients" | "earnings" | "reviews" | "profile";
 
@@ -37,14 +38,53 @@ function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
   );
 }
 
+/** Scope selector shown to salon owners when they have accepted team members */
+function ScopeSelector({
+  team,
+  scope,
+  onScopeChange,
+}: {
+  team: TeamMemberRow[];
+  scope: string;
+  onScopeChange: (s: string) => void;
+}) {
+  const accepted = team.filter((m) => m.inviteStatus === "accepted");
+  if (accepted.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider whitespace-nowrap">Viewing:</span>
+      <select
+        value={scope}
+        onChange={(e) => onScopeChange(e.target.value)}
+        className="bg-white border border-pebble-grey/20 text-deep-slate text-sm rounded-full px-4 py-2 font-bold outline-none focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold cursor-pointer"
+      >
+        <option value="all">Full salon</option>
+        <option value="own">My data</option>
+        {accepted.map((m) => (
+          <option key={m.id} value={m.id}>{m.name}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 interface Props {
   businessName: string;
   ownerName: string;
   unrespondedReviews?: number;
+  editorData: ProfileEditorInitialData;
 }
 
-export function GroomerDashboardClient({ businessName, ownerName, unrespondedReviews = 3 }: Props) {
+export function GroomerDashboardClient({ businessName, ownerName, unrespondedReviews = 0, editorData }: Props) {
   const [tab, setTab] = useState<Tab>("bookings");
+  // 'all' = full salon, 'own' = owner's personal data, teamMemberId = specific team member
+  const [scope, setScope] = useState<string>("all");
+
+  const { viewerRole, teamMemberId, team } = editorData;
+
+  // Team members always see their own scope; owners control via selector
+  const effectiveScope = viewerRole === "team_member" ? (teamMemberId ?? "own") : scope;
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
@@ -63,7 +103,10 @@ export function GroomerDashboardClient({ businessName, ownerName, unrespondedRev
             {ownerName} · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">4.9 (184 reviews)</span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {viewerRole === "owner" && (
+            <ScopeSelector team={team} scope={scope} onScopeChange={setScope} />
+          )}
           <button className="btn-secondary font-nunito font-bold px-5 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2">
             <CalendarIcon size={16} /> Block time
           </button>
@@ -109,11 +152,19 @@ export function GroomerDashboardClient({ businessName, ownerName, unrespondedRev
       </nav>
 
       {/* Tab content */}
-      {tab === "bookings" && <BookingsView />}
-      {tab === "clients"  && <ClientsView />}
-      {tab === "earnings" && <EarningsView />}
-      {tab === "reviews"  && <ReviewsView />}
-      {tab === "profile"  && <ProfileEditor />}
+      {tab === "bookings" && <BookingsView scope={effectiveScope} />}
+      {tab === "clients"  && <ClientsView scope={effectiveScope} />}
+      {tab === "earnings" && <EarningsView scope={effectiveScope} />}
+      {tab === "reviews"  && <ReviewsView scope={effectiveScope} />}
+      {tab === "profile"  && (
+        <ProfileEditor
+          groomerProfileId={editorData.groomerProfileId}
+          initialProfile={editorData.profile}
+          initialServices={editorData.services}
+          initialTeam={editorData.team}
+          viewerRole={editorData.viewerRole}
+        />
+      )}
     </div>
   );
 }

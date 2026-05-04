@@ -1,4 +1,5 @@
 import { fetchGroomers, extractFilters, geocodeQuery, UK_CENTRE } from "@/lib/search";
+import { getFavouriteGroomers } from "@/app/actions/favourites";
 import type { SearchParams, MapCentre } from "@/types/search";
 import { SearchPageClient } from "./_components/SearchPageClient";
 
@@ -8,7 +9,11 @@ export default async function SearchPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const groomers = await fetchGroomers(params);
+  const [groomers, favourites] = await Promise.all([
+    fetchGroomers(params),
+    getFavouriteGroomers(),
+  ]);
+  const initialFavouriteIds = favourites.map((f) => f.groomer_profile_id);
 
   const isGeoSearch = Boolean(params.lat && params.lng);
 
@@ -38,6 +43,7 @@ export default async function SearchPage({
         isGeoSearch={isGeoSearch}
         initialFilters={extractFilters(params)}
         mapCentre={mapCentre}
+        initialFavouriteIds={initialFavouriteIds}
       />
     </div>
   );

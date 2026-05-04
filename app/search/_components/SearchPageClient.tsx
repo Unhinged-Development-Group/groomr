@@ -13,6 +13,7 @@ interface SearchPageClientProps {
   isGeoSearch: boolean;
   initialFilters: ActiveFilters;
   mapCentre: MapCentre;
+  initialFavouriteIds: string[];
 }
 
 export function SearchPageClient({
@@ -21,6 +22,7 @@ export function SearchPageClient({
   isGeoSearch,
   initialFilters,
   mapCentre,
+  initialFavouriteIds,
 }: SearchPageClientProps) {
   const [filteredCount, setFilteredCount] = useState(initialGroomers.length);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(initialFilters);
@@ -44,6 +46,7 @@ export function SearchPageClient({
         mapCentre={mapCentre}
         onFilteredCountChange={setFilteredCount}
         onViewGroomer={setSelectedGroomer}
+        initialFavouriteIds={initialFavouriteIds}
       />
       {selectedGroomer && (
         <GroomerProfileModal

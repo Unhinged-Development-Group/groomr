@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { GroomerCard } from "@/components/ui/GroomerCard";
+import { addFavourite, removeFavourite } from "@/app/actions/favourites";
 import type { GroomerResult, ActiveFilters, MapCentre } from "@/types/search";
 
 const MapView = dynamic(() => import("./MapView"), {
@@ -28,6 +29,7 @@ interface ResultsSectionProps {
   mapCentre: MapCentre;
   onFilteredCountChange: (count: number) => void;
   onViewGroomer: (groomer: GroomerResult) => void;
+  initialFavouriteIds: string[];
 }
 
 export function ResultsSection({
@@ -37,8 +39,27 @@ export function ResultsSection({
   mapCentre,
   onFilteredCountChange,
   onViewGroomer,
+  initialFavouriteIds,
 }: ResultsSectionProps) {
   const [view, setView] = useState<"list" | "map">("list");
+  const [savedIds, setSavedIds] = useState(() => new Set(initialFavouriteIds));
+
+  async function handleToggleFavourite(groomer: { id: string }) {
+    const isSaved = savedIds.has(groomer.id);
+    setSavedIds(prev => {
+      const next = new Set(prev);
+      isSaved ? next.delete(groomer.id) : next.add(groomer.id);
+      return next;
+    });
+    const result = await (isSaved ? removeFavourite(groomer.id) : addFavourite(groomer.id));
+    if (!result.ok) {
+      setSavedIds(prev => {
+        const next = new Set(prev);
+        isSaved ? next.add(groomer.id) : next.delete(groomer.id);
+        return next;
+      });
+    }
+  }
 
   const filteredGroomers = useMemo(() => {
     return allGroomers.filter((g) => {
@@ -77,7 +98,7 @@ export function ResultsSection({
   const isEmpty = allGroomers.length === 0;
 
   return (
-    <section className="max-w-7xl mx-auto px-6 mt-12 pb-20">
+    <section className="max-w-5xl mx-auto px-6 mt-12 pb-20">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
         <h2 className="font-fredoka text-3xl text-deep-slate">
           {isGeoSearch ? "Groomers Near You" : "Local Groomers Near You"}
@@ -126,6 +147,8 @@ export function ResultsSection({
                   key={groomer.id}
                   groomer={groomer}
                   onView={() => onViewGroomer(groomer)}
+                  saved={savedIds.has(groomer.id)}
+                  onSave={handleToggleFavourite}
                 />
               ))}
             </div>

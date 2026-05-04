@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { HeartIcon, StarIcon } from "@/components/ui/GroomrIcons";
+import { HeartIcon, StarIcon, LocationPinIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
 
 interface Groomer {
@@ -43,7 +43,8 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
 
         {/* Distance — top left */}
         {groomer.distance != null && (
-          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-deep-slate text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-deep-slate text-xs font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+            <LocationPinIcon size={12} className="text-deep-slate" />
             {groomer.distance} miles away
           </span>
         )}

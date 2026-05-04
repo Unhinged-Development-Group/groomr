@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import type { GroomerResult, SearchParams, ActiveFilters, MapCentre } from "@/types/search";
 
 const PLACEHOLDER_IMAGE =

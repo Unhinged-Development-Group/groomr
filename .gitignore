@@ -38,5 +38,14 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# next.js type reference (auto-generated, should be committed)
+# next-env.d.ts
+
+# windows metadata sidecar files
+*.Zone.Identifier
+
+# ngrok binaries / archives (install globally, not in project)
+ngrok
 ngrok.zip
+ngrok.exe

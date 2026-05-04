@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "find /home/andrew/projects/groomr/.claude/worktrees -mindepth 1 -maxdepth 1 -type d | while IFS= read -r wt; do [ ! -e \"$wt/.env.local\" ] && ln -sf /home/andrew/projects/groomr/.env.local \"$wt/.env.local\"; done 2>/dev/null || true",
+            "statusMessage": "Symlinking .env.local into worktree…"
+          }
+        ]
+      }
+    ]
+  }
+}

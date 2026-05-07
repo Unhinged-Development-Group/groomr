@@ -366,7 +366,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 ## 9. Database Schema
 
-**Supabase Project ID:** `fvbxjwfxcbhjoidrmzgv`
+**Supabase Project ID:** `************`
 
 ### Custom Types (public schema)
 ```sql

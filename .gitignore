@@ -49,3 +49,4 @@ yarn-error.log*
 ngrok
 ngrok.zip
 ngrok.exe
+.claude/

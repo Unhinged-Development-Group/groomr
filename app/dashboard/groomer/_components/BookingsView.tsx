@@ -61,7 +61,7 @@ function TodayView({ appointments }: { appointments: any[] }) {
   const dateStr = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
-    <div className="grid lg:grid-cols-[1fr_380px] gap-8">
+    <div className="grid lg:grid-cols-[1fr_380px] gap-6">
       <section>
         <div className="flex items-baseline justify-between mb-4">
           <div>
@@ -74,7 +74,7 @@ function TodayView({ appointments }: { appointments: any[] }) {
           {todayBookings.length === 0 ? (
             <div className="p-8 text-center text-pebble-grey text-sm font-bold">No bookings today.</div>
           ) : todayBookings.map((b, i) => (
-            <div key={b.id} className={`grid grid-cols-[88px_1fr_auto] gap-4 p-5 items-center ${i ? "border-t border-pebble-grey/10" : ""} ${b.status === "in-progress" ? "bg-groomr-gold/10" : ""}`}>
+            <div key={b.id} className={`flex flex-col sm:grid sm:grid-cols-[88px_1fr_auto] gap-3 sm:gap-4 p-4 sm:p-5 ${i ? "border-t border-pebble-grey/10" : ""} ${b.status === "in-progress" ? "bg-groomr-gold/10" : ""}`}>
               <div>
                 <p className="font-fredoka text-2xl text-deep-slate leading-none">{b.time}</p>
                 <p className="text-xs text-pebble-grey font-bold mt-1">{b.duration} min</p>
@@ -189,6 +189,8 @@ function WeekView({ appointments }: { appointments: any[] }) {
         </div>
       </div>
       <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden">
+        <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
         <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-pebble-grey/15">
           <div className="p-3" />
           {weekDays.map((d, i) => (
@@ -232,6 +234,8 @@ function WeekView({ appointments }: { appointments: any[] }) {
               })}
             </div>
           ))}
+        </div>
+        </div>
         </div>
       </div>
     </section>
@@ -390,7 +394,7 @@ export function BookingsView({ appointments }: { appointments: any[] }) {
   const [view, setView] = useState<BookingSubView>("today");
   return (
     <section className="space-y-5">
-      <div className="flex items-center gap-2 bg-white border border-pebble-grey/20 rounded-full p-1.5 w-fit">
+      <div className="flex items-center gap-1 bg-white border border-pebble-grey/20 rounded-full p-1.5 overflow-x-auto max-w-full">
         {(["today","week","month","year"] as BookingSubView[]).map(v => (
           <SubPill key={v} active={view === v} onClick={() => setView(v)}>
             {v.charAt(0).toUpperCase() + v.slice(1)}

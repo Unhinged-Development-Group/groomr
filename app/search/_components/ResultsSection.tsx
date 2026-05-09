@@ -98,7 +98,7 @@ export function ResultsSection({
   const isEmpty = allGroomers.length === 0;
 
   return (
-    <section className="max-w-5xl mx-auto px-6 mt-12 pb-20">
+    <section className="max-w-7xl mx-auto px-6 mt-12 pb-20">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
         <h2 className="font-fredoka text-3xl text-deep-slate">
           {isGeoSearch ? "Groomers Near You" : "Local Groomers Near You"}
@@ -141,7 +141,12 @@ export function ResultsSection({
             <EmptyState type="filtered" />
           )}
           {!isNoResults && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div
+              className="grid gap-4"
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              }}
+            >
               {filteredGroomers.map((groomer) => (
                 <GroomerCard
                   key={groomer.id}

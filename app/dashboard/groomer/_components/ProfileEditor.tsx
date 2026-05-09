@@ -318,11 +318,11 @@ export function ProfileEditor({
             </div>
 
             <div className="space-y-2">
-              <div className="grid grid-cols-[1fr_100px_100px_40px] gap-3 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-pebble-grey">
+              <div className="hidden sm:grid grid-cols-[1fr_100px_100px_40px] gap-3 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-pebble-grey">
                 <span>Service</span><span>Duration</span><span>Price</span><span />
               </div>
               {services.map((s, i) => (
-                <div key={i} className="grid grid-cols-[1fr_100px_100px_40px] gap-3 items-center">
+                <div key={i} className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_100px_100px_40px] gap-2 sm:gap-3 items-start sm:items-center">
                   <input
                     className="field"
                     value={s.name}

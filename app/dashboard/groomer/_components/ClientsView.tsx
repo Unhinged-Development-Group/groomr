@@ -207,7 +207,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[260px] bg-white rounded-full p-1.5 flex items-center border border-pebble-grey/20 focus-within:ring-2 focus-within:ring-groomr-gold transition-shadow">
+        <div className="flex-1 min-w-0 bg-white rounded-full p-1.5 flex items-center border border-pebble-grey/20 focus-within:ring-2 focus-within:ring-groomr-gold transition-shadow">
           <span className="pl-3 text-pebble-grey"><SearchIcon size={18} /></span>
           <input
             value={query}
@@ -231,8 +231,9 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         </div>
       </div>
 
-      <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden">
-        <div className="grid grid-cols-[1fr_120px_120px_120px_60px] gap-4 px-5 py-3 bg-alabaster-cream border-b border-pebble-grey/15">
+      {/* Desktop table */}
+      <div className="hidden sm:block bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden">
+        <div className="grid grid-cols-[1fr_100px_120px_100px_48px] gap-3 px-5 py-3 bg-alabaster-cream border-b border-pebble-grey/15">
           <SortHead k="dog" label="Dog & owner" align="left" sort={sort} onSort={sortBy} />
           <SortHead k="visits" label="Visits" sort={sort} onSort={sortBy} />
           <SortHead k="last"   label="Last"   sort={sort} onSort={sortBy} />
@@ -247,7 +248,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         )}
         {rows.map((c, i) => (
           <button key={c.id} onClick={() => setOpenClient(c)}
-            className={`w-full text-left grid grid-cols-[1fr_120px_120px_120px_60px] gap-4 px-5 py-4 items-center hover:bg-alabaster-cream transition-colors focus-ring ${i ? "border-t border-pebble-grey/10" : ""}`}>
+            className={`w-full text-left grid grid-cols-[1fr_100px_120px_100px_48px] gap-3 px-5 py-4 items-center hover:bg-alabaster-cream transition-colors focus-ring ${i ? "border-t border-pebble-grey/10" : ""}`}>
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate shrink-0">
                 {c.dog.charAt(0)}
@@ -267,6 +268,36 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
             <span className="justify-self-end rounded-full p-2 bg-alabaster-cream border border-pebble-grey/20 text-deep-slate">
               <ChevronRightIcon size={16} />
             </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Mobile card list */}
+      <div className="sm:hidden space-y-3">
+        {rows.length === 0 && (
+          <div className="bg-white border border-pebble-grey/20 rounded-[20px] px-5 py-10 text-center">
+            <p className="font-fredoka text-lg text-deep-slate">No matches.</p>
+            <p className="text-sm text-pebble-grey font-bold">Try a different name.</p>
+          </div>
+        )}
+        {rows.map((c) => (
+          <button key={c.id} onClick={() => setOpenClient(c)}
+            className="w-full text-left bg-white border border-pebble-grey/20 rounded-[20px] p-4 flex items-center gap-3 hover:bg-alabaster-cream transition-colors focus-ring">
+            <div className="w-12 h-12 rounded-xl bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate text-lg shrink-0">
+              {c.dog.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-fredoka text-deep-slate">{c.dog}</p>
+                {c.regular && <Badge tone="gold">Regular</Badge>}
+              </div>
+              <p className="text-xs text-pebble-grey font-bold truncate">{c.breed} · {c.owner.split(" (")[0]}</p>
+              <div className="flex gap-3 mt-1 text-xs font-bold text-pebble-grey">
+                <span>{c.visits} visits</span>
+                <span>£{c.spend} lifetime</span>
+              </div>
+            </div>
+            <ChevronRightIcon size={16} className="text-pebble-grey shrink-0" />
           </button>
         ))}
       </div>

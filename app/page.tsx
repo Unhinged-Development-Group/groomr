@@ -82,7 +82,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-6 pt-3 text-sm font-bold text-pebble-grey">
+            <div className="flex flex-wrap items-center gap-4 pt-3 text-sm font-bold text-pebble-grey">
               <div className="flex items-center gap-2">
                 <ShieldIcon size={20} />
                 Verified groomers
@@ -185,7 +185,7 @@ export default function LandingPage() {
                 Become a Groomr
               </Link>
             </div>
-            <div className="flex items-center gap-8 pt-5 border-t border-pebble-grey/20 mt-6">
+            <div className="flex flex-wrap items-center gap-6 pt-5 border-t border-pebble-grey/20 mt-6">
               <div>
                 <p className="font-fredoka text-3xl text-deep-slate">2,400+</p>
                 <p className="text-xs font-bold text-sage-leaf uppercase tracking-wider">

@@ -136,18 +136,23 @@ export function GroomerDashboardClient({
             {ownerName} · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">4.9 (184 reviews)</span>
           </p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {viewerRole === "owner" && (
             <ScopeSelector team={team} scope={scope} onScopeChange={setScope} />
           )}
-          <button className="btn-secondary font-nunito font-bold px-5 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2">
-            <CalendarIcon size={16} /> Block time
+          <button className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2">
+            <CalendarIcon size={16} />
+            <span className="hidden sm:inline">Block time</span>
+            <span className="sm:hidden">Block</span>
           </button>
-          <Link href="/dashboard/groomer/messages" className="btn-secondary font-nunito font-bold px-5 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2">
-            <MessagesIcon size={16} /> Messages
+          <Link href="/dashboard/groomer/messages" className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2">
+            <MessagesIcon size={16} />
+            <span className="hidden sm:inline">Messages</span>
           </Link>
-          <button className="btn-primary font-nunito font-bold px-5 py-2.5 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
-            <PlusIcon size={16} /> New booking
+          <button className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
+            <PlusIcon size={16} />
+            <span className="hidden sm:inline">New booking</span>
+            <span className="sm:hidden">Book</span>
           </button>
         </div>
       </header>
@@ -162,18 +167,18 @@ export function GroomerDashboardClient({
 
       {/* Tab nav */}
       <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+        <div className="flex sm:grid sm:grid-cols-5 gap-1 overflow-x-auto pb-0.5 sm:overflow-visible scrollbar-none">
           {TABS.map((t) => {
             const active = tab === t.id;
             const showDot = t.id === "reviews" && unrespondedReviews > 0;
             return (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={cn("relative flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl font-nunito font-bold text-base transition-colors focus-ring",
+                className={cn("relative flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-nunito font-bold text-sm transition-colors focus-ring shrink-0 sm:shrink whitespace-nowrap",
                   active ? "bg-deep-slate text-alabaster-cream" : "text-deep-slate hover:bg-alabaster-cream")}>
-                <t.Icon size={20} />
+                <t.Icon size={18} />
                 {t.label}
                 {showDot && (
-                  <span className={cn("absolute top-2.5 right-3 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center",
+                  <span className={cn("absolute top-2 right-2 min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
                     active ? "bg-groomr-gold text-deep-slate" : "bg-muted-terracotta text-alabaster-cream")}>
                     {unrespondedReviews}
                   </span>

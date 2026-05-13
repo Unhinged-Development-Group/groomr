@@ -70,7 +70,7 @@ export default function LandingPage() {
               <SearchPillWrapper placeholder="Postcode, town, or 'near me'" ctaLabel="Find Groomers" />
               <div className="flex flex-wrap gap-2 mt-3 text-xs">
                 <span className="text-pebble-grey font-bold mr-1 self-center">Popular:</span>
-                {["E8", "Hackney", "Bethnal Green", "Mobile only"].map((t) => (
+                {["Glasgow", "Edinburgh", "Southside", "Mobile only"].map((t) => (
                   <Link
                     key={t}
                     href={`/search?q=${encodeURIComponent(t)}`}

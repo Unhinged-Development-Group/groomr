@@ -128,13 +128,18 @@ export function GroomerDashboardClient({
         <div className="min-w-0">
           <Eyebrow>Studio dashboard</Eyebrow>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <h1 className="font-fredoka text-4xl md:text-5xl text-deep-slate">{businessName}</h1>
-            <span className="inline-flex items-center gap-2 bg-sage-leaf/10 border border-sage-leaf/30 rounded-full px-3 py-1.5">
-              <span className="w-2 h-2 bg-sage-leaf rounded-full animate-pulse" />
-              <span className="text-xs font-bold text-deep-slate">Open · Accepting bookings</span>
-            </span>
+            <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">{businessName}</h1>
+            {(() => {
+              const isOpen = editorData.availability.some((r) => r.isActive);
+              return (
+                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 border ${isOpen ? "bg-sage-leaf/10 border-sage-leaf/30" : "bg-muted-terracotta/10 border-muted-terracotta/30"}`}>
+                  <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-sage-leaf animate-pulse" : "bg-muted-terracotta"}`} />
+                  <span className="text-xs font-bold text-deep-slate">{isOpen ? "Open · Accepting bookings" : "Closed · Not accepting bookings"}</span>
+                </span>
+              );
+            })()}
           </div>
-          <p className="text-sm text-pebble-grey font-bold mt-1">
+          <p className="text-sm text-pebble-grey font-bold mt-3">
             {ownerName} · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">4.9 (184 reviews)</span>
           </p>
         </div>
@@ -194,7 +199,7 @@ export function GroomerDashboardClient({
       {/* Tab content */}
       {tab === "bookings" && <BookingsView appointments={scopedAppointments} />}
       {tab === "clients"  && <ClientsView appointments={scopedAppointments} />}
-      {tab === "earnings" && <EarningsView payments={initialPayments} />}
+      {tab === "earnings" && <EarningsView payments={initialPayments} appointments={scopedAppointments} />}
       {tab === "reviews"  && <ReviewsView reviews={initialReviews} />}
       {tab === "profile"  && (
         <ProfileEditor

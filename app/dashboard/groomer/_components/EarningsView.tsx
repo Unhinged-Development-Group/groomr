@@ -20,13 +20,19 @@ function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
   );
 }
 
-export function EarningsView({ payments }: { payments: Payment[] }) {
+export function EarningsView({ payments, appointments = [] }: { payments: Payment[]; appointments?: any[] }) {
   const [range, setRange] = useState<"7d"|"30d"|"ytd" | "all">("all");
+
+  const now = new Date();
+  const upcomingAppointments = appointments.filter(a =>
+    a.status === "confirmed" && new Date(a.scheduled_at) > now
+  );
+  const upcomingRevenue = upcomingAppointments.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100;
 
   const { totalRevenue, totalBookings, chartData, recentHistory } = useMemo(() => {
     const now = new Date();
     let filteredPayments = payments;
-    
+
     if (range === "7d") {
       const d = new Date(); d.setDate(d.getDate() - 7);
       filteredPayments = payments.filter(p => new Date(p.date) >= d);
@@ -104,6 +110,12 @@ export function EarningsView({ payments }: { payments: Payment[] }) {
                 <p className="font-fredoka text-2xl text-deep-slate">£{avgValue.toFixed(0)}</p>
                 <p className="text-xs font-bold text-pebble-grey mt-1">Avg value</p>
               </div>
+              {upcomingRevenue > 0 && (
+                <div>
+                  <p className="font-fredoka text-2xl text-sage-leaf">+£{upcomingRevenue.toFixed(0)}</p>
+                  <p className="text-xs font-bold text-pebble-grey mt-1">Upcoming</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -134,8 +146,20 @@ export function EarningsView({ payments }: { payments: Payment[] }) {
             <Eyebrow>Recent activity</Eyebrow>
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2">
-            {recentHistory.length === 0 ? (
-              <p className="text-sm text-pebble-grey">No recent payment history.</p>
+            {upcomingAppointments.slice(0, 5).map(a => (
+              <div key={a.id} className="flex justify-between items-center text-sm border-b border-pebble-grey/10 pb-4">
+                <div>
+                  <p className="font-bold text-deep-slate">{a.service_snapshot_name || "Appointment"}</p>
+                  <p className="text-xs text-pebble-grey mt-0.5">{new Date(a.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · {a.dogs?.name || "Dog"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-sage-leaf">+£{((a.service_snapshot_price || 0) / 100).toFixed(0)}</p>
+                  <p className="text-[10px] uppercase tracking-wide font-bold text-sage-leaf/70 mt-0.5">Upcoming</p>
+                </div>
+              </div>
+            ))}
+            {recentHistory.length === 0 && upcomingAppointments.length === 0 ? (
+              <p className="text-sm text-pebble-grey">No payment history yet.</p>
             ) : recentHistory.map(h => (
               <div key={h.id} className="flex justify-between items-center text-sm border-b border-pebble-grey/10 pb-4 last:border-0 last:pb-0">
                 <div>

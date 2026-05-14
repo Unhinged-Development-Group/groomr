@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type {
@@ -15,13 +15,20 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) redirect("/sign-in");
 
-  const { data: myProfile } = await supabaseAdmin
-    .from("profiles")
-    .select("id, full_name, email, phone, roles")
-    .eq("clerk_id", clerkUserId)
-    .single();
+  const [{ data: myProfile }, clerkUser] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email, phone, roles")
+      .eq("clerk_id", clerkUserId)
+      .single(),
+    currentUser(),
+  ]);
 
   if (!myProfile) redirect("/sign-in");
+
+  const clerkName  = clerkUser ? [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") : "";
+  const clerkEmail = clerkUser?.emailAddresses?.[0]?.emailAddress ?? "";
+  const clerkPhone = clerkUser?.phoneNumbers?.[0]?.phoneNumber ?? "";
 
   const roles: string[] = myProfile.roles ?? [];
   const isDirectGroomer = roles.includes("groomer");
@@ -61,7 +68,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   if (!groomerProfile) {
     return {
       groomerProfileId: "",
-      profile: emptyProfile(myProfile.full_name ?? "", myProfile.email ?? "", myProfile.phone ?? ""),
+      profile: emptyProfile(myProfile.full_name || clerkName, myProfile.email || clerkEmail, myProfile.phone || clerkPhone),
       services: [],
       availability: [],
       team: [],
@@ -93,9 +100,9 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
 
   const profile: ProfileFormData = {
     businessName: (groomerProfile.business_name as string) ?? "",
-    ownerName: myProfile.full_name ?? "",
-    email: myProfile.email ?? "",
-    phone: myProfile.phone ?? "",
+    ownerName: myProfile.full_name || clerkName,
+    email: myProfile.email || clerkEmail,
+    phone: myProfile.phone || clerkPhone,
     bio: (groomerProfile.bio as string) ?? "",
     businessMode: (groomerProfile.is_mobile as boolean) ? "mobile" : "studio",
     radius: (groomerProfile.travel_radius_miles as number) ?? 5,

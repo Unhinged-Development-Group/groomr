@@ -225,8 +225,8 @@ export function ProfileEditor({
             <Eyebrow>How you operate</Eyebrow>
             <div className="grid grid-cols-2 gap-3 mt-3">
               {([
-                { k: "mobile", l: "Mobile (we drive)",          sub: "You travel to clients" },
                 { k: "studio", l: "Studio (clients come to us)", sub: "Fixed location" },
+                { k: "mobile", l: "Mobile (we drive)",           sub: "You travel to clients" },
               ] as const).map((m) => (
                 <button
                   key={m.k}
@@ -676,12 +676,60 @@ export function ProfileEditor({
 
         <div className="bg-deep-slate text-alabaster-cream rounded-[20px] p-5">
           <Eyebrow className="text-groomr-gold">Account health</Eyebrow>
-          <div className="mt-3 space-y-2 text-sm">
-            <div className="flex items-center gap-2"><span className="w-2 h-2 bg-sage-leaf rounded-full" /> Profile 100% complete</div>
-            <div className="flex items-center gap-2"><span className="w-2 h-2 bg-sage-leaf rounded-full" /> Verified groomer</div>
-            <div className="flex items-center gap-2"><span className="w-2 h-2 bg-groomr-gold rounded-full" /> Insurance expires Jul 2026</div>
-            <div className="flex items-center gap-2"><span className="w-2 h-2 bg-sage-leaf rounded-full" /> Stripe payouts active</div>
-          </div>
+          {(() => {
+            const checks = [
+              { label: "Business name set",    done: !!initialProfile.businessName },
+              { label: "Bio written",          done: !!initialProfile.bio },
+              { label: "Phone number added",   done: !!initialProfile.phone },
+              { label: "Services added",       done: services.length > 0 },
+              { label: "Availability set",     done: availability.some((r) => r.isActive) },
+              { label: "Location configured",  done: initialProfile.businessMode === "studio" ? !!initialProfile.addressLine1 : initialProfile.radius > 0 },
+            ];
+            const done = checks.filter((c) => c.done).length;
+            const pct = Math.round((done / checks.length) * 100);
+            const next = checks.find((c) => !c.done);
+            return (
+              <>
+                <div className="mt-3 mb-3">
+                  <div className="flex justify-between text-xs font-bold mb-1.5">
+                    <span className="text-alabaster-cream/70">Profile complete</span>
+                    <span className="text-groomr-gold">{pct}%</span>
+                  </div>
+                  <div className="h-1.5 bg-alabaster-cream/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-groomr-gold rounded-full transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm">
+                  {checks.map((c) => (
+                    <div key={c.label} className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${c.done ? "bg-sage-leaf" : "bg-pebble-grey/40"}`} />
+                      <span className={c.done ? "text-alabaster-cream" : "text-alabaster-cream/40 line-through"}>{c.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {next && (
+                  <div className="mt-4 pt-4 border-t border-alabaster-cream/10">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-groomr-gold mb-1">Next up</p>
+                    <p className="text-xs text-alabaster-cream/80">{next.label}</p>
+                    <button
+                      onClick={() => {
+                        const el = document.querySelector("[data-section='profile-form']");
+                        el?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="mt-2 text-xs font-bold text-groomr-gold hover:underline focus-ring rounded"
+                    >
+                      Complete now →
+                    </button>
+                  </div>
+                )}
+                {pct === 100 && (
+                  <div className="mt-4 pt-4 border-t border-alabaster-cream/10">
+                    <p className="text-xs font-bold text-sage-leaf">Profile complete — you&apos;re ready to take bookings.</p>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {viewerRole === "owner" && (

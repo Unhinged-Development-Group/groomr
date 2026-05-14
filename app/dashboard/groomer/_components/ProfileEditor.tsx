@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon } from "@/components/ui/GroomrIcons";
@@ -62,13 +63,19 @@ export function ProfileEditor({
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [pausing, startPause] = useTransition();
+  const [isPaused, setIsPaused] = useState(() => availability.length > 0 && availability.every((r) => !r.isActive));
+  const prePauseRef = useRef<AvailabilityRow[] | null>(null);
+  // Tracks the last-saved availability so auto-saves (pause/re-open) don't trigger the save button
+  const [savedAvailability, setSavedAvailability] = useState(initialAvailability);
+  const router = useRouter();
 
   const isDirty = useMemo(
     () =>
       JSON.stringify(formData) !== JSON.stringify(initialProfile) ||
       JSON.stringify(services) !== JSON.stringify(initialServices) ||
-      JSON.stringify(availability) !== JSON.stringify(initialAvailability),
-    [formData, initialProfile, services, initialServices, availability, initialAvailability]
+      JSON.stringify(availability) !== JSON.stringify(savedAvailability),
+    [formData, initialProfile, services, initialServices, availability, savedAvailability]
   );
 
   function updateAvailability(dayOfWeek: number, patch: Partial<AvailabilityRow>) {
@@ -106,12 +113,10 @@ export function ProfileEditor({
     const err = profileResult.error ?? servicesResult.error ?? availabilityResult.error;
     if (err) {
       setSaveError(err);
+    } else {
+      setSavedAvailability(availability);
+      router.refresh();
     }
-    // On success, dirty state resets naturally because JSON.stringify will now match
-    // (server has the new state; a page refresh would re-populate initialProfile)
-    // For now, we just clear the visual dirty marker by resetting local initial references
-    // via a workaround: re-stamp initial values to the current state
-    // This is handled below by conditionally resetting after success
   }
 
   async function handleDiscard() {
@@ -703,7 +708,7 @@ export function ProfileEditor({
                   {checks.map((c) => (
                     <div key={c.label} className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${c.done ? "bg-sage-leaf" : "bg-pebble-grey/40"}`} />
-                      <span className={c.done ? "text-alabaster-cream" : "text-alabaster-cream/40 line-through"}>{c.label}</span>
+                      <span className={c.done ? "text-alabaster-cream/40 line-through" : "text-alabaster-cream"}>{c.label}</span>
                     </div>
                   ))}
                 </div>
@@ -735,7 +740,28 @@ export function ProfileEditor({
         {viewerRole === "owner" && (
           <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
             <Eyebrow>Danger zone</Eyebrow>
-            <button className="w-full mt-3 text-xs font-bold text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors py-2 rounded-full">Pause new bookings</button>
+            <button
+              disabled={pausing}
+              onClick={() => startPause(async () => {
+                if (isPaused) {
+                  const restored = prePauseRef.current ?? availability.map((r) => ({ ...r, isActive: true }));
+                  setAvailability(restored);
+                  setSavedAvailability(restored);
+                  setIsPaused(false);
+                  await saveAvailability(groomerProfileId, restored);
+                } else {
+                  prePauseRef.current = availability;
+                  const paused = availability.map((r) => ({ ...r, isActive: false }));
+                  setAvailability(paused);
+                  setSavedAvailability(paused);
+                  setIsPaused(true);
+                  await saveAvailability(groomerProfileId, paused);
+                }
+                router.refresh();
+              })}
+              className="w-full mt-3 text-xs font-bold text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors py-2 rounded-full disabled:opacity-50">
+              {pausing ? "Updating…" : isPaused ? "Re-open bookings" : "Pause new bookings"}
+            </button>
             <button className="w-full text-xs font-bold text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors py-2 rounded-full">Close my Groomr account</button>
           </div>
         )}

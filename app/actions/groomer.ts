@@ -308,6 +308,19 @@ export async function createManualAppointment(
   return { appointmentId: data.id };
 }
 
+export async function markAppointmentComplete(appointmentId: string): Promise<{ error?: string }> {
+  const ctx = await getGroomerContext();
+  if (!ctx) return { error: "Not authorised" };
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({ status: "completed", updated_at: new Date().toISOString() })
+    .eq("id", appointmentId)
+    .eq("groomer_profile_id", ctx.groomerProfileId);
+
+  return error ? { error: error.message } : {};
+}
+
 export async function replyToReview(reviewId: string, text: string) {
   const ctx = await getGroomerContext();
   if (!ctx) return { error: "Not authorized" };

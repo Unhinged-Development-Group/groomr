@@ -191,7 +191,7 @@ export function AccountIcon({ size = 24, className }: IconProps) {
 
 export function SearchIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M21 21l-6-6" />
       <path d="M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -201,7 +201,7 @@ export function SearchIcon({ size = 24, className }: IconProps) {
 
 export function ChevronDownIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M19 9l-7 7-7-7" />
     </svg>
@@ -210,7 +210,7 @@ export function ChevronDownIcon({ size = 24, className }: IconProps) {
 
 export function ChevronRightIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M9 5l7 7-7 7" />
     </svg>
@@ -219,7 +219,7 @@ export function ChevronRightIcon({ size = 24, className }: IconProps) {
 
 export function ChevronLeftIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M15 19l-7-7 7-7" />
     </svg>
@@ -228,7 +228,7 @@ export function ChevronLeftIcon({ size = 24, className }: IconProps) {
 
 export function CloseIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M6 18L18 6" />
       <path d="M6 6l12 12" />
@@ -238,7 +238,7 @@ export function CloseIcon({ size = 24, className }: IconProps) {
 
 export function ClockIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M12 8v4l3 3" />
       <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -248,7 +248,7 @@ export function ClockIcon({ size = 24, className }: IconProps) {
 
 export function PlusIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M12 4v16" />
       <path d="M4 12h16" />
@@ -258,7 +258,7 @@ export function PlusIcon({ size = 24, className }: IconProps) {
 
 export function MenuIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M4 6h16" />
       <path d="M4 12h16" />
@@ -269,7 +269,7 @@ export function MenuIcon({ size = 24, className }: IconProps) {
 
 export function CheckIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M5 13l4 4L19 7" />
     </svg>
@@ -284,7 +284,7 @@ export function HeartIcon({ size = 24, className, filled }: HeartIconProps) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
       <path
         d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        stroke={STROKE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         fill={filled ? TERRA : "none"}
       />
     </svg>
@@ -293,7 +293,7 @@ export function HeartIcon({ size = 24, className, filled }: HeartIconProps) {
 
 export function MessageIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
     </svg>
@@ -302,7 +302,7 @@ export function MessageIcon({ size = 24, className }: IconProps) {
 
 export function UploadIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
       <path d="M17 8l-5-5-5 5" />
@@ -313,7 +313,7 @@ export function UploadIcon({ size = 24, className }: IconProps) {
 
 export function PencilIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M12 20h9" />
       <path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />
@@ -323,7 +323,7 @@ export function PencilIcon({ size = 24, className }: IconProps) {
 
 export function TrashIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={STROKE}
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M3 6h18" />
       <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
@@ -346,7 +346,7 @@ export function StarIcon({ size = 16, className }: IconProps) {
 export function LocationPinIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      stroke={STROKE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
       className={className}>
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
       <circle cx="12" cy="9" r="2.5" />

@@ -12,10 +12,16 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
   const now = new Date();
 
   const { earned, upcoming, chartData } = useMemo(() => {
-    const cutoff = (() => {
-      if (range === "7d")  { const d = new Date(); d.setDate(d.getDate() - 7);           return d; }
-      if (range === "30d") { const d = new Date(); d.setDate(d.getDate() - 30);          return d; }
+    const pastCutoff = (() => {
+      if (range === "7d")  { const d = new Date(); d.setDate(d.getDate() - 7);  return d; }
+      if (range === "30d") { const d = new Date(); d.setDate(d.getDate() - 30); return d; }
       if (range === "ytd") { return new Date(new Date().getFullYear(), 0, 1); }
+      return null;
+    })();
+
+    const futureCutoff = (() => {
+      if (range === "7d" || range === "30d") return now; // backward-looking only
+      if (range === "ytd") { return new Date(new Date().getFullYear(), 11, 31, 23, 59, 59); }
       return null;
     })();
 
@@ -23,14 +29,14 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
 
     const earnedAppts = active.filter(a => {
       const d = new Date(a.scheduled_at);
-      if (d > now) return false; // future = not yet earned
-      return cutoff ? d >= cutoff : true;
+      if (d > now) return false;
+      return pastCutoff ? d >= pastCutoff : true;
     });
 
     const upcomingAppts = active.filter(a => {
       const d = new Date(a.scheduled_at);
       if (d <= now) return false;
-      return cutoff ? d >= cutoff : true;
+      return futureCutoff ? d <= futureCutoff : true;
     });
 
     // Chart: group earned by day (7d/30d) or month (ytd/all)
@@ -63,7 +69,7 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
     });
 
     return { earned: earnedAppts, upcoming: upcomingAppts, chartData: seriesData };
-  }, [appointments, range, now]);
+  }, [appointments, range]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const earnedGross     = earned.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
   const upcomingGross   = upcoming.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
@@ -162,11 +168,10 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
 
             {/* Groomr fees */}
             <div className="flex justify-between px-5 py-3">
-              <span className="text-pebble-grey font-bold flex items-center gap-2">
+              <span className="text-pebble-grey font-bold">
                 Groomr fees
-                <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">Year 1 free</span>
               </span>
-              <span className="font-fredoka text-pebble-grey">£{groomrFees.toFixed(2)}</span>
+              <span className="font-fredoka text-muted-terracotta">−£{groomrFees.toFixed(2)}</span>
             </div>
 
             {/* Refunds */}
@@ -178,8 +183,8 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                   : <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">None</span>
                 }
               </span>
-              <span className={`font-fredoka ${refunds > 0 ? "text-muted-terracotta" : "text-pebble-grey"}`}>
-                {refunds > 0 ? `−£${refunds.toFixed(2)}` : "£0.00"}
+              <span className="font-fredoka text-muted-terracotta">
+                {refunds > 0 ? `−£${refunds.toFixed(2)}` : "−£0.00"}
               </span>
             </div>
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { MessageIcon, ChevronRightIcon, ChevronLeftIcon } from "@/components/ui/GroomrIcons";
+import type { ActiveGroom } from "./LiveGroomTracker";
 import type { Appointment } from "@/app/actions/appointments";
 
 function StatusDot({ status }: { status: string }) {
@@ -31,9 +32,13 @@ function SubPill({ active, children, onClick }: { active: boolean; children: Rea
   );
 }
 
-function TodayView({ appointments }: { appointments: any[] }) {
+function TodayView({ appointments, onBeginGroom, activeGroomId }: {
+  appointments: any[];
+  onBeginGroom?: (g: ActiveGroom) => void;
+  activeGroomId?: string | null;
+}) {
   const now = new Date();
-  
+
   const todayBookings = appointments
     .filter(a => {
       const d = new Date(a.scheduled_at);
@@ -52,7 +57,6 @@ function TodayView({ appointments }: { appointments: any[] }) {
         price: a.service_snapshot_price ? (a.service_snapshot_price / 100).toFixed(0) : "0",
         status: a.status,
         note: a.owner_notes || a.groomer_notes,
-        groomer: "Team" // Mocking groomer as we don't have team_members assigned to appointments yet
       };
     });
 
@@ -90,8 +94,29 @@ function TodayView({ appointments }: { appointments: any[] }) {
                 </p>
                 {b.note && <p className="text-xs text-sage-leaf font-bold italic mt-1">&quot;{b.note}&quot;</p>}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <p className="font-fredoka text-lg text-deep-slate">£{b.price}</p>
+                {b.status === "confirmed" && activeGroomId !== b.id && onBeginGroom && (
+                  <button
+                    onClick={() => onBeginGroom({
+                      appointmentId: b.id,
+                      dogName: b.dog,
+                      serviceName: b.svc,
+                      ownerName: b.owner,
+                      startedAt: Date.now(),
+                      durationMinutes: b.duration,
+                      extensionMinutes: 0,
+                    })}
+                    className="text-xs font-bold bg-groomr-gold text-deep-slate px-3 py-1.5 rounded-full hover:bg-groomr-gold/80 transition-colors focus-ring whitespace-nowrap"
+                  >
+                    Begin Groom
+                  </button>
+                )}
+                {activeGroomId === b.id && (
+                  <span className="text-xs font-bold text-groomr-gold bg-deep-slate px-3 py-1.5 rounded-full animate-pulse whitespace-nowrap">
+                    In progress
+                  </span>
+                )}
                 <button className="rounded-full p-2 bg-alabaster-cream hover:bg-deep-slate hover:text-alabaster-cream transition-colors focus-ring border border-pebble-grey/20" aria-label="Message">
                   <MessageIcon size={16} />
                 </button>
@@ -107,21 +132,40 @@ function TodayView({ appointments }: { appointments: any[] }) {
       <aside className="space-y-6">
         <div className="bg-deep-slate text-alabaster-cream rounded-[20px] p-6">
           <Eyebrow className="text-groomr-gold">Live status</Eyebrow>
-          {todayBookings.length > 0 ? (
-            <>
-              <p className="font-fredoka text-2xl mt-1 text-alabaster-cream">{todayBookings[0].dog} · {todayBookings[0].svc}</p>
-              <p className="text-sm text-alabaster-cream/85 mt-1 font-bold">Scheduled {todayBookings[0].time}</p>
-              <div className="mt-4 h-1.5 bg-alabaster-cream/20 rounded-full overflow-hidden">
-                <div className="h-full bg-groomr-gold" style={{ width: "0%" }} />
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button className="btn-gold-on-dark text-xs font-bold px-4 py-2 rounded-full focus-ring">Mark complete</button>
-                <button className="text-xs font-bold text-alabaster-cream border-2 border-alabaster-cream/40 hover:bg-alabaster-cream hover:text-deep-slate transition-colors px-4 py-2 rounded-full focus-ring">Notify owner</button>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm mt-3">No active bookings.</p>
-          )}
+          {(() => {
+            const active = activeGroomId ? todayBookings.find(b => b.id === activeGroomId) : null;
+            const next = !active ? todayBookings.find(b => b.status === "confirmed") : null;
+
+            if (active) return (
+              <>
+                <p className="font-fredoka text-2xl mt-1 text-alabaster-cream">{active.dog} · {active.svc}</p>
+                <p className="text-xs text-groomr-gold font-bold uppercase tracking-wider mt-2 animate-pulse">In progress — see tracker ↘</p>
+              </>
+            );
+
+            if (next) return (
+              <>
+                <p className="font-fredoka text-2xl mt-1 text-alabaster-cream">{next.dog} · {next.svc}</p>
+                <p className="text-sm text-alabaster-cream/70 font-bold mt-1">Scheduled {next.time}</p>
+                <button
+                  onClick={() => onBeginGroom?.({
+                    appointmentId: next.id,
+                    dogName: next.dog,
+                    serviceName: next.svc,
+                    ownerName: next.owner,
+                    startedAt: Date.now(),
+                    durationMinutes: next.duration,
+                    extensionMinutes: 0,
+                  })}
+                  className="mt-4 bg-groomr-gold text-deep-slate font-nunito font-bold px-5 py-2 rounded-full text-sm focus-ring hover:bg-groomr-gold/90 transition-colors"
+                >
+                  Begin Groom
+                </button>
+              </>
+            );
+
+            return <p className="text-sm mt-3 text-alabaster-cream/60">No bookings today.</p>;
+          })()}
         </div>
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
           <Eyebrow>Today&apos;s notes</Eyebrow>
@@ -390,7 +434,11 @@ function YearView({ appointments }: { appointments: any[] }) {
 
 type BookingSubView = "today" | "week" | "month" | "year";
 
-export function BookingsView({ appointments }: { appointments: any[] }) {
+export function BookingsView({ appointments, onBeginGroom, activeGroomId }: {
+  appointments: any[];
+  onBeginGroom?: (g: ActiveGroom) => void;
+  activeGroomId?: string | null;
+}) {
   const [view, setView] = useState<BookingSubView>("today");
   return (
     <section className="space-y-5">
@@ -401,7 +449,7 @@ export function BookingsView({ appointments }: { appointments: any[] }) {
           </SubPill>
         ))}
       </div>
-      {view === "today" && <TodayView appointments={appointments} />}
+      {view === "today" && <TodayView appointments={appointments} onBeginGroom={onBeginGroom} activeGroomId={activeGroomId} />}
       {view === "week"  && <WeekView appointments={appointments} />}
       {view === "month" && <MonthView appointments={appointments} />}
       {view === "year"  && <YearView appointments={appointments} />}

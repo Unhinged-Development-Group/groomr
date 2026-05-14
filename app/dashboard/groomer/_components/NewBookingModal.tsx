@@ -64,7 +64,7 @@ export function NewBookingModal({ services, onClose }: Props) {
       />
 
       {/* Sheet */}
-      <div className="relative bg-alabaster-cream w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[28px] shadow-modal border border-pebble-grey/20 z-10 overflow-hidden">
+      <div className="relative bg-alabaster-cream w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[28px] shadow-modal border border-pebble-grey/20 z-10 flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-pebble-grey/15">
           <div>
@@ -100,7 +100,7 @@ export function NewBookingModal({ services, onClose }: Props) {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 overflow-y-auto">
             {/* Service */}
             <label className="block">
               <span className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">

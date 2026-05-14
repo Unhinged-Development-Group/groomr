@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CalendarIcon, PetsIcon, ScissorsIcon, StarIcon, ShieldIcon, PlusIcon, MessagesIcon } from "@/components/ui/GroomrIcons";
@@ -10,6 +10,8 @@ import { EarningsView } from "./EarningsView";
 import { ReviewsView } from "./ReviewsView";
 import { ProfileEditor } from "./ProfileEditor";
 import { NewBookingModal } from "./NewBookingModal";
+import { LiveGroomTracker } from "./LiveGroomTracker";
+import type { ActiveGroom } from "./LiveGroomTracker";
 import { cn } from "@/lib/utils";
 import type { ProfileEditorInitialData, TeamMemberRow } from "@/types/groomer-dashboard";
 
@@ -90,6 +92,31 @@ export function GroomerDashboardClient({
   const [tab, setTab] = useState<Tab>("bookings");
   const [scope, setScope] = useState<string>("all");
   const [newBookingOpen, setNewBookingOpen] = useState(false);
+  const [activeGroom, setActiveGroom] = useState<ActiveGroom | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("groomr_active_groom");
+      if (stored) setActiveGroom(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
+
+  function handleBeginGroom(groom: ActiveGroom) {
+    localStorage.setItem("groomr_active_groom", JSON.stringify(groom));
+    setActiveGroom(groom);
+  }
+
+  function handleGroomComplete() {
+    localStorage.removeItem("groomr_active_groom");
+    setActiveGroom(null);
+  }
+
+  function handleGroomExtend(minutes: number) {
+    if (!activeGroom) return;
+    const updated = { ...activeGroom, extensionMinutes: activeGroom.extensionMinutes + minutes };
+    localStorage.setItem("groomr_active_groom", JSON.stringify(updated));
+    setActiveGroom(updated);
+  }
 
   const { viewerRole, teamMemberId, team } = editorData;
   const effectiveScope = viewerRole === "team_member" ? (teamMemberId ?? "own") : scope;
@@ -112,8 +139,22 @@ export function GroomerDashboardClient({
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
   weekStart.setHours(0, 0, 0, 0);
-  const weekPayments = initialPayments.filter((p) => new Date(p.date) >= weekStart);
-  const weekRevenue = weekPayments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+  const weekAppointments = scopedAppointments.filter((a) => {
+    const d = new Date(a.scheduled_at);
+    return d >= weekStart && d <= weekEnd && a.status !== "cancelled" && a.status !== "no_show";
+  });
+  const weekRevenue = weekAppointments.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100;
+
+  const allActiveAppts = scopedAppointments.filter((a) => a.status !== "cancelled" && a.status !== "no_show");
+  const allGross = allActiveAppts.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100;
+  const nextPayoutAmount = allGross * (1 - 0.08);
+
+  const nextMonday = new Date(now);
+  nextMonday.setDate(now.getDate() + ((8 - now.getDay()) % 7 || 7));
+  const nextPayoutDate = nextMonday.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   const uniqueClients = new Set(scopedAppointments.map((a) => a.owner_id));
   const repeatClients = Array.from(uniqueClients).filter(
@@ -166,10 +207,10 @@ export function GroomerDashboardClient({
 
       {/* Stat strip */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Today"       value={todayAppointments.length.toString()} sub={`bookings · ${todayHours.toFixed(1)} hrs`} tone="gold" />
-        <StatCard label="This week"   value={`£${weekRevenue.toFixed(0)}`}        sub={`${weekPayments.length} payments this week`} tone="sage" />
-        <StatCard label="Next payout" value={`£${weekRevenue.toFixed(0)}`}        sub="Estimated" tone="terra" />
-        <StatCard label="Repeat rate" value={`${repeatRate}%`}                    sub="of clients booked again" tone="slate" />
+        <StatCard label="Today"       value={todayAppointments.length.toString()}    sub={`bookings · ${todayHours.toFixed(1)} hrs`} tone="gold" />
+        <StatCard label="This week"   value={`£${weekRevenue.toFixed(0)}`}          sub={`${weekAppointments.length} bookings this week`} tone="sage" />
+        <StatCard label="Next payout" value={`£${nextPayoutAmount.toFixed(2)}`}     sub={`Est. ${nextPayoutDate}`} tone="terra" />
+        <StatCard label="Repeat rate" value={`${repeatRate}%`}                      sub="of clients booked again" tone="slate" />
       </section>
 
       {/* Tab nav */}
@@ -181,12 +222,12 @@ export function GroomerDashboardClient({
             return (
               <button key={t.id} onClick={() => setTab(t.id)}
                 className={cn("relative flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-nunito font-bold text-sm transition-colors focus-ring shrink-0 sm:shrink whitespace-nowrap",
-                  active ? "bg-deep-slate text-alabaster-cream" : "text-deep-slate hover:bg-alabaster-cream")}>
+                  active ? "bg-groomr-gold text-deep-slate" : "text-deep-slate hover:bg-alabaster-cream")}>
                 <t.Icon size={18} />
                 {t.label}
                 {showDot && (
                   <span className={cn("absolute top-2 right-2 min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
-                    active ? "bg-groomr-gold text-deep-slate" : "bg-muted-terracotta text-alabaster-cream")}>
+                    active ? "bg-deep-slate text-alabaster-cream" : "bg-muted-terracotta text-alabaster-cream")}>
                     {unrespondedReviews}
                   </span>
                 )}
@@ -197,7 +238,7 @@ export function GroomerDashboardClient({
       </nav>
 
       {/* Tab content */}
-      {tab === "bookings" && <BookingsView appointments={scopedAppointments} />}
+      {tab === "bookings" && <BookingsView appointments={scopedAppointments} onBeginGroom={handleBeginGroom} activeGroomId={activeGroom?.appointmentId ?? null} />}
       {tab === "clients"  && <ClientsView appointments={scopedAppointments} />}
       {tab === "earnings" && <EarningsView payments={initialPayments} appointments={scopedAppointments} />}
       {tab === "reviews"  && <ReviewsView reviews={initialReviews} />}
@@ -216,6 +257,14 @@ export function GroomerDashboardClient({
         <NewBookingModal
           services={editorData.services}
           onClose={() => setNewBookingOpen(false)}
+        />
+      )}
+
+      {activeGroom && (
+        <LiveGroomTracker
+          activeGroom={activeGroom}
+          onExtend={handleGroomExtend}
+          onComplete={handleGroomComplete}
         />
       )}
     </div>

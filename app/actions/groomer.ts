@@ -109,9 +109,10 @@ export async function getGroomerProfile() {
 
 export async function getGroomerAppointments() {
   const ctx = await getGroomerContext();
+  console.log("[getGroomerAppointments] ctx:", ctx);
   if (!ctx) return [];
 
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("appointments")
     .select(`
       *,
@@ -121,6 +122,7 @@ export async function getGroomerAppointments() {
     .eq("groomer_profile_id", ctx.groomerProfileId)
     .order("scheduled_at", { ascending: true });
 
+  console.log("[getGroomerAppointments] count:", data?.length, "error:", error);
   return (data || []) as any[];
 }
 

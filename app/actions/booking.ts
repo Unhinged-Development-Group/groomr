@@ -214,5 +214,6 @@ export async function createAppointment(
     return { error: "Failed to create appointment. Please try again." };
   }
 
+  console.log("[createAppointment] created id:", data.id, "groomer:", input.groomerProfileId);
   return { appointmentId: data.id };
 }

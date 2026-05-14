@@ -65,12 +65,16 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
     return { earned: earnedAppts, upcoming: upcomingAppts, chartData: seriesData };
   }, [appointments, range, now]);
 
-  const grossRevenue    = earned.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
+  const earnedGross     = earned.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
   const upcomingGross   = upcoming.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
-  const commission      = grossRevenue * GROOMR_COMMISSION_RATE;
-  const netRevenue      = grossRevenue - commission;
-  const upcomingNet     = upcomingGross * (1 - GROOMR_COMMISSION_RATE);
-  const avgValue        = earned.length > 0 ? grossRevenue / earned.length : 0;
+  const totalGross      = earnedGross + upcomingGross;
+  const totalBookings   = earned.length + upcoming.length;
+  const avgValue        = totalBookings > 0 ? totalGross / totalBookings : 0;
+  const earnedCommission   = earnedGross * GROOMR_COMMISSION_RATE;
+  const upcomingCommission = upcomingGross * GROOMR_COMMISSION_RATE;
+  const earnedNet       = earnedGross - earnedCommission;
+  const upcomingNet     = upcomingGross - upcomingCommission;
+  const nextPayout      = totalGross - (totalGross * GROOMR_COMMISSION_RATE);
   const maxVal          = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
 
   // Activity list: upcoming first (soonest), then past (most recent)
@@ -102,50 +106,55 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
           <div className="flex flex-wrap gap-4 items-baseline justify-between">
             <div>
               <p className="font-fredoka text-5xl text-deep-slate leading-none">
-                £{netRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                £{totalGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
-              <p className="text-pebble-grey font-bold mt-2">Your earnings (after commission)</p>
+              <p className="text-pebble-grey font-bold mt-2">Total services booked</p>
             </div>
-            <div className="flex gap-6 text-right">
+            <div className="flex gap-4 text-right items-end">
               <div>
-                <p className="font-fredoka text-2xl text-deep-slate">{earned.length}</p>
+                <p className="font-fredoka text-2xl text-deep-slate">{totalBookings}</p>
                 <p className="text-xs font-bold text-pebble-grey mt-1">Bookings</p>
               </div>
               <div>
-                <p className="font-fredoka text-2xl text-deep-slate">£{avgValue.toFixed(0)}</p>
+                <p className="font-fredoka text-2xl text-deep-slate">£{avgValue.toFixed(2)}</p>
                 <p className="text-xs font-bold text-pebble-grey mt-1">Avg value</p>
               </div>
-              {upcomingGross > 0 && (
-                <div>
-                  <p className="font-fredoka text-2xl text-sage-leaf">+£{upcomingNet.toFixed(2)}</p>
-                  <p className="text-xs font-bold text-pebble-grey mt-1">Upcoming (net)</p>
-                </div>
-              )}
+              <div className="bg-groomr-gold rounded-2xl px-4 py-2 text-center min-w-[110px]">
+                <p className="font-fredoka text-2xl text-deep-slate leading-none">£{nextPayout.toFixed(2)}</p>
+                <p className="text-[10px] font-bold text-deep-slate/70 mt-1 uppercase tracking-wide">Next payout</p>
+              </div>
             </div>
           </div>
 
           {/* Commission breakdown */}
           <div className="bg-white border border-pebble-grey/20 rounded-2xl divide-y divide-pebble-grey/10 text-sm">
-            <div className="flex justify-between px-5 py-3">
-              <span className="text-pebble-grey font-bold">Gross revenue (earned)</span>
-              <span className="font-fredoka text-deep-slate">£{grossRevenue.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between px-5 py-3">
-              <span className="text-pebble-grey font-bold flex items-center gap-2">
-                Groomr commission
-                <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{GROOMR_COMMISSION_RATE * 100}%</span>
-              </span>
-              <span className="font-fredoka text-muted-terracotta">−£{commission.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between px-5 py-3 bg-alabaster-cream">
-              <span className="font-bold text-deep-slate">Earned payout</span>
-              <span className="font-fredoka text-deep-slate">£{netRevenue.toFixed(2)}</span>
-            </div>
+            {earned.length > 0 && (
+              <>
+                <div className="flex justify-between px-5 py-3">
+                  <span className="text-pebble-grey font-bold flex items-center gap-2">
+                    Completed / past bookings
+                    <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{earned.length}</span>
+                  </span>
+                  <span className="font-fredoka text-deep-slate">£{earnedGross.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between px-5 py-3">
+                  <span className="text-pebble-grey font-bold flex items-center gap-2">
+                    Groomr commission
+                    <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{GROOMR_COMMISSION_RATE * 100}%</span>
+                  </span>
+                  <span className="font-fredoka text-muted-terracotta">−£{earnedCommission.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between px-5 py-3 bg-alabaster-cream">
+                  <span className="font-bold text-deep-slate">Earned payout</span>
+                  <span className="font-fredoka text-deep-slate">£{earnedNet.toFixed(2)}</span>
+                </div>
+              </>
+            )}
             {upcomingGross > 0 && (
               <>
                 <div className="flex justify-between px-5 py-3">
                   <span className="text-pebble-grey font-bold flex items-center gap-2">
-                    Upcoming gross
+                    Upcoming bookings
                     <span className="text-[10px] font-bold bg-sage-leaf/15 text-sage-leaf px-2 py-0.5 rounded-full">{upcoming.length} confirmed</span>
                   </span>
                   <span className="font-fredoka text-deep-slate">£{upcomingGross.toFixed(2)}</span>
@@ -155,20 +164,14 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                     Groomr commission
                     <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{GROOMR_COMMISSION_RATE * 100}%</span>
                   </span>
-                  <span className="font-fredoka text-muted-terracotta">−£{(upcomingGross * GROOMR_COMMISSION_RATE).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between px-5 py-3 bg-alabaster-cream rounded-b-2xl">
-                  <span className="font-bold text-deep-slate">Projected total payout</span>
-                  <span className="font-fredoka text-xl text-deep-slate">£{(netRevenue + upcomingNet).toFixed(2)}</span>
+                  <span className="font-fredoka text-muted-terracotta">−£{upcomingCommission.toFixed(2)}</span>
                 </div>
               </>
             )}
-            {upcomingGross === 0 && (
-              <div className="flex justify-between px-5 py-3 bg-alabaster-cream rounded-b-2xl">
-                <span className="font-bold text-deep-slate">Your payout</span>
-                <span className="font-fredoka text-xl text-deep-slate">£{netRevenue.toFixed(2)}</span>
-              </div>
-            )}
+            <div className="flex justify-between px-5 py-3 bg-groomr-gold/20 rounded-b-2xl">
+              <span className="font-bold text-deep-slate">Next payout</span>
+              <span className="font-fredoka text-xl text-deep-slate">£{nextPayout.toFixed(2)}</span>
+            </div>
           </div>
 
           {/* Chart */}

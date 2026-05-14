@@ -72,31 +72,32 @@ Located in `components/ui/`:
 - `GroomerCard` — card with save/favourite toggle
 - `Eyebrow`, `Badge`, `Button`, `Chip`
 
-### App Routes
+### App Routes & Page Docs
 
-| Route | Type | Purpose |
+Each page has a dedicated reference doc in `documents/pages/`. Read the relevant doc before editing a page — it covers sections, components, data flow, and gotchas.
+
+| Route | Doc | Notes |
 |---|---|---|
-| `/` | static | Landing page |
-| `/become-a-groomer` | static | Groomer marketing page |
-| `/register/groomer` | dynamic | Multi-step groomer registration wizard |
-| `/dashboard` | dynamic | Role-based redirect hub |
-| `/dashboard/owner` | dynamic | Dog owner dashboard (dogs CRUD, coming-soon tiles) |
-| `/dashboard/groomer` | dynamic | Full groomer back-office (5-tab system) |
-| `/dashboard/groomer/messages` | static* | Split-pane messages UI (mock data) |
-| `/api/webhooks/clerk` | API route | Clerk → Supabase user sync |
-
-*Currently rendered client-side with mock data; no real DB backing yet.
-
-### Groomer Dashboard Architecture
-
-`/dashboard/groomer/page.tsx` is a server component that fetches `business_name` from Supabase and passes it as props to `GroomerDashboardClient` (client component). All five tab components (`BookingsView`, `ClientsView`, `EarningsView`, `ReviewsView`, `ProfileEditor`) are client components with **mock data only** — the booking/transaction tables don't exist in Supabase yet.
+| `/` | [`documents/pages/landing-page.md`](documents/pages/landing-page.md) | Static marketing, no auth |
+| `/become-a-groomer` | [`documents/pages/become-a-groomer.md`](documents/pages/become-a-groomer.md) | Static groomer acquisition page |
+| `/founder` | [`documents/pages/founder.md`](documents/pages/founder.md) | Static founder letter |
+| `/search` | [`documents/pages/search.md`](documents/pages/search.md) | Async server component, PostGIS + Google Maps |
+| `/register/groomer` | [`documents/pages/register-groomer.md`](documents/pages/register-groomer.md) | 6-step wizard, writes to Supabase |
+| `/dashboard` | [`documents/pages/dashboard-redirect.md`](documents/pages/dashboard-redirect.md) | Role-based redirect only, no UI |
+| `/dashboard/owner` | [`documents/pages/dashboard-owner.md`](documents/pages/dashboard-owner.md) | Dog CRUD, appointments, favourites |
+| `/dashboard/groomer` | [`documents/pages/dashboard-groomer.md`](documents/pages/dashboard-groomer.md) | 5-tab groomer back-office |
+| `/dashboard/groomer/messages` | [`documents/pages/dashboard-groomer-messages.md`](documents/pages/dashboard-groomer-messages.md) | Mock split-pane messaging UI |
+| `/api/webhooks/clerk` | — | Clerk → Supabase user sync |
 
 ### What's Real vs Mock
 
 | Feature | Status |
 |---|---|
 | Dog CRUD (owner dashboard) | Real — Supabase + Cloudinary |
+| Appointments + Favourites (owner) | Real — Supabase |
 | Groomer registration wizard | Real — writes to `groomer_profiles` |
-| Groomer dashboard tabs | Mock data only |
+| Groomer profile editor + team | Real — live Supabase writes |
+| Groomer reviews tab | Real — shows + reply wired |
+| Groomer bookings/clients/earnings tabs | Mock data only |
 | Messages page | Mock data only |
-| Bookings / payments | Not yet built |
+| Bookings / payments / Stripe | Not yet built |

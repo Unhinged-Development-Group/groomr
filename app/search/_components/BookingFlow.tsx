@@ -458,13 +458,13 @@ export function BookingFlow({
                     Add a dog first
                   </p>
                   <p className="text-pebble-grey text-sm font-nunito">
-                    Add your dog&apos;s details to your dashboard before booking.
+                    Add your dog&apos;s details to your owner dashboard before booking.
                   </p>
                   <Link
                     href="/dashboard/owner"
                     className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring inline-block"
                   >
-                    Go to My Dashboard
+                    Go to Owner Dashboard
                   </Link>
                 </div>
               ) : (

@@ -9,6 +9,7 @@ import { ClientsView } from "./ClientsView";
 import { EarningsView } from "./EarningsView";
 import { ReviewsView } from "./ReviewsView";
 import { ProfileEditor } from "./ProfileEditor";
+import { NewBookingModal } from "./NewBookingModal";
 import { cn } from "@/lib/utils";
 import type { ProfileEditorInitialData, TeamMemberRow } from "@/types/groomer-dashboard";
 
@@ -88,6 +89,7 @@ export function GroomerDashboardClient({
 }: Props) {
   const [tab, setTab] = useState<Tab>("bookings");
   const [scope, setScope] = useState<string>("all");
+  const [newBookingOpen, setNewBookingOpen] = useState(false);
 
   const { viewerRole, teamMemberId, team } = editorData;
   const effectiveScope = viewerRole === "team_member" ? (teamMemberId ?? "own") : scope;
@@ -149,7 +151,10 @@ export function GroomerDashboardClient({
             <MessagesIcon size={16} />
             <span className="hidden sm:inline">Messages</span>
           </Link>
-          <button className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
+          <button
+            onClick={() => setNewBookingOpen(true)}
+            className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2"
+          >
             <PlusIcon size={16} />
             <span className="hidden sm:inline">New booking</span>
             <span className="sm:hidden">Book</span>
@@ -199,8 +204,16 @@ export function GroomerDashboardClient({
           groomerProfileId={editorData.groomerProfileId}
           initialProfile={editorData.profile}
           initialServices={editorData.services}
+          initialAvailability={editorData.availability}
           initialTeam={editorData.team}
           viewerRole={editorData.viewerRole}
+        />
+      )}
+
+      {newBookingOpen && (
+        <NewBookingModal
+          services={editorData.services}
+          onClose={() => setNewBookingOpen(false)}
         />
       )}
     </div>

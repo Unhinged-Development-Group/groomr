@@ -22,6 +22,13 @@ export interface ServiceRow {
   sortOrder: number;
 }
 
+export interface AvailabilityRow {
+  dayOfWeek: number;   // 0=Sun, 1=Mon … 6=Sat
+  startTime: string;   // "HH:MM"
+  endTime: string;     // "HH:MM"
+  isActive: boolean;
+}
+
 export interface TeamMemberRow {
   id: string;
   name: string;
@@ -39,6 +46,7 @@ export interface ProfileEditorInitialData {
   groomerProfileId: string;
   profile: ProfileFormData;
   services: ServiceRow[];
+  availability: AvailabilityRow[];
   team: TeamMemberRow[];
   viewerRole: "owner" | "team_member";
   /** Set when viewerRole === 'team_member' */

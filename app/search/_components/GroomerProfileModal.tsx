@@ -71,48 +71,51 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [svcRes, availRes, revRes, galleryRes] = await Promise.all([
-        supabase
-          .from("services")
-          .select("id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, sort_order")
-          .eq("groomer_profile_id", groomer.id)
-          .eq("is_active", true)
-          .order("sort_order", { ascending: true, nullsFirst: false }),
-        supabase
-          .from("availability")
-          .select("day_of_week, start_time, end_time")
-          .eq("groomer_profile_id", groomer.id)
-          .eq("is_active", true)
-          .order("day_of_week", { ascending: true }),
-        supabase
-          .from("reviews")
-          .select("id, rating, body, created_at, profiles(full_name)")
-          .eq("groomer_profile_id", groomer.id)
-          .eq("is_visible", true)
-          .order("created_at", { ascending: false })
-          .limit(10),
-        supabase
-          .from("groomer_profiles")
-          .select("gallery_images, deposit_type, deposit_percentage")
-          .eq("id", groomer.id)
-          .single(),
-      ]);
+      try {
+        const [svcRes, availRes, revRes, galleryRes] = await Promise.all([
+          supabase
+            .from("services")
+            .select("id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, sort_order")
+            .eq("groomer_profile_id", groomer.id)
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true, nullsFirst: false }),
+          supabase
+            .from("availability")
+            .select("day_of_week, start_time, end_time")
+            .eq("groomer_profile_id", groomer.id)
+            .eq("is_active", true)
+            .order("day_of_week", { ascending: true }),
+          supabase
+            .from("reviews")
+            .select("id, rating, body, created_at, profiles(full_name)")
+            .eq("groomer_profile_id", groomer.id)
+            .eq("is_visible", true)
+            .order("created_at", { ascending: false })
+            .limit(10),
+          supabase
+            .from("groomer_profiles")
+            .select("gallery_images, deposit_type, deposit_percentage")
+            .eq("id", groomer.id)
+            .maybeSingle(),
+        ]);
 
-      setServices((svcRes.data ?? []) as Service[]);
-      setAvailability((availRes.data ?? []) as AvailabilityRow[]);
-      setReviews((revRes.data ?? []) as Review[]);
+        setServices((svcRes.data ?? []) as Service[]);
+        setAvailability((availRes.data ?? []) as AvailabilityRow[]);
+        setReviews((revRes.data ?? []) as Review[]);
 
-      const profileData = galleryRes.data as {
-        gallery_images: string[] | null;
-        deposit_type: string | null;
-        deposit_percentage: number | null;
-      } | null;
-      setGalleryImages(profileData?.gallery_images ?? []);
-      setDepositPolicy({
-        type: (profileData?.deposit_type as 'none' | 'percentage' | 'full') ?? 'none',
-        percentage: profileData?.deposit_percentage ?? null,
-      });
-      setLoading(false);
+        const profileData = galleryRes.data as {
+          gallery_images: string[] | null;
+          deposit_type: string | null;
+          deposit_percentage: number | null;
+        } | null;
+        setGalleryImages(profileData?.gallery_images ?? []);
+        setDepositPolicy({
+          type: (profileData?.deposit_type as 'none' | 'percentage' | 'full') ?? 'none',
+          percentage: profileData?.deposit_percentage ?? null,
+        });
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [groomer.id]);

@@ -7,6 +7,7 @@ import type {
   ProfileEditorInitialData,
   ProfileFormData,
   ServiceRow,
+  AvailabilityRow,
   TeamMemberRow,
 } from "@/types/groomer-dashboard";
 
@@ -62,6 +63,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       groomerProfileId: "",
       profile: emptyProfile(myProfile.full_name ?? "", myProfile.email ?? "", myProfile.phone ?? ""),
       services: [],
+      availability: [],
       team: [],
       viewerRole,
       teamMemberId,
@@ -70,13 +72,18 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
 
   const groomerProfileId = groomerProfile.id as string;
 
-  const [{ data: serviceRows }, { data: teamRows }] = await Promise.all([
+  const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }] = await Promise.all([
     supabaseAdmin
       .from("services")
       .select("id, name, duration_minutes, price_pence, sort_order")
       .eq("groomer_profile_id", groomerProfileId)
       .eq("is_active", true)
       .order("sort_order"),
+    supabaseAdmin
+      .from("availability")
+      .select("day_of_week, start_time, end_time, is_active")
+      .eq("groomer_profile_id", groomerProfileId)
+      .order("day_of_week"),
     supabaseAdmin
       .from("team_members")
       .select("id, name, role, since_year, email, user_id, invite_status, average_rating, total_reviews, public_slug")
@@ -108,6 +115,20 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     sortOrder: s.sort_order ?? i,
   }));
 
+  // Build a full 7-day map keyed by day_of_week; fill gaps with inactive defaults
+  const availMap = new Map(
+    (availabilityRows ?? []).map((a) => [
+      a.day_of_week as number,
+      { startTime: a.start_time as string, endTime: a.end_time as string, isActive: a.is_active as boolean },
+    ])
+  );
+  const availability: AvailabilityRow[] = Array.from({ length: 7 }, (_, dow) => ({
+    dayOfWeek: dow,
+    startTime: availMap.get(dow)?.startTime ?? "09:00",
+    endTime:   availMap.get(dow)?.endTime   ?? "17:00",
+    isActive:  availMap.get(dow)?.isActive  ?? false,
+  }));
+
   const team: TeamMemberRow[] = (teamRows ?? []).map((m) => ({
     id: m.id,
     name: m.name,
@@ -121,7 +142,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     publicSlug: m.public_slug ?? null,
   }));
 
-  return { groomerProfileId, profile, services, team, viewerRole, teamMemberId };
+  return { groomerProfileId, profile, services, availability, team, viewerRole, teamMemberId };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
@@ -231,6 +252,49 @@ export async function saveServices(
         price_pence: s.price,
         is_active: true,
         sort_order: i,
+      }))
+    );
+    if (error) return { error: error.message };
+  }
+
+  return {};
+}
+
+export async function saveAvailability(
+  groomerProfileId: string,
+  rows: AvailabilityRow[]
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  const { data: gp } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("id")
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id)
+    .maybeSingle();
+
+  if (!gp) return { error: "Not authorised" };
+
+  await supabaseAdmin.from("availability").delete().eq("groomer_profile_id", groomerProfileId);
+
+  const active = rows.filter((r) => r.isActive);
+  if (active.length > 0) {
+    const { error } = await supabaseAdmin.from("availability").insert(
+      active.map((r) => ({
+        groomer_profile_id: groomerProfileId,
+        day_of_week: r.dayOfWeek,
+        start_time: r.startTime,
+        end_time: r.endTime,
+        is_active: true,
       }))
     );
     if (error) return { error: error.message };

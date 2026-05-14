@@ -99,6 +99,11 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
             .maybeSingle(),
         ]);
 
+        if (svcRes.error)   console.error("[modal] services error:",      svcRes.error);
+        if (availRes.error) console.error("[modal] availability error:",  availRes.error);
+        if (revRes.error)   console.error("[modal] reviews error:",       revRes.error);
+        if (galleryRes.error) console.error("[modal] gallery error:",     galleryRes.error);
+
         setServices((svcRes.data ?? []) as Service[]);
         setAvailability((availRes.data ?? []) as AvailabilityRow[]);
         setReviews((revRes.data ?? []) as Review[]);

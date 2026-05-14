@@ -162,7 +162,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         phone: a.profiles?.phone || "—",
         email: a.profiles?.email || "—",
         joined: d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-        coat: a.dogs?.coat || "Unknown",
+        coat: a.dogs?.coat_type || "Unknown",
       });
     }
     

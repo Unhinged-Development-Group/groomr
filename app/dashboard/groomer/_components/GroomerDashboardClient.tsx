@@ -151,10 +151,7 @@ export function GroomerDashboardClient({
             <MessagesIcon size={16} />
             <span className="hidden sm:inline">Messages</span>
           </Link>
-          <button
-            onClick={() => setNewBookingOpen(true)}
-            className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2"
-          >
+          <button onClick={() => setNewBookingOpen(true)} className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
             <PlusIcon size={16} />
             <span className="hidden sm:inline">New booking</span>
             <span className="sm:hidden">Book</span>

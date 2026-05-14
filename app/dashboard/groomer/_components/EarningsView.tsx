@@ -20,6 +20,8 @@ function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
   );
 }
 
+const GROOMR_COMMISSION_RATE = 0.08; // 8% — 0% for founding groomers for first 6 months
+
 export function EarningsView({ payments, appointments = [] }: { payments: Payment[]; appointments?: any[] }) {
   const [range, setRange] = useState<"7d"|"30d"|"ytd" | "all">("all");
 
@@ -77,6 +79,10 @@ export function EarningsView({ payments, appointments = [] }: { payments: Paymen
   const avgValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
   const maxVal = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
 
+  const commission = totalRevenue * GROOMR_COMMISSION_RATE;
+  const netRevenue = totalRevenue - commission;
+  const upcomingNet = upcomingRevenue * (1 - GROOMR_COMMISSION_RATE);
+
   return (
     <section className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -98,8 +104,8 @@ export function EarningsView({ payments, appointments = [] }: { payments: Paymen
         <section className="lg:col-span-2 space-y-6">
           <div className="flex flex-wrap gap-4 items-baseline justify-between">
             <div>
-              <p className="font-fredoka text-5xl text-deep-slate leading-none">£{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-              <p className="text-pebble-grey font-bold mt-2">Gross revenue</p>
+              <p className="font-fredoka text-5xl text-deep-slate leading-none">£{netRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+              <p className="text-pebble-grey font-bold mt-2">Your earnings (after commission)</p>
             </div>
             <div className="flex gap-6 text-right">
               <div>
@@ -112,10 +118,29 @@ export function EarningsView({ payments, appointments = [] }: { payments: Paymen
               </div>
               {upcomingRevenue > 0 && (
                 <div>
-                  <p className="font-fredoka text-2xl text-sage-leaf">+£{upcomingRevenue.toFixed(0)}</p>
-                  <p className="text-xs font-bold text-pebble-grey mt-1">Upcoming</p>
+                  <p className="font-fredoka text-2xl text-sage-leaf">+£{upcomingNet.toFixed(0)}</p>
+                  <p className="text-xs font-bold text-pebble-grey mt-1">Upcoming (net)</p>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Commission breakdown */}
+          <div className="bg-white border border-pebble-grey/20 rounded-2xl divide-y divide-pebble-grey/10 text-sm">
+            <div className="flex justify-between px-5 py-3">
+              <span className="text-pebble-grey font-bold">Gross revenue</span>
+              <span className="font-fredoka text-deep-slate">£{totalRevenue.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between px-5 py-3">
+              <span className="text-pebble-grey font-bold flex items-center gap-2">
+                Groomr commission
+                <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{GROOMR_COMMISSION_RATE * 100}%</span>
+              </span>
+              <span className="font-fredoka text-muted-terracotta">−£{commission.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between px-5 py-3 bg-alabaster-cream rounded-b-2xl">
+              <span className="font-bold text-deep-slate">Your payout</span>
+              <span className="font-fredoka text-xl text-deep-slate">£{netRevenue.toFixed(2)}</span>
             </div>
           </div>
 

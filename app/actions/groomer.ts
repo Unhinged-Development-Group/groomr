@@ -117,7 +117,7 @@ export async function getGroomerAppointments() {
     .select(`
       *,
       dogs (name, breed, coat_type),
-      profiles (full_name, email, phone, clerk_id)
+      profiles!appointments_owner_id_fkey (full_name, email, phone, clerk_id)
     `)
     .eq("groomer_profile_id", ctx.groomerProfileId)
     .order("scheduled_at", { ascending: true });
@@ -147,7 +147,7 @@ export async function getGroomerReviews() {
       appointments (
         service_snapshot_name,
         dogs (name),
-        profiles (first_name, last_name)
+        profiles!appointments_owner_id_fkey (full_name)
       )
     `)
     .in("appointment_id", appointmentIds)

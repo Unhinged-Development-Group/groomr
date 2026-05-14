@@ -25,7 +25,7 @@ export function ReviewsView({ reviews: dbReviews }: { reviews: DBReview[] }) {
   useEffect(() => {
     const formatted = dbReviews.map(r => ({
       id: r.id,
-      name: r.appointments?.profiles ? `${r.appointments.profiles.first_name} ${r.appointments.profiles.last_name?.charAt(0)}.` : "Owner",
+      name: r.appointments?.profiles?.full_name ?? "Owner",
       dog: r.appointments?.dogs?.name || "Dog",
       rating: r.rating,
       when: new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),

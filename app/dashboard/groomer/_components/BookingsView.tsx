@@ -47,7 +47,7 @@ function TodayView({ appointments }: { appointments: any[] }) {
         duration: a.service_snapshot_duration || 60,
         dog: a.dogs?.name || "Dog",
         breed: a.dogs?.breed || "Mixed",
-        owner: a.profiles ? `${a.profiles.first_name} ${a.profiles.last_name?.charAt(0)}.` : "Owner",
+        owner: a.profiles?.full_name ?? "Owner",
         svc: a.service_snapshot_name || "Service",
         price: a.service_snapshot_price ? (a.service_snapshot_price / 100).toFixed(0) : "0",
         status: a.status,

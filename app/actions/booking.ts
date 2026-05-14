@@ -204,7 +204,7 @@ export async function createAppointment(
       service_snapshot_duration: service.duration_minutes,
       service_snapshot_price:    service.price_pence,
       scheduled_at:              input.scheduledAt,
-      status:                    "pending",
+      status:                    "confirmed",
     })
     .select("id")
     .single();

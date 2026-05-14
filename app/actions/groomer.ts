@@ -115,8 +115,8 @@ export async function getGroomerAppointments() {
     .from("appointments")
     .select(`
       *,
-      dogs (name, breed),
-      profiles (first_name, last_name, phone_number, clerk_id)
+      dogs (name, breed, coat),
+      profiles (full_name, email, phone, clerk_id)
     `)
     .eq("groomer_profile_id", ctx.groomerProfileId)
     .order("scheduled_at", { ascending: true });

@@ -5,9 +5,9 @@ import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-import { saveProfile, saveServices } from "@/app/actions/profile-editor";
+import { saveProfile, saveServices, saveAvailability } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
-import type { ProfileFormData, ServiceRow, TeamMemberRow } from "@/types/groomer-dashboard";
+import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow } from "@/types/groomer-dashboard";
 
 const SERVICE_TEMPLATES: Array<{ name: string; duration: number; price: number }> = [
   { name: "Bath & Brush",          duration: 45,  price: 3800 },
@@ -30,10 +30,15 @@ function FieldGroup({ label, children }: { label: string; children: React.ReactN
   );
 }
 
+// Mon-first display order (UK standard): 1,2,3,4,5,6,0
+const AVAIL_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 interface Props {
   groomerProfileId: string;
   initialProfile: ProfileFormData;
   initialServices: ServiceRow[];
+  initialAvailability: AvailabilityRow[];
   initialTeam: TeamMemberRow[];
   viewerRole: "owner" | "team_member";
 }
@@ -42,11 +47,13 @@ export function ProfileEditor({
   groomerProfileId,
   initialProfile,
   initialServices,
+  initialAvailability,
   initialTeam,
   viewerRole,
 }: Props) {
   const [formData, setFormData] = useState<ProfileFormData>(initialProfile);
   const [services, setServices] = useState<ServiceRow[]>(initialServices);
+  const [availability, setAvailability] = useState<AvailabilityRow[]>(initialAvailability);
   const [team, setTeam] = useState<TeamMemberRow[]>(initialTeam);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -59,9 +66,16 @@ export function ProfileEditor({
   const isDirty = useMemo(
     () =>
       JSON.stringify(formData) !== JSON.stringify(initialProfile) ||
-      JSON.stringify(services) !== JSON.stringify(initialServices),
-    [formData, initialProfile, services, initialServices]
+      JSON.stringify(services) !== JSON.stringify(initialServices) ||
+      JSON.stringify(availability) !== JSON.stringify(initialAvailability),
+    [formData, initialProfile, services, initialServices, availability, initialAvailability]
   );
+
+  function updateAvailability(dayOfWeek: number, patch: Partial<AvailabilityRow>) {
+    setAvailability((arr) =>
+      arr.map((row) => (row.dayOfWeek === dayOfWeek ? { ...row, ...patch } : row))
+    );
+  }
 
   function setField<K extends keyof ProfileFormData>(key: K, value: ProfileFormData[K]) {
     setFormData((d) => ({ ...d, [key]: value }));
@@ -83,12 +97,13 @@ export function ProfileEditor({
     if (!isDirty || saving) return;
     setSaving(true);
     setSaveError(null);
-    const [profileResult, servicesResult] = await Promise.all([
+    const [profileResult, servicesResult, availabilityResult] = await Promise.all([
       saveProfile(groomerProfileId, formData),
       saveServices(groomerProfileId, services),
+      saveAvailability(groomerProfileId, availability),
     ]);
     setSaving(false);
-    const err = profileResult.error ?? servicesResult.error;
+    const err = profileResult.error ?? servicesResult.error ?? availabilityResult.error;
     if (err) {
       setSaveError(err);
     }
@@ -102,6 +117,7 @@ export function ProfileEditor({
   async function handleDiscard() {
     setFormData(initialProfile);
     setServices(initialServices);
+    setAvailability(initialAvailability);
   }
 
   async function handleAddMember() {
@@ -398,6 +414,81 @@ export function ProfileEditor({
                   </select>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Hours & availability — owner only */}
+        {viewerRole === "owner" && (
+          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
+            <Eyebrow>Hours &amp; availability</Eyebrow>
+            <p className="text-xs text-pebble-grey font-bold mt-1 mb-4">
+              Set the days and hours owners can book appointments.
+            </p>
+            <div className="space-y-2">
+              {AVAIL_DISPLAY_ORDER.map((dow) => {
+                const row = availability.find((r) => r.dayOfWeek === dow) ?? {
+                  dayOfWeek: dow,
+                  startTime: "09:00",
+                  endTime: "17:00",
+                  isActive: false,
+                };
+                return (
+                  <div
+                    key={dow}
+                    className={cn(
+                      "grid grid-cols-[80px_1fr] sm:grid-cols-[80px_auto_auto_1fr] gap-3 items-center rounded-xl px-4 py-3 border transition-colors",
+                      row.isActive
+                        ? "border-deep-slate/20 bg-alabaster-cream"
+                        : "border-pebble-grey/15 bg-white opacity-60"
+                    )}
+                  >
+                    {/* Day toggle */}
+                    <button
+                      onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
+                      className={cn(
+                        "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors",
+                        row.isActive ? "text-deep-slate" : "text-pebble-grey"
+                      )}
+                      aria-label={`Toggle ${DAY_LABELS[dow]}`}
+                    >
+                      <span
+                        className={cn(
+                          "w-8 h-4 rounded-full transition-colors relative shrink-0",
+                          row.isActive ? "bg-deep-slate" : "bg-pebble-grey/30"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
+                            row.isActive ? "left-4" : "left-0.5"
+                          )}
+                        />
+                      </span>
+                      <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
+                    </button>
+
+                    {/* Time pickers (only interactive when active) */}
+                    <div className="flex items-center gap-2 col-span-1 sm:col-span-3">
+                      <input
+                        type="time"
+                        value={row.startTime}
+                        disabled={!row.isActive}
+                        onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
+                        className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
+                      />
+                      <span className="text-xs font-bold text-pebble-grey">to</span>
+                      <input
+                        type="time"
+                        value={row.endTime}
+                        disabled={!row.isActive}
+                        onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
+                        className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

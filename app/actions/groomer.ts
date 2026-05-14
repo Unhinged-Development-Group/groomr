@@ -245,6 +245,67 @@ export async function saveTeamMembers(team: Partial<TeamMember>[]) {
   return { success: true };
 }
 
+export interface ManualAppointmentInput {
+  serviceId: string;
+  clientName: string;
+  dogName: string;
+  scheduledDate: string; // "YYYY-MM-DD"
+  scheduledTime: string; // "HH:MM"
+  notes?: string;
+  status: "confirmed" | "pending";
+}
+
+export async function createManualAppointment(
+  input: ManualAppointmentInput
+): Promise<{ appointmentId: string } | { error: string }> {
+  const ctx = await getGroomerContext();
+  if (!ctx) return { error: "Not authenticated or not a groomer." };
+
+  const { data: service } = await supabaseAdmin
+    .from("services")
+    .select("name, duration_minutes, price_pence, groomer_profile_id, is_active")
+    .eq("id", input.serviceId)
+    .maybeSingle();
+
+  if (!service || service.groomer_profile_id !== ctx.groomerProfileId || !service.is_active) {
+    return { error: "Service not found." };
+  }
+
+  const scheduledAt = `${input.scheduledDate}T${input.scheduledTime}:00.000Z`;
+
+  const groomerNote = [
+    `Client: ${input.clientName}`,
+    `Dog: ${input.dogName}`,
+    input.notes?.trim() ? input.notes.trim() : null,
+  ]
+    .filter(Boolean)
+    .join(" — ");
+
+  const { data, error } = await supabaseAdmin
+    .from("appointments")
+    .insert({
+      owner_id: ctx.profileId,
+      groomer_profile_id: ctx.groomerProfileId,
+      dog_id: null,
+      service_id: input.serviceId,
+      service_snapshot_name: service.name,
+      service_snapshot_duration: service.duration_minutes,
+      service_snapshot_price: service.price_pence,
+      scheduled_at: scheduledAt,
+      status: input.status,
+      groomer_notes: groomerNote,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    console.error("createManualAppointment error:", error);
+    return { error: "Failed to create appointment. Please try again." };
+  }
+
+  return { appointmentId: data.id };
+}
+
 export async function replyToReview(reviewId: string, text: string) {
   const ctx = await getGroomerContext();
   if (!ctx) return { error: "Not authorized" };

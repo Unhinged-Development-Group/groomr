@@ -105,6 +105,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     postcode: (groomerProfile.postcode as string) ?? "",
     depositType: ((groomerProfile.deposit_type as string) ?? "none") as ProfileFormData["depositType"],
     depositPercentage: (groomerProfile.deposit_percentage as number) ?? 10,
+    bufferMinutes: (groomerProfile.default_buffer_minutes as number) ?? 0,
   };
 
   const services: ServiceRow[] = (serviceRows ?? []).map((s, i) => ({
@@ -159,6 +160,7 @@ function emptyProfile(ownerName: string, email: string, phone: string): ProfileF
     postcode: "",
     depositType: "none",
     depositPercentage: 10,
+    bufferMinutes: 0,
   };
 }
 
@@ -201,6 +203,7 @@ export async function saveProfile(
         postcode: data.businessMode === "studio" ? data.postcode : null,
         deposit_type: data.depositType,
         deposit_percentage: data.depositType === "percentage" ? data.depositPercentage : null,
+        default_buffer_minutes: data.bufferMinutes,
         updated_at: new Date().toISOString(),
       })
       .eq("id", groomerProfileId),

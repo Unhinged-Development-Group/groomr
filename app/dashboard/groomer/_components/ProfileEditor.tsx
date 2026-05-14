@@ -425,6 +425,26 @@ export function ProfileEditor({
             <p className="text-xs text-pebble-grey font-bold mt-1 mb-4">
               Set the days and hours owners can book appointments.
             </p>
+
+            {/* Buffer time */}
+            <div className="mb-4 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-pebble-grey">Buffer between appointments</p>
+                  <p className="text-[10px] font-bold text-pebble-grey/70 mt-0.5">Gap added after each booking — not shown to customers</p>
+                </div>
+                <select
+                  value={formData.bufferMinutes}
+                  onChange={(e) => setField("bufferMinutes", Number(e.target.value))}
+                  className="bg-white border border-pebble-grey/20 text-deep-slate text-sm rounded-full focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold px-4 py-2 outline-none font-bold cursor-pointer"
+                >
+                  {[0, 5, 10, 15, 20, 30].map((m) => (
+                    <option key={m} value={m}>{m === 0 ? "No buffer" : `${m} min`}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-2">
               {AVAIL_DISPLAY_ORDER.map((dow) => {
                 const row = availability.find((r) => r.dayOfWeek === dow) ?? {

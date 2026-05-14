@@ -12,6 +12,7 @@ export interface ProfileFormData {
   postcode: string;
   depositType: "none" | "percentage" | "full";
   depositPercentage: number;
+  bufferMinutes: number;
 }
 
 export interface ServiceRow {

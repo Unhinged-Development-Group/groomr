@@ -70,12 +70,16 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
   const totalGross      = earnedGross + upcomingGross;
   const totalBookings   = earned.length + upcoming.length;
   const avgValue        = totalBookings > 0 ? totalGross / totalBookings : 0;
+  const completedAppts     = earned.filter(a => a.status === "completed");
+  const completedGross     = completedAppts.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
   const earnedCommission   = earnedGross * GROOMR_COMMISSION_RATE;
   const upcomingCommission = upcomingGross * GROOMR_COMMISSION_RATE;
-  const earnedNet       = earnedGross - earnedCommission;
-  const upcomingNet     = upcomingGross - upcomingCommission;
-  const nextPayout      = totalGross - (totalGross * GROOMR_COMMISSION_RATE);
-  const maxVal          = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
+  const earnedNet          = earnedGross - earnedCommission;
+  const upcomingNet        = upcomingGross - upcomingCommission;
+  const groomrFees         = 0;   // £0 in year 1; subscription fee applies from year 2
+  const refunds            = 0;   // £0 unless a customer refund is being processed
+  const nextPayout         = totalGross - (totalGross * GROOMR_COMMISSION_RATE) - groomrFees - refunds;
+  const maxVal             = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
 
   // Activity list: upcoming first (soonest), then past (most recent)
   const activityList = [
@@ -126,51 +130,63 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
             </div>
           </div>
 
-          {/* Commission breakdown */}
+          {/* Full breakdown */}
           <div className="bg-white border border-pebble-grey/20 rounded-2xl divide-y divide-pebble-grey/10 text-sm">
-            {earned.length > 0 && (
-              <>
-                <div className="flex justify-between px-5 py-3">
-                  <span className="text-pebble-grey font-bold flex items-center gap-2">
-                    Completed / past bookings
-                    <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{earned.length}</span>
-                  </span>
-                  <span className="font-fredoka text-deep-slate">£{earnedGross.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between px-5 py-3">
-                  <span className="text-pebble-grey font-bold flex items-center gap-2">
-                    Groomr commission
-                    <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{GROOMR_COMMISSION_RATE * 100}%</span>
-                  </span>
-                  <span className="font-fredoka text-muted-terracotta">−£{earnedCommission.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between px-5 py-3 bg-alabaster-cream">
-                  <span className="font-bold text-deep-slate">Earned payout</span>
-                  <span className="font-fredoka text-deep-slate">£{earnedNet.toFixed(2)}</span>
-                </div>
-              </>
-            )}
-            {upcomingGross > 0 && (
-              <>
-                <div className="flex justify-between px-5 py-3">
-                  <span className="text-pebble-grey font-bold flex items-center gap-2">
-                    Upcoming bookings
-                    <span className="text-[10px] font-bold bg-sage-leaf/15 text-sage-leaf px-2 py-0.5 rounded-full">{upcoming.length} confirmed</span>
-                  </span>
-                  <span className="font-fredoka text-deep-slate">£{upcomingGross.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between px-5 py-3">
-                  <span className="text-pebble-grey font-bold flex items-center gap-2">
-                    Groomr commission
-                    <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{GROOMR_COMMISSION_RATE * 100}%</span>
-                  </span>
-                  <span className="font-fredoka text-muted-terracotta">−£{upcomingCommission.toFixed(2)}</span>
-                </div>
-              </>
-            )}
-            <div className="flex justify-between px-5 py-3 bg-groomr-gold/20 rounded-b-2xl">
-              <span className="font-bold text-deep-slate">Next payout</span>
-              <span className="font-fredoka text-xl text-deep-slate">£{nextPayout.toFixed(2)}</span>
+
+            {/* Completed bookings */}
+            <div className="flex justify-between px-5 py-3">
+              <span className="text-pebble-grey font-bold flex items-center gap-2">
+                Completed bookings
+                <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{completedAppts.length}</span>
+              </span>
+              <span className="font-fredoka text-deep-slate">£{completedGross.toFixed(2)}</span>
+            </div>
+
+            {/* Upcoming bookings */}
+            <div className="flex justify-between px-5 py-3">
+              <span className="text-pebble-grey font-bold flex items-center gap-2">
+                Upcoming bookings
+                <span className="text-[10px] font-bold bg-sage-leaf/15 text-sage-leaf px-2 py-0.5 rounded-full">{upcoming.length} confirmed</span>
+              </span>
+              <span className="font-fredoka text-deep-slate">£{upcomingGross.toFixed(2)}</span>
+            </div>
+
+            {/* Groomr commission */}
+            <div className="flex justify-between px-5 py-3">
+              <span className="text-pebble-grey font-bold flex items-center gap-2">
+                Groomr commission
+                <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">{GROOMR_COMMISSION_RATE * 100}%</span>
+              </span>
+              <span className="font-fredoka text-muted-terracotta">−£{(totalGross * GROOMR_COMMISSION_RATE).toFixed(2)}</span>
+            </div>
+
+            {/* Groomr fees */}
+            <div className="flex justify-between px-5 py-3">
+              <span className="text-pebble-grey font-bold flex items-center gap-2">
+                Groomr fees
+                <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">Year 1 free</span>
+              </span>
+              <span className="font-fredoka text-pebble-grey">£{groomrFees.toFixed(2)}</span>
+            </div>
+
+            {/* Refunds */}
+            <div className="flex justify-between px-5 py-3">
+              <span className="text-pebble-grey font-bold flex items-center gap-2">
+                Refunds
+                {refunds > 0
+                  ? <span className="text-[10px] font-bold bg-muted-terracotta/15 text-muted-terracotta px-2 py-0.5 rounded-full">Processing</span>
+                  : <span className="text-[10px] font-bold bg-pebble-grey/15 text-pebble-grey px-2 py-0.5 rounded-full">None</span>
+                }
+              </span>
+              <span className={`font-fredoka ${refunds > 0 ? "text-muted-terracotta" : "text-pebble-grey"}`}>
+                {refunds > 0 ? `−£${refunds.toFixed(2)}` : "£0.00"}
+              </span>
+            </div>
+
+            {/* Next payout total */}
+            <div className="flex justify-between px-5 py-4 bg-groomr-gold/20 rounded-b-2xl">
+              <span className="font-bold text-deep-slate text-base">Next payout</span>
+              <span className="font-fredoka text-2xl text-deep-slate">£{nextPayout.toFixed(2)}</span>
             </div>
           </div>
 

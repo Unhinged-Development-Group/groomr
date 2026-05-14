@@ -7,6 +7,7 @@ import { StarRow } from "@/components/ui/StarRow";
 import { supabase } from "@/lib/supabase";
 import type { GroomerResult } from "@/types/search";
 import { MapPin } from "lucide-react";
+import { BookingFlow } from "./BookingFlow";
 
 interface Service {
   id: string;
@@ -63,6 +64,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
     percentage: number | null;
   }>({ type: 'none', percentage: null });
   const [loading, setLoading] = useState(true);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -202,8 +204,9 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                 </div>
                 <div className="lg:col-span-1">
                   <button
-                    onClick={() => setToast("Booking coming soon! We'll let you know when it's live.")}
-                    className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-lg shadow-subtle focus-ring"
+                    onClick={() => setBookingOpen(true)}
+                    disabled={loading}
+                    className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-lg shadow-subtle focus-ring disabled:opacity-60"
                   >
                     Book Now
                   </button>
@@ -335,6 +338,18 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
       </div>
 
       <Toast message={toast} onDismiss={() => setToast(null)} />
+
+      {/* Booking flow */}
+      {bookingOpen && (
+        <BookingFlow
+          groomerProfileId={groomer.id}
+          groomerName={groomer.name}
+          services={services}
+          availability={availability}
+          depositPolicy={depositPolicy}
+          onClose={() => setBookingOpen(false)}
+        />
+      )}
 
       {/* Lightbox */}
       {lightboxIndex !== null && galleryImages.length > 0 && (

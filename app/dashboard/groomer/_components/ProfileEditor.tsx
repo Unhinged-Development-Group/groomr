@@ -443,7 +443,6 @@ export function ProfileEditor({
                         : "border-pebble-grey/15 bg-white opacity-60"
                     )}
                   >
-                    {/* Day toggle */}
                     <button
                       onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
                       className={cn(
@@ -468,7 +467,6 @@ export function ProfileEditor({
                       <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
                     </button>
 
-                    {/* Time pickers (only interactive when active) */}
                     <div className="flex items-center gap-2 col-span-1 sm:col-span-3">
                       <input
                         type="time"

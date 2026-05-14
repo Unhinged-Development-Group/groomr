@@ -115,7 +115,6 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     sortOrder: s.sort_order ?? i,
   }));
 
-  // Build a full 7-day map keyed by day_of_week; fill gaps with inactive defaults
   const availMap = new Map(
     (availabilityRows ?? []).map((a) => [
       a.day_of_week as number,

@@ -531,18 +531,16 @@ export function BookingFlow({
                       💳 {depositDisplay(selectedService)}
                     </p>
                     <p className="text-xs text-pebble-grey mt-0.5 font-nunito">
-                      Payment will be collected when booking is confirmed (Phase 3).
+                      Payment will be collected at the appointment (Phase 3).
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Pending note */}
+              {/* Instant booking note */}
               <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl px-4 py-3">
                 <p className="text-sm font-nunito text-deep-slate">
-                  Your request will show as{" "}
-                  <span className="font-bold">pending</span> in your dashboard
-                  while {groomerName} confirms it.
+                  <span className="font-bold">Instant booking</span> — your appointment is confirmed straight away and will appear in your dashboard immediately.
                 </p>
               </div>
 
@@ -559,7 +557,7 @@ export function BookingFlow({
                 disabled={submitting}
                 className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-base shadow-subtle focus-ring disabled:opacity-60"
               >
-                {submitting ? "Requesting…" : "Request Booking"}
+                {submitting ? "Booking…" : "Confirm Booking"}
               </button>
             </div>
           )}
@@ -618,11 +616,10 @@ function SuccessState({
       </div>
       <div className="space-y-2">
         <h3 className="font-fredoka text-3xl text-deep-slate">
-          Booking requested!
+          You&apos;re booked in!
         </h3>
         <p className="text-pebble-grey font-nunito text-sm max-w-xs mx-auto">
-          {groomerName} will confirm shortly. You can track it in your
-          dashboard.
+          Your appointment with {groomerName} is confirmed. See you there!
         </p>
       </div>
       <div className="flex flex-col gap-3 pt-2">

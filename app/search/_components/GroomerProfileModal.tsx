@@ -190,8 +190,8 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
             </div>
 
             <div className="pt-20 pb-12 px-8 md:px-12 space-y-10">
-              {/* CTA buttons — right-aligned, just below the banner */}
-              <div className="flex justify-end gap-3">
+              {/* CTA buttons — right-aligned, inline with lower avatar */}
+              <div className="flex justify-end gap-3 -mt-10">
                 <a
                   href={`/groomers/${groomer.id}`}
                   className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring"

@@ -59,7 +59,21 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
       {/* Card body */}
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div>
-          <h3 className="font-fredoka text-lg text-deep-slate leading-tight">{groomer.name}</h3>
+          {/* Name + heart on same row */}
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-fredoka text-lg text-deep-slate leading-tight">{groomer.name}</h3>
+            <button
+              onClick={(e) => { e.stopPropagation(); onSave?.(groomer); }}
+              aria-label={saved ? "Remove from favourites" : "Save to favourites"}
+              className="shrink-0 p-1 rounded-full hover:bg-pebble-grey/10 transition-colors focus-ring"
+            >
+              <HeartIcon
+                size={16}
+                filled={saved}
+                className={cn("transition-colors", saved ? "text-muted-terracotta" : "text-pebble-grey")}
+              />
+            </button>
+          </div>
           {groomer.location && (
             <p className="text-[11px] font-bold text-pebble-grey uppercase tracking-wider mt-0.5">
               {groomer.location}
@@ -74,7 +88,7 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
 
         <div className="flex-1" />
 
-        {/* Footer: price left, actions right */}
+        {/* Footer: price left, View Profile right */}
         <div className="flex items-center justify-between pt-3 border-t border-pebble-grey/10">
           <div className="flex items-baseline gap-1">
             {groomer.priceFrom != null ? (
@@ -87,26 +101,12 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); onSave?.(groomer); }}
-              aria-label={saved ? "Remove from favourites" : "Save to favourites"}
-              className="p-1.5 rounded-full hover:bg-pebble-grey/10 transition-colors focus-ring"
-            >
-              <HeartIcon
-                size={16}
-                filled={saved}
-                className={cn("transition-colors", saved ? "text-muted-terracotta" : "text-pebble-grey")}
-              />
-            </button>
-
-            <button
-              onClick={() => onView?.(groomer)}
-              className="btn-secondary text-xs px-3 py-1.5 rounded-full font-bold focus-ring"
-            >
-              View Profile
-            </button>
-          </div>
+          <button
+            onClick={() => onView?.(groomer)}
+            className="btn-secondary text-xs px-3 py-1.5 rounded-full font-bold focus-ring whitespace-nowrap"
+          >
+            View Profile
+          </button>
         </div>
       </div>
     </div>

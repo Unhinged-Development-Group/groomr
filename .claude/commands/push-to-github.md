@@ -44,7 +44,7 @@ git commit -m "<your generated message>"
 ### 6. Push to main
 
 ```bash
-git push git@github.com:andyyhughes/groomr.git main
+git push git@github.com:Unhinged-Development-Group/groomr.git main
 ```
 
 ### 7. Confirm
@@ -60,12 +60,12 @@ Tell the user:
 |---|---|
 | `git push` rejected (non-fast-forward) | Tell the user there are remote changes they need to pull first. Run `git pull --rebase origin main` and retry the push, but **ask the user before doing the rebase**. |
 | Merge conflicts after pull | Stop. Tell the user exactly which files conflict and ask them to resolve manually. |
-| No remote named `origin` | Tell the user no remote is configured. Set it up with `git remote add origin git@github.com:andyyhughes/groomr.git` |
+| No remote named `origin` | Tell the user no remote is configured. Set it up with `git remote add origin git@github.com:Unhinged-Development-Group/groomr.git` |
 | Untracked large files / `.env` | Warn the user if anything sensitive-looking (`.env`, secrets, credentials) is being staged. Ask for confirmation before committing. |
 
 ## Repository
 
-- **Remote URL**: `git@github.com:andyyhughes/groomr.git`
+- **Remote URL**: `git@github.com:Unhinged-Development-Group/groomr.git`
 - **Branch**: `main`
 
 ## Notes

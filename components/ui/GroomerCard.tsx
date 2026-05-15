@@ -54,26 +54,25 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
           <StarIcon size={12} className="text-deep-slate" />
           <span className="text-xs font-bold text-deep-slate">{groomer.rating}</span>
         </div>
+
+        {/* Favourite heart — bottom right */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onSave?.(groomer); }}
+          aria-label={saved ? "Remove from favourites" : "Save to favourites"}
+          className="absolute bottom-3 right-3 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-colors focus-ring"
+        >
+          <HeartIcon
+            size={32}
+            filled={saved}
+            className={cn("transition-colors", saved ? "text-muted-terracotta" : "text-pebble-grey")}
+          />
+        </button>
       </div>
 
       {/* Card body */}
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div>
-          {/* Name + heart on same row */}
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-fredoka text-lg text-deep-slate leading-tight">{groomer.name}</h3>
-            <button
-              onClick={(e) => { e.stopPropagation(); onSave?.(groomer); }}
-              aria-label={saved ? "Remove from favourites" : "Save to favourites"}
-              className="shrink-0 p-1 rounded-full hover:bg-pebble-grey/10 transition-colors focus-ring"
-            >
-              <HeartIcon
-                size={16}
-                filled={saved}
-                className={cn("transition-colors", saved ? "text-muted-terracotta" : "text-pebble-grey")}
-              />
-            </button>
-          </div>
+          <h3 className="font-fredoka text-lg text-deep-slate leading-tight">{groomer.name}</h3>
           {groomer.location && (
             <p className="text-[11px] font-bold text-pebble-grey uppercase tracking-wider mt-0.5">
               {groomer.location}

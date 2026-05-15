@@ -201,10 +201,10 @@ export default async function GroomerProfilePage({
 
           {/* Name / tagline / meta */}
           <div className="flex-1 space-y-1.5 min-w-0">
+            <h1 className="font-fredoka text-2xl sm:text-3xl md:text-4xl text-deep-slate leading-tight">
+              {groomer.business_name}
+            </h1>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-fredoka text-2xl sm:text-3xl md:text-4xl text-deep-slate leading-tight">
-                {groomer.business_name}
-              </h1>
               {groomer.is_verified && (
                 <span className="bg-groomr-gold text-deep-slate text-xs font-bold px-3 py-1 rounded-full shrink-0">
                   Verified

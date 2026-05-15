@@ -194,7 +194,7 @@ export default async function GroomerProfilePage({
 
       {/* ── Name block + CTAs ───────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="pt-20 md:pt-24 pb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+        <div className="pt-16 md:pt-20 pb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
 
           {/* Name / tagline / meta */}
           <div className="space-y-2">
@@ -336,9 +336,9 @@ export default async function GroomerProfilePage({
             <section>
               <h2 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4 mb-6">
                 Reviews
-                {(groomer.total_reviews ?? 0) > 0 && (
+                {reviews.length > 0 && (
                   <span className="ml-2 font-nunito text-base font-bold text-pebble-grey">
-                    ({groomer.total_reviews})
+                    ({reviews.length})
                   </span>
                 )}
               </h2>

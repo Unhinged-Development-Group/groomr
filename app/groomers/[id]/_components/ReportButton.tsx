@@ -37,8 +37,11 @@ export function ReportButton({ groomerName }: { groomerName: string }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-pebble-grey text-sm hover:text-muted-terracotta transition-colors focus-ring rounded"
+        className="flex items-center gap-1.5 text-sm font-bold text-pebble-grey border border-pebble-grey/30 px-4 py-2 rounded-full hover:border-muted-terracotta hover:text-muted-terracotta transition-colors focus-ring"
       >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H12.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+        </svg>
         Report this listing
       </button>
 

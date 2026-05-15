@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/register/groomer(.*)',
   '/founder(.*)',
   '/search(.*)',
+  '/groomers(.*)',
 ])
 
 export default clerkMiddleware(async (auth, request) => {

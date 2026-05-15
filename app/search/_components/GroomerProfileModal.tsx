@@ -191,7 +191,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
 
             <div className="relative pt-20 pb-12 px-8 md:px-12 space-y-8">
               {/* Buttons — absolute so they sit in the avatar's lower half independent of name layout */}
-              <div className="absolute top-8 right-8 md:right-12 flex gap-3">
+              <div className="absolute top-4 right-8 md:right-12 flex gap-3">
                 <a
                   href={`/groomers/${groomer.id}`}
                   className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring"

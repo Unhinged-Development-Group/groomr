@@ -171,32 +171,33 @@ export default async function GroomerProfilePage({
             priority
           />
         )}
-        {/* Avatar — straddles banner bottom */}
-        <div className="absolute -bottom-14 md:-bottom-16 left-6 md:left-12">
-          <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-sage-leaf/20 flex items-center justify-center">
-            {avatarUrl ? (
-              <Image
-                src={avatarUrl}
-                alt={groomer.business_name}
-                width={144}
-                height={144}
-                className="object-cover w-full h-full"
-              />
-            ) : (
-              <span className="font-fredoka text-4xl text-sage-leaf select-none">
-                {groomer.business_name.charAt(0)}
-              </span>
-            )}
-          </div>
-        </div>
       </div>
 
-      {/* ── Name + CTAs — sits beside the avatar's lower half ──────────────── */}
+      {/* ── Name + CTAs — avatar overlaps banner, aligned with content ─────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
-        <div className="flex items-end gap-4 sm:gap-5 pt-2">
+        <div className="relative flex items-end gap-4 sm:gap-5 pt-2">
 
-          {/* Spacer — matches avatar width + left offset, pushes name past avatar */}
-          <div className="w-28 md:w-36 ml-2 md:ml-6 shrink-0" aria-hidden="true" />
+          {/* Avatar — absolute so it straddles the banner, left-aligned with content */}
+          <div className="absolute -top-14 md:-top-16 left-0 shrink-0">
+            <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-sage-leaf/20 flex items-center justify-center">
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  alt={groomer.business_name}
+                  width={144}
+                  height={144}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <span className="font-fredoka text-4xl text-sage-leaf select-none">
+                  {groomer.business_name.charAt(0)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Spacer — pushes name/CTAs past the avatar */}
+          <div className="w-28 md:w-36 shrink-0" aria-hidden="true" />
 
           {/* Name / tagline / meta */}
           <div className="flex-1 space-y-1.5 min-w-0">

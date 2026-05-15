@@ -187,11 +187,14 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                   />
                 </div>
               </div>
-              {/* CTA buttons — bottom right of banner */}
-              <div className="absolute bottom-4 right-14 flex gap-3">
+            </div>
+
+            <div className="pt-20 pb-12 px-8 md:px-12 space-y-10">
+              {/* CTA buttons — right-aligned, just below the banner */}
+              <div className="flex justify-end gap-3">
                 <a
                   href={`/groomers/${groomer.id}`}
-                  className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring shadow-sm"
+                  className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring"
                 >
                   View Full Profile
                 </a>
@@ -203,9 +206,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                   Book Now
                 </button>
               </div>
-            </div>
 
-            <div className="pt-20 pb-12 px-8 md:px-12 space-y-10">
               {/* Title */}
               <div className="space-y-2">
                 <h2 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">

@@ -187,53 +187,47 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                   />
                 </div>
               </div>
+              {/* CTA buttons — bottom right of banner */}
+              <div className="absolute bottom-4 right-14 flex gap-3">
+                <a
+                  href={`/groomers/${groomer.id}`}
+                  className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring shadow-sm"
+                >
+                  View Full Profile
+                </a>
+                <button
+                  onClick={() => setBookingOpen(true)}
+                  disabled={loading}
+                  className="btn-primary font-nunito font-bold py-2.5 px-6 rounded-full text-sm shadow-subtle focus-ring disabled:opacity-60"
+                >
+                  Book Now
+                </button>
+              </div>
             </div>
 
             <div className="pt-20 pb-12 px-8 md:px-12 space-y-10">
-              {/* Title + Book Now */}
-              <div className="grid lg:grid-cols-3 gap-6 lg:gap-10 items-end">
-                <div className="lg:col-span-2 space-y-2">
-                  <h2 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
-                    {groomer.name}
-                  </h2>
-                  {groomer.tagline && (
-                    <p className="text-base text-sage-leaf font-bold">{groomer.tagline}</p>
+              {/* Title */}
+              <div className="space-y-2">
+                <h2 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
+                  {groomer.name}
+                </h2>
+                {groomer.tagline && (
+                  <p className="text-base text-sage-leaf font-bold">{groomer.tagline}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-pebble-grey">
+                  {groomer.rating > 0 && (
+                    <StarRow rating={groomer.rating} count={groomer.reviewCount} />
                   )}
-
-                  <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-pebble-grey">
-                    {groomer.rating > 0 && (
-                      <StarRow rating={groomer.rating} count={groomer.reviewCount} />
-                    )}
-                    <span className="flex items-center gap-1">
-                      <MapPin size={14} />
-                      {groomer.location}
-                      {groomer.distance !== undefined && ` · ${groomer.distance} miles`}
-                    </span>
-                  </div>
-                </div>
-                <div className="lg:col-span-1 flex flex-col gap-3">
-                  <a
-                    href={`/groomers/${groomer.id}`}
-                    className="w-full btn-secondary font-nunito font-bold py-3 rounded-full text-base text-center focus-ring"
-                  >
-                    View Full Profile
-                  </a>
-                  <button
-                    onClick={() => setBookingOpen(true)}
-                    disabled={loading}
-                    className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-lg shadow-subtle focus-ring disabled:opacity-60"
-                  >
-                    Book Now
-                  </button>
+                  <span className="flex items-center gap-1">
+                    <MapPin size={14} />
+                    {groomer.location}
+                    {groomer.distance !== undefined && ` · ${groomer.distance} miles`}
+                  </span>
                 </div>
               </div>
 
               {/* Gallery — always 4 slots */}
-              <div className="space-y-4">
-                <h3 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4">
-                  Photos
-                </h3>
-                <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                   {Array.from({ length: 4 }).map((_, i) => {
                     const url = galleryImages[i];
                     return url ? (
@@ -258,16 +252,16 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                       />
                     );
                   })}
-                </div>
               </div>
 
               {/* Services + Hours/About */}
-              <div className="grid lg:grid-cols-3 gap-10">
+              <div>
+                <h3 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4 mb-6">
+                  Our Services
+                </h3>
+                <div className="grid lg:grid-cols-3 gap-6">
                 {/* Services */}
-                <div className="lg:col-span-2 space-y-6">
-                  <h3 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4">
-                    Our Services
-                  </h3>
+                <div className="lg:col-span-2">
                   {loading ? (
                     <div className="space-y-3">
                       {[...Array(3)].map((_, i) => (
@@ -330,6 +324,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                       </p>
                     </div>
                   )}
+                </div>
                 </div>
               </div>
 

@@ -24,6 +24,19 @@ function StatusDot({ status }: { status: string }) {
   );
 }
 
+// Manual bookings store names in groomer_notes as "Client: X — Dog: Y[— extra]"
+function parseManualNotes(groomerNotes: string | null) {
+  if (!groomerNotes) return { dogName: null, clientName: null, extraNote: null };
+  const clientMatch = groomerNotes.match(/Client:\s*([^—]+)/);
+  const dogMatch    = groomerNotes.match(/Dog:\s*([^—]+)/);
+  const extraMatch  = groomerNotes.match(/Dog:[^—]+—\s*(.+)/);
+  return {
+    clientName: clientMatch?.[1]?.trim() ?? null,
+    dogName:    dogMatch?.[1]?.trim()    ?? null,
+    extraNote:  extraMatch?.[1]?.trim()  ?? null,
+  };
+}
+
 function SubPill({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
   return (
     <button onClick={onClick} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors focus-ring ${active ? "bg-deep-slate text-alabaster-cream" : "text-deep-slate hover:bg-pebble-grey/10"}`}>
@@ -46,17 +59,19 @@ function TodayView({ appointments, onBeginGroom, activeGroomId }: {
     })
     .map(a => {
       const d = new Date(a.scheduled_at);
+      const isManual = !a.dog_id;
+      const manual   = isManual ? parseManualNotes(a.groomer_notes) : null;
       return {
         id: a.id,
         time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         duration: a.service_snapshot_duration || 60,
-        dog: a.dogs?.name || "Dog",
-        breed: a.dogs?.breed || "Mixed",
-        owner: a.profiles?.full_name ?? "Owner",
+        dog:   a.dogs?.name   ?? manual?.dogName    ?? "Dog",
+        breed: a.dogs?.breed  ?? "Mixed",
+        owner: isManual ? (manual?.clientName ?? "Client") : (a.profiles?.full_name ?? "Owner"),
         svc: a.service_snapshot_name || "Service",
         price: a.service_snapshot_price ? (a.service_snapshot_price / 100).toFixed(0) : "0",
         status: a.status,
-        note: a.owner_notes || a.groomer_notes,
+        note: a.owner_notes || (isManual ? manual?.extraNote : a.groomer_notes) || null,
       };
     });
 
@@ -270,7 +285,7 @@ function WeekView({ appointments }: { appointments: any[] }) {
                 return (
                   <button key={i} className="absolute left-1 right-1 rounded-lg p-2 text-left focus-ring hover:-translate-y-px transition-transform"
                     style={{ top, height, background: c.bg, borderLeft: `3px solid ${c.bd}` }}>
-                    <p className="font-bold text-xs text-deep-slate leading-tight truncate">{a.dogs?.name || "Dog"}</p>
+                    <p className="font-bold text-xs text-deep-slate leading-tight truncate">{a.dogs?.name ?? parseManualNotes(a.groomer_notes).dogName ?? "Dog"}</p>
                     <p className="text-[10px] text-deep-slate/70 font-bold truncate">{a.service_snapshot_name}</p>
                     {a.status === 'in-progress' && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-muted-terracotta rounded-full animate-pulse" />}
                   </button>

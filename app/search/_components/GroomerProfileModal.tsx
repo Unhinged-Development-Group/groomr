@@ -7,6 +7,7 @@ import { StarRow } from "@/components/ui/StarRow";
 import { supabase } from "@/lib/supabase";
 import type { GroomerResult } from "@/types/search";
 import { MapPin } from "lucide-react";
+import { ChevronRightIcon } from "@/components/ui/GroomrIcons";
 import { BookingFlow } from "./BookingFlow";
 
 interface Service {
@@ -210,7 +211,13 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                     </span>
                   </div>
                 </div>
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 flex flex-col gap-3">
+                  <a
+                    href={`/groomers/${groomer.id}`}
+                    className="w-full btn-secondary font-nunito font-bold py-3 rounded-full text-base text-center focus-ring"
+                  >
+                    View Full Profile
+                  </a>
                   <button
                     onClick={() => setBookingOpen(true)}
                     disabled={loading}
@@ -221,35 +228,38 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                 </div>
               </div>
 
-              {/* Gallery */}
-              {galleryImages.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4">
-                    Photos
-                  </h3>
-                  <div
-                    className="flex gap-3 overflow-x-auto pb-1"
-                    style={{ scrollbarWidth: "none" }}
-                  >
-                    {galleryImages.map((url, i) => (
+              {/* Gallery — always 4 slots */}
+              <div className="space-y-4">
+                <h3 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4">
+                  Photos
+                </h3>
+                <div className="grid grid-cols-4 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => {
+                    const url = galleryImages[i];
+                    return url ? (
                       <button
                         key={i}
                         onClick={() => setLightboxIndex(i)}
-                        className="flex-shrink-0 w-52 h-40 rounded-2xl overflow-hidden focus-ring hover:opacity-90 transition-opacity"
+                        className="aspect-square rounded-2xl overflow-hidden focus-ring hover:opacity-90 transition-opacity"
                         aria-label={`View photo ${i + 1}`}
                       >
                         <Image
                           src={url}
                           alt={`${groomer.name} photo ${i + 1}`}
-                          width={208}
-                          height={160}
+                          width={200}
+                          height={200}
                           className="object-cover w-full h-full"
                         />
                       </button>
-                    ))}
-                  </div>
+                    ) : (
+                      <div
+                        key={i}
+                        className="aspect-square rounded-2xl bg-sage-leaf/10 border border-dashed border-sage-leaf/20"
+                      />
+                    );
+                  })}
                 </div>
-              )}
+              </div>
 
               {/* Services + Hours/About */}
               <div className="grid lg:grid-cols-3 gap-10">
@@ -268,9 +278,17 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                     <p className="text-pebble-grey text-sm">No services listed yet.</p>
                   ) : (
                     <div className="space-y-4">
-                      {services.map((svc) => (
+                      {services.slice(0, 4).map((svc) => (
                         <ServiceCard key={svc.id} service={svc} depositPolicy={depositPolicy} />
                       ))}
+                      {services.length > 4 && (
+                        <a
+                          href={`/groomers/${groomer.id}`}
+                          className="flex items-center gap-1 text-sm font-bold text-sage-leaf hover:text-deep-slate transition-colors"
+                        >
+                          View more services <ChevronRightIcon size={14} />
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
@@ -445,7 +463,14 @@ function ServiceCard({
   return (
     <div className="bg-white rounded-xl border border-pebble-grey/10 p-5 flex justify-between items-start gap-4">
       <div className="flex-1 min-w-0">
-        <p className="font-fredoka text-lg text-deep-slate">{service.name}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-fredoka text-lg text-deep-slate">{service.name}</p>
+          {service.duration_minutes && (
+            <span className="text-xs font-bold text-pebble-grey bg-pebble-grey/10 px-2 py-0.5 rounded-full">
+              {service.duration_minutes} min
+            </span>
+          )}
+        </div>
         {service.description && (
           <p className="text-xs text-pebble-grey mt-1 leading-relaxed">{service.description}</p>
         )}
@@ -460,9 +485,6 @@ function ServiceCard({
               </span>
             ))}
           </div>
-        )}
-        {service.duration_minutes && (
-          <p className="text-xs text-pebble-grey mt-2">{service.duration_minutes} min</p>
         )}
       </div>
       <div className="text-right shrink-0">

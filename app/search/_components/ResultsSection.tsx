@@ -141,12 +141,7 @@ export function ResultsSection({
             <EmptyState type="filtered" />
           )}
           {!isNoResults && (
-            <div
-              className="grid gap-4"
-              style={{
-                gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              }}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredGroomers.map((groomer) => (
                 <GroomerCard
                   key={groomer.id}

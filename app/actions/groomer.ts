@@ -56,7 +56,7 @@ export interface Review {
   };
 }
 
-// Internal Helper
+// Internal Helper — works for both direct groomers and accepted team members
 async function getGroomerContext() {
   const { userId } = await auth();
   if (!userId) return null;
@@ -69,15 +69,26 @@ async function getGroomerContext() {
 
   if (!profile) return null;
 
+  // Direct groomer owner
   const { data: groomer } = await supabaseAdmin
     .from("groomer_profiles")
     .select("id")
     .eq("user_id", profile.id)
     .maybeSingle();
 
-  if (!groomer) return null;
+  if (groomer) return { profileId: profile.id, groomerProfileId: groomer.id };
 
-  return { profileId: profile.id, groomerProfileId: groomer.id };
+  // Team member — use their employer's groomer profile
+  const { data: membership } = await supabaseAdmin
+    .from("team_members")
+    .select("groomer_profile_id")
+    .eq("user_id", profile.id)
+    .eq("invite_status", "accepted")
+    .maybeSingle();
+
+  if (!membership) return null;
+
+  return { profileId: profile.id, groomerProfileId: membership.groomer_profile_id as string };
 }
 
 export async function getGroomerProfile() {

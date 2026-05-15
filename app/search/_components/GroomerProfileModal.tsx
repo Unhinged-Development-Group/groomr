@@ -189,41 +189,41 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
               </div>
             </div>
 
-            <div className="pt-20 pb-12 px-8 md:px-12 space-y-10">
-              {/* CTA buttons — right-aligned, inline with lower avatar */}
-              <div className="flex justify-end gap-3 -mt-10">
-                <a
-                  href={`/groomers/${groomer.id}`}
-                  className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring"
-                >
-                  View Full Profile
-                </a>
-                <button
-                  onClick={() => setBookingOpen(true)}
-                  disabled={loading}
-                  className="btn-primary font-nunito font-bold py-2.5 px-6 rounded-full text-sm shadow-subtle focus-ring disabled:opacity-60"
-                >
-                  Book Now
-                </button>
-              </div>
-
-              {/* Title */}
-              <div className="space-y-2">
-                <h2 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
-                  {groomer.name}
-                </h2>
-                {groomer.tagline && (
-                  <p className="text-base text-sage-leaf font-bold">{groomer.tagline}</p>
-                )}
-                <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-pebble-grey">
-                  {groomer.rating > 0 && (
-                    <StarRow rating={groomer.rating} count={groomer.reviewCount} />
+            <div className="pb-12 px-8 md:px-12 space-y-8">
+              {/* Name + buttons row — pt clears avatar, items-end aligns both to the same baseline */}
+              <div className="flex items-end justify-between gap-6 pt-16 md:pt-20">
+                <div className="space-y-1">
+                  <h2 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
+                    {groomer.name}
+                  </h2>
+                  {groomer.tagline && (
+                    <p className="text-base text-sage-leaf font-bold">{groomer.tagline}</p>
                   )}
-                  <span className="flex items-center gap-1">
-                    <MapPin size={14} />
-                    {groomer.location}
-                    {groomer.distance !== undefined && ` · ${groomer.distance} miles`}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-pebble-grey pt-1">
+                    {groomer.rating > 0 && (
+                      <StarRow rating={groomer.rating} count={groomer.reviewCount} />
+                    )}
+                    <span className="flex items-center gap-1">
+                      <MapPin size={14} />
+                      {groomer.location}
+                      {groomer.distance !== undefined && ` · ${groomer.distance} miles`}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-3 shrink-0">
+                  <a
+                    href={`/groomers/${groomer.id}`}
+                    className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring"
+                  >
+                    View Full Profile
+                  </a>
+                  <button
+                    onClick={() => setBookingOpen(true)}
+                    disabled={loading}
+                    className="btn-primary font-nunito font-bold py-2.5 px-6 rounded-full text-sm shadow-subtle focus-ring disabled:opacity-60"
+                  >
+                    Book Now
+                  </button>
                 </div>
               </div>
 

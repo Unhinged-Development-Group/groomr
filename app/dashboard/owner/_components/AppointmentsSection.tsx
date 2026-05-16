@@ -22,7 +22,9 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
 
   // Group into upcoming vs past
   const now = new Date();
-  const upcoming = appointments.filter(a => new Date(a.scheduled_at) > now && a.status !== 'cancelled');
+  const upcoming = appointments
+    .filter(a => new Date(a.scheduled_at) > now && a.status !== 'cancelled')
+    .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
   const past = appointments.filter(a => new Date(a.scheduled_at) <= now || a.status === 'cancelled');
 
   async function handleCancel() {

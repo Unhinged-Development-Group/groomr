@@ -76,8 +76,8 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
   const totalGross      = earnedGross + upcomingGross;
   const totalBookings   = earned.length + upcoming.length;
   const avgValue        = totalBookings > 0 ? totalGross / totalBookings : 0;
-  const completedAppts     = earned.filter(a => a.status === "completed");
-  const completedGross     = completedAppts.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
+  const completedAppts     = earned; // all past non-cancelled appointments count as completed
+  const completedGross     = earnedGross;
   const earnedCommission   = earnedGross * GROOMR_COMMISSION_RATE;
   const upcomingCommission = upcomingGross * GROOMR_COMMISSION_RATE;
   const earnedNet          = earnedGross - earnedCommission;

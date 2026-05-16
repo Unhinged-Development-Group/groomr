@@ -127,7 +127,7 @@ export async function getGroomerAppointments() {
     .from("appointments")
     .select(`
       *,
-      dogs (name, breed, coat_type),
+      dogs (name, breed, coat_type, profile_image_url),
       profiles!appointments_owner_id_fkey (full_name, email, phone, clerk_id)
     `)
     .eq("groomer_profile_id", ctx.groomerProfileId)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
@@ -21,6 +22,7 @@ interface Client {
   email: string;
   joined: string;
   coat: string;
+  photoUrl: string | null;
 }
 
 type SortKey = "dog" | "owner" | "visits" | "last" | "spend";
@@ -43,6 +45,21 @@ function SortHead({ k, label, align = "right", sort, onSort }: {
   );
 }
 
+function DogAvatar({ name, photoUrl, size = "md" }: { name: string; photoUrl: string | null; size?: "sm" | "md" | "lg" }) {
+  const dims = size === "lg" ? "w-16 h-16" : size === "sm" ? "w-10 h-10" : "w-12 h-12";
+  const text = size === "lg" ? "text-2xl" : size === "sm" ? "text-base" : "text-lg";
+  const radius = size === "lg" ? "rounded-2xl" : "rounded-xl";
+  return photoUrl ? (
+    <div className={`${dims} ${radius} overflow-hidden shrink-0`}>
+      <Image src={photoUrl} alt={name} width={64} height={64} className="object-cover w-full h-full" />
+    </div>
+  ) : (
+    <div className={`${dims} ${radius} bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate ${text} shrink-0`}>
+      {name.charAt(0)}
+    </div>
+  );
+}
+
 function ContactRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-3">
@@ -58,9 +75,7 @@ function ClientModal({ client, onClose }: { client: Client | null; onClose: () =
     <Modal open={!!client} onClose={onClose} size="lg">
       <div className="space-y-5">
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-sage-leaf text-white font-fredoka text-2xl flex items-center justify-center shrink-0">
-            {client.dog.charAt(0)}
-          </div>
+          <DogAvatar name={client.dog} photoUrl={client.photoUrl} size="lg" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="font-fredoka text-3xl text-deep-slate">{client.dog}</h2>
@@ -163,6 +178,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         email: a.profiles?.email || "—",
         joined: d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
         coat: a.dogs?.coat_type || "Unknown",
+        photoUrl: a.dogs?.profile_image_url || null,
       });
     }
     
@@ -250,9 +266,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
           <button key={c.id} onClick={() => setOpenClient(c)}
             className={`w-full text-left grid grid-cols-[1fr_100px_120px_100px_48px] gap-3 px-5 py-4 items-center hover:bg-alabaster-cream transition-colors focus-ring ${i ? "border-t border-pebble-grey/10" : ""}`}>
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate shrink-0">
-                {c.dog.charAt(0)}
-              </div>
+              <DogAvatar name={c.dog} photoUrl={c.photoUrl} size="sm" />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-fredoka text-deep-slate">{c.dog}</p>
@@ -283,9 +297,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         {rows.map((c) => (
           <button key={c.id} onClick={() => setOpenClient(c)}
             className="w-full text-left bg-white border border-pebble-grey/20 rounded-[20px] p-4 flex items-center gap-3 hover:bg-alabaster-cream transition-colors focus-ring">
-            <div className="w-12 h-12 rounded-xl bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate text-lg shrink-0">
-              {c.dog.charAt(0)}
-            </div>
+            <DogAvatar name={c.dog} photoUrl={c.photoUrl} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-fredoka text-deep-slate">{c.dog}</p>

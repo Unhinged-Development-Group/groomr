@@ -65,14 +65,13 @@ export function ActionBar({
           disabled={busy}
           aria-label={saved ? "Remove from favourites" : "Save to favourites"}
           className={cn(
-            "flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border font-nunito font-bold text-sm transition-all focus-ring",
+            "flex items-center justify-center w-10 h-10 rounded-full border transition-all focus-ring",
             saved
               ? "bg-muted-terracotta/10 border-muted-terracotta text-muted-terracotta"
               : "bg-white border-pebble-grey/30 text-pebble-grey hover:border-muted-terracotta hover:text-muted-terracotta"
           )}
         >
           <HeartIcon size={18} filled={saved} />
-          {saved ? "Saved" : "Save"}
         </button>
 
         <button

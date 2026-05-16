@@ -175,7 +175,7 @@ export default async function GroomerProfilePage({
 
       {/* ── Name + CTAs — avatar overlaps banner, aligned with content ─────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
-        <div className="relative flex items-end gap-4 sm:gap-5 pt-2">
+        <div className="relative flex items-start gap-4 sm:gap-5 pt-2">
 
           {/* Avatar — absolute so it straddles the banner, left-aligned with content */}
           <div className="absolute -top-14 md:-top-16 left-0 shrink-0">

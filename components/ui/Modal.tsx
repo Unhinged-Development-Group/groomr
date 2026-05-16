@@ -1,7 +1,8 @@
 "use client";
 
 import { CloseIcon } from "@/components/ui/GroomrIcons";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface ModalProps {
@@ -19,6 +20,10 @@ const sizeClasses = {
 };
 
 export function Modal({ open, onClose, children, size = "md" }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose?.(); };
@@ -30,9 +35,9 @@ export function Modal({ open, onClose, children, size = "md" }: ModalProps) {
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
@@ -57,6 +62,7 @@ export function Modal({ open, onClose, children, size = "md" }: ModalProps) {
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

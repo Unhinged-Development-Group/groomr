@@ -79,7 +79,9 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
                     </p>
                     <p className="flex items-center gap-2 font-nunito text-sm text-pebble-grey">
                       <MapPin size={14} />
-                      {apt.groomer_profiles?.business_name || "Groomer"} 
+                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="hover:text-sage-leaf transition-colors focus-ring rounded">
+                        {apt.groomer_profiles?.business_name || "Groomer"}
+                      </Link>
                     </p>
                   </div>
 
@@ -133,9 +135,10 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
                   <div className="space-y-1">
                     <p className="font-bold text-deep-slate font-nunito">
                       {apt.service_snapshot_name || "Service"}
-                      <span className="text-pebble-grey font-normal">
-                        {" "}| {apt.groomer_profiles?.business_name}
-                      </span>
+                      <span className="text-pebble-grey font-normal"> | </span>
+                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="text-pebble-grey font-normal hover:text-sage-leaf transition-colors focus-ring rounded">
+                        {apt.groomer_profiles?.business_name}
+                      </Link>
                     </p>
                     <p className="text-sm text-pebble-grey font-nunito">
                       {dateString} · {apt.dogs?.name} · {priceDisplay} · Status: {apt.status}
@@ -179,9 +182,9 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
                 <div>
                   <p className={LABEL_CLASS}>Where</p>
                   <div className="flex items-start gap-1 mt-1">
-                    <p className="text-sm font-nunito text-deep-slate">
+                    <Link href={`/groomers/${activeAppointment.groomer_profile_id}`} className="text-sm font-nunito text-deep-slate hover:text-sage-leaf transition-colors focus-ring rounded">
                       {activeAppointment.groomer_profiles?.business_name}
-                    </p>
+                    </Link>
                   </div>
                 </div>
               </div>

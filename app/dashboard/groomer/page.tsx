@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { GroomerDashboardClient } from "./_components/GroomerDashboardClient";
 import { getGroomerAppointments, getGroomerReviews, getGroomerPayments } from "@/app/actions/groomer";
 import { loadProfileEditorData } from "@/app/actions/profile-editor";
+import { getTimeBlocks } from "@/app/actions/time-blocks";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -15,11 +16,12 @@ export default async function GroomerDashboardPage() {
 
   const ownerName = user.firstName ?? "Groomer";
 
-  const [appointments, reviews, payments, editorData] = await Promise.all([
+  const [appointments, reviews, payments, editorData, timeBlocks] = await Promise.all([
     getGroomerAppointments(),
     getGroomerReviews(),
     getGroomerPayments(),
     loadProfileEditorData(),
+    getTimeBlocks(),
   ]);
 
   const businessName = editorData.profile.businessName || "Your Studio";
@@ -33,6 +35,7 @@ export default async function GroomerDashboardPage() {
       initialAppointments={appointments}
       initialReviews={reviews}
       initialPayments={payments}
+      initialTimeBlocks={timeBlocks}
       editorData={editorData}
     />
   );

@@ -10,10 +10,12 @@ import { EarningsView } from "./EarningsView";
 import { ReviewsView } from "./ReviewsView";
 import { ProfileEditor } from "./ProfileEditor";
 import { NewBookingModal } from "./NewBookingModal";
+import { BlockTimeModal } from "./BlockTimeModal";
 import { LiveGroomTracker } from "./LiveGroomTracker";
 import type { ActiveGroom } from "./LiveGroomTracker";
 import { cn } from "@/lib/utils";
 import type { ProfileEditorInitialData, TeamMemberRow } from "@/types/groomer-dashboard";
+import type { TimeBlock } from "@/app/actions/time-blocks";
 
 type Tab = "bookings" | "clients" | "earnings" | "reviews" | "profile";
 
@@ -77,6 +79,7 @@ interface Props {
   initialAppointments: any[];
   initialReviews: any[];
   initialPayments: any[];
+  initialTimeBlocks: TimeBlock[];
   editorData: ProfileEditorInitialData;
 }
 
@@ -87,11 +90,14 @@ export function GroomerDashboardClient({
   initialAppointments,
   initialReviews,
   initialPayments,
+  initialTimeBlocks,
   editorData,
 }: Props) {
   const [tab, setTab] = useState<Tab>("bookings");
   const [scope, setScope] = useState<string>("all");
   const [newBookingOpen, setNewBookingOpen] = useState(false);
+  const [blockTimeOpen, setBlockTimeOpen] = useState(false);
+  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>(initialTimeBlocks);
   const [activeGroom, setActiveGroom] = useState<ActiveGroom | null>(null);
 
   useEffect(() => {
@@ -188,7 +194,10 @@ export function GroomerDashboardClient({
           {viewerRole === "owner" && (
             <ScopeSelector team={team} scope={scope} onScopeChange={setScope} />
           )}
-          <button className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2">
+          <button
+            onClick={() => setBlockTimeOpen(true)}
+            className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2"
+          >
             <CalendarIcon size={16} />
             <span className="hidden sm:inline">Block time</span>
             <span className="sm:hidden">Block</span>
@@ -260,6 +269,14 @@ export function GroomerDashboardClient({
           onClose={() => setNewBookingOpen(false)}
         />
       )}
+
+      <BlockTimeModal
+        open={blockTimeOpen}
+        onClose={() => setBlockTimeOpen(false)}
+        existingBlocks={timeBlocks}
+        onBlockAdded={(block) => setTimeBlocks((prev) => [...prev, block].sort((a, b) => a.date.localeCompare(b.date)))}
+        onBlockDeleted={(id) => setTimeBlocks((prev) => prev.filter((b) => b.id !== id))}
+      />
 
       {activeGroom && (
         <LiveGroomTracker

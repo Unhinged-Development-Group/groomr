@@ -69,7 +69,7 @@ function ContactRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ClientModal({ client, onClose }: { client: Client | null; onClose: () => void }) {
+function ClientModal({ client, visits, onClose }: { client: Client | null; visits: Array<{ date: string; service: string; price: number }>; onClose: () => void }) {
   if (!client) return null;
   return (
     <Modal open={!!client} onClose={onClose} size="lg">
@@ -101,10 +101,12 @@ function ClientModal({ client, onClose }: { client: Client | null; onClose: () =
           </div>
         </div>
 
-        <div className="bg-white border border-pebble-grey/15 rounded-2xl p-4">
-          <Eyebrow>Grooming notes</Eyebrow>
-          <p className="text-sm text-deep-slate mt-2 italic">&quot;{client.note}&quot;</p>
-        </div>
+        {client.note && (
+          <div className="bg-white border border-pebble-grey/15 rounded-2xl p-4">
+            <Eyebrow>Grooming notes</Eyebrow>
+            <p className="text-sm text-deep-slate mt-2 italic">&quot;{client.note}&quot;</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <ContactRow label="Phone"  value={client.phone} />
@@ -114,19 +116,18 @@ function ClientModal({ client, onClose }: { client: Client | null; onClose: () =
         </div>
 
         <div className="bg-white border border-pebble-grey/15 rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-pebble-grey/10"><Eyebrow>Recent visits</Eyebrow></div>
-          {[
-            { d: "12 Apr", svc: "Full Groom",   g: "Lola",   price: 58 },
-            { d: "29 Mar", svc: "Bath & Brush",  g: "Marcus", price: 38 },
-            { d: "15 Feb", svc: "Full Groom",   g: "Lola",   price: 58 },
-          ].map((v, i) => (
-            <div key={i} className={`grid grid-cols-[80px_1fr_auto_auto] gap-3 px-4 py-3 items-center ${i ? "border-t border-pebble-grey/10" : ""}`}>
-              <span className="font-bold text-sm text-deep-slate">{v.d}</span>
-              <span className="text-sm text-deep-slate">{v.svc}</span>
-              <span className="text-xs text-pebble-grey font-bold">w/ {v.g}</span>
-              <span className="font-fredoka text-deep-slate">£{v.price}</span>
-            </div>
-          ))}
+          <div className="px-4 py-3 border-b border-pebble-grey/10"><Eyebrow>Visit history</Eyebrow></div>
+          {visits.length === 0 ? (
+            <p className="px-4 py-4 text-sm text-pebble-grey font-bold">No visits recorded yet.</p>
+          ) : (
+            visits.map((v, i) => (
+              <div key={i} className={`grid grid-cols-[90px_1fr_auto] gap-3 px-4 py-3 items-center ${i ? "border-t border-pebble-grey/10" : ""}`}>
+                <span className="font-bold text-sm text-deep-slate">{v.date}</span>
+                <span className="text-sm text-deep-slate">{v.service || "—"}</span>
+                <span className="font-fredoka text-deep-slate">£{v.price.toFixed(2)}</span>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2 pt-2">
@@ -135,9 +136,6 @@ function ClientModal({ client, onClose }: { client: Client | null; onClose: () =
           </button>
           <button className="btn-secondary font-nunito font-bold px-5 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2">
             <MessageIcon size={16} /> Message
-          </button>
-          <button className="font-nunito font-bold text-deep-slate hover:text-muted-terracotta transition-colors px-5 py-2.5 rounded-full text-sm focus-ring">
-            Edit notes
           </button>
         </div>
       </div>
@@ -150,6 +148,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "last", dir: "desc" });
   const [openClient, setOpenClient] = useState<Client | null>(null);
+  const [openClientVisits, setOpenClientVisits] = useState<Array<{ date: string; service: string; price: number }>>([]);
 
   function sortBy(key: SortKey) {
     setSort(s => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
@@ -164,11 +163,15 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
     const d = new Date(a.scheduled_at);
     
     if (!clientsMap.has(clientId)) {
+      const ownerName = a.profiles?.full_name
+        || (a.profiles?.first_name || a.profiles?.last_name
+            ? `${a.profiles.first_name ?? ""} ${a.profiles.last_name ?? ""}`.trim()
+            : "Owner");
       clientsMap.set(clientId, {
         id: clientId,
         dog: a.dogs?.name || "Dog",
         breed: a.dogs?.breed || "Mixed",
-        owner: a.profiles?.full_name ?? "Owner",
+        owner: ownerName,
         visits: 0,
         last: "",
         spend: 0,
@@ -185,13 +188,13 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
     const c = clientsMap.get(clientId)!;
     c.visits += 1;
     c.spend += (a.service_snapshot_price || 0) / 100;
-    
+
     const lastDate = c.last ? new Date(c.last) : new Date(0);
     if (d > lastDate) {
       c.last = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
-    
-    if (c.visits > 1) {
+
+    if (c.visits >= 3) {
       c.regular = true;
     }
   });
@@ -263,7 +266,18 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
           </div>
         )}
         {rows.map((c, i) => (
-          <button key={c.id} onClick={() => setOpenClient(c)}
+          <button key={c.id} onClick={() => {
+            const clientVisits = appointments
+              .filter(a => a.owner_id + "-" + a.dog_id === c.id && a.status !== "cancelled")
+              .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+              .map(a => ({
+                date: new Date(a.scheduled_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+                service: a.service_snapshot_name || "—",
+                price: (a.service_snapshot_price || 0) / 100,
+              }));
+            setOpenClientVisits(clientVisits);
+            setOpenClient(c);
+          }}
             className={`w-full text-left grid grid-cols-[1fr_100px_120px_100px_48px] gap-3 px-5 py-4 items-center hover:bg-alabaster-cream transition-colors focus-ring ${i ? "border-t border-pebble-grey/10" : ""}`}>
             <div className="flex items-center gap-3 min-w-0">
               <DogAvatar name={c.dog} photoUrl={c.photoUrl} size="sm" />
@@ -295,7 +309,18 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
           </div>
         )}
         {rows.map((c) => (
-          <button key={c.id} onClick={() => setOpenClient(c)}
+          <button key={c.id} onClick={() => {
+            const clientVisits = appointments
+              .filter(a => a.owner_id + "-" + a.dog_id === c.id && a.status !== "cancelled")
+              .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+              .map(a => ({
+                date: new Date(a.scheduled_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+                service: a.service_snapshot_name || "—",
+                price: (a.service_snapshot_price || 0) / 100,
+              }));
+            setOpenClientVisits(clientVisits);
+            setOpenClient(c);
+          }}
             className="w-full text-left bg-white border border-pebble-grey/20 rounded-[20px] p-4 flex items-center gap-3 hover:bg-alabaster-cream transition-colors focus-ring">
             <DogAvatar name={c.dog} photoUrl={c.photoUrl} />
             <div className="flex-1 min-w-0">
@@ -314,7 +339,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         ))}
       </div>
 
-      <ClientModal client={openClient} onClose={() => setOpenClient(null)} />
+      <ClientModal client={openClient} visits={openClientVisits} onClose={() => { setOpenClient(null); setOpenClientVisits([]); }} />
     </section>
   );
 }

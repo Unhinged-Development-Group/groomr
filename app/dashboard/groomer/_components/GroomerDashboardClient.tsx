@@ -274,7 +274,7 @@ export function GroomerDashboardClient({
         open={blockTimeOpen}
         onClose={() => setBlockTimeOpen(false)}
         existingBlocks={timeBlocks}
-        onBlockAdded={(block) => setTimeBlocks((prev) => [...prev, block].sort((a, b) => a.date.localeCompare(b.date)))}
+        onBlockAdded={(block) => setTimeBlocks((prev) => [...prev, block].sort((a, b) => a.startDate.localeCompare(b.startDate)))}
         onBlockDeleted={(id) => setTimeBlocks((prev) => prev.filter((b) => b.id !== id))}
       />
 

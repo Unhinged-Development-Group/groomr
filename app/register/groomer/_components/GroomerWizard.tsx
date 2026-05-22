@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { SignUp } from "@clerk/nextjs";
-import { Check, Upload, Shield, Plus, X, Info } from "lucide-react";
+import { Check, Plus, X, Info, Shield, Building2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { registerGroomer } from "@/app/actions/groomer-registration";
+import { UploadIcon, CheckIcon } from "@/components/ui/GroomrIcons";
+import { registerGroomer, getInsuranceUploadSignature } from "@/app/actions/groomer-registration";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -46,6 +47,12 @@ interface FormState {
   // Step 5 (was Step 4)
   days: Record<DayKey, DaySlot>;
   lead: number;
+  // Step 6
+  insuranceDocUrl: string | null;
+  insuranceFileName: string | null;
+  bankHolderName: string;
+  bankSortCode: string;
+  bankAccountNumber: string;
 }
 
 /* ── Constants ────────────────────────────────────────────────────────── */
@@ -115,6 +122,9 @@ export function GroomerWizard({
   const firstStep = startAuthenticated ? 1 : 0;
   const [step, setStep] = useState(firstStep);
   const [isPending, startTransition] = useTransition();
+  const [insuranceUploading, setInsuranceUploading] = useState(false);
+  const [insuranceError, setInsuranceError] = useState<string | null>(null);
+  const insuranceInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormState>({
     fullName: initialName,
@@ -134,6 +144,11 @@ export function GroomerWizard({
     depositPercentage: 10,
     days: DEFAULT_DAYS,
     lead: 24,
+    insuranceDocUrl: null,
+    insuranceFileName: null,
+    bankHolderName: "",
+    bankSortCode: "",
+    bankAccountNumber: "",
   });
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
@@ -177,6 +192,43 @@ export function GroomerWizard({
 
   const activeDays = (Object.keys(form.days) as DayKey[]).filter((k) => form.days[k].on);
 
+  /* ── Insurance upload ── */
+  const handleInsuranceUpload = async (file: File) => {
+    setInsuranceUploading(true);
+    setInsuranceError(null);
+    try {
+      const sig = await getInsuranceUploadSignature();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", sig.apiKey);
+      formData.append("timestamp", String(sig.timestamp));
+      formData.append("signature", sig.signature);
+      formData.append("folder", sig.folder);
+      // resource_type=auto handles PDFs, images, etc.
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
+        { method: "POST", body: formData }
+      );
+      const json = await res.json();
+      if (!json.secure_url) throw new Error("Upload failed");
+      set("insuranceDocUrl", json.secure_url);
+      set("insuranceFileName", file.name);
+    } catch {
+      setInsuranceError("Upload failed — please try again.");
+    } finally {
+      setInsuranceUploading(false);
+    }
+  };
+
+  /* ── Sort code formatter (auto-inserts dashes: 123456 → 12-34-56) ── */
+  const handleSortCode = (raw: string) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 6);
+    const formatted = digits.replace(/(\d{2})(\d{1,2})?(\d{1,2})?/, (_, a, b, c) =>
+      [a, b, c].filter(Boolean).join("-")
+    );
+    set("bankSortCode", formatted);
+  };
+
   /* ── Submit ── */
   const handleLaunch = () => {
     startTransition(async () => {
@@ -207,6 +259,10 @@ export function GroomerWizard({
           (Object.keys(form.days) as DayKey[]).map((k) => [k, form.days[k]])
         ),
         leadHours: form.lead,
+        insuranceDocUrl: form.insuranceDocUrl,
+        bankAccountHolder: form.bankHolderName || null,
+        bankSortCode: form.bankSortCode || null,
+        bankAccountNumber: form.bankAccountNumber || null,
       });
     });
   };
@@ -656,35 +712,154 @@ export function GroomerWizard({
               <header className="space-y-2">
                 <Eyebrow>Step 6 — last one</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">Verify &amp; get paid.</h2>
+                <p className="text-sm text-pebble-grey">
+                  Both sections are optional — you can launch now and add them from your dashboard later.
+                </p>
               </header>
 
-              <div className="border border-pebble-grey/20 rounded-2xl p-5 flex items-center gap-4">
-                <Shield size={32} className="text-pebble-grey shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-deep-slate">Public liability insurance</p>
-                  <p className="text-xs text-pebble-grey">
-                    Upload a certificate. Required for the verified badge.
-                  </p>
+              {/* ── Insurance ── */}
+              <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
+                <div className="flex items-center gap-4 p-5 border-b border-pebble-grey/10">
+                  <Shield size={28} className={form.insuranceDocUrl ? "text-sage-leaf" : "text-pebble-grey"} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-deep-slate">Public liability insurance</p>
+                    <p className="text-xs text-pebble-grey">PDF or image of your certificate. Required for the verified badge.</p>
+                  </div>
                 </div>
-                <button disabled
-                  className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2 opacity-50 cursor-not-allowed"
-                >
-                  <Upload size={14} /> Upload
-                </button>
+
+                <div className="p-5 space-y-3">
+                  {form.insuranceDocUrl ? (
+                    /* Uploaded state */
+                    <div className="flex items-center gap-3 bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl px-4 py-3">
+                      <div className="w-7 h-7 rounded-full bg-sage-leaf flex items-center justify-center shrink-0">
+                        <CheckIcon size={14} className="text-white" />
+                      </div>
+                      <p className="text-sm font-bold text-deep-slate flex-1 truncate">
+                        {form.insuranceFileName ?? "Document uploaded"}
+                      </p>
+                      <button
+                        onClick={() => { set("insuranceDocUrl", null); set("insuranceFileName", null); }}
+                        className="text-xs font-bold text-pebble-grey hover:text-muted-terracotta focus-ring rounded"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    /* Upload prompt */
+                    <div className="space-y-2">
+                      <input
+                        ref={insuranceInputRef}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleInsuranceUpload(file);
+                          e.target.value = "";
+                        }}
+                      />
+                      <button
+                        onClick={() => insuranceInputRef.current?.click()}
+                        disabled={insuranceUploading}
+                        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-pebble-grey/30 rounded-xl hover:border-deep-slate/40 hover:bg-alabaster-cream/60 transition-colors focus-ring font-bold text-sm text-deep-slate disabled:opacity-50"
+                      >
+                        <UploadIcon size={16} />
+                        {insuranceUploading ? "Uploading…" : "Upload certificate"}
+                      </button>
+                      {insuranceError && (
+                        <p className="text-xs font-bold text-muted-terracotta flex items-center gap-1.5">
+                          <AlertCircle size={12} /> {insuranceError}
+                        </p>
+                      )}
+                      <div className="flex items-start gap-2 bg-groomr-gold/15 border border-groomr-gold/30 rounded-xl px-4 py-3">
+                        <AlertCircle size={14} className="text-deep-slate shrink-0 mt-0.5" />
+                        <p className="text-xs font-bold text-deep-slate">
+                          Without insurance, your profile won&apos;t receive the verified badge and may have lower visibility in search.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => set("insuranceDocUrl", "skipped")}
+                        className="text-xs font-bold text-pebble-grey hover:text-deep-slate underline focus-ring rounded"
+                      >
+                        I&apos;ll add this later →
+                      </button>
+                    </div>
+                  )}
+
+                  {form.insuranceDocUrl === "skipped" && (
+                    <div className="flex items-center gap-2 text-pebble-grey">
+                      <p className="text-xs font-bold">Skipped — add from your dashboard after launch.</p>
+                      <button
+                        onClick={() => set("insuranceDocUrl", null)}
+                        className="text-xs font-bold text-sage-leaf hover:underline focus-ring rounded"
+                      >
+                        Upload now
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="bg-sage-leaf/10 rounded-2xl p-5 border border-sage-leaf/20">
-                <p className="font-bold text-deep-slate text-sm mb-1">Bank details &amp; payouts</p>
-                <p className="text-sm text-pebble-grey">
-                  We&apos;ll send you a quick setup email after launch. Payouts go weekly once your
-                  first booking is completed.
-                </p>
+              {/* ── Bank details ── */}
+              <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
+                <div className="flex items-center gap-4 p-5 border-b border-pebble-grey/10">
+                  <Building2 size={28} className={form.bankHolderName && form.bankSortCode && form.bankAccountNumber ? "text-sage-leaf" : "text-pebble-grey"} />
+                  <div className="flex-1">
+                    <p className="font-bold text-deep-slate">Bank account for payouts</p>
+                    <p className="text-xs text-pebble-grey">UK bank account. Used for weekly payout transfers and fee collection.</p>
+                  </div>
+                </div>
+
+                <div className="p-5 space-y-3">
+                  <Field label="Account holder name">
+                    <input
+                      className="field"
+                      placeholder="e.g. Lola García"
+                      value={form.bankHolderName}
+                      onChange={(e) => set("bankHolderName", e.target.value)}
+                      autoComplete="name"
+                    />
+                  </Field>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Field label="Sort code">
+                      <input
+                        className="field"
+                        placeholder="12-34-56"
+                        value={form.bankSortCode}
+                        onChange={(e) => handleSortCode(e.target.value)}
+                        maxLength={8}
+                        inputMode="numeric"
+                      />
+                    </Field>
+                    <Field label="Account number">
+                      <input
+                        className="field"
+                        placeholder="12345678"
+                        value={form.bankAccountNumber}
+                        onChange={(e) => set("bankAccountNumber", e.target.value.replace(/\D/g, "").slice(0, 8))}
+                        maxLength={8}
+                        inputMode="numeric"
+                      />
+                    </Field>
+                  </div>
+                  {(!form.bankHolderName || !form.bankSortCode || !form.bankAccountNumber) && (
+                    <div className="flex items-start gap-2 bg-groomr-gold/15 border border-groomr-gold/30 rounded-xl px-4 py-3">
+                      <AlertCircle size={14} className="text-deep-slate shrink-0 mt-0.5" />
+                      <p className="text-xs font-bold text-deep-slate">
+                        Without bank details you won&apos;t be able to receive payouts or pay Groomr&apos;s platform fee.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="bg-deep-slate text-alabaster-cream rounded-2xl p-5">
                 <p className="font-fredoka text-xl">You&apos;re ready.</p>
                 <p className="text-sage-leaf text-sm mt-1">
-                  Hit launch and your profile goes live in your area within an hour.
+                  Hit launch and your profile goes live in your area.
+                  {(!form.insuranceDocUrl || form.insuranceDocUrl === "skipped" || !form.bankHolderName) && (
+                    <span className="text-alabaster-cream/50"> You can complete verification from your dashboard.</span>
+                  )}
                 </p>
               </div>
             </>

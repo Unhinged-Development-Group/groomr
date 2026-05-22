@@ -3,6 +3,39 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export async function getInsuranceUploadSignature(): Promise<{
+  signature: string;
+  timestamp: number;
+  cloudName: string;
+  apiKey: string;
+  folder: string;
+}> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = "groomr/insurance";
+  const signature = cloudinary.utils.api_sign_request(
+    { folder, timestamp },
+    process.env.CLOUDINARY_API_SECRET!
+  );
+
+  return {
+    signature,
+    timestamp,
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+    apiKey: process.env.CLOUDINARY_API_KEY!,
+    folder,
+  };
+}
 
 interface ServiceInput {
   name: string;
@@ -30,6 +63,10 @@ interface RegisterGroomerInput {
   depositPercentage: number | null;
   days: Record<string, DaySlotInput>;
   leadHours: number;
+  insuranceDocUrl?: string | null;
+  bankAccountHolder?: string | null;
+  bankSortCode?: string | null;
+  bankAccountNumber?: string | null;
 }
 
 const DAY_OF_WEEK: Record<string, number> = {
@@ -79,6 +116,10 @@ export async function registerGroomer(input: RegisterGroomerInput) {
     is_verified: false,
     deposit_type: input.depositType,
     deposit_percentage: input.depositPercentage,
+    insurance_doc_url: input.insuranceDocUrl ?? null,
+    bank_account_holder: input.bankAccountHolder ?? null,
+    bank_sort_code: input.bankSortCode ?? null,
+    bank_account_number: input.bankAccountNumber ?? null,
   };
 
   const { data: existing } = await supabaseAdmin

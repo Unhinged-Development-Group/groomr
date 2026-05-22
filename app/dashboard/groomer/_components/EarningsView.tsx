@@ -6,10 +6,32 @@ import type { Payment } from "@/app/actions/groomer";
 
 const GROOMR_COMMISSION_RATE = 0.08; // 8% — 0% for founding groomers for first 6 months
 
+function getPayoutWindow(now: Date): { lastMonday: Date; nextMonday: Date } {
+  const day = now.getDay(); // 0=Sun … 6=Sat
+  const daysToLastMonday = day === 0 ? 6 : day - 1;
+  const lastMonday = new Date(now);
+  lastMonday.setDate(now.getDate() - daysToLastMonday);
+  lastMonday.setHours(0, 0, 0, 0);
+  const nextMonday = new Date(lastMonday);
+  nextMonday.setDate(lastMonday.getDate() + 7);
+  return { lastMonday, nextMonday };
+}
+
 export function EarningsView({ payments: _payments, appointments = [] }: { payments: Payment[]; appointments?: any[] }) {
   const [range, setRange] = useState<"7d" | "30d" | "ytd" | "all">("all");
 
   const now = new Date();
+  const { lastMonday, nextMonday } = getPayoutWindow(now);
+
+  // Current payout cycle: completed/past appointments since last Monday
+  const payoutCycleAppts = appointments.filter(a => {
+    if (a.status === "cancelled" || a.status === "no_show") return false;
+    const d = new Date(a.scheduled_at);
+    return d >= lastMonday && d < nextMonday && d <= now;
+  });
+  const payoutCycleGross = payoutCycleAppts.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
+  const payoutCycleNet = payoutCycleGross * (1 - GROOMR_COMMISSION_RATE);
+  const nextPayoutDate = nextMonday.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
   const { earned, upcoming, chartData } = useMemo(() => {
     const pastCutoff = (() => {
@@ -84,7 +106,6 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
   const upcomingNet        = upcomingGross - upcomingCommission;
   const groomrFees         = 0;   // £0 in year 1; subscription fee applies from year 2
   const refunds            = 0;   // £0 unless a customer refund is being processed
-  const nextPayout         = totalGross - (totalGross * GROOMR_COMMISSION_RATE) - groomrFees - refunds;
   const maxVal             = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
 
   // Activity list: upcoming first (soonest), then past (most recent)
@@ -130,8 +151,8 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                 <p className="text-xs font-bold text-pebble-grey mt-1">Avg value</p>
               </div>
               <div className="bg-groomr-gold rounded-2xl px-4 py-2 text-center min-w-[110px]">
-                <p className="font-fredoka text-2xl text-deep-slate leading-none">£{nextPayout.toFixed(2)}</p>
-                <p className="text-[10px] font-bold text-deep-slate/70 mt-1 uppercase tracking-wide">Next payout</p>
+                <p className="font-fredoka text-2xl text-deep-slate leading-none">£{payoutCycleNet.toFixed(2)}</p>
+                <p className="text-[10px] font-bold text-deep-slate/70 mt-1 uppercase tracking-wide">Payout {nextPayoutDate}</p>
               </div>
             </div>
           </div>
@@ -189,9 +210,12 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
             </div>
 
             {/* Next payout total */}
-            <div className="flex justify-between px-5 py-4 bg-groomr-gold/20 rounded-b-2xl">
-              <span className="font-bold text-deep-slate text-base">Next payout</span>
-              <span className="font-fredoka text-2xl text-deep-slate">£{nextPayout.toFixed(2)}</span>
+            <div className="flex justify-between items-center px-5 py-4 bg-groomr-gold/20 rounded-b-2xl">
+              <div>
+                <span className="font-bold text-deep-slate text-base">Next payout</span>
+                <p className="text-xs text-deep-slate/60 font-bold mt-0.5">Due {nextPayoutDate} · this week&apos;s earnings</p>
+              </div>
+              <span className="font-fredoka text-2xl text-deep-slate">£{payoutCycleNet.toFixed(2)}</span>
             </div>
           </div>
 

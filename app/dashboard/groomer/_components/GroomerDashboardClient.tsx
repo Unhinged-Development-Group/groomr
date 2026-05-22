@@ -154,12 +154,20 @@ export function GroomerDashboardClient({
   });
   const weekRevenue = weekAppointments.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100;
 
-  const allActiveAppts = scopedAppointments.filter((a) => a.status !== "cancelled" && a.status !== "no_show");
-  const allGross = allActiveAppts.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100;
-  const nextPayoutAmount = allGross * (1 - 0.08);
+  // Payout cycle: Mon–Sun, paid on Monday
+  const dayOfWeek = now.getDay();
+  const lastMonday = new Date(now);
+  lastMonday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  lastMonday.setHours(0, 0, 0, 0);
+  const nextMonday = new Date(lastMonday);
+  nextMonday.setDate(lastMonday.getDate() + 7);
 
-  const nextMonday = new Date(now);
-  nextMonday.setDate(now.getDate() + ((8 - now.getDay()) % 7 || 7));
+  const payoutCycleAppts = scopedAppointments.filter((a) => {
+    if (a.status === "cancelled" || a.status === "no_show") return false;
+    const d = new Date(a.scheduled_at);
+    return d >= lastMonday && d < nextMonday && d <= now;
+  });
+  const nextPayoutAmount = payoutCycleAppts.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100 * (1 - 0.08);
   const nextPayoutDate = nextMonday.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   const uniqueClients = new Set(scopedAppointments.map((a) => a.owner_id));

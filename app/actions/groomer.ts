@@ -3,6 +3,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Appointment } from "@/app/actions/appointments";
+import { resend, FROM_EMAIL } from "@/lib/resend";
+import { groomCompleteEmail } from "@/lib/emails/groom-complete";
 
 export interface GroomerProfileDetails {
   id: string;
@@ -329,7 +331,61 @@ export async function markAppointmentComplete(appointmentId: string): Promise<{ 
     .eq("id", appointmentId)
     .eq("groomer_profile_id", ctx.groomerProfileId);
 
-  return error ? { error: error.message } : {};
+  if (error) return { error: error.message };
+
+  // Fire pickup notification — best effort, don't block on failure
+  try {
+    const { data: appt } = await supabaseAdmin
+      .from("appointments")
+      .select(`
+        service_snapshot_name,
+        dogs (name),
+        profiles!appointments_owner_id_fkey (first_name, email),
+        groomer_profiles (
+          business_name,
+          phone,
+          address_line_1,
+          city,
+          postcode
+        )
+      `)
+      .eq("id", appointmentId)
+      .single();
+
+    if (appt) {
+      const ownerEmail = (appt.profiles as any)?.email;
+      const ownerName = (appt.profiles as any)?.first_name || "there";
+      const dogName = (appt.dogs as any)?.name || "your dog";
+      const gp = appt.groomer_profiles as any;
+      const salonName = gp?.business_name || "the salon";
+      const salonPhone = gp?.phone || null;
+      const salonAddress = [gp?.address_line_1, gp?.city, gp?.postcode]
+        .filter(Boolean)
+        .join(", ") || null;
+
+      if (ownerEmail) {
+        const { subject, html, text } = groomCompleteEmail({
+          ownerName,
+          dogName,
+          salonName,
+          salonPhone,
+          salonAddress,
+        });
+
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: ownerEmail,
+          subject,
+          html,
+          text,
+        });
+      }
+    }
+  } catch (emailErr) {
+    console.error("[markAppointmentComplete] email failed:", emailErr);
+  }
+
+  return {};
 }
 
 export async function replyToReview(reviewId: string, text: string) {

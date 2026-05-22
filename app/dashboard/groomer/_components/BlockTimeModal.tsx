@@ -20,7 +20,8 @@ interface Props {
 }
 
 export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, onBlockDeleted }: Props) {
-  const [date, setDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [allDay, setAllDay] = useState(true);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
@@ -29,15 +30,29 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  function handleStartDateChange(val: string) {
+    setStartDate(val);
+    // Keep end date in sync if it's before the new start date
+    if (endDate && endDate < val) setEndDate(val);
+  }
+
   async function handleSave() {
     setError(null);
     setSaving(true);
-    const result = await createTimeBlock({ date, allDay, startTime, endTime, reason });
+    const result = await createTimeBlock({
+      startDate,
+      endDate: endDate || startDate,
+      allDay,
+      startTime,
+      endTime,
+      reason,
+    });
     setSaving(false);
     if (result.error) { setError(result.error); return; }
     if (result.block) {
       onBlockAdded(result.block);
-      setDate("");
+      setStartDate("");
+      setEndDate("");
       setAllDay(true);
       setStartTime("09:00");
       setEndTime("17:00");
@@ -58,12 +73,23 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
     });
   }
 
+  function formatDateShort(dateStr: string) {
+    return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", {
+      day: "numeric", month: "short",
+    });
+  }
+
   function formatTime(t: string) {
     if (!t) return "";
     const [h, m] = t.split(":").map(Number);
     const suffix = h >= 12 ? "pm" : "am";
     const hour = h % 12 || 12;
     return `${hour}:${String(m).padStart(2, "0")}${suffix}`;
+  }
+
+  function formatBlockRange(b: TimeBlock) {
+    if (b.startDate === b.endDate) return formatDate(b.startDate);
+    return `${formatDateShort(b.startDate)} – ${formatDate(b.endDate)}`;
   }
 
   return (
@@ -79,16 +105,29 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
 
         {/* Form */}
         <div className="space-y-4 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4">
-          {/* Date */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">Date</label>
-            <input
-              type="date"
-              min={TODAY}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="field w-full"
-            />
+
+          {/* Date range */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">From</label>
+              <input
+                type="date"
+                min={TODAY}
+                value={startDate}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                className="field w-full"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">To</label>
+              <input
+                type="date"
+                min={startDate || TODAY}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="field w-full"
+              />
+            </div>
           </div>
 
           {/* All day toggle */}
@@ -105,11 +144,11 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
             </button>
           </div>
 
-          {/* Time pickers */}
+          {/* Time pickers — only shown when not all-day */}
           {!allDay && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">From</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">Start time</label>
                 <input
                   type="time"
                   value={startTime}
@@ -118,7 +157,7 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
                 />
               </div>
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">To</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">End time</label>
                 <input
                   type="time"
                   value={endTime}
@@ -157,7 +196,7 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
 
           <button
             onClick={handleSave}
-            disabled={!date || saving}
+            disabled={!startDate || saving}
             className="btn-primary w-full font-nunito font-bold py-2.5 rounded-full text-sm focus-ring disabled:opacity-50"
           >
             {saving ? "Saving…" : "Block this time"}
@@ -172,7 +211,7 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
               {existingBlocks.map((b) => (
                 <div key={b.id} className="flex items-center justify-between bg-white border border-pebble-grey/20 rounded-2xl px-4 py-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-deep-slate">{formatDate(b.date)}</p>
+                    <p className="text-sm font-bold text-deep-slate">{formatBlockRange(b)}</p>
                     <p className="text-xs text-pebble-grey font-bold mt-0.5">
                       {b.allDay ? "All day" : `${formatTime(b.startTime)} – ${formatTime(b.endTime)}`}
                       {b.reason && ` · ${b.reason}`}

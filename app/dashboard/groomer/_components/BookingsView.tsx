@@ -45,8 +45,9 @@ function SubPill({ active, children, onClick }: { active: boolean; children: Rea
   );
 }
 
-function TodayView({ appointments, onBeginGroom, activeGroomId }: {
+function TodayView({ appointments, refDate, onBeginGroom, activeGroomId }: {
   appointments: any[];
+  refDate: Date;
   onBeginGroom?: (g: ActiveGroom) => void;
   activeGroomId?: string | null;
 }) {
@@ -55,7 +56,7 @@ function TodayView({ appointments, onBeginGroom, activeGroomId }: {
   const todayBookings = appointments
     .filter(a => {
       const d = new Date(a.scheduled_at);
-      return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      return d.getDate() === refDate.getDate() && d.getMonth() === refDate.getMonth() && d.getFullYear() === refDate.getFullYear();
     })
     .map(a => {
       const d = new Date(a.scheduled_at);
@@ -76,8 +77,8 @@ function TodayView({ appointments, onBeginGroom, activeGroomId }: {
     });
 
   const totalHours = todayBookings.reduce((sum, b) => sum + b.duration, 0) / 60;
-  
-  const dateStr = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+
+  const dateStr = refDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
     <div className="grid lg:grid-cols-[1fr_380px] gap-6">
@@ -205,12 +206,12 @@ const ROW_H = 60;
 
 const CAL_HOURS = ["08","09","10","11","12","13","14","15","16","17","18"];
 
-function WeekView({ appointments }: { appointments: any[] }) {
+function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Date }) {
   const now = new Date();
-  
-  // Calculate start of week (Monday)
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+
+  // Calculate start of week (Monday) from refDate
+  const weekStart = new Date(refDate);
+  weekStart.setDate(refDate.getDate() - (refDate.getDay() === 0 ? 6 : refDate.getDay() - 1));
   weekStart.setHours(0,0,0,0);
 
   const weekDays = Array.from({length: 7}).map((_, i) => {
@@ -237,15 +238,9 @@ function WeekView({ appointments }: { appointments: any[] }) {
 
   return (
     <section>
-      <div className="flex items-baseline justify-between mb-4">
-        <div>
-          <Eyebrow>Week of {weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</Eyebrow>
-          <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{totalDogs} dogs booked · {totalHours.toFixed(1)} hrs</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring"><ChevronLeftIcon size={16} /></button>
-          <button className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring"><ChevronRightIcon size={16} /></button>
-        </div>
+      <div className="mb-4">
+        <Eyebrow>Week of {weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</Eyebrow>
+        <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{totalDogs} dogs booked · {totalHours.toFixed(1)} hrs</h2>
       </div>
       <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden">
         <div className="overflow-x-auto">
@@ -301,10 +296,10 @@ function WeekView({ appointments }: { appointments: any[] }) {
   );
 }
 
-function MonthView({ appointments }: { appointments: any[] }) {
+function MonthView({ appointments, refDate }: { appointments: any[]; refDate: Date }) {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const year = refDate.getFullYear();
+  const month = refDate.getMonth();
   
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -328,23 +323,18 @@ function MonthView({ appointments }: { appointments: any[] }) {
     totalBookings += c;
     totalHours += h;
     
-    cells.push({ d, count: c, today: d === now.getDate(), hours: h });
+    const isToday = d === now.getDate() && month === now.getMonth() && year === now.getFullYear();
+    cells.push({ d, count: c, today: isToday, hours: h });
   }
   while (cells.length % 7) cells.push({ blank: true });
 
-  const monthName = now.toLocaleString('default', { month: 'long' });
+  const monthName = refDate.toLocaleString('default', { month: 'long' });
 
   return (
     <section>
-      <div className="flex items-baseline justify-between mb-4">
-        <div>
-          <Eyebrow>{monthName} {year}</Eyebrow>
-          <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{totalBookings} bookings · {totalHours.toFixed(1)} hrs</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring"><ChevronLeftIcon size={16} /></button>
-          <button className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring"><ChevronRightIcon size={16} /></button>
-        </div>
+      <div className="mb-4">
+        <Eyebrow>{monthName} {year}</Eyebrow>
+        <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{totalBookings} bookings · {totalHours.toFixed(1)} hrs</h2>
       </div>
       <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden">
         <div className="grid grid-cols-7 border-b border-pebble-grey/15">
@@ -384,10 +374,10 @@ function MonthView({ appointments }: { appointments: any[] }) {
   );
 }
 
-function YearView({ appointments }: { appointments: any[] }) {
+function YearView({ appointments, refDate }: { appointments: any[]; refDate: Date }) {
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const now = new Date();
-  const year = now.getFullYear();
+  const year = refDate.getFullYear();
   
   const counts = Array(12).fill(0);
   const earnings = Array(12).fill(0);
@@ -407,21 +397,15 @@ function YearView({ appointments }: { appointments: any[] }) {
 
   return (
     <section>
-      <div className="flex items-baseline justify-between mb-4">
-        <div>
-          <Eyebrow>{year} · Year to date</Eyebrow>
-          <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{totalBookings} bookings · £{totalEarnings.toLocaleString()} earned</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring"><ChevronLeftIcon size={16} /></button>
-          <button className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring"><ChevronRightIcon size={16} /></button>
-        </div>
+      <div className="mb-4">
+        <Eyebrow>{year}</Eyebrow>
+        <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{totalBookings} bookings · £{totalEarnings.toLocaleString()} earned</h2>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {months.map((m, i) => {
           const pct = max ? counts[i] / max : 0;
           const empty = counts[i] === 0;
-          const current = i === now.getMonth();
+          const current = i === now.getMonth() && year === now.getFullYear();
           return (
             <div key={m} className={`bg-white border rounded-[16px] p-5 transition-colors ${current ? "border-groomr-gold border-2" : "border-pebble-grey/20"}`}>
               <div className="flex items-baseline justify-between">
@@ -449,25 +433,82 @@ function YearView({ appointments }: { appointments: any[] }) {
 
 type BookingSubView = "today" | "week" | "month" | "year";
 
+function computeRefDate(view: BookingSubView, offset: number): Date {
+  const now = new Date();
+  if (view === "today") {
+    const d = new Date(now); d.setDate(now.getDate() + offset); return d;
+  }
+  if (view === "week") {
+    // anchor on this week's Monday, then shift by offset weeks
+    const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    const d = new Date(now); d.setDate(now.getDate() - dow + offset * 7); return d;
+  }
+  if (view === "month") {
+    return new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  }
+  // year
+  return new Date(now.getFullYear() + offset, 0, 1);
+}
+
+function navLabel(view: BookingSubView, refDate: Date): string {
+  if (view === "today") return refDate.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" });
+  if (view === "week") {
+    const weekStart = new Date(refDate);
+    weekStart.setDate(refDate.getDate() - (refDate.getDay() === 0 ? 6 : refDate.getDay() - 1));
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+    return `${weekStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+  }
+  if (view === "month") return refDate.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  return refDate.getFullYear().toString();
+}
+
 export function BookingsView({ appointments, onBeginGroom, activeGroomId }: {
   appointments: any[];
   onBeginGroom?: (g: ActiveGroom) => void;
   activeGroomId?: string | null;
 }) {
   const [view, setView] = useState<BookingSubView>("today");
+  const [offset, setOffset] = useState(0);
+
+  function handleViewChange(v: BookingSubView) { setView(v); setOffset(0); }
+
+  const refDate = computeRefDate(view, offset);
+  const label = navLabel(view, refDate);
+  const isPresent = offset === 0;
+
   return (
     <section className="space-y-5">
-      <div className="flex items-center gap-1 bg-white border border-pebble-grey/20 rounded-full p-1.5 overflow-x-auto max-w-full">
-        {(["today","week","month","year"] as BookingSubView[]).map(v => (
-          <SubPill key={v} active={view === v} onClick={() => setView(v)}>
-            {v.charAt(0).toUpperCase() + v.slice(1)}
-          </SubPill>
-        ))}
+      {/* View switcher + navigation */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1 bg-white border border-pebble-grey/20 rounded-full p-1.5">
+          {(["today","week","month","year"] as BookingSubView[]).map(v => (
+            <SubPill key={v} active={view === v} onClick={() => handleViewChange(v)}>
+              {v.charAt(0).toUpperCase() + v.slice(1)}
+            </SubPill>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          {!isPresent && (
+            <button
+              onClick={() => setOffset(0)}
+              className="px-3 py-1.5 rounded-full text-xs font-bold bg-groomr-gold text-deep-slate hover:bg-groomr-gold/80 transition-colors focus-ring"
+            >
+              Today
+            </button>
+          )}
+          <span className="text-sm font-bold text-deep-slate hidden sm:block">{label}</span>
+          <button onClick={() => setOffset(o => o - 1)} className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring" aria-label="Previous">
+            <ChevronLeftIcon size={16} />
+          </button>
+          <button onClick={() => setOffset(o => o + 1)} className="rounded-full p-2 bg-white border border-pebble-grey/20 hover:border-deep-slate transition-colors focus-ring" aria-label="Next">
+            <ChevronRightIcon size={16} />
+          </button>
+        </div>
       </div>
-      {view === "today" && <TodayView appointments={appointments} onBeginGroom={onBeginGroom} activeGroomId={activeGroomId} />}
-      {view === "week"  && <WeekView appointments={appointments} />}
-      {view === "month" && <MonthView appointments={appointments} />}
-      {view === "year"  && <YearView appointments={appointments} />}
+      {view === "today" && <TodayView appointments={appointments} refDate={refDate} onBeginGroom={onBeginGroom} activeGroomId={activeGroomId} />}
+      {view === "week"  && <WeekView  appointments={appointments} refDate={refDate} />}
+      {view === "month" && <MonthView appointments={appointments} refDate={refDate} />}
+      {view === "year"  && <YearView  appointments={appointments} refDate={refDate} />}
     </section>
   );
 }

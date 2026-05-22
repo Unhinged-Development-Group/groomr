@@ -4,9 +4,9 @@ import { useMemo, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { PlusIcon, PencilIcon, TrashIcon, StarIcon } from "@/components/ui/GroomrIcons";
+import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-import { saveProfile, saveServices, saveAvailability } from "@/app/actions/profile-editor";
+import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow } from "@/types/groomer-dashboard";
 
@@ -38,6 +38,7 @@ const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 interface Props {
   groomerProfileId: string;
   initialProfile: ProfileFormData;
+  initialCoverPhotoUrl: string | null;
   initialServices: ServiceRow[];
   initialAvailability: AvailabilityRow[];
   initialTeam: TeamMemberRow[];
@@ -47,13 +48,18 @@ interface Props {
 export function ProfileEditor({
   groomerProfileId,
   initialProfile,
+  initialCoverPhotoUrl,
   initialServices,
   initialAvailability,
   initialTeam,
   viewerRole,
 }: Props) {
   const [formData, setFormData] = useState<ProfileFormData>(initialProfile);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialCoverPhotoUrl);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [services, setServices] = useState<ServiceRow[]>(initialServices);
+  const [savedServices, setSavedServices] = useState<ServiceRow[]>(initialServices);
   const [availability, setAvailability] = useState<AvailabilityRow[]>(initialAvailability);
   const [team, setTeam] = useState<TeamMemberRow[]>(initialTeam);
   const [saving, setSaving] = useState(false);
@@ -73,9 +79,9 @@ export function ProfileEditor({
   const isDirty = useMemo(
     () =>
       JSON.stringify(formData) !== JSON.stringify(initialProfile) ||
-      JSON.stringify(services) !== JSON.stringify(initialServices) ||
+      JSON.stringify(services) !== JSON.stringify(savedServices) ||
       JSON.stringify(availability) !== JSON.stringify(savedAvailability),
-    [formData, initialProfile, services, initialServices, availability, savedAvailability]
+    [formData, initialProfile, services, savedServices, availability, savedAvailability]
   );
 
   function updateAvailability(dayOfWeek: number, patch: Partial<AvailabilityRow>) {
@@ -100,6 +106,33 @@ export function ProfileEditor({
     ]);
   }
 
+  async function handleCoverPhotoUpload(file: File) {
+    setCoverUploading(true);
+    try {
+      const sig = await getCoverPhotoSignature(groomerProfileId);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("api_key", sig.apiKey);
+      form.append("timestamp", String(sig.timestamp));
+      form.append("signature", sig.signature);
+      form.append("folder", sig.folder);
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
+        { method: "POST", body: form }
+      );
+      const json = await res.json();
+      if (!json.secure_url) throw new Error("Upload failed");
+
+      await saveCoverPhoto(groomerProfileId, json.secure_url);
+      setCoverPhotoUrl(json.secure_url);
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setCoverUploading(false);
+    }
+  }
+
   async function handleSave() {
     if (!isDirty || saving) return;
     setSaving(true);
@@ -114,6 +147,11 @@ export function ProfileEditor({
     if (err) {
       setSaveError(err);
     } else {
+      // Update saved references so isDirty clears immediately, before router.refresh()
+      // brings back new UUIDs from the re-inserted service rows.
+      const freshServices = servicesResult.services ?? services;
+      setServices(freshServices);
+      setSavedServices(freshServices);
       setSavedAvailability(availability);
       router.refresh();
     }
@@ -121,8 +159,8 @@ export function ProfileEditor({
 
   async function handleDiscard() {
     setFormData(initialProfile);
-    setServices(initialServices);
-    setAvailability(initialAvailability);
+    setServices(savedServices);
+    setAvailability(savedAvailability);
   }
 
   async function handleAddMember() {
@@ -667,16 +705,51 @@ export function ProfileEditor({
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
           <Eyebrow>Public profile</Eyebrow>
           <div className="mt-3 aspect-[5/3] rounded-xl bg-sage-leaf/20 overflow-hidden relative">
-            <Image
-              src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=600&q=70"
-              alt="Cover photo"
-              fill
-              className="object-cover"
-              sizes="360px"
-            />
+            {coverPhotoUrl ? (
+              <Image
+                src={coverPhotoUrl}
+                alt="Cover photo"
+                fill
+                className="object-cover"
+                sizes="360px"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-sage-leaf/60">
+                <UploadIcon size={28} />
+                <p className="text-xs font-bold">No cover photo yet</p>
+              </div>
+            )}
+            {coverUploading && (
+              <div className="absolute inset-0 bg-deep-slate/50 flex items-center justify-center">
+                <p className="text-xs font-bold text-white">Uploading…</p>
+              </div>
+            )}
           </div>
-          <button className="btn-secondary w-full font-nunito font-bold py-2 rounded-full text-xs mt-3 focus-ring">Replace cover photo</button>
-          <button className="btn-secondary w-full font-nunito font-bold py-2 rounded-full text-xs mt-2 focus-ring">Manage portfolio</button>
+          {/* Hidden file input */}
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleCoverPhotoUpload(file);
+              e.target.value = "";
+            }}
+          />
+          <button
+            onClick={() => coverInputRef.current?.click()}
+            disabled={coverUploading}
+            className="btn-secondary w-full font-nunito font-bold py-2 rounded-full text-xs mt-3 focus-ring disabled:opacity-50"
+          >
+            {coverUploading ? "Uploading…" : "Replace cover photo"}
+          </button>
+          <button
+            onClick={() => window.location.href = "/dashboard/groomer/portfolio"}
+            className="btn-secondary w-full font-nunito font-bold py-2 rounded-full text-xs mt-2 focus-ring"
+          >
+            Manage portfolio
+          </button>
         </div>
 
         <div className="bg-deep-slate text-alabaster-cream rounded-[20px] p-5">

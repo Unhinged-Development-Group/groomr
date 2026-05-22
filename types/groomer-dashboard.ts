@@ -46,6 +46,7 @@ export interface TeamMemberRow {
 export interface ProfileEditorInitialData {
   groomerProfileId: string;
   profile: ProfileFormData;
+  coverPhotoUrl: string | null;
   services: ServiceRow[];
   availability: AvailabilityRow[];
   team: TeamMemberRow[];

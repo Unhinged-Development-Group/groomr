@@ -3,6 +3,13 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 import type {
   ProfileEditorInitialData,
   ProfileFormData,
@@ -69,6 +76,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     return {
       groomerProfileId: "",
       profile: emptyProfile(myProfile.full_name || clerkName, myProfile.email || clerkEmail, myProfile.phone || clerkPhone),
+      coverPhotoUrl: null,
       services: [],
       availability: [],
       team: [],
@@ -149,7 +157,9 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     publicSlug: m.public_slug ?? null,
   }));
 
-  return { groomerProfileId, profile, services, availability, team, viewerRole, teamMemberId };
+  const coverPhotoUrl = (groomerProfile.cover_photo_url as string | null) ?? null;
+
+  return { groomerProfileId, profile, coverPhotoUrl, services, availability, team, viewerRole, teamMemberId };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
@@ -229,7 +239,7 @@ export async function saveProfile(
 export async function saveServices(
   groomerProfileId: string,
   rows: ServiceRow[]
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; services?: ServiceRow[] }> {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) return { error: "Not authenticated" };
 
@@ -252,8 +262,11 @@ export async function saveServices(
 
   await supabaseAdmin.from("services").delete().eq("groomer_profile_id", groomerProfileId);
 
-  if (rows.length > 0) {
-    const { error } = await supabaseAdmin.from("services").insert(
+  if (rows.length === 0) return { services: [] };
+
+  const { data: inserted, error } = await supabaseAdmin
+    .from("services")
+    .insert(
       rows.map((s, i) => ({
         groomer_profile_id: groomerProfileId,
         name: s.name,
@@ -262,11 +275,20 @@ export async function saveServices(
         is_active: true,
         sort_order: i,
       }))
-    );
-    if (error) return { error: error.message };
-  }
+    )
+    .select("id, name, duration_minutes, price_pence, sort_order");
 
-  return {};
+  if (error) return { error: error.message };
+
+  const saved: ServiceRow[] = (inserted ?? []).map((s, i) => ({
+    id: s.id,
+    name: s.name,
+    duration: s.duration_minutes ?? 60,
+    price: s.price_pence ?? 0,
+    sortOrder: s.sort_order ?? i,
+  }));
+
+  return { services: saved };
 }
 
 export async function saveAvailability(
@@ -309,5 +331,56 @@ export async function saveAvailability(
     if (error) return { error: error.message };
   }
 
+  return {};
+}
+
+export async function getCoverPhotoSignature(groomerProfileId: string): Promise<{
+  signature: string;
+  timestamp: number;
+  cloudName: string;
+  apiKey: string;
+  folder: string;
+}> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) throw new Error("Not authenticated");
+
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = `groomr/cover-photos/${groomerProfileId}`;
+  const signature = cloudinary.utils.api_sign_request(
+    { folder, timestamp },
+    process.env.CLOUDINARY_API_SECRET!
+  );
+
+  return {
+    signature,
+    timestamp,
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+    apiKey: process.env.CLOUDINARY_API_KEY!,
+    folder,
+  };
+}
+
+export async function saveCoverPhoto(
+  groomerProfileId: string,
+  url: string
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ cover_photo_url: url, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id);
+
+  if (error) return { error: error.message };
   return {};
 }

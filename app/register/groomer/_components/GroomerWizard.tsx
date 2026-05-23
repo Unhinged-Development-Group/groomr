@@ -124,6 +124,7 @@ export function GroomerWizard({
   const [isPending, startTransition] = useTransition();
   const [insuranceUploading, setInsuranceUploading] = useState(false);
   const [insuranceError, setInsuranceError] = useState<string | null>(null);
+  const [policyAgreed, setPolicyAgreed] = useState(false);
   const insuranceInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormState>({
@@ -853,6 +854,35 @@ export function GroomerWizard({
                 </div>
               </div>
 
+              {/* Policy agreement */}
+              <label className="flex items-start gap-3 p-4 bg-alabaster-cream border-2 border-pebble-grey/20 rounded-2xl cursor-pointer hover:border-deep-slate transition-colors group">
+                <button
+                  type="button"
+                  onClick={() => setPolicyAgreed(v => !v)}
+                  aria-checked={policyAgreed}
+                  role="checkbox"
+                  className={cn(
+                    "mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors focus-ring",
+                    policyAgreed ? "bg-deep-slate border-deep-slate text-alabaster-cream" : "border-pebble-grey/40 group-hover:border-deep-slate"
+                  )}
+                >
+                  {policyAgreed && <Check size={12} />}
+                </button>
+                <span className="text-sm text-deep-slate font-bold leading-snug">
+                  I have read and agree to the{" "}
+                  <a
+                    href="/verification-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sage-leaf underline hover:text-sage-leaf/80"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    Groomr Verification Policy
+                  </a>
+                  , including the animal welfare standards and document requirements.
+                </span>
+              </label>
+
               <div className="bg-deep-slate text-alabaster-cream rounded-2xl p-5">
                 <p className="font-fredoka text-xl">You&apos;re ready.</p>
                 <p className="text-sage-leaf text-sm mt-1">
@@ -877,8 +907,9 @@ export function GroomerWizard({
               </button>
               <button
                 onClick={() => isLast ? handleLaunch() : setStep(step + 1)}
-                disabled={isPending}
-                className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle disabled:opacity-70"
+                disabled={isPending || (isLast && !policyAgreed)}
+                title={isLast && !policyAgreed ? "Please agree to the Verification Policy to continue" : undefined}
+                className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isPending ? "Launching…" : isLast ? "Launch My Profile" : "Continue"}
               </button>

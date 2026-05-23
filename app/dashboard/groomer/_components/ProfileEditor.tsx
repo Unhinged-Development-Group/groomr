@@ -8,6 +8,7 @@ import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon } from "@/compone
 import { cn } from "@/lib/utils";
 import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
+import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
 import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow } from "@/types/groomer-dashboard";
 
 const SERVICE_TEMPLATES: Array<{ name: string; duration: number; price: number }> = [
@@ -71,6 +72,7 @@ export function ProfileEditor({
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [pausing, startPause] = useTransition();
   const [isPaused, setIsPaused] = useState(() => availability.length > 0 && availability.every((r) => !r.isActive));
+  const [closeAccountOpen, setCloseAccountOpen] = useState(false);
   const prePauseRef = useRef<AvailabilityRow[] | null>(null);
   // Tracks the last-saved availability so auto-saves (pause/re-open) don't trigger the save button
   const [savedAvailability, setSavedAvailability] = useState(initialAvailability);
@@ -835,7 +837,17 @@ export function ProfileEditor({
               className="w-full mt-3 text-xs font-bold text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors py-2 rounded-full disabled:opacity-50">
               {pausing ? "Updating…" : isPaused ? "Re-open bookings" : "Pause new bookings"}
             </button>
-            <button className="w-full text-xs font-bold text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors py-2 rounded-full">Close my Groomr account</button>
+            <button
+              onClick={() => setCloseAccountOpen(true)}
+              className="w-full text-xs font-bold text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors py-2 rounded-full">
+              Close my Groomr account
+            </button>
+
+            <CloseAccountModal
+              open={closeAccountOpen}
+              onClose={() => setCloseAccountOpen(false)}
+              role="groomer"
+            />
           </div>
         )}
       </aside>

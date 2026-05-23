@@ -41,12 +41,12 @@ const STATUS_LABEL: Record<string, string> = {
   no_show: "No Show",
 };
 
-const STATUS_TONE: Record<string, "sage" | "gold" | "red" | "slate"> = {
+const STATUS_TONE: Record<string, "sage" | "gold" | "terra" | "grey"> = {
   confirmed: "sage",
   pending: "gold",
-  completed: "slate",
-  cancelled: "red",
-  no_show: "slate",
+  completed: "grey",
+  cancelled: "terra",
+  no_show: "grey",
 };
 
 type Panel = "detail" | "reschedule" | "cancel";

@@ -388,6 +388,66 @@ export async function markAppointmentComplete(appointmentId: string): Promise<{ 
   return {};
 }
 
+export async function groomerCancelAppointment(
+  appointmentId: string,
+  reason: string
+): Promise<{ error?: string }> {
+  const ctx = await getGroomerContext();
+  if (!ctx) return { error: "Not authorised" };
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      status: "cancelled",
+      cancelled_by: ctx.profileId,
+      cancellation_reason: reason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId)
+    .eq("groomer_profile_id", ctx.groomerProfileId);
+
+  return error ? { error: error.message } : {};
+}
+
+export async function groomerRescheduleAppointment(
+  appointmentId: string,
+  newScheduledAt: string // ISO string
+): Promise<{ error?: string }> {
+  const ctx = await getGroomerContext();
+  if (!ctx) return { error: "Not authorised" };
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      scheduled_at: newScheduledAt,
+      status: "confirmed",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId)
+    .eq("groomer_profile_id", ctx.groomerProfileId);
+
+  return error ? { error: error.message } : {};
+}
+
+export async function groomerUpdateNotes(
+  appointmentId: string,
+  notes: string
+): Promise<{ error?: string }> {
+  const ctx = await getGroomerContext();
+  if (!ctx) return { error: "Not authorised" };
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      groomer_notes: notes || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId)
+    .eq("groomer_profile_id", ctx.groomerProfileId);
+
+  return error ? { error: error.message } : {};
+}
+
 export async function replyToReview(reviewId: string, text: string) {
   const ctx = await getGroomerContext();
   if (!ctx) return { error: "Not authorized" };

@@ -5,6 +5,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { MessageIcon, ChevronRightIcon, ChevronLeftIcon } from "@/components/ui/GroomrIcons";
 import type { ActiveGroom } from "./LiveGroomTracker";
 import type { Appointment } from "@/app/actions/appointments";
+import { BookingDetailModal } from "./BookingDetailModal";
 
 function StatusDot({ status }: { status: string }) {
   const tone: Record<string, [string, string]> = {
@@ -62,6 +63,7 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
 }) {
   const now = new Date();
   const isToday = refDate.toDateString() === now.toDateString();
+  const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
 
   // Determine open/close from availability, fallback to 8–18
   const dayAvail = availability.find(a => a.isActive && a.dayOfWeek === refDate.getDay());
@@ -162,7 +164,8 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
                   return (
                     <div
                       key={b.id}
-                      className="absolute left-0 right-0 rounded-xl px-3 py-2 overflow-hidden"
+                      onClick={() => setSelectedAppt(todayAppts.find(a => a.id === b.id) ?? null)}
+                      className="absolute left-0 right-0 rounded-xl px-3 py-2 overflow-hidden cursor-pointer hover:-translate-y-px transition-transform"
                       style={{ top, height, background: c.bg, borderLeft: `3px solid ${c.bd}` }}
                     >
                       <div className="flex items-start justify-between gap-2 h-full">
@@ -276,6 +279,12 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
           </ul>
         </div>
       </aside>
+
+      <BookingDetailModal
+        appointment={selectedAppt}
+        onClose={() => setSelectedAppt(null)}
+        onUpdated={(id, patch) => setSelectedAppt((prev: any) => prev?.id === id ? { ...prev, ...patch } : prev)}
+      />
     </div>
   );
 }
@@ -291,6 +300,7 @@ const CAL_HOURS = ["08","09","10","11","12","13","14","15","16","17","18"];
 
 function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Date }) {
   const now = new Date();
+  const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
 
   // Calculate start of week (Monday) from refDate
   const weekStart = new Date(refDate);
@@ -361,7 +371,9 @@ function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Dat
                 const tone = tones[i % 3];
                 const c = COLOR_MAP[tone];
                 return (
-                  <button key={i} className="absolute left-1 right-1 rounded-lg p-2 text-left focus-ring hover:-translate-y-px transition-transform"
+                  <button key={i}
+                    onClick={() => setSelectedAppt(a)}
+                    className="absolute left-1 right-1 rounded-lg p-2 text-left focus-ring hover:-translate-y-px transition-transform"
                     style={{ top, height, background: c.bg, borderLeft: `3px solid ${c.bd}` }}>
                     <p className="font-bold text-xs text-deep-slate leading-tight truncate">{a.dogs?.name ?? parseManualNotes(a.groomer_notes).dogName ?? "Dog"}</p>
                     <p className="text-[10px] text-deep-slate/70 font-bold truncate">{a.service_snapshot_name}</p>
@@ -375,6 +387,12 @@ function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Dat
         </div>
         </div>
       </div>
+
+      <BookingDetailModal
+        appointment={selectedAppt}
+        onClose={() => setSelectedAppt(null)}
+        onUpdated={(id, patch) => setSelectedAppt((prev: any) => prev?.id === id ? { ...prev, ...patch } : prev)}
+      />
     </section>
   );
 }

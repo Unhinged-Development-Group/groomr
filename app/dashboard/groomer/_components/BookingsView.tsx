@@ -397,19 +397,19 @@ function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Dat
   );
 }
 
-function MonthView({ appointments, refDate }: { appointments: any[]; refDate: Date }) {
+function MonthView({ appointments, refDate, onDayClick }: { appointments: any[]; refDate: Date; onDayClick: (date: Date) => void }) {
   const now = new Date();
   const year = refDate.getFullYear();
   const month = refDate.getMonth();
-  
+
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const days = lastDay.getDate();
-  const offset = (firstDay.getDay() + 6) % 7; // Monday = 0
-  
+  const calOffset = (firstDay.getDay() + 6) % 7; // Monday = 0
+
   const cells: { blank?: boolean; d?: number; count?: number; today?: boolean; hours?: number }[] = [];
-  for (let i = 0; i < offset; i++) cells.push({ blank: true });
-  
+  for (let i = 0; i < calOffset; i++) cells.push({ blank: true });
+
   let totalBookings = 0;
   let totalHours = 0;
 
@@ -420,10 +420,10 @@ function MonthView({ appointments, refDate }: { appointments: any[]; refDate: Da
     });
     const c = dayAppointments.length;
     const h = dayAppointments.reduce((sum, a) => sum + (a.service_snapshot_duration || 0), 0) / 60;
-    
+
     totalBookings += c;
     totalHours += h;
-    
+
     const isToday = d === now.getDate() && month === now.getMonth() && year === now.getFullYear();
     cells.push({ d, count: c, today: isToday, hours: h });
   }
@@ -445,11 +445,15 @@ function MonthView({ appointments, refDate }: { appointments: any[]; refDate: Da
         </div>
         <div className="grid grid-cols-7">
           {cells.map((c, i) => (
-            <div key={i} className={`min-h-[100px] border-l border-t border-pebble-grey/10 first:border-l-0 p-2 ${c.blank ? "bg-pebble-grey/5" : ""} ${c.today ? "bg-groomr-gold/15" : ""}`}>
+            <div
+              key={i}
+              onClick={() => !c.blank && onDayClick(new Date(year, month, c.d!))}
+              className={`min-h-[100px] border-l border-t border-pebble-grey/10 first:border-l-0 p-2 ${c.blank ? "bg-pebble-grey/5" : "cursor-pointer hover:bg-alabaster-cream transition-colors"} ${c.today ? "bg-groomr-gold/15 hover:bg-groomr-gold/25" : ""}`}
+            >
               {!c.blank && (
                 <div className="h-full flex flex-col">
                   <div className="flex items-center justify-between">
-                    <span className="font-fredoka text-lg text-deep-slate">{c.d}</span>
+                    <span className={`font-fredoka text-lg ${c.today ? "text-deep-slate" : "text-deep-slate"}`}>{c.d}</span>
                     {(c.count ?? 0) > 0 && <span className="text-[10px] font-bold text-pebble-grey">{c.count}</span>}
                   </div>
                   {(c.count ?? 0) > 0 ? (
@@ -574,6 +578,16 @@ export function BookingsView({ appointments, availability = [], onBeginGroom, ac
 
   function handleViewChange(v: BookingSubView) { setView(v); setOffset(0); }
 
+  function handleDayClick(date: Date) {
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    const clickedMidnight = new Date(date);
+    clickedMidnight.setHours(0, 0, 0, 0);
+    const dayDiff = Math.round((clickedMidnight.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24));
+    setView("today");
+    setOffset(dayDiff);
+  }
+
   const refDate = computeRefDate(view, offset);
   const label = navLabel(view, refDate);
   const isPresent = offset === 0;
@@ -609,7 +623,7 @@ export function BookingsView({ appointments, availability = [], onBeginGroom, ac
       </div>
       {view === "today" && <TodayView appointments={appointments} refDate={refDate} availability={availability} onBeginGroom={onBeginGroom} activeGroomId={activeGroomId} />}
       {view === "week"  && <WeekView  appointments={appointments} refDate={refDate} />}
-      {view === "month" && <MonthView appointments={appointments} refDate={refDate} />}
+      {view === "month" && <MonthView appointments={appointments} refDate={refDate} onDayClick={handleDayClick} />}
       {view === "year"  && <YearView  appointments={appointments} refDate={refDate} />}
     </section>
   );

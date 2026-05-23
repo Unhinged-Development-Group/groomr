@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { v2 as cloudinary } from "cloudinary";
@@ -80,21 +80,44 @@ export async function registerGroomer(input: RegisterGroomerInput) {
 
   const clerkId = userId;
 
-  /* ── 1. Resolve profile UUID ───────────────────────────────────────── */
-  const { data: profile, error: profileErr } = await supabaseAdmin
+  /* ── 1. Resolve profile UUID (create if webhook missed) ───────────── */
+  let profileId: string;
+  let currentRolesInit: string[];
+
+  const { data: existingProfile } = await supabaseAdmin
     .from("profiles")
     .select("id, roles")
     .eq("clerk_id", clerkId)
-    .single();
+    .maybeSingle();
 
-  if (profileErr || !profile) {
-    throw new Error("Profile not found. Make sure the sign-up webhook has run.");
+  if (existingProfile) {
+    profileId = existingProfile.id;
+    currentRolesInit = existingProfile.roles ?? [];
+  } else {
+    const user = await currentUser();
+    const fullName = user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : "";
+    const email = user?.emailAddresses?.[0]?.emailAddress ?? null;
+
+    const { data: created, error: createErr } = await supabaseAdmin
+      .from("profiles")
+      .insert({
+        id: crypto.randomUUID(),
+        clerk_id: clerkId,
+        full_name: fullName,
+        email,
+        roles: "{owner}",
+        is_admin: false,
+      })
+      .select("id")
+      .single();
+
+    if (createErr || !created) throw new Error("Failed to create profile.");
+    profileId = created.id;
+    currentRolesInit = ["owner"];
   }
 
-  const profileId: string = profile.id;
-
   /* ── 2. Add groomer role ───────────────────────────────────────────── */
-  const currentRoles: string[] = profile.roles ?? [];
+  const currentRoles: string[] = currentRolesInit;
   if (!currentRoles.includes("groomer")) {
     await supabaseAdmin
       .from("profiles")

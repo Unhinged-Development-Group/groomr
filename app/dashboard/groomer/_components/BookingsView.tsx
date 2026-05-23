@@ -479,7 +479,7 @@ function MonthView({ appointments, refDate, onDayClick }: { appointments: any[];
   );
 }
 
-function YearView({ appointments, refDate }: { appointments: any[]; refDate: Date }) {
+function YearView({ appointments, refDate, onMonthClick }: { appointments: any[]; refDate: Date; onMonthClick: (date: Date) => void }) {
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const now = new Date();
   const year = refDate.getFullYear();
@@ -512,7 +512,7 @@ function YearView({ appointments, refDate }: { appointments: any[]; refDate: Dat
           const empty = counts[i] === 0;
           const current = i === now.getMonth() && year === now.getFullYear();
           return (
-            <div key={m} className={`bg-white border rounded-[16px] p-5 transition-colors ${current ? "border-groomr-gold border-2" : "border-pebble-grey/20"}`}>
+            <div key={m} onClick={() => onMonthClick(new Date(year, i, 1))} className={`bg-white border rounded-[16px] p-5 transition-colors cursor-pointer hover:border-deep-slate ${current ? "border-groomr-gold border-2" : "border-pebble-grey/20"}`}>
               <div className="flex items-baseline justify-between">
                 <p className="font-fredoka text-xl text-deep-slate">{m}</p>
                 {current && <span className="text-[10px] font-bold uppercase tracking-wider text-deep-slate bg-groomr-gold rounded-full px-2 py-0.5">Current</span>}
@@ -578,6 +578,13 @@ export function BookingsView({ appointments, availability = [], onBeginGroom, ac
 
   function handleViewChange(v: BookingSubView) { setView(v); setOffset(0); }
 
+  function handleMonthClick(date: Date) {
+    const now = new Date();
+    const monthDiff = (date.getFullYear() - now.getFullYear()) * 12 + (date.getMonth() - now.getMonth());
+    setView("month");
+    setOffset(monthDiff);
+  }
+
   function handleDayClick(date: Date) {
     const todayMidnight = new Date();
     todayMidnight.setHours(0, 0, 0, 0);
@@ -624,7 +631,7 @@ export function BookingsView({ appointments, availability = [], onBeginGroom, ac
       {view === "today" && <TodayView appointments={appointments} refDate={refDate} availability={availability} onBeginGroom={onBeginGroom} activeGroomId={activeGroomId} />}
       {view === "week"  && <WeekView  appointments={appointments} refDate={refDate} />}
       {view === "month" && <MonthView appointments={appointments} refDate={refDate} onDayClick={handleDayClick} />}
-      {view === "year"  && <YearView  appointments={appointments} refDate={refDate} />}
+      {view === "year"  && <YearView  appointments={appointments} refDate={refDate} onMonthClick={handleMonthClick} />}
     </section>
   );
 }

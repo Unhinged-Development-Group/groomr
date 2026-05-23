@@ -50,9 +50,12 @@ export default function VerificationPolicyPage() {
               Connecting dog owners with trusted groomers
             </p>
           </div>
-          <div className="text-right text-sm text-alabaster-cream/60 font-bold">
-            <p>Groomr — Unhinged Development Group Ltd</p>
-            <p className="mt-0.5">Version 1.0 · May 2026</p>
+          <div className="text-right text-sm font-bold space-y-1">
+            <p className="text-alabaster-cream/60">Groomr — Unhinged Development Group Ltd</p>
+            <p className="text-alabaster-cream/60">Version 1.0 · May 2026</p>
+            <Link href="/verification-policy/letter" className="inline-block text-groomr-gold hover:text-groomr-gold/80 transition-colors text-xs">
+              Print / PDF version →
+            </Link>
           </div>
         </div>
       </header>

@@ -335,7 +335,61 @@ Every table has an `admin_all` policy (`FOR ALL`) for `is_admin = true`.
 
 ---
 
-## 6. Environment Variables
+## 6. Legal & Compliance
+
+The legal document pack is drafted in v0.1 form. All six documents share a consistent brand (Deep Slate / Groomr Gold / terracotta accents, A4, Arial 11pt) with running header, footer, and page numbering. Each has a **DRAFTING NOTE** banner on page 1 marking it as AI-assisted and requiring solicitor review before publication.
+
+### Documents drafted (v0.1)
+
+| Document | Purpose | Notes |
+|---|---|---|
+| **Platform Terms of Use** | Master terms for all Platform users. Establishes Groomr as a marketplace, not a service provider. | Contains the core liability cap and IP clauses. |
+| **Owner Terms** | Contract terms for dog owners booking services. | Reflects three deposit tiers (No Deposit / Fixed / Full Prepayment) and the disputes flow. |
+| **Groomer Terms** | B2B contract terms for groomers listing services. | Carries the heavy commercial clauses: commission, payout timing, indemnity, no-circumvention. |
+| **Privacy Policy** | UK GDPR / DPA 2018 / PECR compliant. | Lists every named processor (Supabase, Clerk, Stripe, Vercel, Resend, Cloudinary, Google Maps, PostHog). Must be updated whenever tooling changes. |
+| **Cookie Policy** | PECR-compliant. Includes tables of cookies by category. | Assumes Cookiebot as consent vendor. Live cookie list must be reconciled against actual site before launch. |
+| **Acceptable Use Policy** | Standalone behavioural rules for the Platform. | Includes detailed dog photo guidelines, animal welfare standards, fake-review prohibition, enforcement ladder, appeals process. |
+
+The pre-existing **Groomer Verification Policy** sits alongside these and is cross-referenced from the Groomer Terms.
+
+### Drafting decisions baked in
+
+- **Governing law:** English & Welsh law for all contracts, with explicit preservation of Scots / Northern Irish consumer protections and local courts. Standard UK-wide marketplace pattern.
+- **Payment model:** funds held in Stripe Connect (Stripe is the regulated party, not Groomr), released to groomer after appointment completion + 24–48hr clearance window. **All payment-related wording marked `[REVIEW]` until Stripe Connect setup is finalised.**
+- **Data protection contact:** Andrew Hughes / privacy@groomr.uk. No formal DPO appointed (not required at current scale).
+- **Analytics assumption:** PostHog with autocapture + session replay, behind explicit consent via Cookiebot. PII masking on sensitive form inputs. No GA / Meta Pixel at launch.
+- **Marketing email:** Resend for transactional now; placeholder section in Privacy Policy for future marketing provider (Mailchimp or similar).
+- **Verified badge:** treated in legal docs as a trust signal, *not* a guarantee, to bound Groomr's liability exposure for groomer misconduct.
+
+### Outstanding placeholders across the pack
+
+Search-and-replace targets that need filling before publication:
+
+- `[COMPANY NUMBER]`
+- `[REGISTERED OFFICE ADDRESS]`
+- `[VAT NUMBER, if applicable]`
+- `[ICO NUMBER]` — Privacy Policy only
+- `[X]%` — commission rate in Groomer Terms §7.2
+- `[24–48 hours]` — clearance window in multiple docs
+- `[REVIEW]` markers throughout, mostly on payment-flow language
+- Effective dates on all documents
+
+### Required email aliases
+
+The legal docs introduce several email addresses that must exist (forwards are fine):
+
+- hello@groomr.uk — general
+- legal@groomr.uk — legal & complaints
+- privacy@groomr.uk — data protection
+- safety@groomr.uk — animal welfare / safety
+- disputes@groomr.uk — booking disputes
+- security@groomr.uk — security vulnerability reports
+- partners@groomr.uk — groomer onboarding
+- verify@groomr.uk — verification (already exists)
+
+---
+
+## 7. Environment Variables
 
 ```env
 # Supabase
@@ -367,7 +421,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 ---
 
-## 7. Known Issues & Gotchas
+## 8. Known Issues & Gotchas
 
 | Issue | Detail | Resolution |
 |---|---|---|
@@ -392,7 +446,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 ---
 
-## 8. Build Roadmap
+## 9. Build Roadmap
 
 ### Done
 - Full project setup (Next.js 16, Tailwind v4, Clerk, Supabase, Cloudinary)
@@ -410,9 +464,19 @@ NEXT_PUBLIC_POSTHOG_KEY=
 - Messages — full real-time implementation: `app/actions/messages.ts`, `MessagesClient.tsx` with Supabase Realtime, unread badge in groomer header
 - Groomer invite — redirect changed to `/dashboard/groomer?welcome=1`; welcome banner shows for new team members
 - Migration files created: `portfolio_photos`, `time_blocks`, `is_accepting_bookings`, `messages_rls` (in `supabase/migrations/` — must be applied manually)
+- **Legal pack v0.1 drafted (24 May 2026)** — Platform Terms, Owner Terms, Groomer Terms, Privacy Policy, Cookie Policy, Acceptable Use Policy. All six produced as .docx with consistent brand, validated, marked as DRAFT v0.1 pending solicitor review.
+- Migration `20260524000005_availability_breaks` — adds `break_start_time` and `break_end_time` to `availability` table for per-day lunch/break windows
 
 ### Next Up (Phase 2)
-1. **Apply pending migrations** — `supabase db push` or Supabase dashboard for the 4 migration files in `supabase/migrations/` (portfolio_photos, time_blocks, is_accepting_bookings, messages_rls)
+1. **Apply pending migrations** — `supabase db push` or Supabase dashboard for all 5 migration files in `supabase/migrations/` (portfolio_photos, time_blocks, is_accepting_bookings, messages_rls, availability_breaks)
+1a. **Register with the ICO** — £40, ~10 minutes at ico.org.uk. Required before launch; insert resulting registration number into Privacy Policy §2.
+1b. **Create launch email aliases** — `legal@`, `privacy@`, `safety@`, `disputes@`, `security@`, `partners@`, `hello@` on groomr.uk. All can forward to Andrew's main inbox initially.
+1c. **Confirm Stripe Connect configuration** — decide between destination charges vs separate charges with delayed transfers; the choice changes payment-flow wording in three legal docs.
+1d. **Pick & install cookie consent tool** — Cookiebot recommended (~£10/mo). Wire it to gate PostHog so non-essential cookies don't fire pre-consent.
+1e. **Configure PostHog on EU cloud** (eu.posthog.com) — confirm project location, enable sensitive input masking.
+1f. **Solicitor review of full legal pack** — budget £500–1,500 with a UK marketplace/SaaS specialist (Harper James, SeedLegals, or local commercial firm). Required before any customer money flows.
+1g. **Run a live cookie scan** before publishing Cookie Policy; reconcile actual cookies vs. the drafted table.
+1h. **Set up DPAs from every processor** — Stripe, Vercel, Supabase, Clerk, Cloudinary, Resend, PostHog each auto-provide one; screenshot/save each.
 2. **Public groomer profiles** (`/groomers/[slug]`) — SEO + deep linking, full page from modal
 3. **Booking flow** — service → date/time → dog → checkout (Stripe deposit)
 4. **Groomer dashboard** — wire Bookings/Clients/Earnings tabs to live data; schedule/calendar view
@@ -433,4 +497,4 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 ---
 
-*Last updated: 24 May 2026*
+*Last updated: 24 May 2026 (legal pack session + dashboard improvements)*

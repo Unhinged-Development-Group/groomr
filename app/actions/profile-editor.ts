@@ -82,6 +82,8 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       team: [],
       viewerRole,
       teamMemberId,
+      averageRating: null,
+      totalReviews: null,
     };
   }
 
@@ -96,7 +98,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       .order("sort_order"),
     supabaseAdmin
       .from("availability")
-      .select("day_of_week, start_time, end_time, is_active")
+      .select("day_of_week, start_time, end_time, is_active, break_start_time, break_end_time")
       .eq("groomer_profile_id", groomerProfileId)
       .order("day_of_week"),
     supabaseAdmin
@@ -135,14 +137,22 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const availMap = new Map(
     (availabilityRows ?? []).map((a) => [
       a.day_of_week as number,
-      { startTime: a.start_time as string, endTime: a.end_time as string, isActive: a.is_active as boolean },
+      {
+        startTime:      a.start_time as string,
+        endTime:        a.end_time as string,
+        isActive:       a.is_active as boolean,
+        breakStartTime: (a.break_start_time as string | null) ?? null,
+        breakEndTime:   (a.break_end_time   as string | null) ?? null,
+      },
     ])
   );
   const availability: AvailabilityRow[] = Array.from({ length: 7 }, (_, dow) => ({
-    dayOfWeek: dow,
-    startTime: availMap.get(dow)?.startTime ?? "09:00",
-    endTime:   availMap.get(dow)?.endTime   ?? "17:00",
-    isActive:  availMap.get(dow)?.isActive  ?? false,
+    dayOfWeek:      dow,
+    startTime:      availMap.get(dow)?.startTime      ?? "09:00",
+    endTime:        availMap.get(dow)?.endTime        ?? "17:00",
+    isActive:       availMap.get(dow)?.isActive       ?? false,
+    breakStartTime: availMap.get(dow)?.breakStartTime ?? null,
+    breakEndTime:   availMap.get(dow)?.breakEndTime   ?? null,
   }));
 
   const team: TeamMemberRow[] = (teamRows ?? []).map((m) => ({
@@ -158,9 +168,11 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     publicSlug: m.public_slug ?? null,
   }));
 
-  const coverPhotoUrl = (groomerProfile.cover_photo_url as string | null) ?? null;
+  const coverPhotoUrl   = (groomerProfile.cover_photo_url as string | null) ?? null;
+  const averageRating   = (groomerProfile.average_rating  as number | null)  ?? null;
+  const totalReviews    = (groomerProfile.total_reviews   as number | null)  ?? null;
 
-  return { groomerProfileId, profile, coverPhotoUrl, services, availability, team, viewerRole, teamMemberId };
+  return { groomerProfileId, profile, coverPhotoUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
@@ -358,10 +370,12 @@ export async function saveAvailability(
     const { error } = await supabaseAdmin.from("availability").insert(
       active.map((r) => ({
         groomer_profile_id: groomerProfileId,
-        day_of_week: r.dayOfWeek,
-        start_time: r.startTime,
-        end_time: r.endTime,
-        is_active: true,
+        day_of_week:        r.dayOfWeek,
+        start_time:         r.startTime,
+        end_time:           r.endTime,
+        is_active:          true,
+        break_start_time:   r.breakStartTime ?? null,
+        break_end_time:     r.breakEndTime   ?? null,
       }))
     );
     if (error) return { error: error.message };

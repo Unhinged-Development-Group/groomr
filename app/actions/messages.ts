@@ -281,6 +281,51 @@ export async function markThreadRead(
   return {};
 }
 
+// ─── Groomer: all bookings eligible to start a message thread ────────────────
+
+export interface BookingForMessaging {
+  appointmentId: string;
+  scheduledAt: string;
+  ownerName: string;
+  ownerProfileId: string;
+  dogName: string | null;
+}
+
+export async function getGroomerBookingsForMessaging(): Promise<BookingForMessaging[]> {
+  const ctx = await getMessagingContext();
+  if (!ctx?.groomerProfileId) return [];
+
+  const { data: appointments } = await supabaseAdmin
+    .from("appointments")
+    .select("id, scheduled_at, dog_id, owner_id")
+    .eq("groomer_profile_id", ctx.groomerProfileId)
+    .not("status", "eq", "cancelled")
+    .order("scheduled_at", { ascending: false });
+
+  if (!appointments?.length) return [];
+
+  const ownerIds = [...new Set(appointments.map((a) => a.owner_id as string))];
+  const dogIds   = [...new Set(appointments.map((a) => a.dog_id as string).filter(Boolean))];
+
+  const [{ data: owners }, { data: dogs }] = await Promise.all([
+    supabaseAdmin.from("profiles").select("id, full_name").in("id", ownerIds),
+    dogIds.length
+      ? supabaseAdmin.from("dogs").select("id, name").in("id", dogIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const ownerMap = new Map((owners ?? []).map((p) => [p.id, p.full_name as string]));
+  const dogMap   = new Map(((dogs as { id: string; name: string }[]) ?? []).map((d) => [d.id, d.name]));
+
+  return appointments.map((a) => ({
+    appointmentId:  a.id as string,
+    scheduledAt:    a.scheduled_at as string,
+    ownerName:      ownerMap.get(a.owner_id as string) ?? "Client",
+    ownerProfileId: a.owner_id as string,
+    dogName:        a.dog_id ? (dogMap.get(a.dog_id as string) ?? null) : null,
+  }));
+}
+
 // ─── Unread count for header badge ───────────────────────────────────────────
 
 export async function getGroomerUnreadMessageCount(): Promise<number> {

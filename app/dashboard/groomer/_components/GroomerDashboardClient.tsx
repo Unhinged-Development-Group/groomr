@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, MessagesIcon, DashboardIcon } from "@/components/ui/GroomrIcons";
+import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, MessagesIcon } from "@/components/ui/GroomrIcons";
 import { toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { BookingsView } from "./BookingsView";
 import { ClientsView } from "./ClientsView";
@@ -249,13 +249,18 @@ export function GroomerDashboardClient({
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-5">
         <div className="min-w-0">
-          <Eyebrow><span className="inline-flex items-center gap-1.5"><DashboardIcon size={13} className="inline-block" />Studio dashboard</span></Eyebrow>
+          <Eyebrow>Studio dashboard</Eyebrow>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">{businessName}</h1>
             <BookingStatusChip isAcceptingBookings={editorData.profile.isAcceptingBookings} groomerProfileId={editorData.groomerProfileId} />
           </div>
           <p className="text-sm text-pebble-grey font-bold mt-3">
-            {ownerName} · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">4.9 (184 reviews)</span>
+            {ownerName}
+            {editorData.totalReviews && editorData.totalReviews > 0 ? (
+              <> · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">{editorData.averageRating?.toFixed(1)} ({editorData.totalReviews} reviews)</span></>
+            ) : (
+              <> · <span className="text-pebble-grey/60">No reviews yet</span></>
+            )}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">

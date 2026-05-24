@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon } from "@/components/ui/GroomrIcons";
+import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
 import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
@@ -32,6 +32,50 @@ function FieldGroup({ label, children }: { label: string; children: React.ReactN
   );
 }
 
+function SectionCard({
+  id,
+  eyebrow,
+  headerRight,
+  description,
+  children,
+  defaultOpen = true,
+}: {
+  id?: string;
+  eyebrow: string;
+  headerRight?: React.ReactNode;
+  description?: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div id={id} className="bg-white border border-pebble-grey/20 rounded-[20px]">
+      <div className="flex items-center justify-between gap-3 px-6 pt-5 pb-4">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex items-center gap-2 min-w-0 focus-ring rounded-lg py-0.5"
+        >
+          <Eyebrow>{eyebrow}</Eyebrow>
+          <ChevronDownIcon
+            size={14}
+            className={cn("text-pebble-grey/50 transition-transform shrink-0", open && "rotate-180")}
+          />
+        </button>
+        {headerRight}
+      </div>
+      {open && (
+        <div className="px-6 pb-6">
+          {description && (
+            <p className="text-xs text-pebble-grey font-bold -mt-1 mb-4">{description}</p>
+          )}
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BookingsToggle({
   groomerProfileId,
   isAcceptingBookings,
@@ -54,7 +98,7 @@ function BookingsToggle({
     startTransition(async () => {
       const result = await toggleAcceptingBookings(groomerProfileId, next);
       if (result?.error) {
-        onToggle(!next); // revert
+        onToggle(!next);
         alert(result.error);
       }
     });
@@ -130,7 +174,6 @@ export function ProfileEditor({
   const [isPaused, setIsPaused] = useState(() => availability.length > 0 && availability.every((r) => !r.isActive));
   const [closeAccountOpen, setCloseAccountOpen] = useState(false);
   const prePauseRef = useRef<AvailabilityRow[] | null>(null);
-  // Tracks the last-saved availability so auto-saves (pause/re-open) don't trigger the save button
   const [savedAvailability, setSavedAvailability] = useState(initialAvailability);
   const router = useRouter();
 
@@ -162,6 +205,14 @@ export function ProfileEditor({
       ...arr,
       { id: null, name: tpl.name, duration: tpl.duration, price: tpl.price, sortOrder: arr.length },
     ]);
+  }
+
+  function applyBreakToAllDays(breakStartTime: string, breakEndTime: string) {
+    setAvailability((arr) =>
+      arr.map((row) =>
+        row.isActive ? { ...row, breakStartTime, breakEndTime } : row
+      )
+    );
   }
 
   async function handleCoverPhotoUpload(file: File) {
@@ -205,8 +256,6 @@ export function ProfileEditor({
     if (err) {
       setSaveError(err);
     } else {
-      // Update saved references so isDirty clears immediately, before router.refresh()
-      // brings back new UUIDs from the re-inserted service rows.
       const freshServices = servicesResult.services ?? services;
       setServices(freshServices);
       setSavedServices(freshServices);
@@ -261,16 +310,22 @@ export function ProfileEditor({
     }
   }
 
+  function scrollToSection(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <section className="grid lg:grid-cols-[1fr_360px] gap-6">
-      <div className="space-y-6 min-w-0">
+      <div className="space-y-4 min-w-0">
 
         {/* Business basics */}
-        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Eyebrow>Business basics</Eyebrow>
-            <button className="text-xs font-bold text-deep-slate text-link">Preview public profile →</button>
-          </div>
+        <SectionCard
+          id="section-basics"
+          eyebrow="Business basics"
+          headerRight={
+            <button className="text-xs font-bold text-deep-slate text-link shrink-0">Preview public profile →</button>
+          }
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <FieldGroup label="Business name">
               <input
@@ -318,13 +373,12 @@ export function ProfileEditor({
               </FieldGroup>
             </div>
           )}
-        </div>
+        </SectionCard>
 
         {/* Mode + radius — owner only */}
         {viewerRole === "owner" && (
-          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
-            <Eyebrow>How you operate</Eyebrow>
-            <div className="grid grid-cols-2 gap-3 mt-3">
+          <SectionCard id="section-operation" eyebrow="How you operate">
+            <div className="grid grid-cols-2 gap-3">
               {([
                 { k: "studio", l: "Studio (clients come to us)", sub: "Fixed location" },
                 { k: "mobile", l: "Mobile (we drive)",           sub: "You travel to clients" },
@@ -379,14 +433,15 @@ export function ProfileEditor({
                 </FieldGroup>
               </div>
             )}
-          </div>
+          </SectionCard>
         )}
 
         {/* Services & pricing — owner only */}
         {viewerRole === "owner" && (
-          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <Eyebrow>Services &amp; pricing</Eyebrow>
+          <SectionCard
+            id="section-services"
+            eyebrow="Services & pricing"
+            headerRight={
               <button
                 onClick={() =>
                   setServices((s) => [
@@ -394,12 +449,12 @@ export function ProfileEditor({
                     { id: null, name: "New service", duration: 30, price: 2000, sortOrder: s.length },
                   ])
                 }
-                className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring flex items-center gap-1"
+                className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring flex items-center gap-1 shrink-0"
               >
                 <PlusIcon size={12} /> Add custom
               </button>
-            </div>
-
+            }
+          >
             {/* Quick-add templates */}
             <div className="mb-4">
               <button
@@ -516,17 +571,16 @@ export function ProfileEditor({
                 </div>
               )}
             </div>
-          </div>
+          </SectionCard>
         )}
 
         {/* Hours & availability — owner only */}
         {viewerRole === "owner" && (
-          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
-            <Eyebrow>Hours &amp; availability</Eyebrow>
-            <p className="text-xs text-pebble-grey font-bold mt-1 mb-4">
-              Set the days and hours owners can book appointments.
-            </p>
-
+          <SectionCard
+            id="section-availability"
+            eyebrow="Hours & availability"
+            description="Set the days and hours owners can book appointments."
+          >
             {/* Accepting bookings toggle */}
             <BookingsToggle
               groomerProfileId={groomerProfileId}
@@ -560,82 +614,124 @@ export function ProfileEditor({
                   startTime: "09:00",
                   endTime: "17:00",
                   isActive: false,
+                  breakStartTime: null,
+                  breakEndTime: null,
                 };
+                const hasBreak = !!(row.breakStartTime && row.breakEndTime);
                 return (
-                  <div
-                    key={dow}
-                    className={cn(
-                      "grid grid-cols-[80px_1fr] sm:grid-cols-[80px_auto_auto_1fr] gap-3 items-center rounded-xl px-4 py-3 border transition-colors",
-                      row.isActive
-                        ? "border-deep-slate/20 bg-alabaster-cream"
-                        : "border-pebble-grey/15 bg-white opacity-60"
-                    )}
-                  >
-                    <button
-                      onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
-                      className={cn(
-                        "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors",
-                        row.isActive ? "text-deep-slate" : "text-pebble-grey"
-                      )}
-                      aria-label={`Toggle ${DAY_LABELS[dow]}`}
-                    >
-                      <span
+                  <div key={dow} className={cn(
+                    "rounded-xl border transition-colors",
+                    row.isActive ? "border-deep-slate/20 bg-alabaster-cream" : "border-pebble-grey/15 bg-white opacity-60"
+                  )}>
+                    {/* Main hours row */}
+                    <div className="grid grid-cols-[80px_1fr] sm:grid-cols-[80px_auto_auto_1fr] gap-3 items-center px-4 py-3">
+                      <button
+                        onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
                         className={cn(
+                          "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors",
+                          row.isActive ? "text-deep-slate" : "text-pebble-grey"
+                        )}
+                        aria-label={`Toggle ${DAY_LABELS[dow]}`}
+                      >
+                        <span className={cn(
                           "w-8 h-4 rounded-full transition-colors relative shrink-0",
                           row.isActive ? "bg-deep-slate" : "bg-pebble-grey/30"
-                        )}
-                      >
-                        <span
-                          className={cn(
+                        )}>
+                          <span className={cn(
                             "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
                             row.isActive ? "left-4" : "left-0.5"
-                          )}
-                        />
-                      </span>
-                      <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
-                    </button>
+                          )} />
+                        </span>
+                        <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
+                      </button>
 
-                    <div className="flex items-center gap-2 col-span-1 sm:col-span-3">
-                      <input
-                        type="time"
-                        value={row.startTime}
-                        disabled={!row.isActive}
-                        onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
-                        className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
-                      />
-                      <span className="text-xs font-bold text-pebble-grey">to</span>
-                      <input
-                        type="time"
-                        value={row.endTime}
-                        disabled={!row.isActive}
-                        onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
-                        className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
-                      />
+                      <div className="flex items-center gap-2 col-span-1 sm:col-span-3">
+                        <input
+                          type="time"
+                          value={row.startTime}
+                          disabled={!row.isActive}
+                          onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
+                          className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
+                        />
+                        <span className="text-xs font-bold text-pebble-grey">to</span>
+                        <input
+                          type="time"
+                          value={row.endTime}
+                          disabled={!row.isActive}
+                          onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
+                          className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
+                        />
+                        {row.isActive && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              hasBreak
+                                ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
+                                : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })
+                            }
+                            className={cn(
+                              "ml-1 text-[10px] font-bold px-2.5 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
+                              hasBreak
+                                ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
+                                : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate"
+                            )}
+                          >
+                            {hasBreak ? "− Break" : "+ Break"}
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Break row */}
+                    {row.isActive && hasBreak && (
+                      <div className="px-4 pb-3 flex items-center gap-2 ml-[80px] sm:ml-[80px]">
+                        <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider w-8 shrink-0">Break</span>
+                        <input
+                          type="time"
+                          value={row.breakStartTime ?? "12:00"}
+                          onChange={(e) => updateAvailability(dow, { breakStartTime: e.target.value })}
+                          className="field py-1 text-xs w-28"
+                        />
+                        <span className="text-xs font-bold text-pebble-grey">to</span>
+                        <input
+                          type="time"
+                          value={row.breakEndTime ?? "13:00"}
+                          onChange={(e) => updateAvailability(dow, { breakEndTime: e.target.value })}
+                          className="field py-1 text-xs w-28"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => applyBreakToAllDays(row.breakStartTime!, row.breakEndTime!)}
+                          className="text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap"
+                          title="Apply this break time to all active days"
+                        >
+                          Copy to all days
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
-          </div>
+          </SectionCard>
         )}
 
         {/* Team */}
-        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <Eyebrow>Team groomers</Eyebrow>
-              <p className="text-xs text-pebble-grey font-bold mt-1">Each groomer gets their own public profile under your business.</p>
-            </div>
-            {viewerRole === "owner" && (
+        <SectionCard
+          id="section-team"
+          eyebrow="Team groomers"
+          description="Each groomer gets their own public profile under your business."
+          headerRight={
+            viewerRole === "owner" ? (
               <button
                 onClick={() => setAdding(true)}
-                className="btn-primary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring shadow-subtle flex items-center gap-1"
+                className="btn-primary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring shadow-subtle flex items-center gap-1 shrink-0"
               >
                 <PlusIcon size={12} /> Add groomer
               </button>
-            )}
-          </div>
-
+            ) : undefined
+          }
+        >
           <div className="space-y-3">
             {team.map((m) => (
               <div key={m.id} className="flex items-center gap-4 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4">
@@ -735,9 +831,9 @@ export function ProfileEditor({
               </div>
             )}
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Sticky save bar — only when dirty */}
+        {/* Sticky save bar */}
         {isDirty && (
           <div className="sticky bottom-4 z-10">
             <div className="bg-deep-slate text-alabaster-cream rounded-[20px] p-4 flex items-center justify-between shadow-lift">
@@ -767,7 +863,7 @@ export function ProfileEditor({
 
       {/* Right column */}
       <aside className="space-y-5">
-        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
+        <div id="section-cover" className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
           <Eyebrow>Public profile</Eyebrow>
           <div className="mt-3 aspect-[5/3] rounded-xl bg-sage-leaf/20 overflow-hidden relative">
             {coverPhotoUrl ? (
@@ -790,7 +886,6 @@ export function ProfileEditor({
               </div>
             )}
           </div>
-          {/* Hidden file input */}
           <input
             ref={coverInputRef}
             type="file"
@@ -817,16 +912,19 @@ export function ProfileEditor({
           </button>
         </div>
 
+        {/* Account health */}
         <div className="bg-deep-slate text-alabaster-cream rounded-[20px] p-5">
           <Eyebrow className="text-groomr-gold">Account health</Eyebrow>
           {(() => {
-            const checks = [
-              { label: "Business name set",    done: !!initialProfile.businessName },
-              { label: "Bio written",          done: !!initialProfile.bio },
-              { label: "Phone number added",   done: !!initialProfile.phone },
-              { label: "Services added",       done: services.length > 0 },
-              { label: "Availability set",     done: availability.some((r) => r.isActive) },
-              { label: "Location configured",  done: initialProfile.businessMode === "studio" ? !!initialProfile.addressLine1 : initialProfile.radius > 0 },
+            const checks: Array<{ label: string; done: boolean; sectionId: string }> = [
+              { label: "Cover photo added",  done: !!coverPhotoUrl,                                                                                               sectionId: "section-cover"        },
+              { label: "Business name set",  done: !!formData.businessName,                                                                                       sectionId: "section-basics"       },
+              { label: "Bio written",        done: !!formData.bio,                                                                                                sectionId: "section-basics"       },
+              { label: "Phone number added", done: !!formData.phone,                                                                                              sectionId: "section-basics"       },
+              { label: "Services added",     done: services.length > 0,                                                                                           sectionId: "section-services"     },
+              { label: "Availability set",   done: availability.some((r) => r.isActive),                                                                          sectionId: "section-availability" },
+              { label: "Location set",       done: formData.businessMode === "studio" ? !!formData.addressLine1 : formData.radius > 0,                           sectionId: "section-operation"    },
+              { label: "Portfolio photos",   done: false,                                                                                                         sectionId: "section-cover"        },
             ];
             const done = checks.filter((c) => c.done).length;
             const pct = Math.round((done / checks.length) * 100);
@@ -842,11 +940,31 @@ export function ProfileEditor({
                     <div className="h-full bg-groomr-gold rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-1.5 text-sm">
                   {checks.map((c) => (
-                    <div key={c.label} className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${c.done ? "bg-sage-leaf" : "bg-pebble-grey/40"}`} />
-                      <span className={c.done ? "text-alabaster-cream/40 line-through" : "text-alabaster-cream"}>{c.label}</span>
+                    <div key={c.label}>
+                      {c.done ? (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full shrink-0 bg-sage-leaf" />
+                          <span className="text-alabaster-cream/40 line-through text-xs">{c.label}</span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (c.sectionId === "section-cover" && c.label === "Portfolio photos") {
+                              window.location.href = "/dashboard/groomer/portfolio";
+                            } else {
+                              scrollToSection(c.sectionId);
+                            }
+                          }}
+                          className="w-full flex items-center gap-2 rounded-lg py-0.5 hover:bg-alabaster-cream/10 transition-colors focus-ring text-left group"
+                        >
+                          <span className="w-2 h-2 rounded-full shrink-0 bg-pebble-grey/40" />
+                          <span className="text-alabaster-cream text-xs group-hover:text-groomr-gold transition-colors">{c.label}</span>
+                          <span className="ml-auto text-[10px] text-alabaster-cream/30 group-hover:text-groomr-gold/60 transition-colors shrink-0">→</span>
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -856,8 +974,11 @@ export function ProfileEditor({
                     <p className="text-xs text-alabaster-cream/80">{next.label}</p>
                     <button
                       onClick={() => {
-                        const el = document.querySelector("[data-section='profile-form']");
-                        el?.scrollIntoView({ behavior: "smooth" });
+                        if (next.sectionId === "section-cover" && next.label === "Portfolio photos") {
+                          window.location.href = "/dashboard/groomer/portfolio";
+                        } else {
+                          scrollToSection(next.sectionId);
+                        }
                       }}
                       className="mt-2 text-xs font-bold text-groomr-gold hover:underline focus-ring rounded"
                     >

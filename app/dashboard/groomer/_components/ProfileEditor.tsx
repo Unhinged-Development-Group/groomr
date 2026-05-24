@@ -38,7 +38,7 @@ function SectionCard({
   headerRight,
   description,
   children,
-  defaultOpen = true,
+  defaultOpen = false,
 }: {
   id?: string;
   eyebrow: string;
@@ -54,13 +54,15 @@ function SectionCard({
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-2 min-w-0 focus-ring rounded-lg py-0.5"
+          className="flex items-center gap-2 min-w-0 focus-ring rounded-lg py-0.5 group"
         >
           <Eyebrow>{eyebrow}</Eyebrow>
-          <ChevronDownIcon
-            size={14}
-            className={cn("text-pebble-grey/50 transition-transform shrink-0", open && "rotate-180")}
-          />
+          <span className="w-7 h-7 rounded-full flex items-center justify-center transition-colors group-hover:bg-pebble-grey/10 shrink-0">
+            <ChevronDownIcon
+              size={18}
+              className={cn("text-pebble-grey/40 transition-all group-hover:text-deep-slate shrink-0", open && "rotate-180")}
+            />
+          </span>
         </button>
         {headerRight}
       </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, MessagesIcon } from "@/components/ui/GroomrIcons";
+import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon } from "@/components/ui/GroomrIcons";
 import { toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { BookingsView } from "./BookingsView";
 import { ClientsView } from "./ClientsView";
@@ -120,7 +120,6 @@ interface Props {
   businessName: string;
   ownerName: string;
   unrespondedReviews?: number;
-  unreadMessages?: number;
   showWelcome?: boolean;
   initialAppointments: any[];
   initialReviews: any[];
@@ -133,7 +132,6 @@ export function GroomerDashboardClient({
   businessName,
   ownerName,
   unrespondedReviews = 0,
-  unreadMessages = 0,
   showWelcome = false,
   initialAppointments,
   initialReviews,
@@ -275,15 +273,7 @@ export function GroomerDashboardClient({
             <span className="hidden sm:inline">Block time</span>
             <span className="sm:hidden">Block</span>
           </button>
-          <Link href="/dashboard/groomer/messages" className="relative btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2">
-            <MessagesIcon size={16} />
-            <span className="hidden sm:inline">Messages</span>
-            {unreadMessages > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 rounded-full bg-muted-terracotta text-alabaster-cream text-[9px] font-bold flex items-center justify-center">
-                {unreadMessages > 99 ? "99+" : unreadMessages}
-              </span>
-            )}
-          </Link>
+
           <button onClick={() => setNewBookingOpen(true)} className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
             <PlusIcon size={16} />
             <span className="hidden sm:inline">New booking</span>

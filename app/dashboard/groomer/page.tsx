@@ -4,7 +4,6 @@ import { GroomerDashboardClient } from "./_components/GroomerDashboardClient";
 import { getGroomerAppointments, getGroomerReviews, getGroomerPayments } from "@/app/actions/groomer";
 import { loadProfileEditorData } from "@/app/actions/profile-editor";
 import { getTimeBlocks } from "@/app/actions/time-blocks";
-import { getGroomerUnreadMessageCount } from "@/app/actions/messages";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,13 +23,12 @@ export default async function GroomerDashboardPage({
 
   const ownerName = user.firstName ?? "Groomer";
 
-  const [appointments, reviews, payments, editorData, timeBlocks, unreadMessages] = await Promise.all([
+  const [appointments, reviews, payments, editorData, timeBlocks] = await Promise.all([
     getGroomerAppointments(),
     getGroomerReviews(),
     getGroomerPayments(),
     loadProfileEditorData(),
     getTimeBlocks(),
-    getGroomerUnreadMessageCount(),
   ]);
 
   const businessName = editorData.profile.businessName || "Your Studio";
@@ -41,7 +39,7 @@ export default async function GroomerDashboardPage({
       businessName={businessName}
       ownerName={ownerName}
       unrespondedReviews={unrespondedReviews}
-      unreadMessages={unreadMessages}
+
       showWelcome={showWelcome}
       initialAppointments={appointments}
       initialReviews={reviews}

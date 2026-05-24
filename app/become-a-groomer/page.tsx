@@ -1,4 +1,8 @@
-import { CalendarIcon, ScissorsIcon, ShieldIcon, FavoritesIcon } from "@/components/ui/GroomrIcons";
+import {
+  CalendarIcon, ScissorsIcon, ShieldIcon, FavoritesIcon,
+  PetsIcon, NotificationsIcon, FinancialsIcon, ReviewsIcon,
+  AnalyticsIcon, DashboardIcon, CheckIcon,
+} from "@/components/ui/GroomrIcons";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { CalculatorWidget } from "./_components/CalculatorWidget";
@@ -12,27 +16,72 @@ export const metadata: Metadata = {
     "Join 2,400+ verified groomers. Online booking, automatic reminders, payments — all in one. Free to list.",
 };
 
-const BENEFITS = [
+const TOOLKIT = [
   {
     Icon: CalendarIcon,
-    title: "Real-time online booking",
-    body: "Show your live availability. Stop the back-and-forth texts.",
+    size: "large",
+    title: "Smart booking calendar",
+    sub: "Real-time availability. Zero double-bookings.",
+    bullets: [
+      "Clients book 24/7 directly from your Groomr profile",
+      "Deposits collected automatically at point of booking",
+      "Sync with Google & Apple Calendar — your whole life in one view",
+      "Block-out days, buffer time, and holidays in one tap",
+    ],
   },
   {
-    Icon: ScissorsIcon,
-    title: "Built for the way you work",
-    body: "Mobile, studio, or home — set your area, services, and prices in minutes.",
+    Icon: PetsIcon,
+    size: "normal",
+    title: "Client & dog profiles",
+    sub: "Know every dog before they arrive.",
+    bullets: [
+      "Coat type, temperament & past service notes",
+      "Full appointment history per dog",
+      "Vet & emergency contact stored safely",
+    ],
   },
   {
-    Icon: ShieldIcon,
-    title: "You own your clients",
-    body: "Take your regulars with you. We never charge commission on rebookings.",
+    Icon: NotificationsIcon,
+    size: "normal",
+    title: "Automatic reminders",
+    sub: "No-shows down 70% on average.",
+    bullets: [
+      "SMS + email sent 48hrs and 2hrs before",
+      "Cancellation window enforced automatically",
+      "Late-cancel deposit retained — no awkward calls",
+    ],
   },
   {
-    Icon: FavoritesIcon,
-    title: "Reviews that bring referrals",
-    body: "Verified reviews from real bookings — the kind word-of-mouth used to do alone.",
+    Icon: FinancialsIcon,
+    size: "normal",
+    title: "Deposits & payouts",
+    sub: "Get paid, on your terms.",
+    bullets: [
+      "Set any deposit % per service type",
+      "Weekly bank transfer every Monday",
+      "Flat 8% fee per completed appointment — no surprises",
+    ],
   },
+  {
+    Icon: ReviewsIcon,
+    size: "normal",
+    title: "Reviews & reputation",
+    sub: "Only real reviews from verified bookings.",
+    bullets: [
+      "No anonymous feedback — ever",
+      "Reply and resolve from your dashboard",
+      "Top-rated groomers featured in search",
+    ],
+  },
+] as const;
+
+const GROWTH_TOOLS = [
+  { Icon: DashboardIcon,   label: "Staff logins & schedules",        detail: "Add team members with their own calendars and client lists" },
+  { Icon: AnalyticsIcon,   label: "Earnings analytics",              detail: "Daily, weekly, monthly breakdowns — always up to date" },
+  { Icon: FavoritesIcon,   label: "Client retention tracking",       detail: "See who's rebooking, who's lapsed, who's overdue" },
+  { Icon: ScissorsIcon,    label: "Mobile & salon modes",            detail: "Travel radius for mobile groomers, address for studios" },
+  { Icon: ShieldIcon,      label: "Verified groomer badge",          detail: "ID-checked status builds trust and lifts your search ranking" },
+  { Icon: CalendarIcon,    label: "Google & Apple Calendar sync",    detail: "Two-way sync so nothing ever clashes" },
 ];
 
 const STEPS = [
@@ -45,11 +94,11 @@ const STEPS = [
 const FAQS = [
   {
     q: "What does Groomr cost?",
-    a: "Free to list and free for clients you bring with you. We take 8% on new clients we send your way — only when the appointment is completed.",
+    a: "Free to list. We take 8% of every completed appointment — no monthly charges, no setup fees, no surprises.",
   },
   {
     q: "Can I import my existing clients?",
-    a: "Yes. Send us a CSV (or your address book) and we'll get them set up. They'll never trigger a fee.",
+    a: "Yes. Send us a CSV (or your address book) and we'll get them set up in your profile straight away.",
   },
   {
     q: "Do I have to use the calendar?",
@@ -163,52 +212,176 @@ export default function BecomeAGroomerPage() {
         </div>
       </section>
 
-      {/* ── BENEFITS ─────────────────────────────────────────────────── */}
-      <section className="w-full px-6 lg:px-12 xl:px-20 py-20 md:py-28">
-        <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-          <Eyebrow>Why groomers switch</Eyebrow>
-          <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-            A toolkit, not a marketplace tax.
-          </h2>
-        </div>
-        <div className="grid md:grid-cols-2 gap-5 max-w-5xl mx-auto">
-          {BENEFITS.map(({ Icon, title, body }) => (
-            <div
-              key={title}
-              className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 flex gap-5 card-lift"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center shrink-0">
-                <Icon size={30} className="text-deep-slate" />
+      {/* ── TOOLKIT ──────────────────────────────────────────────────── */}
+      <section className="relative bg-deep-slate overflow-hidden py-20 md:py-28">
+        {/* Decorative glows */}
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-sage-leaf/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-groomr-gold/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative w-full px-6 lg:px-12 xl:px-20">
+          <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+            <Eyebrow className="border-white/20 text-white/60">Your toolkit</Eyebrow>
+            <h2 className="font-fredoka text-4xl md:text-5xl text-white">
+              A platform built around you.
+            </h2>
+            <p className="text-white/55 font-nunito text-lg">
+              Every tool a groomer needs — and nothing they don&apos;t.
+            </p>
+          </div>
+
+          {/* Bento grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+
+            {/* Feature 1 — large (spans 2 cols on lg) */}
+            {(() => {
+              const { Icon, title, sub, bullets } = TOOLKIT[0];
+              return (
+                <div className="lg:col-span-2 bg-white/[0.06] border border-white/10 rounded-[20px] p-8 flex flex-col md:flex-row gap-8">
+                  <div className="flex-1 space-y-5">
+                    <div className="w-14 h-14 rounded-2xl bg-groomr-gold/15 border border-groomr-gold/20 flex items-center justify-center">
+                      <Icon size={28} />
+                    </div>
+                    <div>
+                      <h3 className="font-fredoka text-2xl text-white mb-1">{title}</h3>
+                      <p className="text-white/55 font-nunito text-sm">{sub}</p>
+                    </div>
+                    <ul className="space-y-2.5">
+                      {bullets.map((b) => (
+                        <li key={b} className="flex items-start gap-2.5 text-sm text-white/75 font-nunito">
+                          <CheckIcon size={16} className="text-groomr-gold shrink-0 mt-0.5" />
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {/* Mini calendar visual */}
+                  <div className="md:w-48 lg:w-52 shrink-0 self-center">
+                    <div className="bg-white/10 rounded-2xl p-4 space-y-2">
+                      <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider">This week</p>
+                      {[
+                        { day: "Mon", slots: 4, full: false },
+                        { day: "Tue", slots: 5, full: true  },
+                        { day: "Wed", slots: 3, full: false },
+                        { day: "Thu", slots: 5, full: true  },
+                        { day: "Fri", slots: 2, full: false },
+                      ].map((d) => (
+                        <div key={d.day} className="flex items-center gap-2">
+                          <span className="text-white/40 text-xs font-bold w-7">{d.day}</span>
+                          <div className="flex gap-1 flex-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <div
+                                key={i}
+                                className={[
+                                  "h-4 flex-1 rounded-sm",
+                                  i < d.slots
+                                    ? d.full ? "bg-groomr-gold/60" : "bg-sage-leaf/60"
+                                    : "bg-white/10",
+                                ].join(" ")}
+                              />
+                            ))}
+                          </div>
+                          {d.full && <span className="text-[9px] font-bold text-groomr-gold">Full</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Features 2–5 — normal cards */}
+            {TOOLKIT.slice(1).map(({ Icon, title, sub, bullets }) => (
+              <div
+                key={title}
+                className="bg-white/[0.06] border border-white/10 rounded-[20px] p-7 space-y-5"
+              >
+                <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
+                  <Icon size={24} />
+                </div>
+                <div>
+                  <h3 className="font-fredoka text-xl text-white mb-1">{title}</h3>
+                  <p className="text-white/50 font-nunito text-xs">{sub}</p>
+                </div>
+                <ul className="space-y-2">
+                  {bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-xs text-white/65 font-nunito">
+                      <CheckIcon size={13} className="text-sage-leaf shrink-0 mt-0.5" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div>
-                <h3 className="font-fredoka text-xl text-deep-slate mb-2">{title}</h3>
-                <p className="text-pebble-grey font-nunito leading-relaxed">{body}</p>
+            ))}
+
+            {/* Growth tools — full-width bottom card */}
+            <div className="md:col-span-2 lg:col-span-3 bg-white/[0.04] border border-white/8 rounded-[20px] p-8">
+              <div className="mb-6">
+                <p className="font-fredoka text-xs tracking-widest text-white/40 uppercase mb-1">And more</p>
+                <h3 className="font-fredoka text-2xl text-white">Built to scale with you.</h3>
+                <p className="text-white/50 font-nunito text-sm mt-1">
+                  From solo groomer to a full salon — Groomr grows as you do.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {GROWTH_TOOLS.map(({ Icon, label, detail }) => (
+                  <div key={label} className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white/8 border border-white/8 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white/85">{label}</p>
+                      <p className="text-xs text-white/45 font-nunito leading-snug mt-0.5">{detail}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
       {/* ── STEPS ────────────────────────────────────────────────────── */}
-      <section className="bg-alabaster-cream border-y border-pebble-grey/15">
-        <div className="w-full px-6 lg:px-12 xl:px-20 py-20">
-          <div className="max-w-2xl mb-12 space-y-3">
+      <section className="w-full px-6 lg:px-12 xl:px-20 py-20 md:py-28 bg-white border-b border-pebble-grey/10">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
             <Eyebrow>How it works</Eyebrow>
             <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
               Up and running by Friday.
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {STEPS.map((s) => (
-              <div
-                key={s.n}
-                className="bg-white border border-pebble-grey/20 rounded-[20px] p-6 space-y-3"
-              >
-                <p className="font-fredoka text-5xl text-groomr-gold">{s.n}</p>
-                <h3 className="font-fredoka text-xl text-deep-slate">{s.t}</h3>
-                <p className="text-pebble-grey text-sm">{s.d}</p>
-              </div>
-            ))}
+
+          {/* Timeline */}
+          <div className="relative">
+            {/* Connecting line — desktop only, sits behind the circles */}
+            <div
+              className="hidden lg:block absolute top-8 h-px bg-gradient-to-r from-transparent via-pebble-grey/25 to-transparent pointer-events-none"
+              style={{ left: "12.5%", right: "12.5%" }}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-6">
+              {STEPS.map((s, i) => (
+                <div key={s.n} className="flex flex-col items-center text-center group">
+                  {/* Circle */}
+                  <div className="relative z-10 w-16 h-16 rounded-full bg-groomr-gold flex items-center justify-center shadow-[0_0_0_6px_white,0_0_0_7px_rgba(234,228,92,0.2)] mb-6">
+                    <span className="font-fredoka text-2xl text-deep-slate leading-none">{s.n}</span>
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="font-fredoka text-xl text-deep-slate mb-2">{s.t}</h3>
+                  <p className="text-pebble-grey text-sm font-nunito leading-relaxed max-w-[200px]">{s.d}</p>
+
+                  {/* Mobile connector — vertical line between steps */}
+                  {i < STEPS.length - 1 && (
+                    <div className="sm:hidden w-px h-8 bg-pebble-grey/20 mt-6" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA nudge */}
+          <div className="text-center mt-14">
+            <BecomeGroomerCTA label="Start your free profile →" />
           </div>
         </div>
       </section>
@@ -219,11 +392,11 @@ export default function BecomeAGroomerPage() {
           <div className="space-y-4">
             <Eyebrow>What you&apos;ll keep</Eyebrow>
             <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-              No hidden fees. Ever.
+              Simple, transparent pricing.
             </h2>
             <p className="text-pebble-grey text-lg font-nunito leading-relaxed">
-              Drag the sliders to estimate your monthly take-home. Existing clients you bring with
-              you cost nothing. We charge 8% only on new clients we send.
+              Drag the sliders to see your monthly take-home. We take 8% of every completed
+              appointment — no monthly charges, no setup fees.
             </p>
           </div>
           <CalculatorWidget />

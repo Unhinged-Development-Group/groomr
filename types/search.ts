@@ -4,6 +4,7 @@ export interface GroomerResult {
   tagline?: string;
   bio?: string;
   image: string;
+  avatarUrl?: string;
   rating: number;
   reviewCount: number;
   distance?: number;

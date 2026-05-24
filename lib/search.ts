@@ -73,9 +73,11 @@ function buildGroomerMap(
 
     const image =
       p.cover_photo_url ||
-      p.profile_image_url ||
       p.gallery_images?.[0] ||
+      p.profile_image_url ||
       PLACEHOLDER_IMAGE;
+
+    const avatarUrl = p.profile_image_url ?? undefined;
 
     return {
       id: p.id,
@@ -83,6 +85,7 @@ function buildGroomerMap(
       tagline: p.tagline ?? undefined,
       bio: p.bio ?? undefined,
       image,
+      avatarUrl,
       rating: p.average_rating ?? 0,
       reviewCount: p.total_reviews ?? 0,
       distance: distMiles,

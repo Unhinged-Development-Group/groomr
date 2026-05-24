@@ -413,7 +413,7 @@ export default async function GroomerProfilePage({
 
             {/* Report */}
             <div className="text-center pt-2 pb-4">
-              <ReportButton groomerName={groomer.business_name} />
+              <ReportButton groomerName={groomer.business_name} groomerId={groomer.id} />
             </div>
           </div>
         </div>

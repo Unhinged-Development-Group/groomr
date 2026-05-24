@@ -176,14 +176,20 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
               />
               {/* Avatar */}
               <div className="absolute -bottom-16 left-8 md:left-12">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-white">
-                  <Image
-                    src={groomer.image}
-                    alt={groomer.name}
-                    width={144}
-                    height={144}
-                    className="object-cover w-full h-full"
-                  />
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-sage-leaf/20 flex items-center justify-center">
+                  {(groomer.avatarUrl || groomer.image) ? (
+                    <Image
+                      src={groomer.avatarUrl || groomer.image}
+                      alt={groomer.name}
+                      width={144}
+                      height={144}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <span className="font-fredoka text-4xl text-sage-leaf select-none">
+                      {groomer.name.charAt(0)}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useUser } from "@clerk/nextjs";
 import { HeartIcon } from "@/components/ui/GroomrIcons";
 import { Toast } from "@/components/ui/Toast";
+import { Modal } from "@/components/ui/Modal";
 import { addFavourite, removeFavourite } from "@/app/actions/favourites";
+import { sendContactInquiry } from "@/app/actions/contact";
 import { BookingFlow } from "@/app/search/_components/BookingFlow";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +42,12 @@ export function ActionBar({
   availability,
   depositPolicy,
 }: ActionBarProps) {
+  const { user, isLoaded, isSignedIn } = useUser();
+
   const [saved, setSaved] = useState(initialSaved);
   const [busy, setBusy] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   async function toggleFavourite() {
@@ -75,7 +81,7 @@ export function ActionBar({
         </button>
 
         <button
-          onClick={() => setToast("Messaging coming soon — book to get in touch!")}
+          onClick={() => setContactOpen(true)}
           className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm focus-ring"
         >
           Contact
@@ -101,6 +107,145 @@ export function ActionBar({
           onClose={() => setBookingOpen(false)}
         />
       )}
+
+      {contactOpen && isLoaded && (
+        <ContactModal
+          groomerName={groomerName}
+          groomerId={groomerId}
+          isSignedIn={!!isSignedIn}
+          prefillName={user?.fullName ?? ""}
+          prefillEmail={user?.primaryEmailAddress?.emailAddress ?? ""}
+          onClose={() => setContactOpen(false)}
+          onSent={() => setToast("Message sent! We'll let the groomer know.")}
+        />
+      )}
     </>
+  );
+}
+
+// ─── ContactModal ─────────────────────────────────────────────────────────────
+
+interface ContactModalProps {
+  groomerName: string;
+  groomerId: string;
+  isSignedIn: boolean;
+  prefillName: string;
+  prefillEmail: string;
+  onClose: () => void;
+  onSent: () => void;
+}
+
+function ContactModal({
+  groomerName,
+  groomerId,
+  isSignedIn,
+  prefillName,
+  prefillEmail,
+  onClose,
+  onSent,
+}: ContactModalProps) {
+  const [name, setName] = useState(prefillName);
+  const [email, setEmail] = useState(prefillEmail);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    startTransition(async () => {
+      const result = await sendContactInquiry(groomerName, groomerId, name, email, message);
+      if (!result.ok) {
+        setError(result.error ?? "Something went wrong");
+      } else {
+        setSent(true);
+        onSent();
+        setTimeout(onClose, 1800);
+      }
+    });
+  }
+
+  return (
+    <Modal open onClose={onClose} size="sm">
+      {sent ? (
+        <div className="text-center py-6 space-y-2">
+          <p className="font-fredoka text-2xl text-deep-slate">Message sent!</p>
+          <p className="text-pebble-grey text-sm font-nunito">
+            We&apos;ve passed your enquiry to {groomerName}. They&apos;ll be in touch shortly.
+          </p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <h2 className="font-fredoka text-2xl text-deep-slate">Contact {groomerName}</h2>
+            {!isSignedIn && (
+              <p className="text-pebble-grey text-sm mt-1 font-nunito">
+                Already have an account?{" "}
+                <a href="/sign-in" className="text-link font-bold">
+                  Sign in
+                </a>{" "}
+                to message groomers.
+              </p>
+            )}
+          </div>
+
+          {!isSignedIn && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block text-sm font-bold text-deep-slate">Your name</label>
+                <input
+                  required
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="field w-full"
+                  placeholder="Jane Smith"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-sm font-bold text-deep-slate">Email address</label>
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="field w-full"
+                  placeholder="jane@example.com"
+                />
+              </div>
+            </div>
+          )}
+
+          {isSignedIn && (
+            <p className="text-sm text-pebble-grey font-nunito">
+              Sending as <span className="font-bold text-deep-slate">{prefillName || prefillEmail}</span>
+            </p>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-bold text-deep-slate">Message</label>
+            <textarea
+              required
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={4}
+              className="field w-full resize-none"
+              placeholder={`Hi ${groomerName}, I'd love to find out more…`}
+            />
+          </div>
+
+          {error && <p className="text-sm text-muted-terracotta font-bold">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="btn-primary w-full font-nunito font-bold py-2.5 rounded-full text-sm disabled:opacity-60"
+          >
+            {isPending ? "Sending…" : "Send message"}
+          </button>
+        </form>
+      )}
+    </Modal>
   );
 }

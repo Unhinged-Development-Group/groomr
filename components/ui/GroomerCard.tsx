@@ -7,6 +7,7 @@ interface Groomer {
   name: string;
   tagline?: string;
   image: string;
+  avatarUrl?: string;
   rating: number;
   reviewCount?: number;
   distance?: number;
@@ -36,7 +37,7 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
       {/* Image with overlaid distance + rating pills */}
       <div className="aspect-[16/10] bg-sage-leaf/20 overflow-hidden relative w-full shrink-0">
         <Image
-          src={groomer.image}
+          src={groomer.avatarUrl || groomer.image}
           alt={groomer.name}
           fill
           className="object-cover"

@@ -83,6 +83,7 @@ function buildGroomerMap(
       depositType: (p.deposit_type as 'none' | 'percentage' | 'full') ?? 'none',
       depositPercentage: p.deposit_percentage ?? null,
       serviceNames: svc?.names ?? [],
+      isVerified: p.is_verified ?? false,
       lat: p.lat ?? undefined,
       lng: p.lng ?? undefined,
     };
@@ -147,7 +148,7 @@ async function fetchGeoSearch(
   const { data, error } = await supabase.rpc("search_groomers_near", {
     user_lat: lat,
     user_lng: lng,
-    radius_metres: 25000,
+    radius_metres: 80000,
   });
 
   if (error) {
@@ -203,6 +204,7 @@ export function extractFilters(params: SearchParams): ActiveFilters {
     price: params.price ?? "all",
     payment: params.payment ?? "all",
     rating: params.rating ?? "all",
+    verified: params.verified ?? "all",
   };
 }
 

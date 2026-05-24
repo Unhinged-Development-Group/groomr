@@ -8,9 +8,10 @@ interface SearchBarProps {
   initialQuery: string;
   isGeoSearch: boolean;
   filteredCount: number;
+  suggestions: string[];
 }
 
-export function SearchBar({ initialQuery, isGeoSearch, filteredCount }: SearchBarProps) {
+export function SearchBar({ initialQuery, isGeoSearch, filteredCount, suggestions }: SearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState(isGeoSearch ? "" : initialQuery);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -131,6 +132,23 @@ export function SearchBar({ initialQuery, isGeoSearch, filteredCount }: SearchBa
 
         {geoError && (
           <p className="mt-3 text-sm text-muted-terracotta font-bold">{geoError}</p>
+        )}
+
+        {suggestions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <span className="text-xs font-bold text-pebble-grey uppercase tracking-wide">
+              Popular near you:
+            </span>
+            {suggestions.map((s) => (
+              <button
+                key={s}
+                onClick={() => router.push(`/search?q=${encodeURIComponent(s)}`)}
+                className="text-xs font-bold px-3 py-1.5 rounded-full border border-pebble-grey/25 text-deep-slate hover:border-sage-leaf hover:text-sage-leaf transition-colors focus-ring bg-white"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </section>

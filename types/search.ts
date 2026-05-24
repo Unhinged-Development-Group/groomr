@@ -13,6 +13,7 @@ export interface GroomerResult {
   depositType: 'none' | 'percentage' | 'full';
   depositPercentage: number | null;
   serviceNames: string[];
+  isVerified: boolean;
   lat?: number;
   lng?: number;
 }
@@ -25,6 +26,7 @@ export interface SearchParams {
   price?: string;
   payment?: string;
   rating?: string;
+  verified?: string;
 }
 
 export interface ActiveFilters {
@@ -32,7 +34,10 @@ export interface ActiveFilters {
   price: string;
   payment: string;
   rating: string;
+  verified: string;
 }
+
+export type SortOption = 'rating' | 'az' | 'price' | 'distance';
 
 export interface MapCentre {
   lat: number;

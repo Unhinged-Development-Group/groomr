@@ -24,7 +24,6 @@ export function SearchPageClient({
   mapCentre,
   initialFavouriteIds,
 }: SearchPageClientProps) {
-  const [filteredCount, setFilteredCount] = useState(initialGroomers.length);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(initialFilters);
   const [sortBy, setSortBy] = useState<SortOption>("rating");
   const [selectedGroomer, setSelectedGroomer] = useState<GroomerResult | null>(null);
@@ -70,7 +69,6 @@ export function SearchPageClient({
       <SearchBar
         initialQuery={initialQuery}
         isGeoSearch={isGeoSearch}
-        filteredCount={filteredCount}
         suggestions={suggestions}
       />
       <FilterBar
@@ -86,7 +84,6 @@ export function SearchPageClient({
         sortBy={sortBy}
         isGeoSearch={isGeoSearch}
         mapCentre={mapCentre}
-        onFilteredCountChange={setFilteredCount}
         onViewGroomer={setSelectedGroomer}
         initialFavouriteIds={initialFavouriteIds}
       />

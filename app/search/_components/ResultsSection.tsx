@@ -31,7 +31,6 @@ interface ResultsSectionProps {
   sortBy: SortOption;
   isGeoSearch: boolean;
   mapCentre: MapCentre;
-  onFilteredCountChange: (count: number) => void;
   onViewGroomer: (groomer: GroomerResult) => void;
   initialFavouriteIds: string[];
 }
@@ -42,7 +41,6 @@ export function ResultsSection({
   sortBy,
   isGeoSearch,
   mapCentre,
-  onFilteredCountChange,
   onViewGroomer,
   initialFavouriteIds,
 }: ResultsSectionProps) {
@@ -113,10 +111,6 @@ export function ResultsSection({
     setVisibleCount(PAGE_SIZE);
   }, [activeFilters, sortBy]);
 
-  useEffect(() => {
-    onFilteredCountChange(filteredAndSorted.length);
-  }, [filteredAndSorted.length, onFilteredCountChange]);
-
   const visibleGroomers = filteredAndSorted.slice(0, visibleCount);
   const hasMore = visibleCount < filteredAndSorted.length;
 
@@ -128,7 +122,9 @@ export function ResultsSection({
     <section className="max-w-7xl mx-auto px-6 mt-12 pb-20">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
         <h2 className="font-fredoka text-3xl text-deep-slate">
-          {isGeoSearch ? "Groomers Near You" : "Local Groomers"}
+          {filteredAndSorted.length > 0
+            ? `${filteredAndSorted.length} ${isGeoSearch ? "Groomers Near You!" : "Groomers Found!"}`
+            : isGeoSearch ? "Groomers Near You" : "Local Groomers"}
         </h2>
 
         {/* View toggle */}

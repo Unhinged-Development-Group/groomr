@@ -6,8 +6,7 @@ import { Toast } from "@/components/ui/Toast";
 import { StarRow } from "@/components/ui/StarRow";
 import { supabase } from "@/lib/supabase";
 import type { GroomerResult } from "@/types/search";
-import { MapPin } from "lucide-react";
-import { ChevronRightIcon } from "@/components/ui/GroomrIcons";
+import { LocationPinIcon, ChevronRightIcon } from "@/components/ui/GroomrIcons";
 import { BookingFlow } from "./BookingFlow";
 
 interface Service {
@@ -220,7 +219,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
                     <StarRow rating={groomer.rating} count={groomer.reviewCount} />
                   )}
                   <span className="flex items-center gap-1">
-                    <MapPin size={14} />
+                    <LocationPinIcon size={14} />
                     {groomer.location}
                     {groomer.distance !== undefined && ` · ${groomer.distance} miles`}
                   </span>

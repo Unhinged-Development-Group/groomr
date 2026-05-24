@@ -88,31 +88,43 @@ updated_at timestamptz DEFAULT now()
 
 #### `groomer_profiles`
 ```sql
-id                   uuid     PRIMARY KEY DEFAULT gen_random_uuid()
-user_id              uuid     REFERENCES profiles(id) ON DELETE CASCADE
-business_name        text
-tagline              text
-bio                  text
-years_experience     smallint
-qualifications       text
-insurance_provider   text
-insurance_policy_ref text
-address_line_1       text
-address_line_2       text
-city                 text
-postcode             text
-location             geography   -- PostGIS point (lng/lat)
-travel_radius_miles  smallint
-is_mobile            boolean
-is_verified          boolean     DEFAULT false
-is_listed            boolean     DEFAULT true
-stripe_account_id    text
-average_rating       numeric
-total_reviews        integer
-created_at           timestamptz DEFAULT now()
-updated_at           timestamptz DEFAULT now()
+id                    uuid     PRIMARY KEY DEFAULT gen_random_uuid()
+user_id               uuid     REFERENCES profiles(id) ON DELETE CASCADE
+business_name         text
+tagline               text
+bio                   text
+years_experience      smallint
+qualifications        text
+insurance_provider    text
+insurance_policy_ref  text
+insurance_doc_url     text
+address_line_1        text
+address_line_2        text
+city                  text
+postcode              text
+location              geography   -- PostGIS point (lng/lat)
+travel_radius_miles   smallint
+is_mobile             boolean
+is_verified           boolean     DEFAULT false
+is_listed             boolean     DEFAULT false  -- starts unlisted; groomer must open
+is_accepting_bookings boolean     DEFAULT false  -- controls search visibility + bookability
+stripe_account_id     text
+average_rating        numeric
+total_reviews         integer
+profile_image_url     text
+banner_image_url      text
+cover_photo_url       text
+deposit_type          text        DEFAULT 'none'  -- 'none' | 'percentage' | 'full'
+deposit_percentage    smallint
+default_buffer_minutes smallint   DEFAULT 0
+bank_account_holder   text
+bank_sort_code        text
+bank_account_number   text
+created_at            timestamptz DEFAULT now()
+updated_at            timestamptz DEFAULT now()
 ```
 > `location` uses `ST_MakePoint(lng, lat)::geography` to insert.
+> New groomers are created with both `is_listed = false` and `is_accepting_bookings = false`. They must explicitly open bookings from the dashboard once ready.
 
 #### `dogs`
 ```sql
@@ -263,6 +275,30 @@ created_at          timestamptz DEFAULT now()
 updated_at          timestamptz DEFAULT now()
 ```
 
+#### `portfolio_photos`
+```sql
+id                 uuid     PRIMARY KEY DEFAULT gen_random_uuid()
+groomer_profile_id uuid     NOT NULL REFERENCES groomer_profiles(id) ON DELETE CASCADE
+url                text     NOT NULL
+caption            text
+sort_order         smallint DEFAULT 0
+created_at         timestamptz DEFAULT now()
+```
+
+#### `time_blocks`
+```sql
+id                 uuid  PRIMARY KEY DEFAULT gen_random_uuid()
+groomer_profile_id uuid  NOT NULL REFERENCES groomer_profiles(id) ON DELETE CASCADE
+start_date         date  NOT NULL
+end_date           date  NOT NULL
+start_time         time
+end_time           time
+all_day            boolean DEFAULT true
+reason             text
+created_at         timestamptz DEFAULT now()
+```
+> Time blocks represent groomer-declared unavailability (holidays, days off). Must be factored into `getAvailableSlots()` in `app/actions/booking.ts` to prevent bookings during blocked periods.
+
 ---
 
 ## 5. Row Level Security (RLS)
@@ -349,6 +385,10 @@ NEXT_PUBLIC_POSTHOG_KEY=
 | `@vis.gl/react-google-maps` SSR | Accesses `window` on import | Import via `next/dynamic` with `{ ssr: false }` |
 | Supabase join returns array | `.select('*, profiles(full_name)')` returns `profiles` as an array | Type as `profiles: { full_name: string \| null }[] \| null` |
 | Two Google Maps env vars needed | Map display and geocoding use different vars | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (browser); `GOOGLE_MAPS_API_KEY` (server) |
+| Supabase MCP project mismatch | MCP resolves to project `pbqgppbierllialjjhkm` ("Unhinged Development Group"), NOT the app's project `fvbxjwfxcbhjoidrmzgv` | Never use MCP to apply migrations to the app DB — create SQL files in `supabase/migrations/` and apply via `supabase db push` or the Supabase dashboard |
+| Migrations not auto-applied | 4 migration files exist in `supabase/migrations/` but must be applied manually | Run `supabase db push` (or paste SQL in Supabase dashboard → SQL editor) before testing portfolio photos, time blocks, `is_accepting_bookings`, or messages RLS |
+| `searchParams` in Next.js 16 server components | `searchParams` must be `await`-ed — it is a Promise in Next.js 16 | `const params = searchParams ? await searchParams : {};` |
+| Supabase Realtime requires anon client | `supabaseAdmin` (service-role) does not support Realtime subscriptions | Import the anon client (`createClient(url, anonKey)`) in client components for `channel().on(...)` subscriptions only |
 
 ---
 
@@ -365,21 +405,32 @@ NEXT_PUBLIC_POSTHOG_KEY=
 - Dashboard role router
 - Owner dashboard: dog CRUD (Supabase + Cloudinary), appointments, favourites
 - Groomer dashboard: profile editor, services, availability, team invite flow, scope selector, reviews tab
+- Icon sweep — all lucide-react imports replaced with Groomr icon library equivalents; TABS array corrected (FinancialsIcon for Earnings, ReviewsIcon for Reviews); DashboardIcon added to groomer header eyebrow
+- `is_accepting_bookings` field — groomers start closed; clickable status chip in header + iOS toggle in ProfileEditor; search filtered to accepting-only
+- Messages — full real-time implementation: `app/actions/messages.ts`, `MessagesClient.tsx` with Supabase Realtime, unread badge in groomer header
+- Groomer invite — redirect changed to `/dashboard/groomer?welcome=1`; welcome banner shows for new team members
+- Migration files created: `portfolio_photos`, `time_blocks`, `is_accepting_bookings`, `messages_rls` (in `supabase/migrations/` — must be applied manually)
 
 ### Next Up (Phase 2)
-1. **Public groomer profiles** (`/groomers/[slug]`) — SEO + deep linking, full page from modal
-2. **Booking flow** — service → date/time → dog → checkout (Stripe deposit)
-3. **Groomer dashboard** — wire Bookings/Clients/Earnings tabs to live data; schedule/calendar view; cover photos
-4. **Stripe Connect** — groomer onboarding, commission split, payout tracking
-5. **Owner dashboard** — review submission, in-app messaging, account settings
-6. **Admin dashboard** — groomer verification queue, disputes, review moderation
+1. **Apply pending migrations** — `supabase db push` or Supabase dashboard for the 4 migration files in `supabase/migrations/` (portfolio_photos, time_blocks, is_accepting_bookings, messages_rls)
+2. **Public groomer profiles** (`/groomers/[slug]`) — SEO + deep linking, full page from modal
+3. **Booking flow** — service → date/time → dog → checkout (Stripe deposit)
+4. **Groomer dashboard** — wire Bookings/Clients/Earnings tabs to live data; schedule/calendar view
+5. **Time blocks → booking conflict** — wire `time_blocks` into `getAvailableSlots()` in `app/actions/booking.ts` so blocked periods can't be booked
+6. **Portfolio photos** — migrations unblock `app/actions/portfolio.ts` and `app/dashboard/groomer/portfolio/`; test Cloudinary upload flow
+7. **Stripe Connect** — groomer onboarding, commission split, payout tracking
+8. **Owner dashboard** — review submission, in-app messaging (thread list), account settings
+9. **Admin dashboard** — groomer verification queue, disputes, review moderation
+10. **Clerk invite email** — customise branded template in Clerk Dashboard (Emails → Invitation) with Groomr copy and logo
 
 ### Planned (Phase 3+)
 - Resend transactional emails
 - PostHog analytics + feature flags
 - `disputes` table (needs adding to schema)
 - Google Calendar sync for groomers
+- Appointment assignment to team members (UI for `assigned_to_team_member_id`)
+- `isOwner` gate on ProfileEditor for team members (read-only view)
 
 ---
 
-*Last updated: May 2026*
+*Last updated: 24 May 2026*

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { CalendarIcon, PetsIcon, ScissorsIcon, StarIcon, ShieldIcon, PlusIcon, MessagesIcon } from "@/components/ui/GroomrIcons";
+import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, MessagesIcon, DashboardIcon } from "@/components/ui/GroomrIcons";
+import { toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { BookingsView } from "./BookingsView";
 import { ClientsView } from "./ClientsView";
 import { EarningsView } from "./EarningsView";
@@ -22,8 +23,8 @@ type Tab = "bookings" | "clients" | "earnings" | "reviews" | "profile";
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
   { id: "bookings", label: "Bookings", Icon: CalendarIcon },
   { id: "clients",  label: "Clients",  Icon: PetsIcon },
-  { id: "earnings", label: "Earnings", Icon: ScissorsIcon },
-  { id: "reviews",  label: "Reviews",  Icon: StarIcon },
+  { id: "earnings", label: "Earnings", Icon: FinancialsIcon },
+  { id: "reviews",  label: "Reviews",  Icon: ReviewsIcon },
   { id: "profile",  label: "Profile",  Icon: ShieldIcon },
 ];
 
@@ -40,6 +41,49 @@ function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
       <p className="font-fredoka text-3xl text-deep-slate mt-2 leading-none">{value}</p>
       <p className="text-xs text-pebble-grey font-bold mt-2">{sub}</p>
     </div>
+  );
+}
+
+function BookingStatusChip({
+  isAcceptingBookings,
+  groomerProfileId,
+}: {
+  isAcceptingBookings: boolean;
+  groomerProfileId: string;
+}) {
+  const [open, setOpen] = useState(isAcceptingBookings);
+  const [pending, startTransition] = useTransition();
+
+  function handleToggle() {
+    const next = !open;
+    const confirmed = window.confirm(
+      next
+        ? "Open your bookings? Clients will be able to find and book you."
+        : "Close your bookings? You will no longer appear in search results."
+    );
+    if (!confirmed) return;
+    setOpen(next);
+    startTransition(async () => {
+      const result = await toggleAcceptingBookings(groomerProfileId, next);
+      if (result?.error) {
+        setOpen(!next); // revert on failure
+        alert(result.error);
+      }
+    });
+  }
+
+  return (
+    <button
+      onClick={handleToggle}
+      disabled={pending}
+      title={open ? "Click to close bookings" : "Click to open bookings"}
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 border transition-colors cursor-pointer ${open ? "bg-sage-leaf/10 border-sage-leaf/30 hover:bg-sage-leaf/20" : "bg-muted-terracotta/10 border-muted-terracotta/30 hover:bg-muted-terracotta/20"} ${pending ? "opacity-60 cursor-not-allowed" : ""}`}
+    >
+      <span className={`w-2 h-2 rounded-full ${open ? "bg-sage-leaf animate-pulse" : "bg-muted-terracotta"}`} />
+      <span className="text-xs font-bold text-deep-slate">
+        {pending ? "Saving…" : open ? "Open · Accepting bookings" : "Closed · Not accepting bookings"}
+      </span>
+    </button>
   );
 }
 
@@ -76,6 +120,8 @@ interface Props {
   businessName: string;
   ownerName: string;
   unrespondedReviews?: number;
+  unreadMessages?: number;
+  showWelcome?: boolean;
   initialAppointments: any[];
   initialReviews: any[];
   initialPayments: any[];
@@ -87,6 +133,8 @@ export function GroomerDashboardClient({
   businessName,
   ownerName,
   unrespondedReviews = 0,
+  unreadMessages = 0,
+  showWelcome = false,
   initialAppointments,
   initialReviews,
   initialPayments,
@@ -99,6 +147,7 @@ export function GroomerDashboardClient({
   const [blockTimeOpen, setBlockTimeOpen] = useState(false);
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>(initialTimeBlocks);
   const [activeGroom, setActiveGroom] = useState<ActiveGroom | null>(null);
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(showWelcome);
 
   useEffect(() => {
     try {
@@ -178,21 +227,32 @@ export function GroomerDashboardClient({
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
+      {/* Welcome banner for new team members */}
+      {showWelcomeBanner && (
+        <div className="bg-groomr-gold/20 border border-groomr-gold/50 rounded-[16px] px-5 py-4 flex items-start justify-between gap-4">
+          <div>
+            <p className="font-fredoka text-lg text-deep-slate">Welcome to {businessName}! 🐾</p>
+            <p className="text-sm text-deep-slate/80 mt-0.5">
+              You&rsquo;ve been added to the team. Your appointments will appear here once bookings are assigned.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowWelcomeBanner(false)}
+            className="text-deep-slate/50 hover:text-deep-slate transition-colors shrink-0 font-bold text-lg leading-none"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-5">
         <div className="min-w-0">
-          <Eyebrow>Studio dashboard</Eyebrow>
+          <Eyebrow><span className="inline-flex items-center gap-1.5"><DashboardIcon size={13} className="inline-block" />Studio dashboard</span></Eyebrow>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">{businessName}</h1>
-            {(() => {
-              const isOpen = editorData.availability.some((r) => r.isActive);
-              return (
-                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 border ${isOpen ? "bg-sage-leaf/10 border-sage-leaf/30" : "bg-muted-terracotta/10 border-muted-terracotta/30"}`}>
-                  <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-sage-leaf animate-pulse" : "bg-muted-terracotta"}`} />
-                  <span className="text-xs font-bold text-deep-slate">{isOpen ? "Open · Accepting bookings" : "Closed · Not accepting bookings"}</span>
-                </span>
-              );
-            })()}
+            <BookingStatusChip isAcceptingBookings={editorData.profile.isAcceptingBookings} groomerProfileId={editorData.groomerProfileId} />
           </div>
           <p className="text-sm text-pebble-grey font-bold mt-3">
             {ownerName} · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">4.9 (184 reviews)</span>
@@ -210,9 +270,14 @@ export function GroomerDashboardClient({
             <span className="hidden sm:inline">Block time</span>
             <span className="sm:hidden">Block</span>
           </button>
-          <Link href="/dashboard/groomer/messages" className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2">
+          <Link href="/dashboard/groomer/messages" className="relative btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2">
             <MessagesIcon size={16} />
             <span className="hidden sm:inline">Messages</span>
+            {unreadMessages > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 rounded-full bg-muted-terracotta text-alabaster-cream text-[9px] font-bold flex items-center justify-center">
+                {unreadMessages > 99 ? "99+" : unreadMessages}
+              </span>
+            )}
           </Link>
           <button onClick={() => setNewBookingOpen(true)} className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
             <PlusIcon size={16} />

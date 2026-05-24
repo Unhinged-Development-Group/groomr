@@ -137,6 +137,7 @@ export async function registerGroomer(input: RegisterGroomerInput) {
     travel_radius_miles: input.bizType === "mobile" ? input.radiusMiles : null,
     is_listed: false,
     is_verified: false,
+    is_accepting_bookings: false,   // groomers start closed; they open once set up
     deposit_type: input.depositType,
     deposit_percentage: input.depositPercentage,
     insurance_doc_url: input.insuranceDocUrl ?? null,

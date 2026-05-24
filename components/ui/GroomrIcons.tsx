@@ -17,11 +17,15 @@ interface IconProps {
 export function PetsIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <circle cx="10" cy="11" r="7" fill={GOLD} opacity="0.55" />
-      <path stroke={STROKE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        d="M12 20.5c-3 0-5.5-2-6.5-5-.5-1.5.5-3 2-3h9c1.5 0 2.5 1.5 2 3-1 3-3.5 5-6.5 5z" />
-      <path stroke={STROKE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        d="M8 8a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM15 6a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM21 8a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+      {/* Gold splash */}
+      <circle cx="9" cy="10" r="7.5" fill={GOLD} opacity="0.55" />
+      {/* Palm pad */}
+      <ellipse cx="12" cy="17.2" rx="4" ry="3.2" stroke={STROKE} strokeWidth="2" />
+      {/* Toe pads — 4 ovals in an arc above the palm */}
+      <ellipse cx="6.5"  cy="11.2" rx="1.8" ry="2.3" stroke={STROKE} strokeWidth="1.8" />
+      <ellipse cx="10"   cy="8.8"  rx="1.8" ry="2.3" stroke={STROKE} strokeWidth="1.8" />
+      <ellipse cx="14"   cy="8.8"  rx="1.8" ry="2.3" stroke={STROKE} strokeWidth="1.8" />
+      <ellipse cx="17.5" cy="11.2" rx="1.8" ry="2.3" stroke={STROKE} strokeWidth="1.8" />
     </svg>
   );
 }

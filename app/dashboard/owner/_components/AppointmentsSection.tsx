@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Clock, MapPin } from "lucide-react";
+import { ClockIcon, LocationPinIcon } from "@/components/ui/GroomrIcons";
 import type { Appointment } from "@/app/actions/appointments";
 import { cancelAppointment } from "@/app/actions/appointments";
 import { Modal } from "@/components/ui/Modal";
@@ -76,11 +76,11 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
                       {apt.service_snapshot_name || "Grooming Service"} for {apt.dogs?.name}
                     </h3>
                     <p className="flex items-center gap-2 font-nunito text-sm text-pebble-grey">
-                      <Clock size={14} />
+                      <ClockIcon size={14} />
                       {timeString}
                     </p>
                     <p className="flex items-center gap-2 font-nunito text-sm text-pebble-grey">
-                      <MapPin size={14} />
+                      <LocationPinIcon size={14} />
                       <Link href={`/groomers/${apt.groomer_profile_id}`} className="hover:text-sage-leaf transition-colors focus-ring rounded">
                         {apt.groomer_profiles?.business_name || "Groomer"}
                       </Link>

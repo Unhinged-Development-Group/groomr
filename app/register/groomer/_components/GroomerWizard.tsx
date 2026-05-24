@@ -2,10 +2,10 @@
 
 import { useState, useTransition, useRef } from "react";
 import { SignUp } from "@clerk/nextjs";
-import { Check, Plus, X, Info, Shield, Building2, AlertCircle } from "lucide-react";
+import { Info, Building2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { UploadIcon, CheckIcon } from "@/components/ui/GroomrIcons";
+import { UploadIcon, CheckIcon, PlusIcon, CloseIcon, ShieldIcon } from "@/components/ui/GroomrIcons";
 import { registerGroomer, getInsuranceUploadSignature } from "@/app/actions/groomer-registration";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -310,7 +310,7 @@ export function GroomerWizard({
                       "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5",
                       done ? "bg-sage-leaf text-white" : active ? "bg-deep-slate text-alabaster-cream" : "bg-pebble-grey/15 text-pebble-grey"
                     )}>
-                      {done ? <Check size={14} /> : i + 1}
+                      {done ? <CheckIcon size={14} /> : i + 1}
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-sm text-deep-slate">{s.t}</p>
@@ -487,7 +487,7 @@ export function GroomerWizard({
                           on ? "bg-deep-slate border-deep-slate text-alabaster-cream" : "border-pebble-grey/40"
                         )}
                       >
-                        {on && <Check size={14} />}
+                        {on && <CheckIcon size={14} />}
                       </button>
                       <p className="font-bold text-deep-slate flex-1 text-sm">{name}</p>
                       <div className={cn("flex items-center gap-1.5 shrink-0", !on && "invisible pointer-events-none")}>
@@ -517,7 +517,7 @@ export function GroomerWizard({
                     className="flex items-center gap-3 p-4 rounded-2xl border-2 bg-alabaster-cream border-deep-slate"
                   >
                     <div className="w-6 h-6 rounded-md bg-deep-slate border-2 border-deep-slate flex items-center justify-center shrink-0">
-                      <Check size={14} className="text-alabaster-cream" />
+                      <CheckIcon size={14} className="text-alabaster-cream" />
                     </div>
                     <input
                       className="flex-1 bg-transparent font-bold text-deep-slate text-sm outline-none border-none placeholder-pebble-grey/50 min-w-0"
@@ -542,7 +542,7 @@ export function GroomerWizard({
                       className="text-pebble-grey hover:text-muted-terracotta transition-colors focus-ring rounded p-1 shrink-0"
                       aria-label="Remove service"
                     >
-                      <X size={16} />
+                      <CloseIcon size={16} />
                     </button>
                   </div>
                 ))}
@@ -551,7 +551,7 @@ export function GroomerWizard({
                   className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-pebble-grey/30 hover:border-deep-slate hover:bg-alabaster-cream/60 transition-colors focus-ring group"
                 >
                   <div className="w-6 h-6 rounded-md border-2 border-pebble-grey/40 group-hover:border-deep-slate flex items-center justify-center shrink-0 transition-colors">
-                    <Plus size={14} className="text-pebble-grey group-hover:text-deep-slate transition-colors" />
+                    <PlusIcon size={14} className="text-pebble-grey group-hover:text-deep-slate transition-colors" />
                   </div>
                   <span className="text-sm font-bold text-pebble-grey group-hover:text-deep-slate transition-colors">
                     Add a service
@@ -721,7 +721,7 @@ export function GroomerWizard({
               {/* ── Insurance ── */}
               <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
                 <div className="flex items-center gap-4 p-5 border-b border-pebble-grey/10">
-                  <Shield size={28} className={form.insuranceDocUrl ? "text-sage-leaf" : "text-pebble-grey"} />
+                  <ShieldIcon size={28} className={form.insuranceDocUrl ? "text-sage-leaf" : "text-pebble-grey"} />
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-deep-slate">Public liability insurance</p>
                     <p className="text-xs text-pebble-grey">PDF or image of your certificate. Required for the verified badge.</p>
@@ -866,7 +866,7 @@ export function GroomerWizard({
                     policyAgreed ? "bg-deep-slate border-deep-slate text-alabaster-cream" : "border-pebble-grey/40 group-hover:border-deep-slate"
                   )}
                 >
-                  {policyAgreed && <Check size={12} />}
+                  {policyAgreed && <CheckIcon size={12} />}
                 </button>
                 <span className="text-sm text-deep-slate font-bold leading-snug">
                   I have read and agree to the{" "}

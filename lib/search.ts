@@ -104,6 +104,22 @@ async function fetchServicesForIds(ids: string[]): Promise<RawService[]> {
   return (data ?? []) as RawService[];
 }
 
+/** Returns the subset of profile IDs that have is_accepting_bookings = true */
+async function filterAcceptingBookings(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const { data, error } = await supabase
+    .from("groomer_profiles")
+    .select("id")
+    .in("id", ids)
+    .eq("is_accepting_bookings", true);
+  if (error) {
+    console.error("Error filtering bookings:", error.message);
+    // On error, return all IDs so we don't accidentally hide groomers
+    return new Set(ids);
+  }
+  return new Set((data ?? []).map((r) => r.id as string));
+}
+
 async function fetchTextSearch(q: string): Promise<GroomerResult[]> {
   const { data, error } = await supabase.rpc("search_groomers_by_text", {
     query: q,
@@ -115,8 +131,13 @@ async function fetchTextSearch(q: string): Promise<GroomerResult[]> {
   }
 
   const profiles = (data ?? []) as RawProfile[];
-  const services = await fetchServicesForIds(profiles.map((p) => p.id));
-  return buildGroomerMap(profiles, services);
+  const ids = profiles.map((p) => p.id);
+  const [services, acceptingIds] = await Promise.all([
+    fetchServicesForIds(ids),
+    filterAcceptingBookings(ids),
+  ]);
+  const acceptingProfiles = profiles.filter((p) => acceptingIds.has(p.id));
+  return buildGroomerMap(acceptingProfiles, services);
 }
 
 async function fetchGeoSearch(
@@ -135,8 +156,13 @@ async function fetchGeoSearch(
   }
 
   const profiles = (data ?? []) as RawProfile[];
-  const services = await fetchServicesForIds(profiles.map((p) => p.id));
-  return buildGroomerMap(profiles, services);
+  const ids = profiles.map((p) => p.id);
+  const [services, acceptingIds] = await Promise.all([
+    fetchServicesForIds(ids),
+    filterAcceptingBookings(ids),
+  ]);
+  const acceptingProfiles = profiles.filter((p) => acceptingIds.has(p.id));
+  return buildGroomerMap(acceptingProfiles, services);
 }
 
 export async function fetchGroomers(

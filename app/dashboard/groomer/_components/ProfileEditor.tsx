@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto } from "@/app/actions/profile-editor";
+import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
 import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow } from "@/types/groomer-dashboard";
@@ -29,6 +29,62 @@ function FieldGroup({ label, children }: { label: string; children: React.ReactN
       <span className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">{label}</span>
       <div className="mt-1.5">{children}</div>
     </label>
+  );
+}
+
+function BookingsToggle({
+  groomerProfileId,
+  isAcceptingBookings,
+  onToggle,
+}: {
+  groomerProfileId: string;
+  isAcceptingBookings: boolean;
+  onToggle: (val: boolean) => void;
+}) {
+  const [pending, startTransition] = useTransition();
+
+  function handleToggle(next: boolean) {
+    const confirmed = window.confirm(
+      next
+        ? "Open your bookings? Clients will be able to find and book you in search results."
+        : "Close your bookings? You will be hidden from search results and new bookings will be paused."
+    );
+    if (!confirmed) return;
+    onToggle(next);
+    startTransition(async () => {
+      const result = await toggleAcceptingBookings(groomerProfileId, next);
+      if (result?.error) {
+        onToggle(!next); // revert
+        alert(result.error);
+      }
+    });
+  }
+
+  return (
+    <div className="mb-4 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-pebble-grey">Accepting bookings</p>
+          <p className="text-[10px] font-bold text-pebble-grey/70 mt-0.5">
+            {isAcceptingBookings
+              ? "Open — clients can find and book you"
+              : "Closed — hidden from search until you open"}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => handleToggle(!isAcceptingBookings)}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus-ring ${isAcceptingBookings ? "bg-sage-leaf" : "bg-pebble-grey/40"} ${pending ? "opacity-60 cursor-not-allowed" : ""}`}
+          role="switch"
+          aria-checked={isAcceptingBookings}
+        >
+          <span
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${isAcceptingBookings ? "translate-x-5" : "translate-x-0"}`}
+          />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -470,6 +526,13 @@ export function ProfileEditor({
             <p className="text-xs text-pebble-grey font-bold mt-1 mb-4">
               Set the days and hours owners can book appointments.
             </p>
+
+            {/* Accepting bookings toggle */}
+            <BookingsToggle
+              groomerProfileId={groomerProfileId}
+              isAcceptingBookings={formData.isAcceptingBookings}
+              onToggle={(val) => setField("isAcceptingBookings", val)}
+            />
 
             {/* Buffer time */}
             <div className="mb-4 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4">

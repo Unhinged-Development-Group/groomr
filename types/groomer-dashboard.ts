@@ -13,6 +13,7 @@ export interface ProfileFormData {
   depositType: "none" | "percentage" | "full";
   depositPercentage: number;
   bufferMinutes: number;
+  isAcceptingBookings: boolean;
 }
 
 export interface ServiceRow {

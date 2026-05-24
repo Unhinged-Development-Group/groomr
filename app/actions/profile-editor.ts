@@ -121,6 +121,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     depositType: ((groomerProfile.deposit_type as string) ?? "none") as ProfileFormData["depositType"],
     depositPercentage: (groomerProfile.deposit_percentage as number) ?? 10,
     bufferMinutes: (groomerProfile.default_buffer_minutes as number) ?? 0,
+    isAcceptingBookings: (groomerProfile.is_accepting_bookings as boolean) ?? false,
   };
 
   const services: ServiceRow[] = (serviceRows ?? []).map((s, i) => ({
@@ -178,6 +179,7 @@ function emptyProfile(ownerName: string, email: string, phone: string): ProfileF
     depositType: "none",
     depositPercentage: 10,
     bufferMinutes: 0,
+    isAcceptingBookings: false,
   };
 }
 
@@ -233,6 +235,40 @@ export async function saveProfile(
   if (gpResult.error) return { error: gpResult.error.message };
   if (profileResult.error) return { error: profileResult.error.message };
 
+  return {};
+}
+
+export async function toggleAcceptingBookings(
+  groomerProfileId: string,
+  isAcceptingBookings: boolean
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  // Only the salon owner may toggle bookings
+  const { data: gp } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("id")
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id)
+    .maybeSingle();
+
+  if (!gp) return { error: "Not authorised" };
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ is_accepting_bookings: isAcceptingBookings, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId);
+
+  if (error) return { error: error.message };
   return {};
 }
 

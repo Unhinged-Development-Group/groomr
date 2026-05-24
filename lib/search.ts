@@ -21,6 +21,9 @@ interface RawProfile {
   lng?: number | null;
   deposit_type?: string | null;
   deposit_percentage?: number | null;
+  cover_photo_url?: string | null;
+  profile_image_url?: string | null;
+  gallery_images?: string[] | null;
 }
 
 interface RawService {
@@ -68,12 +71,18 @@ function buildGroomerMap(
         ? Math.round((p.distance_metres / 1609.34) * 10) / 10
         : undefined;
 
+    const image =
+      p.cover_photo_url ||
+      p.profile_image_url ||
+      p.gallery_images?.[0] ||
+      PLACEHOLDER_IMAGE;
+
     return {
       id: p.id,
       name: p.business_name,
       tagline: p.tagline ?? undefined,
       bio: p.bio ?? undefined,
-      image: PLACEHOLDER_IMAGE,
+      image,
       rating: p.average_rating ?? 0,
       reviewCount: p.total_reviews ?? 0,
       distance: distMiles,
@@ -84,6 +93,7 @@ function buildGroomerMap(
       depositPercentage: p.deposit_percentage ?? null,
       serviceNames: svc?.names ?? [],
       isVerified: p.is_verified ?? false,
+      isMobile: p.is_mobile ?? false,
       lat: p.lat ?? undefined,
       lng: p.lng ?? undefined,
     };

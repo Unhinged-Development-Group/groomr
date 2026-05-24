@@ -13,6 +13,8 @@ interface Groomer {
   location?: string;
   nextSlot?: string;
   priceFrom?: number;
+  isVerified?: boolean;
+  isMobile?: boolean;
 }
 
 interface GroomerCardProps {
@@ -77,6 +79,18 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
             <p className="text-[11px] font-bold text-pebble-grey uppercase tracking-wider mt-0.5">
               {groomer.location}
             </p>
+          )}
+          {(groomer.isVerified || groomer.isMobile != null) && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {groomer.isVerified && (
+                <span className="text-xs font-bold bg-groomr-gold text-deep-slate px-2.5 py-0.5 rounded-full">
+                  Verified
+                </span>
+              )}
+              <span className="text-xs font-bold text-pebble-grey bg-pebble-grey/10 px-2.5 py-0.5 rounded-full">
+                {groomer.isMobile ? "Mobile" : "Salon"}
+              </span>
+            </div>
           )}
           {groomer.tagline && (
             <p className="text-sm text-sage-leaf/90 font-medium mt-1.5 leading-snug">

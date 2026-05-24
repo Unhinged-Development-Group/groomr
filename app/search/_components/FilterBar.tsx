@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
 import type { ActiveFilters, SortOption } from "@/types/search";
 
 interface FilterBarProps {
@@ -18,41 +19,68 @@ const CLEAR_FILTERS: ActiveFilters = {
   verified: "all",
 };
 
-interface PillSelectProps {
+interface Option { value: string; label: string }
+
+interface PillDropdownProps {
   value: string;
+  options: Option[];
   active: boolean;
   onChange: (v: string) => void;
-  children: React.ReactNode;
 }
 
-function PillSelect({ value, active, onChange, children }: PillSelectProps) {
+function PillDropdown({ value, options, active, onChange }: PillDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const label = options.find((o) => o.value === value)?.label ?? options[0].label;
+
+  useEffect(() => {
+    function onOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [open]);
+
   return (
-    <div className="relative inline-flex shrink-0">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
         className={[
-          "appearance-none cursor-pointer text-sm font-bold rounded-full pl-4 pr-8 py-2 outline-none transition-all focus:ring-2 focus:ring-groomr-gold",
+          "flex items-center gap-1.5 text-sm font-bold rounded-full pl-4 pr-3 py-2 outline-none transition-all focus:ring-2 focus:ring-groomr-gold select-none whitespace-nowrap",
           active
             ? "bg-deep-slate text-white border border-deep-slate"
             : "bg-white text-deep-slate border border-pebble-grey/30 hover:border-pebble-grey/60",
         ].join(" ")}
       >
-        {children}
-      </select>
-      {/* Chevron */}
-      <svg
-        className={[
-          "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3",
-          active ? "text-white" : "text-pebble-grey",
-        ].join(" ")}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2.5}
-        viewBox="0 0 24 24"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-      </svg>
+        {label}
+        <svg
+          className={["w-3 h-3 transition-transform", open ? "rotate-180" : "", active ? "text-white" : "text-pebble-grey"].join(" ")}
+          fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-2 z-50 min-w-full bg-white border border-pebble-grey/20 rounded-2xl shadow-lg overflow-hidden py-1">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={[
+                "w-full text-left px-4 py-2.5 text-sm font-bold transition-colors whitespace-nowrap",
+                opt.value === value
+                  ? "bg-deep-slate text-white"
+                  : "text-deep-slate hover:bg-pebble-grey/10",
+              ].join(" ")}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -68,12 +96,18 @@ export function FilterBar({ filters, sortBy, isGeoSearch, onFiltersChange, onSor
     filters.rating !== "all" ||
     filters.verified !== "all";
 
+  const sortOptions: Option[] = [
+    { value: "rating", label: "Top Rated" },
+    { value: "az",     label: "A – Z" },
+    { value: "price",  label: "Lowest Price" },
+    ...(isGeoSearch ? [{ value: "distance", label: "Nearest First" }] : []),
+  ];
+
   return (
     <div className="w-full bg-white border-b border-pebble-grey/10">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-wrap items-center gap-2.5 border-t border-pebble-grey/10 py-4">
 
-          {/* Filter label */}
           <span className="text-sm font-bold text-deep-slate flex items-center gap-2 shrink-0 mr-1">
             <svg className="w-4 h-4 text-sage-leaf" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3}
@@ -82,54 +116,77 @@ export function FilterBar({ filters, sortBy, isGeoSearch, onFiltersChange, onSor
             Filters:
           </span>
 
-          <PillSelect value={filters.service} active={filters.service !== "all"} onChange={(v) => update("service", v)}>
-            <option value="all">All Services</option>
-            <option value="full">Full Groom</option>
-            <option value="bath">Bath &amp; Brush</option>
-            <option value="stripping">Hand Stripping</option>
-            <option value="nail">Nail Clipping</option>
-            <option value="puppy">Puppy Introduction</option>
-          </PillSelect>
+          <PillDropdown
+            value={filters.service}
+            active={filters.service !== "all"}
+            onChange={(v) => update("service", v)}
+            options={[
+              { value: "all",       label: "All Services" },
+              { value: "full",      label: "Full Groom" },
+              { value: "bath",      label: "Bath & Brush" },
+              { value: "stripping", label: "Hand Stripping" },
+              { value: "nail",      label: "Nail Clipping" },
+              { value: "puppy",     label: "Puppy Introduction" },
+            ]}
+          />
 
-          <PillSelect value={filters.price} active={filters.price !== "all"} onChange={(v) => update("price", v)}>
-            <option value="all">Any Price</option>
-            <option value="under-40">Under £40</option>
-            <option value="40-60">£40 – £60</option>
-            <option value="over-60">£60+</option>
-          </PillSelect>
+          <PillDropdown
+            value={filters.price}
+            active={filters.price !== "all"}
+            onChange={(v) => update("price", v)}
+            options={[
+              { value: "all",      label: "Any Price" },
+              { value: "under-40", label: "Under £40" },
+              { value: "40-60",    label: "£40 – £60" },
+              { value: "over-60",  label: "£60+" },
+            ]}
+          />
 
-          <PillSelect value={filters.payment} active={filters.payment !== "all"} onChange={(v) => update("payment", v)}>
-            <option value="all">Any Payment</option>
-            <option value="no-deposit">No Pre-payment</option>
-            <option value="deposit">Pre-payment Required</option>
-          </PillSelect>
+          <PillDropdown
+            value={filters.payment}
+            active={filters.payment !== "all"}
+            onChange={(v) => update("payment", v)}
+            options={[
+              { value: "all",        label: "Any Payment" },
+              { value: "no-deposit", label: "No Pre-payment" },
+              { value: "deposit",    label: "Pre-payment Required" },
+            ]}
+          />
 
-          <PillSelect value={filters.rating} active={filters.rating !== "all"} onChange={(v) => update("rating", v)}>
-            <option value="all">Any Rating</option>
-            <option value="4.0">4.0+ Stars</option>
-            <option value="4.5">4.5+ Stars</option>
-            <option value="4.8">4.8+ Stars</option>
-            <option value="5.0">5.0 Stars only</option>
-          </PillSelect>
+          <PillDropdown
+            value={filters.rating}
+            active={filters.rating !== "all"}
+            onChange={(v) => update("rating", v)}
+            options={[
+              { value: "all", label: "Any Rating" },
+              { value: "4.0", label: "4.0+ Stars" },
+              { value: "4.5", label: "4.5+ Stars" },
+              { value: "4.8", label: "4.8+ Stars" },
+              { value: "5.0", label: "5.0 Stars only" },
+            ]}
+          />
 
-          <PillSelect value={filters.verified} active={filters.verified !== "all"} onChange={(v) => update("verified", v)}>
-            <option value="all">Verified?</option>
-            <option value="verified">Verified Only</option>
-          </PillSelect>
+          <PillDropdown
+            value={filters.verified}
+            active={filters.verified !== "all"}
+            onChange={(v) => update("verified", v)}
+            options={[
+              { value: "all",      label: "Verified?" },
+              { value: "verified", label: "Verified Only" },
+            ]}
+          />
 
-          {/* Divider */}
           <div className="hidden sm:block w-px h-5 bg-pebble-grey/20 mx-1" />
 
-          {/* Sort */}
           <span className="text-sm font-bold text-pebble-grey shrink-0">Sort:</span>
-          <PillSelect value={sortBy} active={sortBy !== "rating"} onChange={(v) => onSortChange(v as SortOption)}>
-            <option value="rating">Top Rated</option>
-            <option value="az">A – Z</option>
-            <option value="price">Lowest Price</option>
-            {isGeoSearch && <option value="distance">Nearest First</option>}
-          </PillSelect>
 
-          {/* Clear */}
+          <PillDropdown
+            value={sortBy}
+            active={sortBy !== "rating"}
+            onChange={(v) => onSortChange(v as SortOption)}
+            options={sortOptions}
+          />
+
           {hasActiveFilter && (
             <button
               onClick={() => onFiltersChange(CLEAR_FILTERS)}

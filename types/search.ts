@@ -14,6 +14,7 @@ export interface GroomerResult {
   depositPercentage: number | null;
   serviceNames: string[];
   isVerified: boolean;
+  isMobile: boolean;
   lat?: number;
   lng?: number;
 }

@@ -1,28 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { SearchIcon, CalendarIcon, FavoritesIcon, ShieldIcon } from "@/components/ui/GroomrIcons";
+import { ShieldIcon, CalendarIcon } from "@/components/ui/GroomrIcons";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { SearchPillWrapper } from "./_components/SearchPillWrapper";
-
-const HOW_IT_WORKS = [
-  {
-    Icon: SearchIcon,
-    title: "Find your match",
-    body: "Search by location. See real availability, prices, and reviews from neighbours.",
-  },
-  {
-    Icon: CalendarIcon,
-    title: "Book in seconds",
-    body: "No back-and-forth DM's. Pick a slot, pay deposit, done.",
-  },
-  {
-    Icon: FavoritesIcon,
-    title: "Build a routine",
-    body: "Rebook your favourite groomer in two taps.",
-    tagline: '"Your dog deserves a regular."',
-  },
-];
+import { HowItWorksCarousel } from "./_components/HowItWorksCarousel";
 
 const TESTIMONIALS = [
   {
@@ -140,29 +122,12 @@ export default function LandingPage() {
       <section className="w-full px-6 lg:px-12 xl:px-20 py-20 md:py-28">
         <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
           <Eyebrow>How Groomr works</Eyebrow>
-          <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
+          <h2 className="font-fredoka text-5xl md:text-6xl text-deep-slate">
             Booking grooming, finally easy.
           </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {HOW_IT_WORKS.map(({ Icon, title, body, tagline }, i) => (
-            <div
-              key={title}
-              className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 card-lift"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center">
-                  <Icon size={26} className="text-deep-slate" />
-                </div>
-                <span className="font-fredoka text-3xl text-pebble-grey/40">0{i + 1}</span>
-              </div>
-              <h3 className="font-fredoka text-xl text-deep-slate mb-2">{title}</h3>
-              <p className="text-pebble-grey font-nunito leading-relaxed">
-                {body}
-                {tagline && <span className="tagline ml-1">{tagline}</span>}
-              </p>
-            </div>
-          ))}
+        <div className="max-w-5xl mx-auto">
+          <HowItWorksCarousel />
         </div>
       </section>
 

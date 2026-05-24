@@ -132,78 +132,180 @@ export default function LandingPage() {
       </section>
 
       {/* ── GROOMER STRIP ────────────────────────────────────────────── */}
-      <section className="bg-alabaster-cream py-20 md:py-24">
-        <div className="w-full px-6 lg:px-12 xl:px-20 grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-5">
-            <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-              Are you a dog groomer?
+      <section className="relative bg-deep-slate overflow-hidden py-20 md:py-28">
+        {/* Decorative glows */}
+        <div className="absolute -top-32 -right-32 w-[480px] h-[480px] bg-sage-leaf/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-[360px] h-[360px] bg-groomr-gold/6 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative w-full px-6 lg:px-12 xl:px-20 grid lg:grid-cols-2 gap-14 items-center">
+
+          {/* Left — text */}
+          <div className="space-y-6">
+            <Eyebrow className="border-white/20 text-white/60">For groomers</Eyebrow>
+            <h2 className="font-fredoka text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
+              Your business,<br />finally organised.
             </h2>
-            <p className="text-pebble-grey text-lg leading-relaxed font-nunito">
-              Online booking, automatic reminders, payments, and a profile that shows up where dog
-              owners actually look. Free to list.
+            <p className="text-white/65 text-lg leading-relaxed font-nunito max-w-md">
+              Online booking, automatic reminders, client profiles, and payments — all in one place.
+              A profile that shows up where dog owners actually look. Free to list.
             </p>
-            <div className="flex flex-wrap gap-4 pt-2">
+            <div className="flex flex-wrap gap-4 pt-1">
               <Link
                 href="/become-a-groomer"
-                className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle inline-flex items-center"
+                className="btn-gold-on-dark font-nunito font-bold px-7 py-3 rounded-full focus-ring inline-flex items-center"
               >
                 Become a Groomr
               </Link>
             </div>
-            <div className="flex flex-wrap items-center gap-6 pt-5 border-t border-pebble-grey/20 mt-6">
+            <div className="flex flex-wrap items-center gap-8 pt-6 border-t border-white/10">
               <div>
-                <p className="font-fredoka text-3xl text-deep-slate">2,400+</p>
-                <p className="text-xs font-bold text-sage-leaf uppercase tracking-wider">
-                  Verified groomers
+                <p className="font-fredoka text-3xl text-groomr-gold">2,400+</p>
+                <p className="text-xs font-bold text-white/50 uppercase tracking-wider mt-0.5">
+                  Active groomers
                 </p>
               </div>
               <div>
-                <p className="font-fredoka text-3xl text-deep-slate">38hrs</p>
-                <p className="text-xs font-bold text-sage-leaf uppercase tracking-wider">
+                <p className="font-fredoka text-3xl text-groomr-gold">38 hrs</p>
+                <p className="text-xs font-bold text-white/50 uppercase tracking-wider mt-0.5">
                   Saved monthly avg
                 </p>
               </div>
               <div>
-                <p className="font-fredoka text-3xl text-deep-slate">£0</p>
-                <p className="text-xs font-bold text-sage-leaf uppercase tracking-wider">
+                <p className="font-fredoka text-3xl text-groomr-gold">£0</p>
+                <p className="text-xs font-bold text-white/50 uppercase tracking-wider mt-0.5">
                   To get listed
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Mock booking widget */}
+          {/* Right — dashboard mockup */}
           <div className="relative">
-            <div className="bg-white text-deep-slate rounded-[24px] p-7 shadow-modal border border-pebble-grey/15">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <p className="font-fredoka text-2xl">This week</p>
-                  <p className="text-sm text-pebble-grey font-bold">12 bookings · 4 new clients</p>
+            {/* Subtle glow behind the card */}
+            <div className="absolute inset-0 bg-groomr-gold/8 rounded-[32px] blur-2xl scale-95 pointer-events-none" />
+
+            {/* Browser chrome frame */}
+            <div className="relative rounded-[24px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/10">
+
+              {/* Chrome bar */}
+              <div className="bg-[#1e2d3d] px-4 py-3 flex items-center gap-2 border-b border-white/8">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                  <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                  <div className="w-3 h-3 rounded-full bg-[#28c840]" />
                 </div>
-                <Badge tone="gold">+22%</Badge>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { time: "9:00", who: "Marlow · cocker spaniel", svc: "Full Groom", price: "£58" },
-                  { time: "11:30", who: "Biscuit · border terrier", svc: "Hand-Strip", price: "£80" },
-                  { time: "14:00", who: "Otis · cockapoo", svc: "Full Groom", price: "£60", isNew: true },
-                ].map((b, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-4 bg-white border border-pebble-grey/15 rounded-xl px-4 py-3"
-                  >
-                    <div className="font-fredoka text-deep-slate w-12 shrink-0">{b.time}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-deep-slate truncate">{b.who}</p>
-                      <p className="text-xs text-pebble-grey">{b.svc}</p>
-                    </div>
-                    {b.isNew && <Badge tone="terra">New</Badge>}
-                    <span className="font-fredoka text-deep-slate">{b.price}</span>
+                <div className="flex-1 mx-3">
+                  <div className="bg-white/8 rounded-md px-3 py-1 text-[11px] text-white/40 font-bold text-center max-w-[200px] mx-auto">
+                    dashboard.groomr.co
                   </div>
-                ))}
+                </div>
+                {/* Notification dot */}
+                <div className="relative w-7 h-7 rounded-full bg-white/8 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-9.33-5M13 17v1a2 2 0 11-4 0v-1" />
+                  </svg>
+                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-muted-terracotta rounded-full" />
+                </div>
+              </div>
+
+              {/* Dashboard body */}
+              <div className="bg-[#f7f8f9] p-5 space-y-3">
+
+                {/* Header row */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-fredoka text-lg text-deep-slate">Good morning, Sarah ☀️</p>
+                    <p className="text-xs text-pebble-grey font-bold">Monday · 23 June</p>
+                  </div>
+                  <Badge tone="gold">+22% this week</Badge>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "£486", label: "Today's earnings", highlight: false },
+                    { value: "6",    label: "Appointments",     highlight: false },
+                    { value: "★ 4.9", label: "Your rating",     highlight: true  },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className={[
+                        "rounded-xl p-3 text-center border",
+                        s.highlight
+                          ? "bg-groomr-gold/15 border-groomr-gold/25"
+                          : "bg-white border-pebble-grey/10",
+                      ].join(" ")}
+                    >
+                      <p className="font-fredoka text-xl text-deep-slate">{s.value}</p>
+                      <p className="text-[10px] text-pebble-grey font-bold leading-tight mt-0.5">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Schedule */}
+                <div className="bg-white rounded-xl border border-pebble-grey/10 overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-pebble-grey/8 flex items-center justify-between">
+                    <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider">Today&apos;s Schedule</p>
+                    <span className="text-[10px] font-bold text-sage-leaf">4 of 6 remaining</span>
+                  </div>
+                  <div className="divide-y divide-pebble-grey/6">
+                    {[
+                      { time: "9:00",  who: "Marlow",  breed: "Cocker Spaniel", svc: "Full Groom",    price: "£58", status: "done" },
+                      { time: "11:30", who: "Biscuit", breed: "Border Terrier", svc: "Hand Strip",     price: "£80", status: "now"  },
+                      { time: "14:00", who: "Otis",    breed: "Cockapoo",       svc: "Full Groom",    price: "£60", status: "new"  },
+                      { time: "15:30", who: "Luna",    breed: "Goldendoodle",   svc: "Bath & Blowdry", price: "£45", status: "soon" },
+                    ].map((b) => (
+                      <div key={b.time} className={["flex items-center gap-3 px-4 py-2.5 text-sm", b.status === "done" ? "opacity-40" : ""].join(" ")}>
+                        {/* Status indicator */}
+                        <div className="shrink-0 w-5 flex justify-center">
+                          {b.status === "done" && (
+                            <svg className="w-4 h-4 text-sage-leaf" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                          {b.status === "now" && <div className="w-2 h-2 rounded-full bg-sage-leaf animate-pulse" />}
+                          {(b.status === "new" || b.status === "soon") && <div className="w-2 h-2 rounded-full bg-pebble-grey/30" />}
+                        </div>
+
+                        <span className="font-fredoka text-deep-slate w-10 shrink-0 text-sm">{b.time}</span>
+
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-xs text-deep-slate leading-tight truncate">{b.who} · <span className="font-normal text-pebble-grey">{b.breed}</span></p>
+                          <p className="text-[10px] text-pebble-grey">{b.svc}</p>
+                        </div>
+
+                        {b.status === "now" && (
+                          <span className="text-[9px] font-bold bg-sage-leaf/15 text-sage-leaf px-2 py-0.5 rounded-full shrink-0">In progress</span>
+                        )}
+                        {b.status === "new" && (
+                          <span className="text-[9px] font-bold bg-muted-terracotta/12 text-muted-terracotta px-2 py-0.5 rounded-full shrink-0">New</span>
+                        )}
+
+                        <span className="font-fredoka text-deep-slate text-sm shrink-0">{b.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* New review notification */}
+                <div className="bg-groomr-gold/10 border border-groomr-gold/20 rounded-xl px-4 py-3 flex items-start gap-3">
+                  <div className="flex gap-0.5 shrink-0 pt-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <svg key={i} className="w-3 h-3 fill-groomr-gold" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-deep-slate leading-snug">&ldquo;Marlow looks absolutely gorgeous, thank you!&rdquo;</p>
+                    <p className="text-[10px] text-pebble-grey mt-0.5">Anya · 2 minutes ago</p>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
+
         </div>
       </section>
 

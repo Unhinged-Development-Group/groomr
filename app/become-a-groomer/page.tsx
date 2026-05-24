@@ -262,7 +262,7 @@ export default function BecomeAGroomerPage() {
               return (
                 <div className="lg:col-span-2 bg-white/[0.06] border border-white/10 rounded-[20px] p-8 flex flex-col md:flex-row gap-8">
                   <div className="flex-1 space-y-5">
-                    <div className="w-14 h-14 rounded-2xl bg-groomr-gold/15 border border-groomr-gold/20 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-subtle">
                       <Icon size={28} />
                     </div>
                     <div>
@@ -319,7 +319,7 @@ export default function BecomeAGroomerPage() {
                 key={title}
                 className="bg-white/[0.06] border border-white/10 rounded-[20px] p-7 space-y-5"
               >
-                <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-subtle">
                   <Icon size={24} />
                 </div>
                 <div>
@@ -349,7 +349,7 @@ export default function BecomeAGroomerPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {GROWTH_TOOLS.map(({ Icon, label, detail }) => (
                   <div key={label} className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-white/8 border border-white/8 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0 mt-0.5 shadow-subtle">
                       <Icon size={18} />
                     </div>
                     <div>

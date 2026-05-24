@@ -97,16 +97,40 @@ const FAQS = [
     a: "Free to list. We take 8% of every completed appointment — no monthly charges, no setup fees, no surprises.",
   },
   {
-    q: "Can I import my existing clients?",
-    a: "Yes. Send us a CSV (or your address book) and we'll get them set up in your profile straight away.",
-  },
-  {
-    q: "Do I have to use the calendar?",
-    a: "No. You can set Groomr to enquiry-only, or sync with Google / Apple Calendar so your other bookings block availability automatically.",
-  },
-  {
     q: "How do payouts work?",
-    a: "Weekly bank transfer (Mondays). Deposits and full payments are pooled and net of fees.",
+    a: "Payments are collected at the time of booking (deposit or full amount, depending on your settings). Your balance is paid out every Monday by bank transfer, net of the 8% fee.",
+  },
+  {
+    q: "Can I import my existing clients?",
+    a: "Yes. Send us a CSV or your address book and we'll get them loaded into your profile. They'll show up in your client list with their dog details ready to go.",
+  },
+  {
+    q: "Do I have to use the Groomr calendar?",
+    a: "No. You can operate in enquiry-only mode if you prefer to confirm bookings manually. You can also sync with Google or Apple Calendar so your existing schedule blocks out your Groomr availability automatically.",
+  },
+  {
+    q: "What if a client no-shows or cancels last minute?",
+    a: "You set your own cancellation window and deposit amount. If a client cancels inside your window, the deposit is yours to keep. No chasing, no awkward calls.",
+  },
+  {
+    q: "Can I add my team or other groomers?",
+    a: "Yes. You can invite staff members who each get their own login, schedule, and client list — all under your business profile. Great for salons or mobile teams.",
+  },
+  {
+    q: "How does the Verified badge work?",
+    a: "We carry out an ID and insurance check before issuing the Verified badge. It appears on your profile and in search results — owners actively look for it, and it lifts your ranking.",
+  },
+  {
+    q: "Will Groomr work for mobile groomers?",
+    a: "Absolutely. Set your home base and travel radius, and owners within that area will find you in search. Your profile clearly shows you as mobile.",
+  },
+  {
+    q: "What happens to my reviews if I leave?",
+    a: "Your reviews belong to your profile. If you close your Groomr account we'll export them for you — we don't hold them hostage.",
+  },
+  {
+    q: "Is there a contract or minimum term?",
+    a: "No contract, no minimum term. You can pause or close your listing at any time from your dashboard.",
   },
 ];
 
@@ -346,7 +370,7 @@ export default function BecomeAGroomerPage() {
           <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
             <Eyebrow>How it works</Eyebrow>
             <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-              Up and running by Friday.
+              Your profile, live in minutes.
             </h2>
           </div>
 
@@ -437,21 +461,6 @@ export default function BecomeAGroomerPage() {
         <FaqAccordion faqs={FAQS} />
       </section>
 
-      {/* ── FINAL CTA ────────────────────────────────────────────────── */}
-      <section className="w-full px-6 lg:px-12 xl:px-20 pb-24">
-        <div className="bg-alabaster-cream text-deep-slate rounded-[32px] p-12 md:p-16 text-center max-w-5xl mx-auto relative overflow-hidden border border-pebble-grey/20">
-          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-groomr-gold/30 blur-3xl" />
-          <div className="relative space-y-5">
-            <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-              Your next booking is one sign-up away.
-            </h2>
-            <p className="text-pebble-grey text-lg max-w-xl mx-auto">
-              Join 2,400+ groomers who&apos;ve quit chasing texts and started filling their week.
-            </p>
-            <BecomeGroomerCTA label="Become a Groomr — Free" className="px-8 py-4 text-base" />
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

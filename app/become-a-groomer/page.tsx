@@ -392,7 +392,7 @@ export default function BecomeAGroomerPage() {
           <div className="space-y-4">
             <Eyebrow>What you&apos;ll keep</Eyebrow>
             <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-              Simple, transparent pricing.
+              No hidden fees. Ever.
             </h2>
             <p className="text-pebble-grey text-lg font-nunito leading-relaxed">
               Drag the sliders to see your monthly take-home. We take 8% of every completed

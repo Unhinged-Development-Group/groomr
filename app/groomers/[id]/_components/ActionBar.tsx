@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { HeartIcon } from "@/components/ui/GroomrIcons";
 import { Toast } from "@/components/ui/Toast";
@@ -47,6 +47,14 @@ export function ActionBar({
   const [saved, setSaved] = useState(initialSaved);
   const [busy, setBusy] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+
+  // Auto-open booking modal if returning from sign-in during a booking flow
+  useEffect(() => {
+    const key = `groomr_booking_resume_${groomerId}`;
+    if (sessionStorage.getItem(key)) {
+      setBookingOpen(true);
+    }
+  }, [groomerId]);
   const [contactOpen, setContactOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 

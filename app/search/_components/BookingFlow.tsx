@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { getDogs } from "@/app/actions/dogs";
@@ -54,12 +54,41 @@ export function BookingFlow({
   const { user, isLoaded } = useUser();
   const { openSignIn } = useClerk();
 
+  const SESSION_KEY = `groomr_booking_resume_${groomerProfileId}`;
+
   const [step, setStep] = useState<Step>(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimeLabel, setSelectedTimeLabel] = useState<string | null>(null);
   const [selectedDog, setSelectedDog] = useState<Dog | null>(null);
+
+  // Restore state saved before sign-in redirect
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(SESSION_KEY);
+    try {
+      const { serviceId, date, time, timeLabel } = JSON.parse(raw) as {
+        serviceId: string;
+        date: string;
+        time: string;
+        timeLabel: string;
+      };
+      const svc = services.find((s) => s.id === serviceId) ?? null;
+      if (svc) setSelectedService(svc);
+      if (date) setSelectedDate(date);
+      if (time) setSelectedTime(time);
+      if (timeLabel) setSelectedTimeLabel(timeLabel);
+      if (svc && date && time) setStep(3);
+    } catch {
+      // ignore malformed data
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const n = new Date();
@@ -437,7 +466,18 @@ export function BookingFlow({
                     You need a Groomr account to request appointments.
                   </p>
                   <button
-                    onClick={() => openSignIn()}
+                    onClick={() => {
+                      sessionStorage.setItem(
+                        SESSION_KEY,
+                        JSON.stringify({
+                          serviceId: selectedService?.id ?? "",
+                          date: selectedDate ?? "",
+                          time: selectedTime ?? "",
+                          timeLabel: selectedTimeLabel ?? "",
+                        }),
+                      );
+                      openSignIn({ forceRedirectUrl: window.location.href });
+                    }}
                     className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring"
                   >
                     Sign In

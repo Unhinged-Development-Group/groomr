@@ -169,11 +169,12 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     publicSlug: m.public_slug ?? null,
   }));
 
-  const coverPhotoUrl   = (groomerProfile.cover_photo_url as string | null) ?? null;
-  const averageRating   = (groomerProfile.average_rating  as number | null)  ?? null;
-  const totalReviews    = (groomerProfile.total_reviews   as number | null)  ?? null;
+  const coverPhotoUrl   = (groomerProfile.cover_photo_url   as string | null) ?? null;
+  const profileImageUrl = (groomerProfile.profile_image_url as string | null) ?? null;
+  const averageRating   = (groomerProfile.average_rating    as number | null) ?? null;
+  const totalReviews    = (groomerProfile.total_reviews     as number | null) ?? null;
 
-  return { groomerProfileId, profile, coverPhotoUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews };
+  return { groomerProfileId, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
@@ -433,6 +434,57 @@ export async function saveCoverPhoto(
   const { error } = await supabaseAdmin
     .from("groomer_profiles")
     .update({ cover_photo_url: url, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id);
+
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function getProfileImageSignature(groomerProfileId: string): Promise<{
+  signature: string;
+  timestamp: number;
+  cloudName: string;
+  apiKey: string;
+  folder: string;
+}> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) throw new Error("Not authenticated");
+
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = `groomr/profile-images/${groomerProfileId}`;
+  const signature = cloudinary.utils.api_sign_request(
+    { folder, timestamp },
+    process.env.CLOUDINARY_API_SECRET!
+  );
+
+  return {
+    signature,
+    timestamp,
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+    apiKey: process.env.CLOUDINARY_API_KEY!,
+    folder,
+  };
+}
+
+export async function saveProfileImage(
+  groomerProfileId: string,
+  url: string
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ profile_image_url: url, updated_at: new Date().toISOString() })
     .eq("id", groomerProfileId)
     .eq("user_id", myProfile.id);
 

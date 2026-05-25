@@ -50,6 +50,7 @@ export interface ProfileEditorInitialData {
   groomerProfileId: string;
   profile: ProfileFormData;
   coverPhotoUrl: string | null;
+  profileImageUrl: string | null;
   services: ServiceRow[];
   availability: AvailabilityRow[];
   team: TeamMemberRow[];

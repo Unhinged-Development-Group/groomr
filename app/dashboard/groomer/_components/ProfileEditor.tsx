@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, toggleAcceptingBookings } from "@/app/actions/profile-editor";
+import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, getProfileImageSignature, saveProfileImage, toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
 import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow } from "@/types/groomer-dashboard";
@@ -142,6 +142,7 @@ interface Props {
   groomerProfileId: string;
   initialProfile: ProfileFormData;
   initialCoverPhotoUrl: string | null;
+  initialProfileImageUrl: string | null;
   initialServices: ServiceRow[];
   initialAvailability: AvailabilityRow[];
   initialTeam: TeamMemberRow[];
@@ -152,6 +153,7 @@ export function ProfileEditor({
   groomerProfileId,
   initialProfile,
   initialCoverPhotoUrl,
+  initialProfileImageUrl,
   initialServices,
   initialAvailability,
   initialTeam,
@@ -161,6 +163,9 @@ export function ProfileEditor({
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialCoverPhotoUrl);
   const [coverUploading, setCoverUploading] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(initialProfileImageUrl);
+  const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [services, setServices] = useState<ServiceRow[]>(initialServices);
   const [savedServices, setSavedServices] = useState<ServiceRow[]>(initialServices);
   const [availability, setAvailability] = useState<AvailabilityRow[]>(initialAvailability);
@@ -241,6 +246,33 @@ export function ProfileEditor({
       // silently ignore — user can retry
     } finally {
       setCoverUploading(false);
+    }
+  }
+
+  async function handleProfileImageUpload(file: File) {
+    setProfileImageUploading(true);
+    try {
+      const sig = await getProfileImageSignature(groomerProfileId);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("api_key", sig.apiKey);
+      form.append("timestamp", String(sig.timestamp));
+      form.append("signature", sig.signature);
+      form.append("folder", sig.folder);
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
+        { method: "POST", body: form }
+      );
+      const json = await res.json();
+      if (!json.secure_url) throw new Error("Upload failed");
+
+      await saveProfileImage(groomerProfileId, json.secure_url);
+      setProfileImageUrl(json.secure_url);
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setProfileImageUploading(false);
     }
   }
 
@@ -865,6 +897,59 @@ export function ProfileEditor({
 
       {/* Right column */}
       <aside className="space-y-5">
+        {/* Profile photo */}
+        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
+          <Eyebrow>Profile photo</Eyebrow>
+          <p className="text-[10px] font-bold text-pebble-grey mt-1 mb-3">Shown in chat and on your public profile</p>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => profileImageInputRef.current?.click()}
+              disabled={profileImageUploading}
+              className="relative w-20 h-20 rounded-full overflow-hidden bg-sage-leaf/20 flex items-center justify-center group shrink-0 focus-ring"
+              aria-label="Upload profile photo"
+            >
+              {profileImageUrl ? (
+                <Image src={profileImageUrl} alt="Profile photo" fill className="object-cover" sizes="80px" />
+              ) : (
+                <span className="font-fredoka text-2xl text-sage-leaf/60">
+                  {(formData.businessName?.[0] ?? formData.ownerName?.[0] ?? "G").toUpperCase()}
+                </span>
+              )}
+              <div className="absolute inset-0 bg-deep-slate/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <UploadIcon size={20} className="text-white" />
+              </div>
+              {profileImageUploading && (
+                <div className="absolute inset-0 bg-deep-slate/60 flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                </div>
+              )}
+            </button>
+            <div className="min-w-0">
+              <button
+                type="button"
+                onClick={() => profileImageInputRef.current?.click()}
+                disabled={profileImageUploading}
+                className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-xs focus-ring disabled:opacity-50 block"
+              >
+                {profileImageUploading ? "Uploading…" : profileImageUrl ? "Replace photo" : "Upload photo"}
+              </button>
+              <p className="text-[10px] font-bold text-pebble-grey mt-1.5">JPG or PNG · max 5 MB</p>
+            </div>
+          </div>
+          <input
+            ref={profileImageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleProfileImageUpload(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+
         <div id="section-cover" className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
           <Eyebrow>Public profile</Eyebrow>
           <div className="mt-3 aspect-[5/3] rounded-xl bg-sage-leaf/20 overflow-hidden relative">
@@ -919,6 +1004,7 @@ export function ProfileEditor({
           <Eyebrow className="text-groomr-gold">Account health</Eyebrow>
           {(() => {
             const checks: Array<{ label: string; done: boolean; sectionId: string }> = [
+              { label: "Profile photo added", done: !!profileImageUrl,                                                                                              sectionId: "section-cover"        },
               { label: "Cover photo added",  done: !!coverPhotoUrl,                                                                                               sectionId: "section-cover"        },
               { label: "Business name set",  done: !!formData.businessName,                                                                                       sectionId: "section-basics"       },
               { label: "Bio written",        done: !!formData.bio,                                                                                                sectionId: "section-basics"       },

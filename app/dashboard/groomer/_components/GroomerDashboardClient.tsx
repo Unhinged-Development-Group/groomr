@@ -324,6 +324,7 @@ export function GroomerDashboardClient({
           groomerProfileId={editorData.groomerProfileId}
           initialProfile={editorData.profile}
           initialCoverPhotoUrl={editorData.coverPhotoUrl}
+          initialProfileImageUrl={editorData.profileImageUrl}
           initialServices={editorData.services}
           initialAvailability={editorData.availability}
           initialTeam={editorData.team}

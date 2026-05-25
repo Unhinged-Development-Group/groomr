@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Terms | Groomr</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'groomr-gold': '#eae45c',
+                        'deep-slate': '#2c3e50',
+                        'sage-leaf': '#88a096',
+                        'pebble-grey': '#95a5a6',
+                        'alabaster-cream': '#f9f8f4',
+                        'muted-terracotta': '#c87964',
+                    },
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                        'nunito': ['Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'subtle': '0 4px 6px -1px rgba(149, 165, 166, 0.10), 0 2px 4px -1px rgba(149, 165, 166, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Global & Print CSS -->
+    <style>
+        body {
+            background-color: #f9f8f4;
+            color: #2c3e50;
+        }
+
+        h1, h2, .font-fredoka {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        h3, h4, p, span, div, li, .font-nunito {
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px #eae45c;
+            border-color: #eae45c;
+        }
+
+        /* Print Styles */
+        @media print {
+            @page { 
+                margin: 20mm 15mm !important; 
+                size: A4 portrait; 
+            }
+            header, footer, #print-button, .no-print { 
+                display: none !important; 
+            }
+            body { 
+                background: #ffffff !important; 
+                color: #000000 !important;
+                font-size: 10pt !important; 
+            }
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            section {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 0 20px 0 !important;
+            }
+            h2, h3, h4, li, .bg-muted-terracotta\/10 { 
+                page-break-inside: avoid !important; 
+            }
+        }
+    </style>
+</head>
+<body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="focus-ring rounded outline-none block">
+                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
+            </a>
+            <div class="hidden md:flex items-center space-x-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
+                <span class="opacity-70">Policy Document</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-4xl mx-auto px-6 md:px-12 py-16 space-y-12 w-full">
+        
+        <!-- Document Title Block -->
+        <div class="text-center space-y-6 py-6">
+            <h1 class="font-fredoka text-4xl md:text-6xl font-bold text-deep-slate">Owner Terms</h1>
+            <div class="space-y-2 text-sage-leaf font-bold text-sm tracking-wider uppercase">
+                <p>Version 0.1 DRAFT</p>
+                <p>Last Updated: May 2026</p>
+                <p>Edited by: Andrew Hughes</p>
+            </div>
+            
+            <div class="flex justify-center pt-4">
+                <button id="print-button" onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 focus-ring cursor-pointer shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Save as PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Drafting Note Callout -->
+        <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-5 rounded-xl flex items-start gap-4 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-muted-terracotta shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="text-deep-slate text-sm md:text-base leading-relaxed">
+                <p><strong class="font-bold text-muted-terracotta">DRAFTING NOTE — NOT FOR PUBLICATION.</strong><br>
+                This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor. Before publishing, you must obtain UK legal review — particularly of sections relating to consumer cancellation rights, deposit handling, and the Stripe Connect payment flow. Sections marked "<span class="font-bold text-muted-terracotta">[REVIEW]</span>" or with bracketed placeholders need explicit legal input.</p>
+            </div>
+        </div>
+
+        <!-- Sections -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">1. About these Owner Terms</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">These Owner Terms apply when you use Groomr to book dog grooming services. They sit alongside our Platform Terms of Use, our Privacy Policy, and the booking details of each appointment you make. By making a booking, you confirm that you have read and accepted these Owner Terms.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr is operated by Unhinged Development Group Ltd, trading as Groomr (“we”, “us”, “Groomr”). You can contact us at <a href="mailto:hello@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">hello@groomr.uk</a> for general queries or <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a> for legal matters.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">2. The Booking is with the Groomer, Not with Us</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">When you book a grooming appointment through Groomr, the contract for that grooming service is between you and the Groomer who will perform it. Groomr is not a party to that contract. We provide the technology that allows you to find Groomers, view their services, book appointments, and pay deposits or full prices. We do not provide the grooming itself, employ the Groomers, or supervise the appointments.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">This means: if your dog is injured, your appointment is unsatisfactory, or there is a dispute about the service, your contractual rights lie primarily against the Groomer. Groomr will help mediate where we can (see section 9), and the Verified badge tells you we have reviewed certain documents (see our Groomer Verification Policy), but the Groomer is the legally responsible party for the grooming.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">3. Making a Booking</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.1 Creating an account</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">To make a booking, you need an account. You must be 18 or over and resident in the United Kingdom. The information you give us — including details about your dog (name, breed, age, size, temperament, and any relevant health notes) — must be accurate. If a Groomer cannot safely or competently groom your dog because you have given inaccurate information, the Groomer may refuse the appointment and you may forfeit any deposit.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.2 When a booking is formed</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">A booking becomes a binding contract between you and the Groomer when you complete the booking flow on the Platform and the system displays a confirmation screen. We will also send a confirmation email. The terms of the booking are those displayed at the point of confirmation, including the service, the date and time, the price, any deposit, and the Groomer’s cancellation policy.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.3 What you are responsible for</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">As an Owner, you agree that you will:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">provide accurate information about your dog;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">declare any known behavioural issues, medical conditions, infectious illnesses, parasites, or recent injuries;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">ensure your dog is up to date with core vaccinations unless an exemption is recorded with the Groomer;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">arrive at the appointment on time, or notify the Groomer promptly if you are running late;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">pay any balance owed at the end of the appointment in accordance with section 5; and</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">treat the Groomer and their premises with respect.</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you do not declare a relevant matter and the Groomer suffers loss or injury as a result (or refuses the service on discovering it), you may be liable to the Groomer and you may lose your deposit.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">4. Deposits, Payment and Pricing</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">4.1 How prices are set</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Each Groomer sets their own prices for their services. The price displayed on the Platform at the time you confirm the booking is the price you agree to pay, including any mandatory fees. Prices are inclusive of VAT where applicable. The Platform will show you the full booking price and any deposit required before you confirm.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.2 The three deposit tiers</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Each Groomer chooses one of three deposit policies, which will be displayed on their profile and at the point of booking:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>No Deposit</strong> — payment is made in full to the Groomer at the appointment.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>Fixed Deposit</strong> — a deposit (a percentage or fixed amount) is taken at the time of booking. The balance is paid to the Groomer at the appointment.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>Full Prepayment</strong> — the full price is taken at the time of booking.</span>
+                </li>
+            </ul>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.3 How payments are processed and held</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Payments made on the Platform are processed by Stripe Payments Europe Ltd through Stripe Connect. When you pay a deposit or full prepayment, the funds are held by Stripe in connection with the Groomer’s connected account and are released to the Groomer after the appointment has been marked as completed (typically within [24–48] hours of the appointment end time). <span class="text-muted-terracotta">[REVIEW: confirm exact hold/release timing once Stripe Connect setup is finalised.]</span> Stripe is the regulated payment service provider; Groomr does not itself hold customer funds for safekeeping.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.4 Card details</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Your card details are collected and stored by Stripe in accordance with PCI-DSS standards. Groomr does not see or store your full card number.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">5. Cancellations, Rescheduling and No-Shows</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">5.1 Your statutory cancellation right (Consumer Contracts Regulations 2013)</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Where you book a service that is not for a specific date within the next 14 days, you have a statutory right to cancel within 14 days of making the booking and receive a full refund, in accordance with the Consumer Contracts (Information, Cancellation and Additional Charges) Regulations 2013. To cancel under this right, email <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a> within the 14-day period quoting your booking reference.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6"><strong>Important exception:</strong> if you book an appointment that takes place within the 14-day cancellation window, you expressly agree, by ticking the relevant box at checkout, that the service may be performed during the cancellation period. In that case you will lose the statutory right of cancellation once the service has been performed, or you may be required to pay for any service supplied before you cancel, in proportion to the value of the service delivered. The Groomer’s commercial cancellation policy (set out in 5.2) applies in addition.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.2 The Groomer’s cancellation policy</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Each Groomer sets a commercial cancellation policy, which is displayed on their profile and at booking. A typical structure is:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">Cancellation more than 48 hours before the appointment: full refund of any deposit or prepayment, less any unrecoverable payment processing fees;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">Cancellation between 24 and 48 hours before: deposit forfeited; prepayments refunded less the deposit equivalent;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">Cancellation less than 24 hours before, or no-show on the day: deposit or full prepayment forfeited.</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">The exact times and amounts will be those displayed on the booking. Where the Groomer’s policy is more generous (for example, free cancellation up to 24 hours), that policy applies. <span class="text-muted-terracotta">[REVIEW: forfeiture rules must comply with the Consumer Rights Act 2015 — a forfeiture that goes beyond a genuine pre-estimate of loss may be challenged as an unfair term.]</span></p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.3 Rescheduling</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">You can usually reschedule a booking through your account, subject to the Groomer’s availability. Rescheduling more than 48 hours before the appointment will not normally result in any loss of deposit. Rescheduling within 48 hours may be treated as a cancellation under section 5.2 at the Groomer’s discretion.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.4 Cancellation by the Groomer</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If the Groomer cancels your booking (other than as a result of a breach by you of these Terms), you are entitled to a full refund of any deposit or prepayment. We will also help you find an alternative Groomer where possible.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.5 Refunds</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Refunds are processed back to the original payment method used at booking. We aim to issue refunds within 5–10 working days, although your card issuer may take longer to credit the funds to your account.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">6. At the Appointment</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">6.1 Welfare</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">All Groomers on the Platform commit at registration to operate in compliance with the Animal Welfare Act 2006 (and the Animal Welfare (Scotland) Act 2006), and to uphold the Five Freedoms. If you observe conduct that you reasonably believe falls below these standards, you should remove your dog from the appointment and report the matter to us at <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a>.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">6.2 Discretion of the Groomer</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">A Groomer may, in their professional judgment, refuse to begin or stop a service if they believe the dog is unsafe to handle, unwell, in pain, or that the requested service is not in the dog’s best interest. In such cases, the Groomer may charge a reasonable handling fee. Their reasons for the refusal will be communicated to you at the appointment or shortly afterwards.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">6.3 Late arrival</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you arrive late, the Groomer may shorten or refuse the appointment. If they refuse on the basis of your late arrival, the appointment will normally be treated as a no-show under section 5.2.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">7. Consumer Rights and Service Standards</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">The grooming service you book is supplied by the Groomer. Under the Consumer Rights Act 2015, the Groomer must:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">perform the service with reasonable care and skill;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">perform it within a reasonable time (where not pre-agreed);</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">charge a reasonable price (where not pre-agreed); and</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">match any description of the service given to you.</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If a Groomer fails to meet these standards, you may be entitled to a repeat performance or to a price reduction. These rights are owed to you by the Groomer.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">8. Reviews</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">After a completed appointment, you may leave a review of the Groomer. Reviews must be honest, based on your actual experience, and not defamatory or abusive. You may not be paid (in money or in kind) to leave a review. You may not threaten a Groomer with a negative review to obtain a refund or other benefit.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr may moderate reviews to remove content that is defamatory, abusive, off-topic, contains personal data of others, or breaches these Terms. We will not remove a review simply because the Groomer disagrees with it.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">9. Disputes With a Groomer</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">9.1 Try direct first</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you have a problem with a service (for example, the service was not what you booked, or your dog was returned in a different condition than expected), please first contact the Groomer through the Platform messaging system within 7 days of the appointment. Most issues can be resolved between the Owner and the Groomer.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">9.2 Raise a dispute with Groomr</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">If you cannot resolve the matter with the Groomer, you may raise a formal dispute through the Platform (or by emailing <a href="mailto:disputes@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">disputes@groomr.uk</a>) within 14 days of the appointment. You will need to describe the problem, provide any relevant evidence (photographs, messages, receipts), and tell us what outcome you are seeking.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Groomr will review the dispute and contact both parties. We will aim to acknowledge disputes within 2 working days and conclude review within 14 working days. Where appropriate, we may:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">recommend a refund of the deposit (in part or in full);</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">recommend a price reduction or repeat service by the Groomer;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">temporarily withhold the release of funds from the Groomer pending the outcome;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">suspend the Groomer’s account pending investigation; or</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">close the dispute without further action if the complaint is not substantiated.</span>
+                </li>
+            </ul>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">9.3 Limits of our role</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr is not a court or a regulator. We can mediate and we control the booking funds while they are held by Stripe, but we cannot determine legal liability between you and the Groomer. If a dispute cannot be resolved through our process, you retain the right to pursue the Groomer through the courts or to make a claim through your payment provider’s chargeback process.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">9.4 Serious matters — injury or welfare</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If the dispute concerns an injury to your dog or a welfare concern, please report it to us as soon as possible at <a href="mailto:safety@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">safety@groomr.uk</a>. Where appropriate, we may suspend the Groomer’s profile pending investigation and may report the matter to the relevant local authority or the RSPCA / SSPCA.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">10. Our Liability to You</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Our liability to you is set out in section 9 of our Platform Terms of Use. In summary, and subject to the points below:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">Nothing limits or excludes our liability for death or personal injury caused by our negligence, fraud, or for anything else we cannot lawfully limit.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">Groomr is not liable for the conduct of Groomers, the outcome of the grooming, or the condition of the premises.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">Our liability for matters under our direct control (for example, a defect in the booking system) is capped as set out in the Platform Terms.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1">These limits do not affect your statutory rights as a consumer under UK law, which cannot be lawfully excluded.</span>
+                </li>
+            </ul>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">11. Changes to these Owner Terms</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">We may update these Owner Terms from time to time. Material changes (those that affect your rights or obligations) will be notified to you by email and via the Platform at least 30 days before they take effect. Non-material changes (typos, clarifications) take effect on posting. If you do not accept a change, you may close your account before it takes effect.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">12. Governing Law</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">These Owner Terms are governed by the laws of England and Wales. If you are resident in Scotland or Northern Ireland, you keep the protection of mandatory rules of your local law and may bring proceedings in your local courts. See section 13 of our Platform Terms of Use for full detail.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">13. Contact Us</h2>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>General:</strong> <a href="mailto:hello@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">hello@groomr.uk</a></span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>Disputes:</strong> <a href="mailto:disputes@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">disputes@groomr.uk</a></span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>Welfare or safety concerns:</strong> <a href="mailto:safety@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">safety@groomr.uk</a></span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>Legal & complaints:</strong> <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a></span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span class="flex-1"><strong>Postal:</strong> Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</span>
+                </li>
+            </ul>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-deep-slate text-alabaster-cream py-12 px-8 md:px-12 text-center relative overflow-hidden mt-8 no-print">
+        <!-- Top border accent -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
+        
+        <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain mx-auto mb-6">
+        
+        <div class="space-y-1">
+            <p class="font-nunito font-bold tracking-wider text-sage-leaf text-sm uppercase">Unhinged Development Group Ltd</p>
+            <p class="text-xs text-pebble-grey opacity-50 uppercase mt-2">&copy; 2026 Groomr. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

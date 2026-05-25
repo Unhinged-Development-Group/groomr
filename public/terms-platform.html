@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Terms of Use | Groomr</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'groomr-gold': '#eae45c',
+                        'deep-slate': '#2c3e50',
+                        'sage-leaf': '#88a096',
+                        'pebble-grey': '#95a5a6',
+                        'alabaster-cream': '#f9f8f4',
+                        'muted-terracotta': '#c87964',
+                    },
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                        'nunito': ['Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'subtle': '0 4px 6px -1px rgba(149, 165, 166, 0.10), 0 2px 4px -1px rgba(149, 165, 166, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Global & Print CSS -->
+    <style>
+        body {
+            background-color: #f9f8f4;
+            color: #2c3e50;
+        }
+
+        h1, h2, .font-fredoka {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        h3, h4, p, span, div, li, .font-nunito {
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px #eae45c;
+            border-color: #eae45c;
+        }
+
+        /* Print Styles */
+        @media print {
+            @page { 
+                margin: 20mm 15mm !important; 
+                size: A4 portrait; 
+            }
+            header, footer, #print-button, .no-print { 
+                display: none !important; 
+            }
+            body { 
+                background: #ffffff !important; 
+                color: #000000 !important;
+                font-size: 10pt !important; 
+            }
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            section {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 0 20px 0 !important;
+            }
+            h2, h3, h4, li, .bg-muted-terracotta\/10 { 
+                page-break-inside: avoid !important; 
+            }
+        }
+    </style>
+</head>
+<body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="focus-ring rounded outline-none block">
+                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
+            </a>
+            <div class="hidden md:flex items-center space-x-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
+                <span class="opacity-70">Policy Document</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-4xl mx-auto px-6 md:px-12 py-16 space-y-12 w-full">
+        
+        <!-- Document Title Block -->
+        <div class="text-center space-y-6 py-6">
+            <h1 class="font-fredoka text-4xl md:text-6xl font-bold text-deep-slate">Platform Terms of Use</h1>
+            <div class="space-y-2 text-sage-leaf font-bold text-sm tracking-wider uppercase">
+                <p>Version 0.1 DRAFT</p>
+                <p>Last Updated: May 2026</p>
+                <p>Edited by: Andrew Hughes</p>
+            </div>
+            
+            <div class="flex justify-center pt-4">
+                <button id="print-button" onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 focus-ring cursor-pointer shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Save as PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Drafting Note Callout -->
+        <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-5 rounded-xl flex items-start gap-4 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-muted-terracotta shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="text-deep-slate text-sm md:text-base leading-relaxed">
+                <p><strong class="font-bold text-muted-terracotta">DRAFTING NOTE — NOT FOR PUBLICATION.</strong><br>
+                This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor. Before publishing or relying on it, you must engage a UK commercial solicitor (ideally one familiar with online marketplaces and consumer law) to review and adapt the document for Groomr's specific operating model, payment flows, and risk profile. Sections marked "[REVIEW]" or with bracketed placeholders are explicitly flagged for legal input.</p>
+            </div>
+        </div>
+
+        <!-- Sections -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">1. About these Terms</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">These Platform Terms of Use (“Terms”) govern your access to and use of the Groomr website at groomr.uk, the Groomr mobile applications, and any related online services (collectively, the “Platform”). They form a legally binding agreement between you and Unhinged Development Group Ltd.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">1.1 Who we are</h3>
+            <div class="text-deep-slate leading-relaxed text-lg mb-6 space-y-1">
+                <p><strong>Company name:</strong> Unhinged Development Group Ltd</p>
+                <p><strong>Trading as:</strong> Groomr</p>
+                <p><strong>Registered in:</strong> [England and Wales / Scotland — confirm at filing] under company number [COMPANY NUMBER]</p>
+                <p><strong>Registered office:</strong> [REGISTERED OFFICE ADDRESS]</p>
+                <p><strong>VAT registration number:</strong> [VAT NUMBER, if applicable]</p>
+                <p><strong>General contact:</strong> <a href="mailto:hello@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">hello@groomr.uk</a></p>
+                <p><strong>Legal & complaints contact:</strong> <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a></p>
+            </div>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">We refer to ourselves in these Terms as “Groomr”, “we”, “us” or “our”. We refer to you as the “user”, “you” or “your”.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">1.2 How the Platform works</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Groomr is an online marketplace that connects dog owners (“Owners”) with independent professional dog groomers (“Groomers”) operating in the United Kingdom. Owners can search for Groomers, view their services, and book appointments. Groomers list their services, manage their availability, and accept bookings.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6"><strong>Important:</strong> Groomr is a platform, not a grooming business. We do not provide grooming services ourselves. We do not employ Groomers. Each booking made through the Platform creates a direct contract for grooming services between the Owner and the Groomer. Our role is limited to providing the technology that enables that booking to be made and paid for.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">1.3 Other documents that apply</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">In addition to these Terms, your use of the Platform is governed by:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>our Owner Terms (if you are booking grooming services);</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>our Groomer Terms (if you are listing services on the Platform);</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>our Privacy Policy, which explains how we collect and use your personal data;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>our Cookie Policy, which explains how we use cookies and similar technologies; and</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>our Acceptable Use Policy (set out in section 6 below).</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Where the Owner Terms or the Groomer Terms conflict with these Platform Terms in relation to a booking, the Owner Terms or Groomer Terms (as applicable) take precedence in respect of that booking.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">2. Acceptance and Eligibility</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">2.1 Accepting these Terms</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">By accessing or using the Platform, you confirm that you have read, understood and agreed to these Terms. If you do not agree, you must stop using the Platform.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">When you create an account, you will be asked to expressly confirm your acceptance of these Terms, the Privacy Policy, and (depending on your account type) either the Owner Terms or the Groomer Terms.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">2.2 Eligibility</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">To create an account or make a booking, you must:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>be at least 18 years old;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>have the legal capacity to enter into a binding contract; and</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>be resident in the United Kingdom.</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">To register as a Groomer, you must additionally meet the requirements set out in our Groomer Terms and Groomer Verification Policy.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">3. Your Account</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.1 Account creation</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may create one account per individual or business. You must provide accurate, current and complete information when registering and keep that information up to date. We use Clerk to manage authentication.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.2 Security of your account</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">You are responsible for:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>keeping your login credentials confidential;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>all activity that occurs under your account; and</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>notifying us immediately at <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a> if you suspect your account has been accessed without your authorisation.</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">We are not liable for any loss arising from your failure to keep your credentials secure, except to the extent we are required by law to be liable.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.3 Closing your account</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may close your account at any time through your account settings or by emailing <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a>. If you have any open bookings or outstanding obligations to other users of the Platform, your account will remain active until those are concluded.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">4. Intellectual Property</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">4.1 Our content</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">All intellectual property rights in the Platform itself — including the Groomr name, logo, brand identity, software, source code, designs, written content, illustrations, and the structure and arrangement of the Platform — are owned by or licensed to Unhinged Development Group Ltd.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Nothing in these Terms transfers any of those rights to you. You are granted a limited, revocable, non-transferable, non-exclusive licence to access and use the Platform for its intended purpose. You may not copy, scrape, reverse-engineer, frame, mirror, or commercially exploit any part of the Platform without our prior written consent.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.2 Your content</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">When you upload or post content to the Platform (for example, your profile information, photographs of dogs, service listings, reviews, or messages), you retain ownership of that content. You grant Groomr a worldwide, royalty-free, non-exclusive, sub-licensable licence to host, store, reproduce, modify (for technical purposes such as resizing), display and distribute that content on and through the Platform for the purpose of operating the Platform and promoting it.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">You warrant that you own or have all necessary rights in any content you upload, and that the content does not infringe the rights of any third party.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">5. Fees and Payments</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">5.1 Platform fees</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Use of the Platform is free for Owners. Groomers pay a commission on completed bookings as set out in the Groomer Terms. We do not charge users a subscription or membership fee.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.2 Payment processing</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">All payments made through the Platform are processed by our payment partner, Stripe Payments Europe Ltd. We use Stripe Connect to handle bookings between Owners and Groomers. Payments made by Owners are held by Stripe and released to the Groomer’s connected Stripe account in accordance with our release rules set out in the Owner Terms and Groomer Terms. <span class="text-muted-terracotta">[REVIEW: confirm exact Stripe Connect configuration once finalised.]</span></p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">By making or receiving payments through the Platform, you also agree to Stripe’s applicable terms of service, which are available at <a href="https://stripe.com/legal" target="_blank" rel="noopener noreferrer" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">stripe.com/legal</a>.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">6. Acceptable Use</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">When using the Platform, you must not:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>use the Platform in any way that is unlawful, fraudulent, or has any unlawful or fraudulent purpose or effect;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>impersonate any person or misrepresent your identity, qualifications, or affiliation with any person or organisation;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>post or transmit any content that is defamatory, threatening, harassing, hateful, obscene, or sexually explicit;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>post or transmit any content that promotes or facilitates animal cruelty or breach of the Animal Welfare Act 2006 or the Animal Welfare (Scotland) Act 2006;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>post fake, paid, or otherwise manipulated reviews — expressly prohibited under the Digital Markets, Competition and Consumers Act 2024;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>circumvent Groomr’s booking and payment systems (for example, by encouraging Owners to book directly outside the Platform);</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>attempt to gain unauthorised access to any part of the Platform, to other users’ accounts, or to any computer systems connected to the Platform;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>introduce viruses, worms, trojans, or any other malicious code to the Platform;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>automate access to the Platform (including by scraping, crawling or using bots) other than as expressly permitted by us in writing;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>collect, harvest or store personal data of other users for any purpose other than the legitimate operation of your account;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>use the Platform to send unsolicited commercial communications; or</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>encourage or assist any third party to do any of the above.</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Breach of this section may result in immediate suspension or termination of your account under section 8 below, and may be reported to the appropriate authorities.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">7. User-Generated Content and Moderation</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">7.1 Reviews</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Owners may leave reviews of Groomers following a completed appointment. Reviews must be honest, based on actual experience, and not defamatory. Groomr reserves the right to remove any review that breaches these Terms, including reviews that contain abusive language, false statements of fact, or commercially sensitive information unrelated to the grooming experience.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">In accordance with the Digital Markets, Competition and Consumers Act 2024, Groomr takes reasonable steps to verify that reviews are genuine, including by linking reviews to completed bookings on the Platform.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">7.2 Reporting content</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you believe any content on the Platform breaches these Terms, is illegal, or infringes your rights, please report it to <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a>. We will review reports promptly and take appropriate action.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">7.3 Our duties as a content host</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr hosts certain user-generated content (such as profiles, photographs, reviews and messages). We act as an intermediary host. In accordance with the Online Safety Act 2023 and other applicable law, we will take down illegal content of which we become aware, and we operate the reporting and moderation processes described above.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">8. Suspension and Termination</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">8.1 By us</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">We may suspend or terminate your access to the Platform (in whole or in part) at any time if:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>you breach these Terms, the Owner Terms, the Groomer Terms, or any policy referred to in them;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>we reasonably suspect fraudulent, illegal, or harmful activity by you;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>a Groomer fails to maintain valid verification documents in accordance with the Groomer Verification Policy; or</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>we are required to do so by law, by a regulator, or by court order.</span>
+                </li>
+            </ul>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Where we do this, we will give you reasonable notice and a chance to respond unless the circumstances make immediate action necessary (for example, where animal welfare is at risk or where notice would frustrate a regulatory investigation).</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">8.2 By you</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may stop using the Platform at any time. To close your account, see section 3.3.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">8.3 Effect of termination</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Termination does not affect rights that have already accrued. Any open bookings will be resolved in accordance with the Owner Terms or Groomer Terms. Sections relating to intellectual property, liability, indemnity, governing law, and any other provision intended to survive termination shall continue to apply.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">9. Our Liability</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">9.1 What we are liable for</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Nothing in these Terms limits or excludes our liability for:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>death or personal injury caused by our negligence;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>fraud or fraudulent misrepresentation;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any breach of statutory rights that cannot be lawfully excluded; or</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any other liability that cannot be lawfully limited or excluded under UK law.</span>
+                </li>
+            </ul>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">9.2 What we are not liable for</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">Subject to section 9.1, Groomr is not liable for:</p>
+            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>the quality, safety, legality, or any other aspect of the grooming services provided by Groomers — those services are provided by independent Groomers under a direct contract with the Owner;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any act, omission, error, or misconduct of a Groomer or an Owner;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any injury, illness, distress, or death of a dog arising from a grooming appointment;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any property damage, theft, or loss occurring at or in connection with a grooming appointment;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any inaccuracy in a Groomer’s profile, service description, pricing, or availability;</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any loss of profits, loss of business, loss of goodwill, or any indirect or consequential loss; or</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
+                    <span>any failure or delay in performing our obligations under these Terms caused by events outside our reasonable control.</span>
+                </li>
+            </ul>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">9.3 Cap on liability</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Subject to section 9.1, our total aggregate liability to you arising out of or in connection with the Platform and these Terms, whether in contract, tort (including negligence), breach of statutory duty, or otherwise, shall not exceed the greater of (a) £100 or (b) the total fees paid by you (or, in the case of Groomers, paid by Owners in connection with your services) through the Platform in the 12 months immediately preceding the event giving rise to the liability. <span class="text-muted-terracotta">[REVIEW: cap level to be confirmed by solicitor. Consumer-facing caps must be reasonable under the Consumer Rights Act 2015.]</span></p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">9.4 Verification badge</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Where a Groomer carries the Verified badge, Groomr has reviewed certain documents as set out in our Groomer Verification Policy. The badge does not constitute a guarantee or warranty by Groomr as to the standard, safety, or outcome of any grooming service. Owners must satisfy themselves of any matter that is important to their booking.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">10. Indemnity</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">You agree to indemnify and hold Groomr harmless against any claims, losses, liabilities, costs and expenses (including reasonable legal fees) arising out of or in connection with: (a) your breach of these Terms, the Owner Terms, the Groomer Terms, or any policy referred to in them; (b) your misuse of the Platform; (c) any content you upload to the Platform; or (d) your infringement of any law or third-party right.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">This indemnity does not apply where the claim is caused by our negligence or wilful breach.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">11. Data Protection and Privacy</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr is the controller of personal data collected through the Platform. We process personal data in accordance with the UK General Data Protection Regulation, the Data Protection Act 2018, and the Privacy and Electronic Communications Regulations 2003, as more fully described in our Privacy Policy. Our data protection contact is <a href="mailto:privacy@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">privacy@groomr.uk</a>.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">12. Changes to these Terms</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">We may update these Terms from time to time. If we make a material change — for example, one that affects your rights or obligations — we will notify you by email and/or via the Platform at least 30 days before the change takes effect, except where the change is required by law or to address a security risk, in which case we may give shorter notice.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you do not agree to a change, you may close your account before the change takes effect. Your continued use of the Platform after the effective date constitutes acceptance of the updated Terms.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">13. Governing Law and Jurisdiction</h2>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">These Terms, and any dispute or claim arising out of or in connection with them or their subject matter or formation (including non-contractual disputes or claims), shall be governed by and construed in accordance with the laws of England and Wales.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-4">However, if you are a consumer ordinarily resident in Scotland or Northern Ireland, this section does not deprive you of the protection of mandatory rules of law in your place of residence, and you may also bring proceedings in the courts of your place of residence. Specifically, consumers in Scotland may bring proceedings in the Scottish courts (Sheriff Court or Court of Session, as appropriate), and consumers in Northern Ireland may bring proceedings in the Northern Irish courts.</p>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Subject to the above, you and we both agree to the non-exclusive jurisdiction of the courts of England and Wales.</p>
+        </section>
+
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">14. General</h2>
+            
+            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">14.1 Entire agreement</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">These Terms (together with the Owner Terms or Groomer Terms, the Privacy Policy, the Cookie Policy and any other documents referred to in them) constitute the entire agreement between you and Groomr in relation to the Platform.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">14.2 Severability</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If any provision of these Terms is held to be invalid or unenforceable, the remaining provisions will continue in full force.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">14.3 Assignment</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may not transfer your rights or obligations under these Terms without our prior written consent. We may transfer our rights and obligations to a successor business or group company on giving you reasonable notice.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">14.4 No waiver</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If we do not enforce a right under these Terms immediately, that does not mean we have waived the right.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">14.5 Third-party rights</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">A person who is not a party to these Terms has no right under the Contracts (Rights of Third Parties) Act 1999 to enforce any of its terms.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">14.6 Notices</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">Notices to Groomr should be sent to <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a>. Notices to you will be sent to the email address registered to your account. Notices are deemed received on the next working day after sending.</p>
+
+            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">14.7 Complaints</h3>
+            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you have a complaint about the Platform, please contact us at <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a>. We will respond within 5 working days and aim to resolve your complaint within 30 days.</p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-deep-slate text-alabaster-cream py-12 px-8 md:px-12 text-center relative overflow-hidden mt-8 no-print">
+        <!-- Top border accent -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
+        
+        <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain mx-auto mb-6">
+        
+        <div class="space-y-1">
+            <p class="font-nunito font-bold tracking-wider text-sage-leaf text-sm uppercase">Unhinged Development Group Ltd</p>
+            <p class="text-xs text-pebble-grey opacity-50 uppercase mt-2">&copy; 2026 Groomr. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

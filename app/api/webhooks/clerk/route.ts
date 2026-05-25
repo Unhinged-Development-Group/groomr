@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   console.log('Webhook received:', evt.type)
 
   if (evt.type === 'user.created') {
-    const { id, first_name, last_name, email_addresses, public_metadata } = evt.data
+    const { id, first_name, last_name, email_addresses, image_url, public_metadata } = evt.data
     const email = email_addresses?.[0]?.email_address ?? null
 
     const { data: profileData, error: profileError } = await supabaseAdmin
@@ -51,6 +51,7 @@ export async function POST(req: Request) {
         clerk_id: id,
         full_name: `${first_name ?? ''} ${last_name ?? ''}`.trim(),
         email,
+        avatar_url: image_url ?? null,
         is_admin: false,
         roles: '{owner}',
       })
@@ -107,7 +108,7 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === 'user.updated') {
-    const { id, first_name, last_name, email_addresses } = evt.data
+    const { id, first_name, last_name, email_addresses, image_url } = evt.data
     const email = email_addresses?.[0]?.email_address ?? null
 
     const { error } = await supabaseAdmin
@@ -115,6 +116,7 @@ export async function POST(req: Request) {
       .update({
         full_name: `${first_name ?? ''} ${last_name ?? ''}`.trim(),
         email,
+        avatar_url: image_url ?? null,
         updated_at: new Date().toISOString(),
       })
       .eq('clerk_id', id)

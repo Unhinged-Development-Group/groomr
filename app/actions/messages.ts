@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -110,8 +110,23 @@ export async function getGroomerMessageThreads(): Promise<{
   const ownerIds = [...new Set(appointments.map((a) => a.owner_id as string))];
   const { data: ownerProfiles } = await supabaseAdmin
     .from("profiles")
-    .select("id, full_name, avatar_url, phone, email")
+    .select("id, full_name, clerk_id, phone, email")
     .in("id", ownerIds);
+
+  // Fetch owner avatar URLs from Clerk (source of truth for profile pictures)
+  const clerkIds = (ownerProfiles ?? []).map((p) => p.clerk_id as string).filter(Boolean);
+  const clerkImageMap = new Map<string, string>();
+  if (clerkIds.length) {
+    try {
+      const clerk = await clerkClient();
+      const { data: clerkUsers } = await clerk.users.getUserList({ userId: clerkIds, limit: 100 });
+      for (const u of clerkUsers) {
+        clerkImageMap.set(u.id, u.imageUrl);
+      }
+    } catch {
+      // non-fatal — fall back to no avatar
+    }
+  }
 
   // Fetch dog names in one query
   const dogIds = [...new Set(appointments.map((a) => a.dog_id as string).filter(Boolean))];
@@ -119,7 +134,16 @@ export async function getGroomerMessageThreads(): Promise<{
     ? await supabaseAdmin.from("dogs").select("id, name").in("id", dogIds)
     : { data: [] };
 
-  const ownerMap = new Map((ownerProfiles ?? []).map((p) => [p.id, p]));
+  // Merge Clerk image URL into each owner profile
+  const ownerMap = new Map(
+    (ownerProfiles ?? []).map((p) => [
+      p.id,
+      {
+        ...p,
+        avatar_url: clerkImageMap.get(p.clerk_id as string) ?? null,
+      },
+    ]),
+  );
   const dogMap   = new Map((dogs ?? []).map((d) => [d.id, d.name as string]));
 
   // Group messages by appointment_id

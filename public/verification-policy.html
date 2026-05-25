@@ -1,0 +1,540 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groomer Verification Policy | Groomr</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
+    
+    <!-- Google Fonts: Fredoka & Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'groomr-gold': '#eae45c',
+                        'deep-slate': '#2c3e50',
+                        'sage-leaf': '#88a096',
+                        'pebble-grey': '#95a5a6',
+                        'alabaster-cream': '#f9f8f4',
+                        'muted-terracotta': '#c87964',
+                    },
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                        'nunito': ['Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'subtle': '0 4px 6px -1px rgba(149, 165, 166, 0.10), 0 2px 4px -1px rgba(149, 165, 166, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f9f8f4; /* Alabaster Cream */
+            color: #2c3e50; /* Deep Slate */
+            scroll-behavior: smooth;
+        }
+        h1, h2, .font-fredoka { font-family: 'Fredoka', sans-serif; }
+        h3, h4, p, span, div, li, .font-nunito { font-family: 'Nunito', sans-serif; }
+
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px #eae45c;
+            border-color: #eae45c;
+        }
+
+        /* Print Styles for PDF Generation */
+        @media print {
+            /* 1. FIX PAGE BREAKS: Use standard @page margins, NOT body padding */
+            @page {
+                margin: 20mm 15mm !important; 
+                size: A4 portrait;
+            }
+            
+            body { 
+                background-color: #ffffff !important; 
+                padding: 0 !important; /* Crucial: Let @page handle margins */
+                font-size: 10pt !important;
+                line-height: 1.4 !important;
+                color: #1e293b !important;
+            }
+
+            /* Remove web-only elements */
+            header, footer, #print-button { 
+                display: none !important; 
+            }
+
+            main { 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                max-width: 100% !important; 
+                width: 100% !important;
+            }
+
+            /* 2. CONDENSE WHITESPACE */
+            .space-y-12 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
+            .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.8rem !important; }
+            .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.4rem !important; }
+            .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem !important; }
+            .py-16 { padding: 0 !important; }
+            .py-6 { padding-top: 0 !important; padding-bottom: 0 !important; }
+            .mb-6, .mb-8 { margin-bottom: 0.75rem !important; }
+
+            /* 3. REFINED TYPOGRAPHY */
+            h1 { font-size: 18pt !important; margin-bottom: 0 !important; line-height: 1.1 !important; color: #0f172a !important; }
+            h2 { font-size: 12.5pt !important; padding-bottom: 0.2rem !important; margin-bottom: 0.5rem !important; margin-top: 1.5rem !important; border-bottom: 1px solid #cbd5e1 !important; color: #0f172a !important; }
+            h3 { font-size: 10.5pt !important; margin: 0 !important; display: inline !important; }
+            p, span, li, div { font-size: 10pt !important; }
+            .text-sm { font-size: 9pt !important; }
+            .text-lg { font-size: 10pt !important; }
+
+            /* 4. INLINE NUMBERS & FORMAL BADGES */
+            /* Force the items into a row so the number sits next to the text */
+            .bg-pebble-grey\/5 {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
+                padding: 0 !important;
+                margin-bottom: 1rem !important;
+                background-color: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                page-break-inside: avoid !important; /* Protects the entire item */
+                break-inside: avoid !important;
+            }
+
+            .flex.flex-wrap.items-center.gap-3 {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 0 !important;
+                margin-bottom: 0.25rem !important;
+            }
+
+            .shrink-0.pt-1 { 
+                padding-top: 0.15rem !important; /* Aligns number perfectly with h3 text */
+            }
+
+            /* Make the gold circle much smaller and cleaner */
+            .w-10.h-10.bg-groomr-gold\/30 { 
+                width: 1.2rem !important; 
+                height: 1.2rem !important; 
+                font-size: 8pt !important;
+                background-color: transparent !important;
+                border: 1px solid #64748b !important;
+                color: #334155 !important;
+            }
+
+            /* Make pills formal: smaller font, square edges, simple outline */
+            .text-\[11px\].tracking-\[0\.1em\] { 
+                font-size: 6.5pt !important; 
+                padding: 1px 6px !important; 
+                margin-left: 0.5rem !important;
+                background-color: transparent !important; 
+                border: 1px solid #94a3b8 !important; 
+                color: #475569 !important; 
+                font-weight: 700 !important;
+                letter-spacing: 0.05em !important;
+                border-radius: 3px !important; /* Formal, document-style edges */
+            }
+
+            /* 5. SECTIONS & ICONS */
+            .w-6.h-6 { width: 1.1rem !important; height: 1.1rem !important; margin-top: 0 !important; }
+            section { 
+                background-color: transparent !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin-bottom: 1rem !important;
+                page-break-inside: auto !important; /* Allow section to split across pages */
+                break-inside: auto !important;
+            }
+            .bg-muted-terracotta\/10 {
+                background-color: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* 6. STRICT PAGE BREAK RULES */
+            h2, h3, h4 {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+            li, .bg-muted-terracotta\/10, .bg-pebble-grey\/5 { 
+                page-break-inside: avoid !important; 
+                break-inside: avoid !important;
+            }
+            p, ul, ol, li {
+                orphans: 3 !important; /* Prevents single lines at the bottom of a page */
+                widows: 3 !important;  /* Prevents single lines at the top of a page */
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
+
+    <!-- Header (Logged Out / Public Variant) -->
+    <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="https://groomr.co" class="focus-ring rounded-lg inline-block transition-opacity hover:opacity-80">
+                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" class="h-8 md:h-10 w-auto object-contain"/>
+            </a>
+            <div class="hidden md:flex items-center space-x-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
+                <span class="opacity-70">Policy Document</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Flow -->
+    <main class="flex-1 max-w-4xl mx-auto px-6 md:px-12 py-16 space-y-12 w-full">
+
+        <!-- Document Title -->
+        <div class="text-center space-y-6 py-6">
+            <!-- Document Logo -->
+            <div class="hidden print:flex justify-center mb-2">
+                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-10 md:h-12 w-auto object-contain">
+            </div>
+
+            <h1 class="font-fredoka text-4xl md:text-6xl font-bold text-deep-slate">Groomer Verification Policy</h1>
+            
+            <div class="space-y-1">
+                <p class="text-pebble-grey font-bold text-sm tracking-wider uppercase">Version 1.0</p>
+                <p class="text-sage-leaf font-bold text-xs tracking-wider uppercase pt-2">Last Updated: Monday, May 25, 2026</p>
+                <p class="text-sage-leaf font-bold text-xs tracking-wider uppercase">Edited by; Andrew Hughes, Founder & Director</p>
+            </div>
+            
+            <!-- Download PDF Button -->
+            <div class="flex justify-center pt-2" id="print-button">
+                <button onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 focus-ring cursor-pointer shadow-sm">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Save as PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 1: Purpose -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20 relative">
+            <!-- Decorative Trust Icon Background -->
+            <div class="absolute right-4 top-4 md:right-8 md:top-8 opacity-5 pointer-events-none print:hidden hidden sm:block">
+                <svg class="w-32 h-32" viewBox="-1 -1 26 26" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="14" cy="10" r="7.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="M9 12l2 2 4-4" />
+                </svg>
+            </div>
+            
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6 relative z-10">1. Purpose</h2>
+            <div class="space-y-4 text-deep-slate leading-relaxed text-lg relative z-10">
+                <p>Dog grooming in the United Kingdom is an unregulated industry. No national licence is required, and no qualification is mandated by lawâ€”any person may hold themselves out as a professional groomer without checks of any kind. Groomr's Verified badge exists to remedy this gap and give dog owners confidence that the professional they are booking has the appropriate training, insurance, and safeguards in place.</p>
+                <p>Verification is not a ceremonial stamp. It means that Groomr has reviewed each groomer's documents directly, confirmed their validity, and is satisfied that the requirements set out in this policy have been met at the time of approval. A groomer whose profile does not carry the verified badge may still list and trade on the platform but will not benefit from the associated search prominence or trust signal.</p>
+            </div>
+        </section>
+
+        <!-- Section 2: Required Documents -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">2. Required Documents</h2>
+            <p class="text-deep-slate leading-relaxed mb-8 text-lg">The following documents are required from every groomer before the verified badge is awarded. Documents must be current, unaltered, and in English or accompanied by a certified translation.</p>
+            
+            <div class="space-y-6">
+                <!-- Item 1 -->
+                <div class="bg-pebble-grey/5 p-6 rounded-xl border border-pebble-grey/20 flex flex-col md:flex-row gap-6">
+                    <div class="shrink-0 pt-1">
+                        <div class="w-10 h-10 bg-groomr-gold/30 rounded-full flex items-center justify-center font-bold text-deep-slate font-fredoka text-lg border border-groomr-gold/50 shadow-sm">1</div>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h3 class="font-nunito font-extrabold text-xl text-deep-slate">Public Liability Insurance</h3>
+                            <span class="font-nunito font-bold text-[11px] tracking-[0.1em] px-[12px] py-[4px] rounded-full border inline-flex items-center bg-sage-leaf/10 text-sage-leaf border-sage-leaf/30 uppercase">Required</span>
+                        </div>
+                        <p class="text-deep-slate leading-relaxed">Minimum cover: Â£1,000,000. The policy must be current and must explicitly cover professional dog grooming activities.</p>
+                        <p class="text-sm text-pebble-grey font-bold">We accept a certificate of insurance or cover note issued directly by the insurer.</p>
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="bg-pebble-grey/5 p-6 rounded-xl border border-pebble-grey/20 flex flex-col md:flex-row gap-6">
+                    <div class="shrink-0 pt-1">
+                        <div class="w-10 h-10 bg-groomr-gold/30 rounded-full flex items-center justify-center font-bold text-deep-slate font-fredoka text-lg border border-groomr-gold/50 shadow-sm">2</div>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h3 class="font-nunito font-extrabold text-xl text-deep-slate">Professional Grooming Qualification</h3>
+                            <span class="font-nunito font-bold text-[11px] tracking-[0.1em] px-[12px] py-[4px] rounded-full border inline-flex items-center bg-sage-leaf/10 text-sage-leaf border-sage-leaf/30 uppercase">Required</span>
+                        </div>
+                        <p class="text-deep-slate leading-relaxed">Minimum Level 2 qualification in dog grooming from an Ofqual-regulated or equivalent awarding body.</p>
+                        <p class="text-deep-slate leading-relaxed">Accepted awarding bodies: City & Guilds; iPET Network (Level 3 Diploma, Level 4 Higher Professional Diploma); Open College Network West Midlands (OCNWM); ST0943 Dog Groomer Apprenticeship Standard.</p>
+                        <p class="text-sm text-pebble-grey font-bold">We accept the original certificate or official transcript showing the awarding body, qualification title, and level.</p>
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="bg-pebble-grey/5 p-6 rounded-xl border border-pebble-grey/20 flex flex-col md:flex-row gap-6">
+                    <div class="shrink-0 pt-1">
+                        <div class="w-10 h-10 bg-groomr-gold/30 rounded-full flex items-center justify-center font-bold text-deep-slate font-fredoka text-lg border border-groomr-gold/50 shadow-sm">3</div>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h3 class="font-nunito font-extrabold text-xl text-deep-slate">Canine First Aid Certification</h3>
+                            <span class="font-nunito font-bold text-[11px] tracking-[0.1em] px-[12px] py-[4px] rounded-full border inline-flex items-center bg-sage-leaf/10 text-sage-leaf border-sage-leaf/30 uppercase">Required</span>
+                        </div>
+                        <p class="text-deep-slate leading-relaxed">Must be a recognised canine or pet first aid course. Human first aid qualification alone is not accepted.</p>
+                        <p class="text-deep-slate leading-relaxed">Accepted: iPET Network Level 3 Award in Canine First Aid; Ofqual Level 3 Pet First Aid; or equivalent.</p>
+                        <p class="text-sm text-pebble-grey font-bold">Certificates must be dated within the previous 3 years. We accept the certificate showing course name, awarding body, and completion date.</p>
+                    </div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="bg-pebble-grey/5 p-6 rounded-xl border border-pebble-grey/20 flex flex-col md:flex-row gap-6">
+                    <div class="shrink-0 pt-1">
+                        <div class="w-10 h-10 bg-groomr-gold/30 rounded-full flex items-center justify-center font-bold text-deep-slate font-fredoka text-lg border border-groomr-gold/50 shadow-sm">4</div>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h3 class="font-nunito font-extrabold text-xl text-deep-slate">Government-Issued Photo ID</h3>
+                            <span class="font-nunito font-bold text-[11px] tracking-[0.1em] px-[12px] py-[4px] rounded-full border inline-flex items-center bg-sage-leaf/10 text-sage-leaf border-sage-leaf/30 uppercase">Required</span>
+                        </div>
+                        <p class="text-deep-slate leading-relaxed">UK passport or UK driving licence. Used solely to confirm that the applicant matches their business registration.</p>
+                        <p class="text-sm text-pebble-grey font-bold">ID documents are not retained beyond the verification review. They are inspected and discarded immediately upon completion.</p>
+                    </div>
+                </div>
+
+                <!-- Item 5 -->
+                <div class="bg-pebble-grey/5 p-6 rounded-xl border border-pebble-grey/20 flex flex-col md:flex-row gap-6">
+                    <div class="shrink-0 pt-1">
+                        <div class="w-10 h-10 bg-groomr-gold/30 rounded-full flex items-center justify-center font-bold text-deep-slate font-fredoka text-lg border border-groomr-gold/50 shadow-sm">5</div>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h3 class="font-nunito font-extrabold text-xl text-deep-slate">Employers' Liability Insurance</h3>
+                            <span class="font-nunito font-bold text-[11px] tracking-[0.1em] px-[12px] py-[4px] rounded-full border inline-flex items-center bg-muted-terracotta/10 text-muted-terracotta border-muted-terracotta/30 uppercase">Conditional</span>
+                        </div>
+                        <p class="text-deep-slate leading-relaxed">Required only where the groomer employs any member of staff. UK law mandates a minimum of Â£5,000,000 cover.</p>
+                        <p class="text-deep-slate leading-relaxed">Groomr asks whether a business has employees during registration. This requirement must be met before the verified badge is awarded in such cases.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Recommended -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">3. Recommended (Not Currently Required)</h2>
+            <p class="text-deep-slate leading-relaxed mb-6 text-lg">The following are not prerequisites for the verified badge but are strongly encouraged. Groomr reserves the right to upgrade any of these to required status in a subsequent version of this policy, with reasonable notice given to existing verified groomers.</p>
+            <ul class="space-y-4 text-deep-slate">
+                <li class="flex items-start gap-4">
+                    <!-- Custom Bullet -->
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
+                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
+                    </svg>
+                    <span class="leading-relaxed"><strong>Professional Indemnity Insurance</strong> â€” covers negligence claims beyond public liability.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
+                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
+                    </svg>
+                    <span class="leading-relaxed"><strong>Equipment & Stock Insurance</strong> â€” covers tools, grooming tables, dryers, and salon assets.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
+                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
+                    </svg>
+                    <span class="leading-relaxed"><strong>Local Council Licence</strong> â€” some local authorities require this; groomers should check with their own council.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
+                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
+                    </svg>
+                    <span class="leading-relaxed"><strong>BIGA/PIF Membership</strong> â€” British Isles Grooming Association or Pet Industry Federation membership signals ongoing commitment to industry standards.</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Section 4: Process -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">4. The Verification Process</h2>
+            <ol class="space-y-4 text-deep-slate leading-relaxed list-none pl-0">
+                <li class="flex items-start gap-3">
+                    <span class="font-bold text-sage-leaf w-5 shrink-0 text-right">1.</span>
+                    <span>The groomer submits required documents via their Groomr dashboard following registration.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="font-bold text-sage-leaf w-5 shrink-0 text-right">2.</span>
+                    <span>Groomr reviews submitted documents within 3-5 working days.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="font-bold text-sage-leaf w-5 shrink-0 text-right">3.</span>
+                    <span>If documents are incomplete or unclear, Groomr contacts the groomer by email stating exactly what is required.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="font-bold text-sage-leaf w-5 shrink-0 text-right">4.</span>
+                    <span>Upon approval, the verified badge appears on the groomer's public profile immediately.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="font-bold text-sage-leaf w-5 shrink-0 text-right">5.</span>
+                    <span>Insurance certificates must be re-submitted annually. First aid certificates every 3 years. Groomr sends reminders before expiry.</span>
+                </li>
+            </ol>
+            
+            <div class="mt-6 p-5 bg-pebble-grey/5 rounded-xl border border-pebble-grey/20 flex items-start gap-4 shadow-sm">
+                <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <p class="text-deep-slate leading-relaxed"><strong>Any issues, contact us here:</strong> <a href="mailto:verify@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors">verify@groomr.uk</a></p>
+            </div>
+        </section>
+
+        <!-- Section 5: Loss of Verification -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">5. Loss of Verification</h2>
+            <p class="text-deep-slate leading-relaxed mb-6">Verification will be revoked in the following circumstances:</p>
+            <ul class="space-y-4 text-deep-slate mb-8">
+                <li class="flex items-start gap-4">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="14" r="5.5" fill="#c87964" stroke="none" opacity="0.3" />
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span class="leading-relaxed">Insurance lapses and is not renewed within 14 days of expiry.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="14" r="5.5" fill="#c87964" stroke="none" opacity="0.3" />
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span class="leading-relaxed">A first aid certificate expires and is not renewed within 30 days.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="14" r="5.5" fill="#c87964" stroke="none" opacity="0.3" />
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span class="leading-relaxed">A complaint is upheld demonstrating that documents submitted were fraudulent or materially misrepresented.</span>
+                </li>
+                <li class="flex items-start gap-4">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="14" r="5.5" fill="#c87964" stroke="none" opacity="0.3" />
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span class="leading-relaxed">A groomer operates in a materially different manner to what was declaredâ€”for example, hiring staff without subsequently obtaining employers' liability insurance.</span>
+                </li>
+            </ul>
+            <div class="bg-pebble-grey/5 p-6 rounded-xl border border-pebble-grey/20">
+                <p class="text-deep-slate leading-relaxed">A groomer whose verification is revoked will have their profile suppressed from search results until verification is reinstated. Their account, booking history, and reviews are retained throughout.</p>
+            </div>
+        </section>
+
+        <!-- Section 6: Animal Welfare Baseline -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">6. Animal Welfare Baseline</h2>
+            <p class="text-deep-slate leading-relaxed mb-6 text-lg">All groomers listing on Groomrâ€”verified or otherwiseâ€”agree at registration to operate in full compliance with the Animal Welfare Act 2006. The Five Freedoms framework is adopted as the minimum standard of care:</p>
+            
+            <ul class="space-y-4 text-deep-slate mb-8 pl-2">
+                <li class="flex items-center gap-4 font-bold">
+                    <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Freedom from hunger, thirst, and malnutrition
+                </li>
+                <li class="flex items-center gap-4 font-bold">
+                    <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Freedom from pain, injury, and disease
+                </li>
+                <li class="flex items-center gap-4 font-bold">
+                    <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Freedom from fear or distress
+                </li>
+                <li class="flex items-center gap-4 font-bold">
+                    <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Freedom from discomfort
+                </li>
+                <li class="flex items-center gap-4 font-bold">
+                    <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5.5" fill="#eae45c" stroke="none" opacity="0.55" />
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Freedom to express normal behaviour
+                </li>
+            </ul>
+            
+            <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-5 rounded-xl flex items-start gap-4 shadow-sm">
+                <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="14" r="5.5" fill="#c87964" stroke="none" opacity="0.55" />
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <p class="text-deep-slate leading-relaxed font-bold">Any credible report of animal mistreatment will result in immediate account suspension pending investigation, regardless of verification status.</p>
+            </div>
+        </section>
+
+        <!-- Section 7: Policy Amendments -->
+        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
+            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">7. Policy Amendments</h2>
+            <p class="text-deep-slate leading-relaxed text-lg">Groomr reserves the right to amend this policy at any time. Existing verified groomers will be notified of material changes by email no fewer than 30 days before such changes take effect. Continued use of the platform following that notice period constitutes acceptance of the updated policy.</p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-deep-slate text-alabaster-cream py-12 px-8 md:px-12 text-center space-y-6 relative overflow-hidden mt-8">
+        <!-- Brand Signature Gold Border -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
+        
+        <div class="flex justify-center mb-4 pt-4">
+            <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
+        </div>
+        
+        <div class="space-y-2 font-nunito font-bold tracking-wider text-sage-leaf text-sm">
+            <p>Unhinged Development Group Ltd</p>
+        </div>
+        
+        <div class="pt-4">
+            <p class="text-xs text-pebble-grey opacity-50 uppercase tracking-wider">&copy; 2026 Groomr. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

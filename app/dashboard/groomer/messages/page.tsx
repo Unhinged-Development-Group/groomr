@@ -7,7 +7,7 @@ export default async function MessagesPage() {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
-  const [threads, bookings] = await Promise.all([
+  const [{ threads, profileId }, bookings] = await Promise.all([
     getGroomerMessageThreads(),
     getGroomerBookingsForMessaging(),
   ]);
@@ -20,7 +20,7 @@ export default async function MessagesPage() {
         </h1>
       </header>
 
-      <MessagesClient initialThreads={threads} initialBookings={bookings} currentUserId={user.id} />
+      <MessagesClient initialThreads={threads} initialBookings={bookings} profileId={profileId} />
     </div>
   );
 }

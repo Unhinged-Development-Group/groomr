@@ -30,10 +30,10 @@ function avatarLetter(name: string): string {
 interface Props {
   initialThreads: MessageThread[];
   initialBookings: BookingForMessaging[];
-  currentUserId: string;
+  profileId: string;
 }
 
-export function MessagesClient({ initialThreads, initialBookings }: Props) {
+export function MessagesClient({ initialThreads, initialBookings, profileId }: Props) {
   const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
   const [activeId, setActiveId] = useState<string | null>(
     initialThreads[0]?.appointmentId ?? null
@@ -131,6 +131,53 @@ export function MessagesClient({ initialThreads, initialBookings }: Props) {
       supabase.removeChannel(channel);
     };
   }, [activeId]);
+
+  // Background subscriptions: update unread counts on threads not currently open
+  useEffect(() => {
+    if (!profileId) return;
+
+    const handler = (payload: {
+      new: { appointment_id: string; sender_id: string; body: string; created_at: string };
+    }) => {
+      const m = payload.new;
+      if (m.sender_id === profileId) return; // own message
+      if (m.appointment_id === activeId) return; // already handled by active-thread sub
+
+      setThreads((prev) =>
+        prev.map((t) =>
+          t.appointmentId === m.appointment_id
+            ? {
+                ...t,
+                lastMessage: m.body,
+                lastMessageAt: m.created_at,
+                unreadCount: t.unreadCount + 1,
+              }
+            : t,
+        ),
+      );
+    };
+
+    const channels = threads.map((t) =>
+      supabase
+        .channel(`groomer-bg:${t.appointmentId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `appointment_id=eq.${t.appointmentId}`,
+          },
+          handler,
+        )
+        .subscribe(),
+    );
+
+    return () => {
+      channels.forEach((ch) => supabase.removeChannel(ch));
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId, activeId, threads.map((t) => t.appointmentId).join(",")]);
 
   function handleSelectThread(appointmentId: string) {
     setActiveId(appointmentId);

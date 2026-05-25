@@ -77,9 +77,12 @@ async function getMessagingContext(): Promise<{
 
 // ─── Groomer: list all conversation threads ──────────────────────────────────
 
-export async function getGroomerMessageThreads(): Promise<MessageThread[]> {
+export async function getGroomerMessageThreads(): Promise<{
+  threads: MessageThread[];
+  profileId: string;
+}> {
   const ctx = await getMessagingContext();
-  if (!ctx?.groomerProfileId) return [];
+  if (!ctx?.groomerProfileId) return { threads: [], profileId: "" };
 
   // Get all appointments for this groomer
   const { data: appointments } = await supabaseAdmin
@@ -88,7 +91,7 @@ export async function getGroomerMessageThreads(): Promise<MessageThread[]> {
     .eq("groomer_profile_id", ctx.groomerProfileId)
     .order("scheduled_at", { ascending: false });
 
-  if (!appointments?.length) return [];
+  if (!appointments?.length) return { threads: [], profileId: ctx.profileId };
 
   const appointmentIds = appointments.map((a) => a.id);
 
@@ -151,7 +154,7 @@ export async function getGroomerMessageThreads(): Promise<MessageThread[]> {
     new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime()
   );
 
-  return threads;
+  return { threads, profileId: ctx.profileId };
 }
 
 // ─── Get all messages for a single appointment thread ───────────────────────

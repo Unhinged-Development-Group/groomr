@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   getMessagesForAppointment,
@@ -24,6 +24,16 @@ function avatarLetter(name: string): string {
   return (name?.[0] ?? "?").toUpperCase();
 }
 
+function TypingDots() {
+  return (
+    <div className="flex gap-1 items-center h-3">
+      <span className="w-1.5 h-1.5 bg-pebble-grey rounded-full animate-bounce [animation-delay:0ms]" />
+      <span className="w-1.5 h-1.5 bg-pebble-grey rounded-full animate-bounce [animation-delay:150ms]" />
+      <span className="w-1.5 h-1.5 bg-pebble-grey rounded-full animate-bounce [animation-delay:300ms]" />
+    </div>
+  );
+}
+
 interface Props {
   initialThreads: MessageThread[];
   profileId: string;
@@ -39,6 +49,13 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [, startSendTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const messageChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const activeIdRef = useRef<string | null>(activeId);
+
+  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
 
   const activeThread = threads.find((t) => t.appointmentId === activeId) ?? null;
 
@@ -63,100 +80,100 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
     }
   }, [messages]);
 
-  // Supabase Realtime subscription for the active thread
+  // Typing indicator — subscribe to broadcast on the active thread
+  useEffect(() => {
+    if (!activeId) return;
+    setIsOtherTyping(false);
+
+    const ch = supabase
+      .channel(`typing:${activeId}`)
+      .on("broadcast", { event: "typing" }, (payload) => {
+        const { senderId, isTyping } = payload.payload as { senderId: string; isTyping: boolean };
+        if (senderId === profileId) return;
+        setIsOtherTyping(isTyping);
+        if (isTyping) {
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
+        }
+      })
+      .subscribe();
+
+    typingChannelRef.current = ch;
+    return () => {
+      supabase.removeChannel(ch);
+      typingChannelRef.current = null;
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      setIsOtherTyping(false);
+    };
+  }, [activeId, profileId]);
+
+  const broadcastTyping = useCallback(
+    (isTyping: boolean) => {
+      typingChannelRef.current?.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { senderId: profileId, isTyping },
+      });
+    },
+    [profileId],
+  );
+
+  // Broadcast subscription for the active thread (no RLS/auth needed)
   useEffect(() => {
     if (!activeId) return;
 
-    const channel = supabase
-      .channel(`owner-messages:${activeId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `appointment_id=eq.${activeId}`,
-        },
-        (payload) => {
-          const m = payload.new as {
-            id: string;
-            appointment_id: string;
-            sender_id: string;
-            body: string;
-            is_system: boolean;
-            read_at: string | null;
-            created_at: string;
-          };
-          const newMsg: MessageRow = {
-            id: m.id,
-            appointmentId: m.appointment_id,
-            senderId: m.sender_id,
-            body: m.body,
-            isSystem: m.is_system,
-            readAt: m.read_at,
-            createdAt: m.created_at,
-          };
-          setMessages((prev) => {
-            if (prev.some((msg) => msg.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-          setThreads((prev) =>
-            prev.map((t) =>
-              t.appointmentId === activeId
-                ? { ...t, lastMessage: m.body, lastMessageAt: m.created_at }
-                : t,
-            ),
-          );
-          markThreadRead(activeId);
-        },
-      )
+    const ch = supabase
+      .channel(`messages:${activeId}`)
+      .on("broadcast", { event: "new_message" }, (payload) => {
+        const newMsg = payload.payload as MessageRow;
+        if (newMsg.senderId === profileId) return; // already shown optimistically
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+        setThreads((prev) =>
+          prev.map((t) =>
+            t.appointmentId === activeId
+              ? { ...t, lastMessage: newMsg.body, lastMessageAt: newMsg.createdAt }
+              : t,
+          ),
+        );
+        markThreadRead(activeId);
+      })
       .subscribe();
 
+    messageChannelRef.current = ch;
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(ch);
+      messageChannelRef.current = null;
     };
-  }, [activeId]);
+  }, [activeId, profileId]);
 
-  // Realtime subscription for new threads appearing (groomer starts a new conversation)
+  // Background broadcast subscriptions: update unread counts on threads not currently open
   useEffect(() => {
     if (!profileId) return;
 
-    // Watch for new messages on any of the owner's threads so unread dots update
-    const handler = (payload: {
-      new: { appointment_id: string; sender_id: string; body: string; created_at: string };
-    }) => {
-      const m = payload.new;
-      if (m.sender_id === profileId) return; // own message
-      if (m.appointment_id === activeId) return; // already handled above
-
-      setThreads((prev) =>
-        prev.map((t) =>
-          t.appointmentId === m.appointment_id
-            ? {
-                ...t,
-                lastMessage: m.body,
-                lastMessageAt: m.created_at,
-                unreadCount: t.unreadCount + 1,
-              }
-            : t,
-        ),
-      );
-    };
-
-    // Subscribe to all active thread IDs for background unread updates
     const channels = threads.map((t) =>
       supabase
         .channel(`owner-bg:${t.appointmentId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `appointment_id=eq.${t.appointmentId}`,
-          },
-          handler,
-        )
+        .on("broadcast", { event: "new_message" }, (payload) => {
+          const msg = payload.payload as MessageRow;
+          if (msg.senderId === profileId) return; // own message
+          if (msg.appointmentId === activeIdRef.current) return; // active thread handles it
+
+          setThreads((prev) =>
+            prev.map((th) =>
+              th.appointmentId === msg.appointmentId
+                ? {
+                    ...th,
+                    lastMessage: msg.body,
+                    lastMessageAt: msg.createdAt,
+                    unreadCount: th.unreadCount + 1,
+                  }
+                : th,
+            ),
+          );
+        })
         .subscribe(),
     );
 
@@ -175,6 +192,7 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
     const text = draft.trim();
     if (!text || !activeId) return;
     setDraft("");
+    broadcastTyping(false);
 
     const tempId = `temp-${Date.now()}`;
     const tempMsg: MessageRow = {
@@ -200,7 +218,14 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
       if (result.error) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
       } else if (result.message) {
-        setMessages((prev) => prev.map((m) => (m.id === tempId ? result.message! : m)));
+        const confirmed = result.message;
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? confirmed : m)));
+        // Broadcast to recipient — no RLS, delivers instantly
+        messageChannelRef.current?.send({
+          type: "broadcast",
+          event: "new_message",
+          payload: confirmed,
+        });
       }
     });
   }
@@ -324,12 +349,22 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
                   </div>
                 );
               })}
+              {isOtherTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-alabaster-cream border border-pebble-grey/15 rounded-2xl px-4 py-3">
+                    <TypingDots />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="border-t border-pebble-grey/15 p-4 flex gap-2">
               <input
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  broadcastTyping(e.target.value.length > 0);
+                }}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder="Write a reply…"
                 className="field flex-1"

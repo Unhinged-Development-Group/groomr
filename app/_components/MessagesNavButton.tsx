@@ -41,26 +41,16 @@ export function MessagesNavButton() {
       channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
       channelsRef.current = [];
 
-      // Subscribe to each relevant appointment for real-time unread updates
+      // Subscribe to each relevant appointment via broadcast (no RLS/auth needed)
       ctx.appointmentIds.forEach((apptId) => {
         const ch = supabase
-          .channel(`nav-unread:${apptId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "messages",
-              filter: `appointment_id=eq.${apptId}`,
-            },
-            (payload) => {
-              const msg = payload.new as { sender_id: string };
-              // Only increment if it's not our own message
-              if (msg.sender_id !== profileIdRef.current) {
-                setUnread((c) => c + 1);
-              }
-            },
-          )
+          .channel(`messages:${apptId}`)
+          .on("broadcast", { event: "new_message" }, (payload) => {
+            const msg = payload.payload as { senderId: string };
+            if (msg.senderId !== profileIdRef.current) {
+              setUnread((c) => c + 1);
+            }
+          })
           .subscribe();
         channelsRef.current.push(ch);
       });

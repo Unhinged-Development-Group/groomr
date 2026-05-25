@@ -310,32 +310,29 @@ export async function saveServices(
 
   if (!gp) return { error: "Not authorised" };
 
-  const { error: deleteError } = await supabaseAdmin.from("services").delete().eq("groomer_profile_id", groomerProfileId);
+  const payload = rows.map((s, i) => ({
+    name: s.name,
+    duration_minutes: s.duration,
+    price_pence: s.price,
+    sort_order: i,
+  }));
 
-  if (deleteError) return { error: deleteError.message };
-
-  if (rows.length === 0) {
-    revalidatePath(`/groomers/${groomerProfileId}`);
-    return { services: [] };
-  }
-
-  const { data: inserted, error } = await supabaseAdmin
-    .from("services")
-    .insert(
-      rows.map((s, i) => ({
-        groomer_profile_id: groomerProfileId,
-        name: s.name,
-        duration_minutes: s.duration,
-        price_pence: s.price,
-        is_active: true,
-        sort_order: i,
-      }))
-    )
-    .select("id, name, duration_minutes, price_pence, sort_order");
+  const { data: result, error } = await supabaseAdmin.rpc("replace_services", {
+    p_groomer_profile_id: groomerProfileId,
+    p_services: payload,
+  });
 
   if (error) return { error: error.message };
 
-  const saved: ServiceRow[] = (inserted ?? []).map((s, i) => ({
+  const inserted = (result ?? []) as Array<{
+    id: string;
+    name: string;
+    duration_minutes: number;
+    price_pence: number;
+    sort_order: number;
+  }>;
+
+  const saved: ServiceRow[] = inserted.map((s, i) => ({
     id: s.id,
     name: s.name,
     duration: s.duration_minutes ?? 60,

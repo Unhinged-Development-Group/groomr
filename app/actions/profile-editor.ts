@@ -1,6 +1,6 @@
 "use server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -490,5 +490,16 @@ export async function saveProfileImage(
     .eq("user_id", myProfile.id);
 
   if (error) return { error: error.message };
+
+  // Sync to Clerk profile picture
+  try {
+    const imgRes = await fetch(url);
+    const blob = await imgRes.blob();
+    const clerk = await clerkClient();
+    await clerk.users.updateUserProfileImage(clerkUserId, { file: blob });
+  } catch {
+    // non-fatal — Supabase already saved, Clerk sync can be retried on next upload
+  }
+
   return {};
 }

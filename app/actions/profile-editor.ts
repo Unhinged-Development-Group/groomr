@@ -494,9 +494,12 @@ export async function saveProfileImage(
   // Sync to Clerk profile picture
   try {
     const imgRes = await fetch(url);
-    const blob = await imgRes.blob();
+    const contentType = imgRes.headers.get("content-type") ?? "image/jpeg";
+    const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
+    const arrayBuffer = await imgRes.arrayBuffer();
+    const file = new File([arrayBuffer], `profile.${ext}`, { type: contentType });
     const clerk = await clerkClient();
-    await clerk.users.updateUserProfileImage(clerkUserId, { file: blob });
+    await clerk.users.updateUserProfileImage(clerkUserId, { file });
   } catch {
     // non-fatal — Supabase already saved, Clerk sync can be retried on next upload
   }

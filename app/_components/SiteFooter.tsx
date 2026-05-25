@@ -34,7 +34,7 @@ export function SiteFooter() {
             {[
               { label: "Our Founder", href: "/founder" },
               { label: "For Groomers", href: "/become-a-groomer" },
-              { label: "Privacy", href: "#" },
+              { label: "Privacy", href: "/privacy-policy" },
               { label: "Terms", href: "#" },
               { label: "Support", href: "#" },
             ].map(({ label, href }) => (

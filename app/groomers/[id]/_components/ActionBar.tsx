@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { HeartIcon } from "@/components/ui/GroomrIcons";
 import { Toast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
@@ -144,6 +144,7 @@ function ContactModal({
   onClose,
   onSent,
 }: ContactModalProps) {
+  const { openSignIn } = useClerk();
   const [name, setName] = useState(prefillName);
   const [email, setEmail] = useState(prefillEmail);
   const [message, setMessage] = useState("");
@@ -182,9 +183,9 @@ function ContactModal({
             {!isSignedIn && (
               <p className="text-pebble-grey text-sm mt-1 font-nunito">
                 Already have an account?{" "}
-                <a href="/sign-in" className="text-link font-bold">
+                <button onClick={() => openSignIn()} className="text-link font-bold">
                   Sign in
-                </a>{" "}
+                </button>{" "}
                 to message groomers.
               </p>
             )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { getDogs } from "@/app/actions/dogs";
 import { getAvailableSlots, createAppointment } from "@/app/actions/booking";
@@ -52,6 +52,7 @@ export function BookingFlow({
   onClose,
 }: BookingFlowProps) {
   const { user, isLoaded } = useUser();
+  const { openSignIn } = useClerk();
 
   const [step, setStep] = useState<Step>(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -435,12 +436,12 @@ export function BookingFlow({
                   <p className="text-pebble-grey text-sm font-nunito">
                     You need a Groomr account to request appointments.
                   </p>
-                  <Link
-                    href="/sign-in"
-                    className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring inline-block"
+                  <button
+                    onClick={() => openSignIn()}
+                    className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring"
                   >
                     Sign In
-                  </Link>
+                  </button>
                 </div>
               ) : dogsLoading ? (
                 <div className="space-y-3">

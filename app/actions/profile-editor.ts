@@ -2,6 +2,7 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -247,6 +248,7 @@ export async function saveProfile(
   if (gpResult.error) return { error: gpResult.error.message };
   if (profileResult.error) return { error: profileResult.error.message };
 
+  revalidatePath(`/groomers/${groomerProfileId}`);
   return {};
 }
 
@@ -308,9 +310,14 @@ export async function saveServices(
 
   if (!gp) return { error: "Not authorised" };
 
-  await supabaseAdmin.from("services").delete().eq("groomer_profile_id", groomerProfileId);
+  const { error: deleteError } = await supabaseAdmin.from("services").delete().eq("groomer_profile_id", groomerProfileId);
 
-  if (rows.length === 0) return { services: [] };
+  if (deleteError) return { error: deleteError.message };
+
+  if (rows.length === 0) {
+    revalidatePath(`/groomers/${groomerProfileId}`);
+    return { services: [] };
+  }
 
   const { data: inserted, error } = await supabaseAdmin
     .from("services")
@@ -336,6 +343,7 @@ export async function saveServices(
     sortOrder: s.sort_order ?? i,
   }));
 
+  revalidatePath(`/groomers/${groomerProfileId}`);
   return { services: saved };
 }
 

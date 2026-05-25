@@ -79,6 +79,38 @@ export async function getOwnerAppointments(): Promise<Appointment[]> {
   return (data ?? []) as Appointment[];
 }
 
+export async function getGroomerAvailabilityDays(groomerProfileId: string): Promise<number[]> {
+  const { data } = await supabaseAdmin
+    .from("availability")
+    .select("day_of_week")
+    .eq("groomer_profile_id", groomerProfileId)
+    .eq("is_active", true);
+  return (data ?? []).map((r) => r.day_of_week as number);
+}
+
+export async function rescheduleAppointment(
+  appointmentId: string,
+  newScheduledAt: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, error: "Not authenticated" };
+
+  const profileId = await getProfileId(userId);
+  if (!profileId) return { ok: false, error: "Profile not found" };
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      scheduled_at: newScheduledAt,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId)
+    .eq("owner_id", profileId);
+
+  if (error) return { ok: false, error: "Failed to reschedule appointment" };
+  return { ok: true };
+}
+
 export async function cancelAppointment(appointmentId: string, reason: string): Promise<{ ok: boolean; error?: string }> {
   const { userId } = await auth();
   if (!userId) return { ok: false, error: "Not authenticated" };

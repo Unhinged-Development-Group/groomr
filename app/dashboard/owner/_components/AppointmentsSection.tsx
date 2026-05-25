@@ -1,41 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ClockIcon, LocationPinIcon } from "@/components/ui/GroomrIcons";
+import { ClockIcon, PinIcon } from "@/components/ui/GroomrIcons";
 import type { Appointment } from "@/app/actions/appointments";
-import { cancelAppointment } from "@/app/actions/appointments";
+import {
+  cancelAppointment,
+  rescheduleAppointment,
+  getGroomerAvailabilityDays,
+} from "@/app/actions/appointments";
+import { getAvailableSlots } from "@/app/actions/booking";
+import type { AvailableSlot } from "@/app/actions/booking";
 import { Modal } from "@/components/ui/Modal";
-import { StarRow } from "@/components/ui/StarRow";
 
-// Helper components mapping from old OwnerDashboard logic
-const LABEL_CLASS = "text-xs font-bold text-pebble-grey uppercase tracking-wider";
-const INPUT_CLASS = "w-full bg-white border border-pebble-grey/30 rounded-xl px-4 py-3 font-nunito text-deep-slate focus:outline-none focus:ring-2 focus:ring-groomr-gold shadow-sm";
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export function AppointmentsSection({ initialAppointments }: { initialAppointments: Appointment[] }) {
+type ManageView = "choice" | "reschedule" | "cancel" | "done";
+
+export function AppointmentsSection({
+  initialAppointments,
+}: {
+  initialAppointments: Appointment[];
+}) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
-  
-  // Modals state
   const [showDetails, setShowDetails] = useState(false);
   const [showManage, setShowManage] = useState(false);
   const [activeAppointment, setActiveAppointment] = useState<Appointment | null>(null);
+  const [manageView, setManageView] = useState<ManageView>("choice");
 
-  // Group into upcoming vs past
   const now = new Date();
   const upcoming = appointments
-    .filter(a => new Date(a.scheduled_at) > now && a.status !== 'cancelled')
+    .filter((a) => new Date(a.scheduled_at) > now && a.status !== "cancelled")
     .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
-  const past = appointments.filter(a => new Date(a.scheduled_at) <= now || a.status === 'cancelled');
+  const past = appointments.filter(
+    (a) => new Date(a.scheduled_at) <= now || a.status === "cancelled",
+  );
+
+  function openManage(apt: Appointment) {
+    setActiveAppointment(apt);
+    setManageView("choice");
+    setShowManage(true);
+  }
+
+  function closeManage() {
+    setShowManage(false);
+  }
 
   async function handleCancel() {
     if (!activeAppointment) return;
-    
-    // Call server action
     const result = await cancelAppointment(activeAppointment.id, "User requested cancellation");
     if (result.ok) {
-      setAppointments(prev => prev.map(a => a.id === activeAppointment.id ? { ...a, status: 'cancelled' } : a));
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.id === activeAppointment.id ? { ...a, status: "cancelled" } : a,
+        ),
+      );
+      setManageView("done");
     }
-    setShowManage(false);
+  }
+
+  function handleRescheduled(newAt: string) {
+    if (!activeAppointment) return;
+    setAppointments((prev) =>
+      prev.map((a) =>
+        a.id === activeAppointment.id ? { ...a, scheduled_at: newAt } : a,
+      ),
+    );
+    setManageView("done");
   }
 
   return (
@@ -51,14 +82,20 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
           </div>
         ) : (
           <div className="space-y-4">
-            {upcoming.map(apt => {
+            {upcoming.map((apt) => {
               const date = new Date(apt.scheduled_at);
-              const month = date.toLocaleString('default', { month: 'short' });
+              const month = date.toLocaleString("default", { month: "short" });
               const day = date.getDate();
-              const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const timeString = date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
 
               return (
-                <div key={apt.id} className="bg-white rounded-[12px] p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center border border-pebble-grey/20">
+                <div
+                  key={apt.id}
+                  className="bg-white rounded-[12px] p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center border border-pebble-grey/20"
+                >
                   <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl p-4 flex flex-col items-center min-w-[80px] shrink-0">
                     <span className="font-nunito font-bold text-sage-leaf uppercase tracking-widest text-xs">
                       {month}
@@ -80,8 +117,11 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
                       {timeString}
                     </p>
                     <p className="flex items-center gap-2 font-nunito text-sm text-pebble-grey">
-                      <LocationPinIcon size={14} />
-                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="hover:text-sage-leaf transition-colors focus-ring rounded">
+                      <PinIcon size={14} />
+                      <Link
+                        href={`/groomers/${apt.groomer_profile_id}`}
+                        className="hover:text-sage-leaf transition-colors focus-ring rounded"
+                      >
                         {apt.groomer_profiles?.business_name || "Groomer"}
                       </Link>
                     </p>
@@ -98,10 +138,7 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
                       View Details
                     </button>
                     <button
-                      onClick={() => {
-                        setActiveAppointment(apt);
-                        setShowManage(true);
-                      }}
+                      onClick={() => openManage(apt)}
                       className="text-sm font-bold text-pebble-grey hover:text-muted-terracotta transition-colors font-nunito text-center focus-ring rounded-full py-1"
                     >
                       Reschedule / Cancel
@@ -127,18 +164,30 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
           </div>
         ) : (
           <div className="space-y-4">
-            {past.slice(0, 5).map(apt => {
+            {past.slice(0, 5).map((apt) => {
               const date = new Date(apt.scheduled_at);
-              const dateString = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-              const priceDisplay = apt.service_snapshot_price ? `£${(apt.service_snapshot_price / 100).toFixed(2)}` : 'N/A';
+              const dateString = date.toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+              const priceDisplay = apt.service_snapshot_price
+                ? `£${(apt.service_snapshot_price / 100).toFixed(2)}`
+                : "N/A";
 
               return (
-                <div key={apt.id} className="bg-white rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-pebble-grey/20">
+                <div
+                  key={apt.id}
+                  className="bg-white rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-pebble-grey/20"
+                >
                   <div className="space-y-1">
                     <p className="font-bold text-deep-slate font-nunito">
                       {apt.service_snapshot_name || "Service"}
                       <span className="text-pebble-grey font-normal"> | </span>
-                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="text-pebble-grey font-normal hover:text-sage-leaf transition-colors focus-ring rounded">
+                      <Link
+                        href={`/groomers/${apt.groomer_profile_id}`}
+                        className="text-pebble-grey font-normal hover:text-sage-leaf transition-colors focus-ring rounded"
+                      >
                         {apt.groomer_profiles?.business_name}
                       </Link>
                     </p>
@@ -163,35 +212,53 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
             <div className="bg-white rounded-xl p-5 border border-pebble-grey/20 mb-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className={LABEL_CLASS}>Base Service</p>
-                  <p className="font-bold text-deep-slate mt-1">{activeAppointment.service_snapshot_name}</p>
-                  <p className="text-sm text-pebble-grey font-nunito">For {activeAppointment.dogs?.name}</p>
+                  <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+                    Base Service
+                  </p>
+                  <p className="font-bold text-deep-slate mt-1">
+                    {activeAppointment.service_snapshot_name}
+                  </p>
+                  <p className="text-sm text-pebble-grey font-nunito">
+                    For {activeAppointment.dogs?.name}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className={LABEL_CLASS}>Base Price</p>
+                  <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+                    Base Price
+                  </p>
                   <p className="font-fredoka text-xl text-deep-slate mt-1">
-                    {activeAppointment.service_snapshot_price ? `£${(activeAppointment.service_snapshot_price / 100).toFixed(2)}` : 'N/A'}
+                    {activeAppointment.service_snapshot_price
+                      ? `£${(activeAppointment.service_snapshot_price / 100).toFixed(2)}`
+                      : "N/A"}
                   </p>
                 </div>
               </div>
               <div className="border-t border-pebble-grey/20 pt-3 grid sm:grid-cols-2 gap-3">
                 <div>
-                  <p className={LABEL_CLASS}>When</p>
+                  <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+                    When
+                  </p>
                   <p className="text-sm font-nunito text-deep-slate mt-1">
                     {new Date(activeAppointment.scheduled_at).toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className={LABEL_CLASS}>Where</p>
-                  <div className="flex items-start gap-1 mt-1">
-                    <Link href={`/groomers/${activeAppointment.groomer_profile_id}`} className="text-sm font-nunito text-deep-slate hover:text-sage-leaf transition-colors focus-ring rounded">
-                      {activeAppointment.groomer_profiles?.business_name}
-                    </Link>
-                  </div>
+                  <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+                    Where
+                  </p>
+                  <Link
+                    href={`/groomers/${activeAppointment.groomer_profile_id}`}
+                    className="text-sm font-nunito text-deep-slate hover:text-sage-leaf transition-colors focus-ring rounded mt-1 block"
+                  >
+                    {activeAppointment.groomer_profiles?.business_name}
+                  </Link>
                 </div>
               </div>
             </div>
-            <button onClick={() => setShowDetails(false)} className="btn-primary font-nunito font-bold px-8 py-3 w-full focus-ring">
+            <button
+              onClick={() => setShowDetails(false)}
+              className="btn-primary font-nunito font-bold px-8 py-3 w-full focus-ring"
+            >
               Close
             </button>
           </>
@@ -199,40 +266,402 @@ export function AppointmentsSection({ initialAppointments }: { initialAppointmen
       </Modal>
 
       {/* Manage Appointment Modal */}
-      <Modal open={showManage} onClose={() => setShowManage(false)}>
+      <Modal open={showManage} onClose={closeManage} size="md">
         {activeAppointment && (
-          <>
-            <h2 className="font-fredoka text-3xl text-deep-slate mb-1">
-              Manage Appointment
-            </h2>
-            <p className="font-bold text-deep-slate font-nunito mb-1">
-              {activeAppointment.service_snapshot_name} for {activeAppointment.dogs?.name}
-            </p>
-            <p className="text-sm text-pebble-grey font-nunito mb-7">
-              Scheduled: {new Date(activeAppointment.scheduled_at).toLocaleString()}
-            </p>
-
-            {/* Cancel Section */}
-            <div className="bg-white p-6 rounded-xl border border-muted-terracotta/30 space-y-4">
-              <h3 className="font-fredoka text-xl text-muted-terracotta">
-                Cancel Appointment
-              </h3>
-              <p className="font-bold text-deep-slate font-nunito">Are you sure?</p>
-              <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-lg p-3">
-                <p className="text-sm font-nunito text-deep-slate">
-                  Please review the cancellation policy. Late cancellations may incur a fee.
-                </p>
-              </div>
-              <button
-                onClick={handleCancel}
-                className="w-full bg-white border-2 border-muted-terracotta text-muted-terracotta hover:bg-muted-terracotta hover:text-white transition-colors font-nunito font-bold px-8 py-3 rounded-full focus-ring"
-              >
-                Yes, Cancel Appointment
-              </button>
-            </div>
-          </>
+          <ManageModal
+            appointment={activeAppointment}
+            view={manageView}
+            onViewChange={setManageView}
+            onCancel={handleCancel}
+            onRescheduled={handleRescheduled}
+            onClose={closeManage}
+          />
         )}
       </Modal>
     </>
+  );
+}
+
+// ─── ManageModal ──────────────────────────────────────────────────────────────
+
+interface ManageModalProps {
+  appointment: Appointment;
+  view: ManageView;
+  onViewChange: (v: ManageView) => void;
+  onCancel: () => Promise<void>;
+  onRescheduled: (newAt: string) => void;
+  onClose: () => void;
+}
+
+function ManageModal({
+  appointment,
+  view,
+  onViewChange,
+  onCancel,
+  onRescheduled,
+  onClose,
+}: ManageModalProps) {
+  const currentDate = new Date(appointment.scheduled_at);
+  const formattedCurrent = currentDate.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }) + " at " + currentDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  if (view === "done") {
+    return (
+      <div className="text-center py-4 space-y-4">
+        <div className="w-14 h-14 bg-groomr-gold rounded-full flex items-center justify-center mx-auto text-2xl">
+          ✓
+        </div>
+        <p className="font-fredoka text-2xl text-deep-slate">Done!</p>
+        <button onClick={onClose} className="btn-primary font-nunito font-bold px-8 py-3 rounded-full focus-ring">
+          Close
+        </button>
+      </div>
+    );
+  }
+
+  if (view === "reschedule") {
+    return (
+      <ReschedulePanel
+        appointment={appointment}
+        onRescheduled={onRescheduled}
+        onBack={() => onViewChange("choice")}
+      />
+    );
+  }
+
+  if (view === "cancel") {
+    return (
+      <CancelPanel
+        appointment={appointment}
+        formattedCurrent={formattedCurrent}
+        onConfirm={onCancel}
+        onBack={() => onViewChange("choice")}
+      />
+    );
+  }
+
+  // choice view
+  return (
+    <>
+      <h2 className="font-fredoka text-2xl text-deep-slate mb-1">Manage Appointment</h2>
+      <p className="font-bold text-deep-slate font-nunito">
+        {appointment.service_snapshot_name} for {appointment.dogs?.name}
+      </p>
+      <p className="text-sm text-pebble-grey font-nunito mb-8">{formattedCurrent}</p>
+
+      <div className="space-y-3">
+        <button
+          onClick={() => onViewChange("reschedule")}
+          className="w-full bg-white border-2 border-deep-slate text-deep-slate hover:bg-deep-slate hover:text-white transition-colors font-nunito font-bold px-8 py-3.5 rounded-full focus-ring text-sm"
+        >
+          Pick a new date &amp; time
+        </button>
+        <button
+          onClick={() => onViewChange("cancel")}
+          className="w-full bg-white border-2 border-muted-terracotta text-muted-terracotta hover:bg-muted-terracotta hover:text-white transition-colors font-nunito font-bold px-8 py-3.5 rounded-full focus-ring text-sm"
+        >
+          Cancel appointment
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ─── ReschedulePanel ──────────────────────────────────────────────────────────
+
+function ReschedulePanel({
+  appointment,
+  onRescheduled,
+  onBack,
+}: {
+  appointment: Appointment;
+  onRescheduled: (newAt: string) => void;
+  onBack: () => void;
+}) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const minDate = new Date(today);
+  minDate.setDate(minDate.getDate() + 1);
+
+  const [availDays, setAvailDays] = useState<Set<number>>(new Set());
+  const [calendarMonth, setCalendarMonth] = useState(
+    () => new Date(today.getFullYear(), today.getMonth(), 1),
+  );
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [slots, setSlots] = useState<AvailableSlot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedTimeLabel, setSelectedTimeLabel] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getGroomerAvailabilityDays(appointment.groomer_profile_id).then((days) =>
+      setAvailDays(new Set(days)),
+    );
+  }, [appointment.groomer_profile_id]);
+
+  function toDateStr(date: Date): string {
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("-");
+  }
+
+  function formatDateLong(dateStr: string): string {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+  }
+
+  function isDateSelectable(date: Date): boolean {
+    if (date < minDate) return false;
+    // JS getDay(): 0=Sun,1=Mon...6=Sat → convert to Supabase day_of_week (0=Sun)
+    return availDays.has(date.getDay());
+  }
+
+  function buildCalendarDays(monthStart: Date): (Date | null)[] {
+    const y = monthStart.getFullYear();
+    const mo = monthStart.getMonth();
+    const daysInMonth = new Date(y, mo + 1, 0).getDate();
+    const rawDow = new Date(y, mo, 1).getDay();
+    const offset = (rawDow + 6) % 7; // Mon-first
+    const cells: (Date | null)[] = Array(offset).fill(null);
+    for (let day = 1; day <= daysInMonth; day++) cells.push(new Date(y, mo, day));
+    return cells;
+  }
+
+  const calendarDays = buildCalendarDays(calendarMonth);
+  const canPrevMonth = calendarMonth > new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const handleDateSelect = useCallback(
+    async (dateStr: string) => {
+      setSelectedDate(dateStr);
+      setSelectedTime(null);
+      setSelectedTimeLabel(null);
+      setSlots([]);
+      setLoadingSlots(true);
+      const result = await getAvailableSlots(
+        appointment.groomer_profile_id,
+        appointment.service_id,
+        dateStr,
+      );
+      setSlots(result);
+      setLoadingSlots(false);
+    },
+    [appointment.groomer_profile_id, appointment.service_id],
+  );
+
+  async function handleConfirm() {
+    if (!selectedDate || !selectedTime) return;
+    setSubmitting(true);
+    setError(null);
+    const newAt = `${selectedDate}T${selectedTime}:00.000Z`;
+    const result = await rescheduleAppointment(appointment.id, newAt);
+    setSubmitting(false);
+    if (!result.ok) {
+      setError(result.error ?? "Something went wrong");
+    } else {
+      onRescheduled(newAt);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <button
+          onClick={onBack}
+          className="text-sm font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded-full px-2 py-1 mb-3"
+        >
+          ← Back
+        </button>
+        <h2 className="font-fredoka text-2xl text-deep-slate">Pick a new time</h2>
+        <p className="text-sm text-pebble-grey font-nunito mt-0.5">
+          {appointment.service_snapshot_name} · {appointment.dogs?.name}
+        </p>
+      </div>
+
+      {/* Month navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() =>
+            setCalendarMonth((p) => new Date(p.getFullYear(), p.getMonth() - 1, 1))
+          }
+          disabled={!canPrevMonth}
+          aria-label="Previous month"
+          className="p-2 rounded-full hover:bg-pebble-grey/10 transition-colors disabled:opacity-25 focus-ring"
+        >
+          <svg className="w-4 h-4 text-deep-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className="font-fredoka text-lg text-deep-slate">
+          {calendarMonth.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
+        </span>
+        <button
+          onClick={() =>
+            setCalendarMonth((p) => new Date(p.getFullYear(), p.getMonth() + 1, 1))
+          }
+          aria-label="Next month"
+          className="p-2 rounded-full hover:bg-pebble-grey/10 transition-colors focus-ring"
+        >
+          <svg className="w-4 h-4 text-deep-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Day-of-week headers */}
+      <div>
+        <div className="grid grid-cols-7 mb-1">
+          {DAY_NAMES.map((d) => (
+            <p key={d} className="text-center text-xs font-bold text-pebble-grey py-1">
+              {d}
+            </p>
+          ))}
+        </div>
+        {/* Day cells */}
+        <div className="grid grid-cols-7 gap-y-1">
+          {calendarDays.map((day, i) => {
+            if (!day) return <div key={`pad-${i}`} />;
+            const ds = toDateStr(day);
+            const selectable = isDateSelectable(day);
+            const isSelected = selectedDate === ds;
+            return (
+              <button
+                key={ds}
+                onClick={() => selectable && handleDateSelect(ds)}
+                disabled={!selectable}
+                className={`mx-auto flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold transition-all focus-ring ${
+                  isSelected
+                    ? "bg-deep-slate text-alabaster-cream"
+                    : selectable
+                    ? "text-deep-slate hover:bg-groomr-gold/25"
+                    : "text-pebble-grey/30 cursor-not-allowed"
+                }`}
+              >
+                {day.getDate()}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Time slots */}
+      {selectedDate && (
+        <div className="space-y-3">
+          <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+            {formatDateLong(selectedDate)}
+          </p>
+          {loadingSlots ? (
+            <div className="grid grid-cols-4 gap-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-10 bg-pebble-grey/15 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : slots.length === 0 ? (
+            <p className="text-pebble-grey text-sm font-nunito">
+              No available slots — try another date.
+            </p>
+          ) : (
+            <div className="grid grid-cols-4 gap-2">
+              {slots.map((slot) => (
+                <button
+                  key={slot.time}
+                  onClick={() => {
+                    setSelectedTime(slot.time);
+                    setSelectedTimeLabel(slot.label);
+                  }}
+                  className={`py-2.5 rounded-xl text-sm font-bold border transition-all focus-ring ${
+                    selectedTime === slot.time
+                      ? "bg-deep-slate text-white border-deep-slate"
+                      : "bg-white border-pebble-grey/20 text-deep-slate hover:border-deep-slate hover:shadow-sm"
+                  }`}
+                >
+                  {slot.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <p className="text-sm font-bold text-muted-terracotta">{error}</p>
+      )}
+
+      {selectedDate && selectedTime && (
+        <button
+          onClick={handleConfirm}
+          disabled={submitting}
+          className="w-full btn-primary font-nunito font-bold py-3 rounded-full focus-ring disabled:opacity-60"
+        >
+          {submitting
+            ? "Saving…"
+            : `Confirm — ${formatDateLong(selectedDate)} at ${selectedTimeLabel}`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── CancelPanel ──────────────────────────────────────────────────────────────
+
+function CancelPanel({
+  appointment,
+  formattedCurrent,
+  onConfirm,
+  onBack,
+}: {
+  appointment: Appointment;
+  formattedCurrent: string;
+  onConfirm: () => Promise<void>;
+  onBack: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function handleClick() {
+    setBusy(true);
+    await onConfirm();
+    setBusy(false);
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <button
+          onClick={onBack}
+          className="text-sm font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded-full px-2 py-1 mb-3"
+        >
+          ← Back
+        </button>
+        <h2 className="font-fredoka text-2xl text-muted-terracotta">Cancel appointment</h2>
+        <p className="font-bold text-deep-slate font-nunito mt-1">
+          {appointment.service_snapshot_name} for {appointment.dogs?.name}
+        </p>
+        <p className="text-sm text-pebble-grey font-nunito">{formattedCurrent}</p>
+      </div>
+
+      <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl p-4">
+        <p className="text-sm font-nunito text-deep-slate">
+          This will cancel your appointment. The groomer will be notified. Late cancellations may incur a fee depending on their policy.
+        </p>
+      </div>
+
+      <button
+        onClick={handleClick}
+        disabled={busy}
+        className="w-full bg-white border-2 border-muted-terracotta text-muted-terracotta hover:bg-muted-terracotta hover:text-white transition-colors font-nunito font-bold px-8 py-3.5 rounded-full focus-ring disabled:opacity-60"
+      >
+        {busy ? "Cancelling…" : "Yes, cancel this appointment"}
+      </button>
+    </div>
   );
 }

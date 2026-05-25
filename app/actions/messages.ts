@@ -10,8 +10,12 @@ export interface MessageThread {
   scheduledAt: string;
   ownerName: string;
   ownerProfileId: string;
+  ownerAvatarUrl?: string | null;
+  ownerPhone?: string | null;
+  ownerEmail?: string | null;
   groomerName?: string;
   groomerProfileId?: string;
+  groomerAvatarUrl?: string | null;
   dogName: string | null;
   lastMessage: string | null;
   lastMessageAt: string | null;
@@ -106,7 +110,7 @@ export async function getGroomerMessageThreads(): Promise<{
   const ownerIds = [...new Set(appointments.map((a) => a.owner_id as string))];
   const { data: ownerProfiles } = await supabaseAdmin
     .from("profiles")
-    .select("id, full_name")
+    .select("id, full_name, avatar_url, phone, email")
     .in("id", ownerIds);
 
   // Fetch dog names in one query
@@ -115,7 +119,7 @@ export async function getGroomerMessageThreads(): Promise<{
     ? await supabaseAdmin.from("dogs").select("id, name").in("id", dogIds)
     : { data: [] };
 
-  const ownerMap = new Map((ownerProfiles ?? []).map((p) => [p.id, p.full_name as string]));
+  const ownerMap = new Map((ownerProfiles ?? []).map((p) => [p.id, p]));
   const dogMap   = new Map((dogs ?? []).map((d) => [d.id, d.name as string]));
 
   // Group messages by appointment_id
@@ -137,11 +141,15 @@ export async function getGroomerMessageThreads(): Promise<{
       (m) => m.sender_id !== ctx.profileId && m.read_at === null
     ).length;
 
+    const owner = ownerMap.get(appt.owner_id as string);
     threads.push({
       appointmentId: appt.id,
       scheduledAt: appt.scheduled_at as string,
-      ownerName: ownerMap.get(appt.owner_id as string) ?? "Client",
+      ownerName: (owner?.full_name as string) ?? "Client",
       ownerProfileId: appt.owner_id as string,
+      ownerAvatarUrl: (owner?.avatar_url as string | null) ?? null,
+      ownerPhone: (owner?.phone as string | null) ?? null,
+      ownerEmail: (owner?.email as string | null) ?? null,
       dogName: appt.dog_id ? (dogMap.get(appt.dog_id as string) ?? null) : null,
       lastMessage: lastMsg.body as string,
       lastMessageAt: lastMsg.created_at as string,
@@ -361,7 +369,7 @@ export async function getOwnerMessageThreads(): Promise<{
   ];
   const { data: groomerProfiles } = await supabaseAdmin
     .from("groomer_profiles")
-    .select("id, business_name")
+    .select("id, business_name, profile_image_url")
     .in("id", groomerProfileIds);
 
   const dogIds = [
@@ -372,7 +380,7 @@ export async function getOwnerMessageThreads(): Promise<{
     : { data: [] };
 
   const groomerMap = new Map(
-    (groomerProfiles ?? []).map((g) => [g.id, g.business_name as string]),
+    (groomerProfiles ?? []).map((g) => [g.id, g]),
   );
   const dogMap = new Map((dogs ?? []).map((d) => [d.id, d.name as string]));
 
@@ -393,13 +401,15 @@ export async function getOwnerMessageThreads(): Promise<{
       (m) => m.sender_id !== ctx.profileId && m.read_at === null,
     ).length;
 
+    const groomer = groomerMap.get(appt.groomer_profile_id as string);
     threads.push({
       appointmentId:    appt.id,
       scheduledAt:      appt.scheduled_at as string,
       ownerName:        "",
       ownerProfileId:   ctx.profileId,
-      groomerName:      groomerMap.get(appt.groomer_profile_id as string) ?? "Groomer",
+      groomerName:      (groomer?.business_name as string) ?? "Groomer",
       groomerProfileId: appt.groomer_profile_id as string,
+      groomerAvatarUrl: (groomer?.profile_image_url as string | null) ?? null,
       dogName:          appt.dog_id ? (dogMap.get(appt.dog_id as string) ?? null) : null,
       lastMessage:      lastMsg.body as string,
       lastMessageAt:    lastMsg.created_at as string,
@@ -465,6 +475,43 @@ export async function getMessagesNavContext(): Promise<{
   }
 
   return { url, unreadCount, profileId: ctx.profileId, appointmentIds };
+}
+
+// ─── Delete all messages in a thread ────────────────────────────────────────
+
+export async function deleteThread(
+  appointmentId: string
+): Promise<{ error?: string }> {
+  const ctx = await getMessagingContext();
+  if (!ctx) return { error: "Not authenticated" };
+
+  const { data: appt } = await supabaseAdmin
+    .from("appointments")
+    .select("owner_id, groomer_profile_id")
+    .eq("id", appointmentId)
+    .single();
+
+  if (!appt) return { error: "Appointment not found" };
+
+  const { data: gpOwner } = ctx.groomerProfileId
+    ? await supabaseAdmin
+        .from("groomer_profiles")
+        .select("id")
+        .eq("id", appt.groomer_profile_id)
+        .eq("id", ctx.groomerProfileId)
+        .maybeSingle()
+    : { data: null };
+
+  const isParticipant = appt.owner_id === ctx.profileId || gpOwner !== null;
+  if (!isParticipant) return { error: "Not authorised" };
+
+  const { error } = await supabaseAdmin
+    .from("messages")
+    .delete()
+    .eq("appointment_id", appointmentId);
+
+  if (error) return { error: error.message };
+  return {};
 }
 
 // ─── Unread count for header badge ───────────────────────────────────────────

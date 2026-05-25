@@ -6,11 +6,12 @@ import {
   getMessagesForAppointment,
   sendMessage,
   markThreadRead,
+  deleteThread,
   type MessageThread,
   type MessageRow,
   type BookingForMessaging,
 } from "@/app/actions/messages";
-import { PlusIcon, CloseIcon } from "@/components/ui/GroomrIcons";
+import { PlusIcon, CloseIcon, TrashIcon } from "@/components/ui/GroomrIcons";
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -19,12 +20,54 @@ function formatRelativeTime(iso: string): string {
   if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d`;
+  return `${Math.floor(hrs / 24)}d`;
+}
+
+function formatMessageTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart = new Date(todayStart);
+  weekStart.setDate(todayStart.getDate() - 6);
+  const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  if (d >= todayStart) return time;
+  if (d >= weekStart) return `${d.toLocaleDateString([], { weekday: "short" })} ${time}`;
+  return `${d.toLocaleDateString([], { day: "numeric", month: "short" })} ${time}`;
 }
 
 function avatarLetter(name: string): string {
   return (name?.[0] ?? "?").toUpperCase();
+}
+
+function Avatar({
+  url,
+  name,
+  className = "",
+  bg = "bg-sage-leaf",
+  fg = "text-white",
+}: {
+  url?: string | null;
+  name: string;
+  className?: string;
+  bg?: string;
+  fg?: string;
+}) {
+  if (url) {
+    return (
+      <img
+        src={url}
+        alt={name}
+        className={`rounded-full object-cover shrink-0 ${className}`}
+      />
+    );
+  }
+  return (
+    <div
+      className={`rounded-full ${bg} ${fg} font-fredoka flex items-center justify-center shrink-0 text-lg ${className}`}
+    >
+      {avatarLetter(name)}
+    </div>
+  );
 }
 
 function TypingDots() {
@@ -61,7 +104,12 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
   const messageChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const activeIdRef = useRef<string | null>(activeId);
 
-  // Keep ref in sync so background handler always has fresh activeId
+  // Owner info modal
+  const [showOwnerInfo, setShowOwnerInfo] = useState(false);
+  // Delete confirm
+  const [deleteConfirming, setDeleteConfirming] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
 
   const activeThread = threads.find((t) => t.appointmentId === activeId) ?? null;
@@ -79,6 +127,8 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
   useEffect(() => {
     if (!activeId) return;
     setLoadingMessages(true);
+    setDeleteConfirming(false);
+    setShowOwnerInfo(false);
     getMessagesForAppointment(activeId).then((msgs) => {
       setMessages(msgs);
       setLoadingMessages(false);
@@ -96,7 +146,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
     }
   }, [messages]);
 
-  // Broadcast subscription for the active thread (no RLS/auth needed)
+  // Broadcast subscription for active thread
   useEffect(() => {
     if (!activeId) return;
 
@@ -104,7 +154,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
       .channel(`messages:${activeId}`)
       .on("broadcast", { event: "new_message" }, (payload) => {
         const newMsg = payload.payload as MessageRow;
-        if (newMsg.senderId === profileId) return; // already shown optimistically
+        if (newMsg.senderId === profileId) return;
         setMessages((prev) => {
           if (prev.some((m) => m.id === newMsg.id)) return prev;
           return [...prev, newMsg];
@@ -127,7 +177,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
     };
   }, [activeId, profileId]);
 
-  // Typing indicator — subscribe to broadcast on the active thread
+  // Typing indicator
   useEffect(() => {
     if (!activeId) return;
     setIsOtherTyping(false);
@@ -136,7 +186,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
       .channel(`typing:${activeId}`)
       .on("broadcast", { event: "typing" }, (payload) => {
         const { senderId, isTyping } = payload.payload as { senderId: string; isTyping: boolean };
-        if (senderId === profileId) return; // ignore own events
+        if (senderId === profileId) return;
         setIsOtherTyping(isTyping);
         if (isTyping) {
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -165,7 +215,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
     [profileId],
   );
 
-  // Background broadcast subscriptions: update unread counts on threads not currently open
+  // Background broadcast subscriptions
   useEffect(() => {
     if (!profileId) return;
 
@@ -174,8 +224,8 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
         .channel(`groomer-bg:${t.appointmentId}`)
         .on("broadcast", { event: "new_message" }, (payload) => {
           const msg = payload.payload as MessageRow;
-          if (msg.senderId === profileId) return; // own message
-          if (msg.appointmentId === activeIdRef.current) return; // active thread handles it
+          if (msg.senderId === profileId) return;
+          if (msg.appointmentId === activeIdRef.current) return;
 
           setThreads((prev) =>
             prev.map((th) =>
@@ -207,12 +257,10 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
   }
 
   function handleStartChat(booking: BookingForMessaging) {
-    // If a thread already exists, just switch to it
     if (existingIds.has(booking.appointmentId)) {
       handleSelectThread(booking.appointmentId);
       return;
     }
-    // Otherwise add a temporary thread stub and open it
     const stub: MessageThread = {
       appointmentId:  booking.appointmentId,
       scheduledAt:    booking.scheduledAt,
@@ -225,6 +273,19 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
     };
     setThreads((prev) => [stub, ...prev]);
     handleSelectThread(booking.appointmentId);
+  }
+
+  async function handleDeleteThread() {
+    if (!activeId) return;
+    setIsDeleting(true);
+    const result = await deleteThread(activeId);
+    setIsDeleting(false);
+    if (result.error) return;
+    setThreads((prev) => prev.filter((t) => t.appointmentId !== activeId));
+    setMessages([]);
+    setDeleteConfirming(false);
+    const remaining = threads.filter((t) => t.appointmentId !== activeId);
+    setActiveId(remaining[0]?.appointmentId ?? null);
   }
 
   function handleSend() {
@@ -244,7 +305,6 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
       createdAt: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, tempMsg]);
-
     setThreads((prev) =>
       prev.map((t) =>
         t.appointmentId === activeId
@@ -261,7 +321,6 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
       } else if (result.message) {
         const confirmed = result.message;
         setMessages((prev) => prev.map((m) => (m.id === tempId ? confirmed : m)));
-        // Broadcast to recipient — no RLS, delivers instantly
         messageChannelRef.current?.send({
           type: "broadcast",
           event: "new_message",
@@ -275,20 +334,17 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
     <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden grid md:grid-cols-[320px_1fr] min-h-[560px]">
       {/* Thread list */}
       <aside className="border-r border-pebble-grey/15 flex flex-col max-h-[640px]">
-        {/* List header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-pebble-grey/10 shrink-0">
           <p className="text-xs font-bold uppercase tracking-wider text-pebble-grey">Conversations</p>
           <button
             onClick={() => { setNewChatOpen((o) => !o); setBookingSearch(""); }}
             className="w-7 h-7 rounded-full bg-deep-slate text-alabaster-cream flex items-center justify-center hover:bg-deep-slate/80 transition-colors focus-ring"
             aria-label="New conversation"
-            title="Start a new conversation"
           >
             {newChatOpen ? <CloseIcon size={12} /> : <PlusIcon size={12} />}
           </button>
         </div>
 
-        {/* New chat picker */}
         {newChatOpen && (
           <div className="border-b border-pebble-grey/10 p-3 bg-alabaster-cream/50 shrink-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey mb-2">Start a conversation with…</p>
@@ -326,7 +382,6 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
           </div>
         )}
 
-        {/* Thread list */}
         <div className="flex-1 overflow-y-auto">
           {threads.length === 0 && !newChatOpen && (
             <div className="p-8 text-center text-pebble-grey text-sm font-bold">
@@ -340,9 +395,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
               onClick={() => handleSelectThread(t.appointmentId)}
               className={`w-full text-left p-4 flex items-start gap-3 border-b border-pebble-grey/10 transition-colors focus-ring ${activeId === t.appointmentId ? "bg-alabaster-cream" : "hover:bg-alabaster-cream/60"}`}
             >
-              <div className="w-10 h-10 rounded-full bg-sage-leaf text-white font-fredoka flex items-center justify-center shrink-0 text-lg">
-                {avatarLetter(t.ownerName)}
-              </div>
+              <Avatar url={t.ownerAvatarUrl} name={t.ownerName} className="w-10 h-10" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-bold text-sm text-deep-slate truncate">{t.ownerName}</p>
@@ -376,18 +429,50 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
         )}
         {activeThread && (
           <>
+            {/* Chat header */}
             <div className="px-5 py-4 border-b border-pebble-grey/15 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-sage-leaf text-white font-fredoka flex items-center justify-center text-lg">
-                {avatarLetter(activeThread.ownerName)}
-              </div>
-              <div className="min-w-0">
-                <p className="font-fredoka text-lg text-deep-slate leading-tight">{activeThread.ownerName}</p>
+              <Avatar url={activeThread.ownerAvatarUrl} name={activeThread.ownerName} className="w-10 h-10" />
+              <div className="min-w-0 flex-1">
+                <button
+                  onClick={() => setShowOwnerInfo(true)}
+                  className="font-fredoka text-lg text-deep-slate leading-tight hover:text-sage-leaf transition-colors text-left"
+                >
+                  {activeThread.ownerName}
+                </button>
                 {activeThread.dogName && (
                   <p className="text-xs text-pebble-grey font-bold">{activeThread.dogName}&rsquo;s appointment</p>
                 )}
               </div>
+              {/* Delete */}
+              {deleteConfirming ? (
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-pebble-grey font-bold">Delete conversation?</span>
+                  <button
+                    onClick={handleDeleteThread}
+                    disabled={isDeleting}
+                    className="text-xs font-bold text-muted-terracotta hover:underline focus-ring disabled:opacity-50"
+                  >
+                    {isDeleting ? "Deleting…" : "Yes"}
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirming(false)}
+                    className="text-xs font-bold text-pebble-grey hover:underline focus-ring"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setDeleteConfirming(true)}
+                  className="text-pebble-grey hover:text-muted-terracotta transition-colors focus-ring rounded p-1 shrink-0"
+                  aria-label="Delete conversation"
+                >
+                  <TrashIcon size={16} />
+                </button>
+              )}
             </div>
 
+            {/* Messages */}
             <div
               ref={scrollRef}
               className="flex-1 p-5 space-y-3 overflow-y-auto"
@@ -404,7 +489,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
               {messages.map((m) => {
                 const isMe = m.senderId !== activeThread.ownerProfileId;
                 return (
-                  <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                     <div
                       className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
                         isMe
@@ -414,6 +499,9 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
                     >
                       {m.body}
                     </div>
+                    <span className="text-[10px] text-pebble-grey mt-1 px-1">
+                      {formatMessageTime(m.createdAt)}
+                    </span>
                   </div>
                 );
               })}
@@ -426,6 +514,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
               )}
             </div>
 
+            {/* Input */}
             <div className="border-t border-pebble-grey/15 p-4 flex gap-2">
               <input
                 value={draft}
@@ -448,6 +537,52 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
           </>
         )}
       </section>
+
+      {/* Owner info modal */}
+      {showOwnerInfo && activeThread && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop"
+          onClick={() => setShowOwnerInfo(false)}
+        >
+          <div
+            className="bg-white rounded-[20px] shadow-modal p-6 w-full max-w-sm mx-4 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-fredoka text-xl text-deep-slate">Client details</h2>
+              <button onClick={() => setShowOwnerInfo(false)} className="text-pebble-grey hover:text-deep-slate focus-ring rounded p-1">
+                <CloseIcon size={18} />
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <Avatar url={activeThread.ownerAvatarUrl} name={activeThread.ownerName} className="w-16 h-16 text-2xl" />
+              <div>
+                <p className="font-fredoka text-lg text-deep-slate">{activeThread.ownerName}</p>
+                {activeThread.dogName && (
+                  <p className="text-sm text-pebble-grey font-bold">{activeThread.dogName}&rsquo;s appointment</p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2 text-sm font-nunito">
+              {activeThread.ownerPhone && (
+                <div className="flex items-center gap-2">
+                  <span className="text-pebble-grey w-16 shrink-0">Phone</span>
+                  <a href={`tel:${activeThread.ownerPhone}`} className="text-deep-slate text-link">{activeThread.ownerPhone}</a>
+                </div>
+              )}
+              {activeThread.ownerEmail && (
+                <div className="flex items-center gap-2">
+                  <span className="text-pebble-grey w-16 shrink-0">Email</span>
+                  <a href={`mailto:${activeThread.ownerEmail}`} className="text-deep-slate text-link truncate">{activeThread.ownerEmail}</a>
+                </div>
+              )}
+              {!activeThread.ownerPhone && !activeThread.ownerEmail && (
+                <p className="text-pebble-grey">No contact details on file.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

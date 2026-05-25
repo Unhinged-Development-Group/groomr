@@ -78,6 +78,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       groomerProfileId: "",
       profile: emptyProfile(myProfile.full_name || clerkName, myProfile.email || clerkEmail, myProfile.phone || clerkPhone),
       coverPhotoUrl: null,
+      profileImageUrl: null,
       services: [],
       availability: [],
       team: [],

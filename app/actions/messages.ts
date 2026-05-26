@@ -181,12 +181,26 @@ export async function getGroomerMessageThreads(): Promise<{
     });
   }
 
-  // Sort by most recent message
-  threads.sort((a, b) =>
-    new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime()
+  // Deduplicate by (owner, dog) — keep the thread with the most recent message per dog
+  const dedupMap = new Map<string, MessageThread>();
+  for (const t of threads) {
+    const key = `${t.ownerProfileId}||${t.dogName ?? ""}`;
+    const existing = dedupMap.get(key);
+    if (
+      !existing ||
+      new Date(t.lastMessageAt ?? 0).getTime() >
+        new Date(existing.lastMessageAt ?? 0).getTime()
+    ) {
+      dedupMap.set(key, t);
+    }
+  }
+
+  const deduped = Array.from(dedupMap.values()).sort(
+    (a, b) =>
+      new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime(),
   );
 
-  return { threads, profileId: ctx.profileId };
+  return { threads: deduped, profileId: ctx.profileId };
 }
 
 // ─── Get all messages for a single appointment thread ───────────────────────
@@ -354,13 +368,88 @@ export async function getGroomerBookingsForMessaging(): Promise<BookingForMessag
   const ownerMap = new Map((owners ?? []).map((p) => [p.id, p.full_name as string]));
   const dogMap   = new Map(((dogs as { id: string; name: string }[]) ?? []).map((d) => [d.id, d.name]));
 
-  return appointments.map((a) => ({
+  const all = appointments.map((a) => ({
     appointmentId:  a.id as string,
     scheduledAt:    a.scheduled_at as string,
     ownerName:      ownerMap.get(a.owner_id as string) ?? "Client",
     ownerProfileId: a.owner_id as string,
     dogName:        a.dog_id ? (dogMap.get(a.dog_id as string) ?? null) : null,
   }));
+
+  // One entry per (owner, dog) — appointments are already sorted desc so first hit = most recent
+  const seen = new Set<string>();
+  return all.filter((b) => {
+    const key = `${b.ownerProfileId}||${b.dogName ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// ─── Owner: all groomers eligible to start / continue a message thread ────────
+
+export interface GroomerForMessaging {
+  appointmentId: string;
+  scheduledAt: string;
+  groomerProfileId: string;
+  groomerName: string;
+  groomerAvatarUrl: string | null;
+  dogName: string | null;
+}
+
+export async function getOwnerBookingsForMessaging(): Promise<GroomerForMessaging[]> {
+  const ctx = await getMessagingContext();
+  if (!ctx) return [];
+
+  const { data: appointments } = await supabaseAdmin
+    .from("appointments")
+    .select("id, scheduled_at, dog_id, groomer_profile_id")
+    .eq("owner_id", ctx.profileId)
+    .not("status", "eq", "cancelled")
+    .order("scheduled_at", { ascending: false });
+
+  if (!appointments?.length) return [];
+
+  const groomerProfileIds = [
+    ...new Set(appointments.map((a) => a.groomer_profile_id as string).filter(Boolean)),
+  ];
+  const dogIds = [
+    ...new Set(appointments.map((a) => a.dog_id as string).filter(Boolean)),
+  ];
+
+  const [{ data: groomers }, { data: dogs }] = await Promise.all([
+    supabaseAdmin
+      .from("groomer_profiles")
+      .select("id, business_name, profile_image_url")
+      .in("id", groomerProfileIds),
+    dogIds.length
+      ? supabaseAdmin.from("dogs").select("id, name").in("id", dogIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const groomerMap = new Map((groomers ?? []).map((g) => [g.id, g]));
+  const dogMap = new Map(
+    ((dogs as { id: string; name: string }[]) ?? []).map((d) => [d.id, d.name]),
+  );
+
+  // One entry per groomer — most recent appointment first
+  const seen = new Set<string>();
+  const result: GroomerForMessaging[] = [];
+  for (const a of appointments) {
+    const gid = a.groomer_profile_id as string;
+    if (!gid || seen.has(gid)) continue;
+    seen.add(gid);
+    const g = groomerMap.get(gid);
+    result.push({
+      appointmentId:    a.id as string,
+      scheduledAt:      a.scheduled_at as string,
+      groomerProfileId: gid,
+      groomerName:      (g?.business_name as string) ?? "Groomer",
+      groomerAvatarUrl: (g?.profile_image_url as string | null) ?? null,
+      dogName:          a.dog_id ? (dogMap.get(a.dog_id as string) ?? null) : null,
+    });
+  }
+  return result;
 }
 
 // ─── Owner: list all conversation threads ────────────────────────────────────

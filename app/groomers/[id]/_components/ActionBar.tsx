@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { HeartIcon } from "@/components/ui/GroomrIcons";
 import { Toast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
@@ -43,6 +44,7 @@ export function ActionBar({
   depositPolicy,
 }: ActionBarProps) {
   const { user, isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
 
   const [saved, setSaved] = useState(initialSaved);
   const [busy, setBusy] = useState(false);
@@ -89,7 +91,13 @@ export function ActionBar({
         </button>
 
         <button
-          onClick={() => setContactOpen(true)}
+          onClick={() => {
+            if (isLoaded && isSignedIn) {
+              router.push(`/dashboard/owner/messages?groomer=${groomerId}`);
+            } else {
+              setContactOpen(true);
+            }
+          }}
           className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm focus-ring"
         >
           Contact

@@ -370,7 +370,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-deep-slate truncate">{b.ownerName}</p>
                     {b.dogName && (
-                      <p className="text-[10px] text-pebble-grey font-bold truncate">{b.dogName}&rsquo;s appointment</p>
+                      <p className="text-[10px] text-pebble-grey font-bold truncate">{b.dogName}</p>
                     )}
                   </div>
                   {existingIds.has(b.appointmentId) && (
@@ -404,7 +404,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
                   </span>
                 </div>
                 {t.dogName && (
-                  <p className="text-xs text-pebble-grey font-bold truncate">{t.dogName}&rsquo;s appointment</p>
+                  <p className="text-xs text-pebble-grey font-bold truncate">{t.dogName}</p>
                 )}
                 <p className={`text-xs mt-1 truncate ${t.unreadCount > 0 ? "text-deep-slate font-bold" : "text-pebble-grey"}`}>
                   {t.lastMessage ?? "No messages yet — say hello!"}
@@ -440,7 +440,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
                   {activeThread.ownerName}
                 </button>
                 {activeThread.dogName && (
-                  <p className="text-xs text-pebble-grey font-bold">{activeThread.dogName}&rsquo;s appointment</p>
+                  <p className="text-xs text-pebble-grey font-bold">{activeThread.dogName}</p>
                 )}
               </div>
               {/* Delete */}
@@ -559,7 +559,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
               <div>
                 <p className="font-fredoka text-lg text-deep-slate">{activeThread.ownerName}</p>
                 {activeThread.dogName && (
-                  <p className="text-sm text-pebble-grey font-bold">{activeThread.dogName}&rsquo;s appointment</p>
+                  <p className="text-sm text-pebble-grey font-bold">{activeThread.dogName}</p>
                 )}
               </div>
             </div>

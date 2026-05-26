@@ -10,8 +10,9 @@ import {
   deleteThread,
   type MessageThread,
   type MessageRow,
+  type GroomerForMessaging,
 } from "@/app/actions/messages";
-import { TrashIcon, CloseIcon } from "@/components/ui/GroomrIcons";
+import { PlusIcon, CloseIcon, TrashIcon } from "@/components/ui/GroomrIcons";
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -82,10 +83,18 @@ function TypingDots() {
 
 interface Props {
   initialThreads: MessageThread[];
+  initialBookings: GroomerForMessaging[];
   profileId: string;
+  /** groomer profile ID passed via ?groomer= URL param — auto-opens that chat */
+  initialGroomerId?: string | null;
 }
 
-export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
+export function OwnerMessagesClient({
+  initialThreads,
+  initialBookings,
+  profileId,
+  initialGroomerId,
+}: Props) {
   const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
   const [activeId, setActiveId] = useState<string | null>(
     initialThreads[0]?.appointmentId ?? null,
@@ -94,6 +103,8 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
   const [draft, setDraft] = useState("");
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [, startSendTransition] = useTransition();
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [groomerSearch, setGroomerSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,9 +115,39 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
   const [deleteConfirming, setDeleteConfirming] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
 
   const activeThread = threads.find((t) => t.appointmentId === activeId) ?? null;
+  const existingIds = new Set(threads.map((t) => t.appointmentId));
+
+  const filteredBookings = initialBookings.filter((b) => {
+    const q = groomerSearch.toLowerCase();
+    return (
+      b.groomerName.toLowerCase().includes(q) ||
+      (b.dogName ?? "").toLowerCase().includes(q)
+    );
+  });
+
+  // Auto-open groomer thread if ?groomer= param was supplied
+  useEffect(() => {
+    if (!initialGroomerId) return;
+
+    // Is there already a thread for this groomer?
+    const existing = threads.find((t) => t.groomerProfileId === initialGroomerId);
+    if (existing) {
+      setActiveId(existing.appointmentId);
+      return;
+    }
+
+    // Is there a booking we can use to start a chat?
+    const booking = initialBookings.find((b) => b.groomerProfileId === initialGroomerId);
+    if (booking) {
+      handleStartChat(booking);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialGroomerId]);
 
   // Load messages when thread changes
   useEffect(() => {
@@ -138,7 +179,10 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
     const ch = supabase
       .channel(`typing:${activeId}`)
       .on("broadcast", { event: "typing" }, (payload) => {
-        const { senderId, isTyping } = payload.payload as { senderId: string; isTyping: boolean };
+        const { senderId, isTyping } = payload.payload as {
+          senderId: string;
+          isTyping: boolean;
+        };
         if (senderId === profileId) return;
         setIsOtherTyping(isTyping);
         if (isTyping) {
@@ -230,12 +274,36 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
     return () => {
       channels.forEach((ch) => supabase.removeChannel(ch));
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId, threads.map((t) => t.appointmentId).join(",")]);
 
   function handleSelectThread(appointmentId: string) {
     setActiveId(appointmentId);
     setDraft("");
+    setNewChatOpen(false);
+    setGroomerSearch("");
+  }
+
+  function handleStartChat(booking: GroomerForMessaging) {
+    if (existingIds.has(booking.appointmentId)) {
+      handleSelectThread(booking.appointmentId);
+      return;
+    }
+    const stub: MessageThread = {
+      appointmentId:    booking.appointmentId,
+      scheduledAt:      booking.scheduledAt,
+      ownerName:        "",
+      ownerProfileId:   profileId,
+      groomerName:      booking.groomerName,
+      groomerProfileId: booking.groomerProfileId,
+      groomerAvatarUrl: booking.groomerAvatarUrl,
+      dogName:          booking.dogName,
+      lastMessage:      null,
+      lastMessageAt:    null,
+      unreadCount:      0,
+    };
+    setThreads((prev) => [stub, ...prev]);
+    handleSelectThread(booking.appointmentId);
   }
 
   async function handleDeleteThread() {
@@ -292,27 +360,92 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
     });
   }
 
-  if (threads.length === 0) {
-    return (
-      <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-12 text-center">
-        <p className="font-fredoka text-xl text-deep-slate mb-2">No messages yet</p>
-        <p className="text-sm text-pebble-grey font-nunito">
-          Your groomer will message you here once you have a booking.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden grid md:grid-cols-[300px_1fr] min-h-[560px]">
       {/* Thread list */}
       <aside className="border-r border-pebble-grey/15 flex flex-col max-h-[640px]">
-        <div className="px-4 py-3 border-b border-pebble-grey/10 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-pebble-grey/10 shrink-0">
           <p className="text-xs font-bold uppercase tracking-wider text-pebble-grey">
             Conversations
           </p>
+          {initialBookings.length > 0 && (
+            <button
+              onClick={() => { setNewChatOpen((o) => !o); setGroomerSearch(""); }}
+              className="w-7 h-7 rounded-full bg-groomr-gold text-deep-slate flex items-center justify-center hover:bg-groomr-gold/80 transition-colors focus-ring"
+              aria-label="New conversation"
+            >
+              {newChatOpen ? <CloseIcon size={12} /> : <PlusIcon size={12} />}
+            </button>
+          )}
         </div>
+
+        {newChatOpen && (
+          <div className="border-b border-pebble-grey/10 p-3 bg-alabaster-cream/50 shrink-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey mb-2">
+              Message a groomer…
+            </p>
+            <input
+              className="field text-sm py-1.5 mb-2"
+              placeholder="Search by groomer or dog name"
+              value={groomerSearch}
+              onChange={(e) => setGroomerSearch(e.target.value)}
+              autoFocus
+            />
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {filteredBookings.length === 0 && (
+                <p className="text-xs text-pebble-grey py-2 text-center">
+                  No groomers found
+                </p>
+              )}
+              {filteredBookings.map((b) => (
+                <button
+                  key={b.appointmentId}
+                  onClick={() => handleStartChat(b)}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-alabaster-cream transition-colors flex items-center gap-3 focus-ring"
+                >
+                  <Avatar
+                    url={b.groomerAvatarUrl}
+                    name={b.groomerName}
+                    bg="bg-deep-slate"
+                    fg="text-alabaster-cream"
+                    className="w-8 h-8 text-sm"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-deep-slate truncate">
+                      {b.groomerName}
+                    </p>
+                    {b.dogName && (
+                      <p className="text-[10px] text-pebble-grey font-bold truncate">
+                        {b.dogName}
+                      </p>
+                    )}
+                  </div>
+                  {existingIds.has(b.appointmentId) && (
+                    <span className="ml-auto text-[9px] font-bold text-sage-leaf bg-sage-leaf/10 px-2 py-0.5 rounded-full shrink-0">
+                      Active
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto">
+          {threads.length === 0 && !newChatOpen && (
+            <div className="p-8 text-center text-pebble-grey text-sm font-bold">
+              No messages yet.
+              {initialBookings.length > 0 && (
+                <span className="block text-xs font-normal opacity-70 mt-1">
+                  Tap{" "}
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-groomr-gold text-deep-slate mx-0.5">
+                    <PlusIcon size={9} />
+                  </span>{" "}
+                  to message a groomer.
+                </span>
+              )}
+            </div>
+          )}
           {threads.map((t) => (
             <button
               key={t.appointmentId}
@@ -323,7 +456,11 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
                   : "hover:bg-alabaster-cream/60"
               }`}
             >
-              <Avatar url={t.groomerAvatarUrl} name={t.groomerName ?? "G"} className="w-10 h-10" />
+              <Avatar
+                url={t.groomerAvatarUrl}
+                name={t.groomerName ?? "G"}
+                className="w-10 h-10"
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-bold text-sm text-deep-slate truncate">
@@ -335,7 +472,7 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
                 </div>
                 {t.dogName && (
                   <p className="text-xs text-pebble-grey font-bold truncate">
-                    {t.dogName}&rsquo;s appointment
+                    {t.dogName}
                   </p>
                 )}
                 <p
@@ -360,13 +497,19 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
       <section className="flex flex-col">
         {!activeThread ? (
           <div className="flex-1 flex items-center justify-center text-pebble-grey text-sm font-bold p-8 text-center">
-            Select a conversation
+            {initialBookings.length > 0
+              ? <>Select a conversation, or tap <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-groomr-gold text-deep-slate mx-1"><PlusIcon size={10} /></span> to start one.</>
+              : "Your groomer will message you here once you have a booking."}
           </div>
         ) : (
           <>
             {/* Chat header */}
             <div className="px-5 py-4 border-b border-pebble-grey/15 flex items-center gap-3">
-              <Avatar url={activeThread.groomerAvatarUrl} name={activeThread.groomerName ?? "G"} className="w-10 h-10" />
+              <Avatar
+                url={activeThread.groomerAvatarUrl}
+                name={activeThread.groomerName ?? "G"}
+                className="w-10 h-10"
+              />
               <div className="min-w-0 flex-1">
                 {activeThread.groomerProfileId ? (
                   <Link
@@ -382,14 +525,16 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
                 )}
                 {activeThread.dogName && (
                   <p className="text-xs text-pebble-grey font-bold">
-                    {activeThread.dogName}&rsquo;s appointment
+                    {activeThread.dogName}
                   </p>
                 )}
               </div>
               {/* Delete */}
               {deleteConfirming ? (
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-pebble-grey font-bold">Delete conversation?</span>
+                  <span className="text-xs text-pebble-grey font-bold">
+                    Delete conversation?
+                  </span>
                   <button
                     onClick={handleDeleteThread}
                     disabled={isDeleting}
@@ -422,17 +567,22 @@ export function OwnerMessagesClient({ initialThreads, profileId }: Props) {
               style={{ maxHeight: 440 }}
             >
               {loadingMessages && (
-                <div className="text-center text-pebble-grey text-xs py-4">Loading…</div>
+                <div className="text-center text-pebble-grey text-xs py-4">
+                  Loading…
+                </div>
               )}
               {!loadingMessages && messages.length === 0 && (
                 <div className="text-center text-pebble-grey text-xs py-8">
-                  No messages yet. The groomer will reach out soon!
+                  No messages yet. Say hello!
                 </div>
               )}
               {messages.map((m) => {
                 const isMe = m.senderId === profileId;
                 return (
-                  <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                  <div
+                    key={m.id}
+                    className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                  >
                     <div
                       className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
                         isMe

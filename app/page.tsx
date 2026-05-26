@@ -29,7 +29,7 @@ export default function LandingPage() {
     <div className="page-fade">
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        <div className="w-full px-5 sm:px-6 lg:px-12 xl:px-20 pt-8 pb-16 md:pt-16 md:pb-32 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="w-full px-5 sm:px-6 lg:px-12 xl:px-20 pt-8 pb-16 md:pt-16 md:pb-32 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="space-y-5 md:space-y-7 w-full lg:max-w-xl text-center lg:text-left">
             <Eyebrow className="mx-auto lg:mx-0 w-fit">Local · Independent · Loved</Eyebrow>
 
@@ -137,7 +137,7 @@ export default function LandingPage() {
         <div className="absolute -top-32 -right-32 w-[480px] h-[480px] bg-sage-leaf/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-[360px] h-[360px] bg-groomr-gold/6 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative w-full px-5 sm:px-6 lg:px-12 xl:px-20 grid lg:grid-cols-2 gap-10 md:gap-14 items-center">
+        <div className="relative w-full px-5 sm:px-6 lg:px-12 xl:px-20 grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 items-center">
 
           {/* Left — text */}
           <div className="space-y-6">
@@ -317,7 +317,7 @@ export default function LandingPage() {
             Real dogs. Real regulars.
           </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {TESTIMONIALS.map((t, i) => (
             <figure
               key={i}

@@ -29,11 +29,11 @@ export default function LandingPage() {
     <div className="page-fade">
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        <div className="w-full px-6 lg:px-12 xl:px-20 pt-10 pb-20 md:pt-16 md:pb-32 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div className="space-y-7 max-w-xl">
+        <div className="w-full px-5 sm:px-6 lg:px-12 xl:px-20 pt-8 pb-16 md:pt-16 md:pb-32 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="space-y-5 md:space-y-7 w-full max-w-xl">
             <Eyebrow>Local · Independent · Loved</Eyebrow>
 
-            <h1 className="font-fredoka text-5xl md:text-6xl lg:text-7xl text-deep-slate leading-[0.95]">
+            <h1 className="font-fredoka text-[2.4rem] sm:text-5xl md:text-6xl lg:text-7xl text-deep-slate leading-[0.95]">
               Book your dog&apos;s
               <br />
               next groom in
@@ -44,11 +44,11 @@ export default function LandingPage() {
               </span>
             </h1>
 
-            <p className="text-xl text-deep-slate font-nunito italic font-bold leading-relaxed">
+            <p className="text-lg md:text-xl text-deep-slate font-nunito italic font-bold leading-relaxed">
               &ldquo;Your dog deserves a regular.&rdquo;
             </p>
 
-            <div className="pt-2">
+            <div className="pt-1 w-full">
               <SearchPillWrapper placeholder="Postcode, town, or 'near me'" ctaLabel="Find Groomers" />
               <div className="flex flex-wrap gap-2 mt-3 text-xs">
                 <span className="text-pebble-grey font-bold mr-1 self-center">Popular:</span>
@@ -119,10 +119,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section className="w-full px-6 lg:px-12 xl:px-20 py-20 md:py-28">
-        <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+      <section className="w-full px-5 sm:px-6 lg:px-12 xl:px-20 py-14 md:py-28">
+        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-14 space-y-3">
           <Eyebrow>How Groomr works</Eyebrow>
-          <h2 className="font-fredoka text-5xl md:text-6xl text-deep-slate">
+          <h2 className="font-fredoka text-4xl md:text-5xl lg:text-6xl text-deep-slate">
             Booking grooming, finally easy.
           </h2>
         </div>
@@ -132,17 +132,17 @@ export default function LandingPage() {
       </section>
 
       {/* ── GROOMER STRIP ────────────────────────────────────────────── */}
-      <section className="relative bg-deep-slate overflow-hidden py-20 md:py-28">
+      <section className="relative bg-deep-slate overflow-hidden py-14 md:py-28">
         {/* Decorative glows */}
         <div className="absolute -top-32 -right-32 w-[480px] h-[480px] bg-sage-leaf/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-[360px] h-[360px] bg-groomr-gold/6 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative w-full px-6 lg:px-12 xl:px-20 grid lg:grid-cols-2 gap-14 items-center">
+        <div className="relative w-full px-5 sm:px-6 lg:px-12 xl:px-20 grid lg:grid-cols-2 gap-10 md:gap-14 items-center">
 
           {/* Left — text */}
           <div className="space-y-6">
             <Eyebrow className="border-white/20 text-white/60">Are you a dog groomer?</Eyebrow>
-            <h2 className="font-fredoka text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
+            <h2 className="font-fredoka text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
               Your business,<br />finally organised.
             </h2>
             <p className="text-white/65 text-lg leading-relaxed font-nunito max-w-md">
@@ -310,8 +310,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
-      <section className="w-full px-6 lg:px-12 xl:px-20 py-20 md:py-28">
-        <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+      <section className="w-full px-5 sm:px-6 lg:px-12 xl:px-20 py-14 md:py-28">
+        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-14 space-y-3">
           <Eyebrow>Loved by neighbours</Eyebrow>
           <h2 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
             Real dogs. Real regulars.

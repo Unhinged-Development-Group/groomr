@@ -375,7 +375,8 @@ export function BookingFlow({
   function depositDisplay(svc: Service): string | null {
     if (depositPolicy.type === "percentage" && depositPolicy.percentage != null) {
       const amt = Math.round((svc.price_pence * depositPolicy.percentage) / 100);
-      return `${depositPolicy.percentage}% deposit (£${(amt / 100).toFixed(0)}) due today`;
+      const display = Number.isInteger(amt / 100) ? `£${amt / 100}` : `£${(amt / 100).toFixed(2)}`;
+      return `${depositPolicy.percentage}% deposit (${display}) due today`;
     }
     if (depositPolicy.type === "full") return "Full payment due today";
     return null;

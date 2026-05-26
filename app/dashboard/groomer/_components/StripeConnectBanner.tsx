@@ -81,7 +81,7 @@ export function StripeConnectBanner({ chargesEnabled, detailsSubmitted, stripeAc
   // Not started or incomplete — primary CTA
   return (
     <div className="px-4 py-4 rounded-xl bg-deep-slate text-white">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
           <p className="font-fredoka text-lg leading-tight mb-1">
             Connect Stripe to accept payments

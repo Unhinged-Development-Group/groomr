@@ -55,7 +55,9 @@ export async function createConnectOnboardingLink(): Promise<
         business_type: "individual",
         settings: {
           payouts: {
-            schedule: { interval: "daily" },
+            // Weekly payouts every Monday — covers the previous Mon–Sun week.
+            // Groomers see one clean transfer per week rather than daily trickle.
+            schedule: { interval: "weekly", weekly_anchor: "monday" },
           },
         },
       });

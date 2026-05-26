@@ -433,8 +433,9 @@ function ServiceCard({
 }) {
   let depositDisplay: string | null = null;
   if (depositPolicy.type === "percentage" && depositPolicy.percentage != null) {
-    const depositPounds = Math.round((service.price_pence * depositPolicy.percentage) / 100 / 100);
-    depositDisplay = `${depositPolicy.percentage}% deposit (£${depositPounds})`;
+    const depositPence = Math.round((service.price_pence * depositPolicy.percentage) / 100);
+    const depositDisplay2 = Number.isInteger(depositPence / 100) ? `£${depositPence / 100}` : `£${(depositPence / 100).toFixed(2)}`;
+    depositDisplay = `${depositPolicy.percentage}% deposit (${depositDisplay2})`;
   } else if (depositPolicy.type === "full") {
     depositDisplay = "Full pre-payment required";
   }

@@ -338,7 +338,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
           <p className="text-xs font-bold uppercase tracking-wider text-pebble-grey">Conversations</p>
           <button
             onClick={() => { setNewChatOpen((o) => !o); setBookingSearch(""); }}
-            className="w-7 h-7 rounded-full bg-deep-slate text-alabaster-cream flex items-center justify-center hover:bg-deep-slate/80 transition-colors focus-ring"
+            className="w-7 h-7 rounded-full bg-groomr-gold text-deep-slate flex items-center justify-center hover:bg-groomr-gold/80 transition-colors focus-ring"
             aria-label="New conversation"
           >
             {newChatOpen ? <CloseIcon size={12} /> : <PlusIcon size={12} />}
@@ -424,7 +424,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
       <section className="flex flex-col">
         {!activeThread && (
           <div className="flex-1 flex items-center justify-center text-pebble-grey text-sm font-bold p-8 text-center">
-            Select a conversation, or tap <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-deep-slate text-alabaster-cream mx-1"><PlusIcon size={10} /></span> to start one.
+            Select a conversation, or tap <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-groomr-gold text-deep-slate mx-1"><PlusIcon size={10} /></span> to start one.
           </div>
         )}
         {activeThread && (

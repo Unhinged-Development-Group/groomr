@@ -464,25 +464,19 @@ export async function getMessagesNavContext(): Promise<{
   const isGroomer = !!ctx.groomerProfileId;
   const url = isGroomer ? "/dashboard/groomer/messages" : "/dashboard/owner/messages";
 
-  // Fetch relevant appointments (upcoming + recent)
-  const since = new Date();
-  since.setDate(since.getDate() - 30);
-
   let appointmentIds: string[] = [];
 
   if (isGroomer) {
     const { data } = await supabaseAdmin
       .from("appointments")
       .select("id")
-      .eq("groomer_profile_id", ctx.groomerProfileId!)
-      .gte("scheduled_at", since.toISOString());
+      .eq("groomer_profile_id", ctx.groomerProfileId!);
     appointmentIds = (data ?? []).map((a) => a.id as string);
   } else {
     const { data } = await supabaseAdmin
       .from("appointments")
       .select("id")
-      .eq("owner_id", ctx.profileId)
-      .gte("scheduled_at", since.toISOString());
+      .eq("owner_id", ctx.profileId);
     appointmentIds = (data ?? []).map((a) => a.id as string);
   }
 

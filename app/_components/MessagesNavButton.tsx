@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getMessagesNavContext } from "@/app/actions/messages";
@@ -23,26 +24,34 @@ function MessagesIcon() {
 }
 
 export function MessagesNavButton() {
+  const pathname = usePathname();
   const [url, setUrl] = useState("/dashboard");
   const [unread, setUnread] = useState(0);
   const profileIdRef = useRef<string>("");
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Whether we're currently on the messages page
+  const isOnMessagesPage =
+    pathname.includes("/messages");
 
-    getMessagesNavContext().then((ctx) => {
-      if (cancelled) return;
-      setUrl(ctx.url);
-      setUnread(ctx.unreadCount);
-      profileIdRef.current = ctx.profileId;
+  const refreshCount = useCallback(async () => {
+    const ctx = await getMessagesNavContext();
+    setUrl(ctx.url);
+    profileIdRef.current = ctx.profileId;
 
-      // Clean up any previous channels
+    // Re-subscribe if appointment list changes
+    const newIds = ctx.appointmentIds;
+    const existingIds = new Set(
+      channelsRef.current.map((ch) => (ch as { topic?: string }).topic ?? "")
+    );
+    const hasNewIds = newIds.some((id) => !existingIds.has(`realtime:messages:${id}`));
+
+    if (hasNewIds || channelsRef.current.length === 0) {
+      // Tear down old channels and re-subscribe
       channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
       channelsRef.current = [];
 
-      // Subscribe to each relevant appointment via broadcast (no RLS/auth needed)
-      ctx.appointmentIds.forEach((apptId) => {
+      newIds.forEach((apptId) => {
         const ch = supabase
           .channel(`messages:${apptId}`)
           .on("broadcast", { event: "new_message" }, (payload) => {
@@ -54,14 +63,38 @@ export function MessagesNavButton() {
           .subscribe();
         channelsRef.current.push(ch);
       });
+    }
+
+    // Always sync the DB count so missed broadcasts are caught
+    setUnread((prev) => {
+      // If user is on the messages page, trust that they're reading — keep low count
+      if (isOnMessagesPage) return 0;
+      // Otherwise take whichever is higher: real-time increments vs DB truth
+      return Math.max(prev, ctx.unreadCount);
     });
+  }, [isOnMessagesPage]);
+
+  // Initial load
+  useEffect(() => {
+    refreshCount();
 
     return () => {
-      cancelled = true;
       channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
       channelsRef.current = [];
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Poll every 30 s as a fallback for missed broadcasts
+  useEffect(() => {
+    const id = setInterval(refreshCount, 30_000);
+    return () => clearInterval(id);
+  }, [refreshCount]);
+
+  // Clear dot when user navigates to messages page
+  useEffect(() => {
+    if (isOnMessagesPage) setUnread(0);
+  }, [isOnMessagesPage]);
 
   return (
     <Link
@@ -71,7 +104,7 @@ export function MessagesNavButton() {
       onClick={() => setUnread(0)}
     >
       <MessagesIcon />
-      {unread > 0 && (
+      {unread > 0 && !isOnMessagesPage && (
         <span
           aria-hidden
           className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-muted-terracotta rounded-full border-2 border-alabaster-cream"

@@ -20,9 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ClerkProvider afterSignOutUrl="/">
 
       <html lang="en">
-        <body className="flex flex-col min-h-screen">
+        <body className="flex flex-col min-h-screen max-w-full overflow-x-hidden">
           <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 min-w-0 max-w-full overflow-x-hidden">{children}</main>
           <SiteFooter />
         </body>
       </html>

@@ -30,7 +30,7 @@ export default function LandingPage() {
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="w-full px-5 sm:px-6 lg:px-12 xl:px-20 pt-8 pb-16 md:pt-16 md:pb-32 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div className="space-y-5 md:space-y-7 w-full max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
+          <div className="space-y-5 md:space-y-7 w-full lg:max-w-xl text-center lg:text-left">
             <Eyebrow className="mx-auto lg:mx-0 w-fit">Local · Independent · Loved</Eyebrow>
 
             <h1 className="font-fredoka text-[2.4rem] sm:text-5xl md:text-6xl lg:text-7xl text-deep-slate leading-[0.95]">

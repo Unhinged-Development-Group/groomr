@@ -155,7 +155,7 @@ export function HowItWorksCarousel() {
 
         <div className="relative z-10 grid md:grid-cols-2 gap-0">
           {/* Left — text */}
-          <div className="p-10 sm:p-14 flex flex-col justify-center space-y-6">
+          <div className="p-6 sm:p-10 md:p-14 flex flex-col justify-center space-y-6">
             <div
               className={[
                 "w-16 h-16 rounded-2xl flex items-center justify-center transition-colors duration-300",

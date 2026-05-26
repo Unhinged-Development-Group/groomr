@@ -78,8 +78,9 @@ export async function createConnectOnboardingLink(): Promise<
 
     return { url: accountLink.url };
   } catch (err) {
-    console.error("[createConnectOnboardingLink]", err);
-    return { error: "Failed to start Stripe onboarding. Please try again." };
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[createConnectOnboardingLink]", msg);
+    return { error: `Stripe error: ${msg}` };
   }
 }
 

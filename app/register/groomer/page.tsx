@@ -8,6 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RegisterGroomerPage() {
+  // If the visitor is already signed in (e.g. an owner adding the groomer role)
+  // we pre-fill their details and skip password creation.
   const user = await currentUser();
 
   const fullName = user

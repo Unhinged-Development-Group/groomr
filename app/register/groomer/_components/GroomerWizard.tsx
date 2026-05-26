@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { SignUp } from "@clerk/nextjs";
-import { Info, Building2, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSignIn, useClerk } from "@clerk/nextjs";
+import { Info, Building2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { UploadIcon, CheckIcon, PlusIcon, CloseIcon, ShieldIcon } from "@/components/ui/GroomrIcons";
@@ -26,11 +27,13 @@ interface CustomService {
 }
 
 interface FormState {
-  // Step 2 (was Step 1)
+  // Step 0 — About you
   fullName: string;
   phone: string;
   email: string;
-  // Step 3 (was Step 2)
+  password: string;
+  confirmPassword: string;
+  // Step 1 — Your business
   biz: string;
   type: BizType;
   addressLine1: string;
@@ -38,16 +41,16 @@ interface FormState {
   city: string;
   postcode: string;
   radius: number;
-  // Step 4 (was Step 3)
+  // Step 2 — Services & prices
   selectedServices: string[];
   servicePrices: Record<string, number>;
   customServices: CustomService[];
   depositType: 'none' | 'percentage' | 'full';
   depositPercentage: number;
-  // Step 5 (was Step 4)
+  // Step 3 — Availability
   days: Record<DayKey, DaySlot>;
   lead: number;
-  // Step 6
+  // Step 4 — Verify & launch
   insuranceDocUrl: string | null;
   insuranceFileName: string | null;
   bankHolderName: string;
@@ -58,12 +61,11 @@ interface FormState {
 /* ── Constants ────────────────────────────────────────────────────────── */
 
 const STEPS = [
-  { id: "account",  t: "Create account",     s: "Email and password." },
-  { id: "you",      t: "About you",          s: "Name, email, phone." },
-  { id: "biz",      t: "Your business",      s: "Trading name, type, address." },
-  { id: "services", t: "Services & prices",  s: "What you offer, what you charge." },
-  { id: "avail",    t: "Availability",       s: "When you work, lead time." },
-  { id: "verify",   t: "Verify & launch",    s: "Insurance & payout." },
+  { id: "you",      t: "About you",         s: "Name, email, phone." },
+  { id: "biz",      t: "Your business",     s: "Trading name, type, address." },
+  { id: "services", t: "Services & prices", s: "What you offer, what you charge." },
+  { id: "avail",    t: "Availability",      s: "When you work, lead time." },
+  { id: "verify",   t: "Verify & launch",   s: "Insurance & payout." },
 ];
 
 const PRESET_SERVICES = [
@@ -115,13 +117,20 @@ export function GroomerWizard({
 }: {
   initialName?: string;
   initialEmail?: string;
+  /** True when the visitor already has a Clerk session (e.g. an owner adding
+   *  the groomer role). Password fields are hidden and account creation is
+   *  skipped — their existing session is used on submit. */
   startAuthenticated?: boolean;
 }) {
-  // Step 0 = Create account (skipped when already signed in)
-  // Steps 1–5 = groomer wizard (original steps 0–4)
-  const firstStep = startAuthenticated ? 1 : 0;
-  const [step, setStep] = useState(firstStep);
+  const router = useRouter();
+  const { signIn }   = useSignIn();   // v7 signals-based hook
+  const { setActive } = useClerk();   // setActive lives on useClerk in v7
+
+  const [step, setStep] = useState(0);
   const [isPending, startTransition] = useTransition();
+  const [launchError, setLaunchError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [insuranceUploading, setInsuranceUploading] = useState(false);
   const [insuranceError, setInsuranceError] = useState<string | null>(null);
   const [policyAgreed, setPolicyAgreed] = useState(false);
@@ -131,6 +140,8 @@ export function GroomerWizard({
     fullName: initialName,
     phone: "",
     email: initialEmail,
+    password: "",
+    confirmPassword: "",
     biz: "",
     type: "studio",
     addressLine1: "",
@@ -155,8 +166,18 @@ export function GroomerWizard({
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const isLast = step === STEPS.length - 1;
-  const progress = ((step + 1) / STEPS.length) * 100;
+  const isLast    = step === STEPS.length - 1;
+  const progress  = ((step + 1) / STEPS.length) * 100;
+
+  /* ── Step 0 validation (About you) ── */
+  const step0Valid = (() => {
+    if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim()) return false;
+    if (!startAuthenticated) {
+      if (form.password.length < 8) return false;
+      if (form.password !== form.confirmPassword) return false;
+    }
+    return true;
+  })();
 
   /* ── Service helpers ── */
   const toggleService = (name: string) => {
@@ -205,8 +226,7 @@ export function GroomerWizard({
       formData.append("timestamp", String(sig.timestamp));
       formData.append("signature", sig.signature);
       formData.append("folder", sig.folder);
-      // resource_type=auto handles PDFs, images, etc.
-      const res = await fetch(
+      const res  = await fetch(
         `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
         { method: "POST", body: formData }
       );
@@ -221,9 +241,9 @@ export function GroomerWizard({
     }
   };
 
-  /* ── Sort code formatter (auto-inserts dashes: 123456 → 12-34-56) ── */
+  /* ── Sort code formatter ── */
   const handleSortCode = (raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 6);
+    const digits    = raw.replace(/\D/g, "").slice(0, 6);
     const formatted = digits.replace(/(\d{2})(\d{1,2})?(\d{1,2})?/, (_, a, b, c) =>
       [a, b, c].filter(Boolean).join("-")
     );
@@ -232,6 +252,7 @@ export function GroomerWizard({
 
   /* ── Submit ── */
   const handleLaunch = () => {
+    setLaunchError(null);
     startTransition(async () => {
       const allServices = [
         ...form.selectedServices.map((name) => ({
@@ -243,28 +264,61 @@ export function GroomerWizard({
           .map((s) => ({ name: s.name.trim(), price: s.price })),
       ];
 
-      await registerGroomer({
-        fullName: form.fullName,
-        phone: form.phone,
-        businessName: form.biz,
-        bizType: form.type,
-        addressLine1: form.addressLine1,
-        addressLine2: form.addressLine2,
-        city: form.city,
-        postcode: form.postcode,
-        radiusMiles: form.type === "mobile" ? form.radius : 0,
-        services: allServices,
-        depositType: form.depositType,
-        depositPercentage: form.depositType === "percentage" ? form.depositPercentage : null,
-        days: Object.fromEntries(
+      const result = await registerGroomer({
+        fullName:           form.fullName,
+        phone:              form.phone,
+        businessName:       form.biz,
+        bizType:            form.type,
+        addressLine1:       form.addressLine1,
+        addressLine2:       form.addressLine2,
+        city:               form.city,
+        postcode:           form.postcode,
+        radiusMiles:        form.type === "mobile" ? form.radius : 0,
+        services:           allServices,
+        depositType:        form.depositType,
+        depositPercentage:  form.depositType === "percentage" ? form.depositPercentage : null,
+        days:               Object.fromEntries(
           (Object.keys(form.days) as DayKey[]).map((k) => [k, form.days[k]])
         ),
-        leadHours: form.lead,
-        insuranceDocUrl: form.insuranceDocUrl,
-        bankAccountHolder: form.bankHolderName || null,
-        bankSortCode: form.bankSortCode || null,
-        bankAccountNumber: form.bankAccountNumber || null,
+        leadHours:          form.lead,
+        insuranceDocUrl:    form.insuranceDocUrl,
+        bankAccountHolder:  form.bankHolderName || null,
+        bankSortCode:       form.bankSortCode || null,
+        bankAccountNumber:  form.bankAccountNumber || null,
+        // Only passed for new users — existing sessions skip account creation
+        ...(!startAuthenticated && {
+          email:    form.email,
+          password: form.password,
+        }),
       });
+
+      if (!result.success) {
+        setLaunchError(result.error);
+        return;
+      }
+
+      // New user — use the sign-in token to silently establish a Clerk session,
+      // then hard-reload so the server picks up the new session cookie.
+      if (result.signInToken) {
+        if (!signIn) {
+          // Clerk not ready — fall back to manual sign-in
+          router.push("/sign-in?redirect_url=/dashboard/groomer");
+          return;
+        }
+        const { error } = await signIn.ticket({ ticket: result.signInToken });
+        if (error) {
+          // Account was created but auto sign-in failed — send to sign-in page
+          setLaunchError("Profile created! Please sign in to access your dashboard.");
+          router.push("/sign-in?redirect_url=/dashboard/groomer");
+          return;
+        }
+        // Session is now active — hard navigate so the server sees the new cookie
+        window.location.href = "/dashboard/groomer";
+        return;
+      }
+
+      // Existing authenticated user — soft navigate
+      router.push("/dashboard/groomer");
     });
   };
 
@@ -291,24 +345,23 @@ export function GroomerWizard({
             </div>
             <div className="mt-1">
               {STEPS.map((s, i) => {
-                // When already authenticated, step 0 always shows as done
-                const done = startAuthenticated && i === 0 ? true : i < step;
+                const done   = i < step;
                 const active = i === step;
-                // Allow clicking back to step 1 minimum when authenticated (not step 0)
-                const minStep = startAuthenticated ? 1 : 0;
                 return (
                   <button key={s.id}
-                    onClick={() => i <= step && i >= minStep && setStep(i)}
-                    disabled={i > step || (startAuthenticated && i === 0)}
+                    onClick={() => i <= step && setStep(i)}
+                    disabled={i > step}
                     className={cn(
                       "w-full text-left flex items-start gap-3 p-3 rounded-xl transition-colors focus-ring",
                       active ? "bg-alabaster-cream" : "hover:bg-alabaster-cream/60",
-                      (i > step || (startAuthenticated && i === 0)) && "opacity-50 cursor-not-allowed"
+                      i > step && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <div className={cn(
                       "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5",
-                      done ? "bg-sage-leaf text-white" : active ? "bg-deep-slate text-alabaster-cream" : "bg-pebble-grey/15 text-pebble-grey"
+                      done   ? "bg-sage-leaf text-white"
+                             : active ? "bg-deep-slate text-alabaster-cream"
+                                      : "bg-pebble-grey/15 text-pebble-grey"
                     )}>
                       {done ? <CheckIcon size={14} /> : i + 1}
                     </div>
@@ -326,32 +379,22 @@ export function GroomerWizard({
         {/* ── Step body ── */}
         <div className="bg-white border border-pebble-grey/20 rounded-[24px] p-8 md:p-10 shadow-subtle space-y-6">
 
-          {/* ── STEP 0: Create account ── */}
+          {/* ── STEP 0: About you ── */}
           {step === 0 && (
             <>
               <header className="space-y-2">
                 <Eyebrow>Step 1</Eyebrow>
-                <h2 className="font-fredoka text-3xl text-deep-slate">Create your account.</h2>
-                <p className="text-pebble-grey text-sm font-nunito">
-                  Already have an account?{" "}
-                  <a href="/sign-in?redirect_url=/register/groomer" className="text-sage-leaf font-bold hover:underline">
-                    Sign in instead
-                  </a>
-                </p>
-              </header>
-              <div className="flex justify-center">
-                <SignUp routing="hash" forceRedirectUrl="/register/groomer" />
-              </div>
-            </>
-          )}
-
-          {/* ── STEP 1: About you ── */}
-          {step === 1 && (
-            <>
-              <header className="space-y-2">
-                <Eyebrow>Step 2</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">Tell us who you are.</h2>
+                {!startAuthenticated && (
+                  <p className="text-pebble-grey text-sm font-nunito">
+                    Already have an account?{" "}
+                    <a href="/sign-in?redirect_url=/register/groomer" className="text-sage-leaf font-bold hover:underline">
+                      Sign in instead
+                    </a>
+                  </p>
+                )}
               </header>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Your name">
                   <input className="field" value={form.fullName} onChange={(e) => set("fullName", e.target.value)}
@@ -365,15 +408,63 @@ export function GroomerWizard({
                   <input className="field" value={form.email} onChange={(e) => set("email", e.target.value)}
                     placeholder="you@example.com" type="email" autoComplete="email" />
                 </Field>
+
+                {!startAuthenticated && (
+                  <>
+                    <Field label="Password">
+                      <div className="relative">
+                        <input
+                          className="field pr-10"
+                          value={form.password}
+                          onChange={(e) => set("password", e.target.value)}
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Min. 8 characters"
+                          autoComplete="new-password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-pebble-grey hover:text-deep-slate transition-colors focus-ring rounded"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </Field>
+                    <Field label="Confirm password">
+                      <div className="relative">
+                        <input
+                          className="field pr-10"
+                          value={form.confirmPassword}
+                          onChange={(e) => set("confirmPassword", e.target.value)}
+                          type={showConfirm ? "text" : "password"}
+                          placeholder="Repeat your password"
+                          autoComplete="new-password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-pebble-grey hover:text-deep-slate transition-colors focus-ring rounded"
+                          aria-label={showConfirm ? "Hide password" : "Show password"}
+                        >
+                          {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {form.confirmPassword && form.password !== form.confirmPassword && (
+                        <p className="text-xs font-bold text-muted-terracotta mt-1">Passwords don&apos;t match</p>
+                      )}
+                    </Field>
+                  </>
+                )}
               </div>
             </>
           )}
 
-          {/* ── STEP 2: Business ── */}
-          {step === 2 && (
+          {/* ── STEP 1: Business ── */}
+          {step === 1 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 3</Eyebrow>
+                <Eyebrow>Step 2</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">About your business.</h2>
               </header>
 
@@ -404,7 +495,7 @@ export function GroomerWizard({
                 </div>
               </div>
 
-              {/* Business address */}
+              {/* Address */}
               <div className="space-y-3">
                 <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
                   {form.type === "mobile" ? "Base address" : "Business address"}
@@ -442,8 +533,7 @@ export function GroomerWizard({
                   <div className="flex items-start gap-2 mb-2">
                     <Info size={14} className="text-pebble-grey shrink-0 mt-0.5" />
                     <p className="text-xs text-pebble-grey">
-                      How far you&apos;re willing to travel from your base address. Customers outside
-                      this radius won&apos;t see your profile in search results.
+                      How far you&apos;re willing to travel from your base address.
                     </p>
                   </div>
                   <input type="range" min="1" max="30" value={form.radius}
@@ -458,19 +548,17 @@ export function GroomerWizard({
             </>
           )}
 
-          {/* ── STEP 3: Services & prices ── */}
-          {step === 3 && (
+          {/* ── STEP 2: Services & prices ── */}
+          {step === 2 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 4</Eyebrow>
+                <Eyebrow>Step 3</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">Services &amp; prices.</h2>
               </header>
               <p className="text-pebble-grey text-sm">
-                Select each service you offer and set your starting price. You can add more detail —
-                like size variations — from your dashboard later.
+                Select each service you offer and set your starting price. You can add more detail from your dashboard later.
               </p>
 
-              {/* Preset services */}
               <div className="space-y-2">
                 {PRESET_SERVICES.map((name) => {
                   const on = form.selectedServices.includes(name);
@@ -527,8 +615,7 @@ export function GroomerWizard({
                     />
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-pebble-grey font-bold text-sm">£</span>
-                      <input
-                        type="number"
+                      <input type="number"
                         value={svc.price || ""}
                         onChange={(e) => updateCustomService(svc.id, "price", +e.target.value)}
                         placeholder="0"
@@ -606,11 +693,11 @@ export function GroomerWizard({
             </>
           )}
 
-          {/* ── STEP 4: Availability ── */}
-          {step === 4 && (
+          {/* ── STEP 3: Availability ── */}
+          {step === 3 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 5</Eyebrow>
+                <Eyebrow>Step 4</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">When are you working?</h2>
               </header>
 
@@ -683,8 +770,7 @@ export function GroomerWizard({
                 <div className="flex items-start gap-2 mb-2">
                   <Info size={14} className="text-pebble-grey shrink-0 mt-0.5" />
                   <p className="text-xs text-pebble-grey">
-                    How much notice you need before a booking. Customers can&apos;t book slots
-                    sooner than this. Set to 0 for same-day bookings.
+                    How much notice you need before a booking. Set to 0 for same-day bookings.
                   </p>
                 </div>
                 <input type="range" min="0" max="72" step="6" value={form.lead}
@@ -700,25 +786,24 @@ export function GroomerWizard({
               <div className="bg-alabaster-cream rounded-2xl p-5 border border-pebble-grey/15">
                 <p className="text-xs font-bold uppercase tracking-wider text-sage-leaf mb-1">Tip</p>
                 <p className="text-sm text-deep-slate">
-                  You can sync Google Calendar later so out-of-Groomr appointments block
-                  availability automatically.
+                  You can sync Google Calendar later so out-of-Groomr appointments block availability automatically.
                 </p>
               </div>
             </>
           )}
 
-          {/* ── STEP 5: Verify & launch ── */}
-          {step === 5 && (
+          {/* ── STEP 4: Verify & launch ── */}
+          {step === 4 && (
             <>
               <header className="space-y-2">
-                <Eyebrow>Step 6 — last one</Eyebrow>
+                <Eyebrow>Step 5 — last one</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">Verify &amp; get paid.</h2>
                 <p className="text-sm text-pebble-grey">
                   Both sections are optional — you can launch now and add them from your dashboard later.
                 </p>
               </header>
 
-              {/* ── Insurance ── */}
+              {/* Insurance */}
               <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
                 <div className="flex items-center gap-4 p-5 border-b border-pebble-grey/10">
                   <ShieldIcon size={28} className={form.insuranceDocUrl ? "text-sage-leaf" : "text-pebble-grey"} />
@@ -727,10 +812,8 @@ export function GroomerWizard({
                     <p className="text-xs text-pebble-grey">PDF or image of your certificate. Required for the verified badge.</p>
                   </div>
                 </div>
-
                 <div className="p-5 space-y-3">
-                  {form.insuranceDocUrl ? (
-                    /* Uploaded state */
+                  {form.insuranceDocUrl && form.insuranceDocUrl !== "skipped" ? (
                     <div className="flex items-center gap-3 bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl px-4 py-3">
                       <div className="w-7 h-7 rounded-full bg-sage-leaf flex items-center justify-center shrink-0">
                         <CheckIcon size={14} className="text-white" />
@@ -746,7 +829,6 @@ export function GroomerWizard({
                       </button>
                     </div>
                   ) : (
-                    /* Upload prompt */
                     <div className="space-y-2">
                       <input
                         ref={insuranceInputRef}
@@ -786,7 +868,6 @@ export function GroomerWizard({
                       </button>
                     </div>
                   )}
-
                   {form.insuranceDocUrl === "skipped" && (
                     <div className="flex items-center gap-2 text-pebble-grey">
                       <p className="text-xs font-bold">Skipped — add from your dashboard after launch.</p>
@@ -801,7 +882,7 @@ export function GroomerWizard({
                 </div>
               </div>
 
-              {/* ── Bank details ── */}
+              {/* Bank details */}
               <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
                 <div className="flex items-center gap-4 p-5 border-b border-pebble-grey/10">
                   <Building2 size={28} className={form.bankHolderName && form.bankSortCode && form.bankAccountNumber ? "text-sage-leaf" : "text-pebble-grey"} />
@@ -810,7 +891,6 @@ export function GroomerWizard({
                     <p className="text-xs text-pebble-grey">UK bank account. Used for weekly payout transfers and fee collection.</p>
                   </div>
                 </div>
-
                 <div className="p-5 space-y-3">
                   <Field label="Account holder name">
                     <input
@@ -892,29 +972,43 @@ export function GroomerWizard({
                   )}
                 </p>
               </div>
+
+              {/* Launch error */}
+              {launchError && (
+                <div className="flex items-start gap-2 bg-muted-terracotta/10 border border-muted-terracotta/30 rounded-xl px-4 py-3">
+                  <AlertCircle size={14} className="text-muted-terracotta shrink-0 mt-0.5" />
+                  <p className="text-sm font-bold text-muted-terracotta">{launchError}</p>
+                </div>
+              )}
             </>
           )}
 
-          {/* Navigation — hidden on step 0 (Clerk handles its own submit) */}
-          {step > 0 && (
-            <div className="flex justify-between gap-4 pt-4 border-t border-pebble-grey/15">
-              <button
-                onClick={() => setStep(Math.max(firstStep, step - 1))}
-                disabled={step <= firstStep}
-                className="btn-secondary font-nunito font-bold px-6 py-3 rounded-full focus-ring disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => isLast ? handleLaunch() : setStep(step + 1)}
-                disabled={isPending || (isLast && !policyAgreed)}
-                title={isLast && !policyAgreed ? "Please agree to the Verification Policy to continue" : undefined}
-                className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isPending ? "Launching…" : isLast ? "Launch My Profile" : "Continue"}
-              </button>
-            </div>
-          )}
+          {/* Navigation */}
+          <div className="flex justify-between gap-4 pt-4 border-t border-pebble-grey/15">
+            <button
+              onClick={() => setStep(Math.max(0, step - 1))}
+              disabled={step === 0}
+              className="btn-secondary font-nunito font-bold px-6 py-3 rounded-full focus-ring disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => isLast ? handleLaunch() : setStep(step + 1)}
+              disabled={
+                isPending ||
+                (step === 0 && !step0Valid) ||
+                (isLast && !policyAgreed)
+              }
+              title={
+                step === 0 && !step0Valid ? "Please fill in all fields above" :
+                isLast && !policyAgreed ? "Please agree to the Verification Policy to continue" :
+                undefined
+              }
+              className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isPending ? "Launching…" : isLast ? "Launch My Profile" : "Continue"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

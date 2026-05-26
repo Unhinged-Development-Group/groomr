@@ -141,9 +141,9 @@ export default function LandingPage() {
 
           {/* Left — text */}
           <div className="space-y-6">
-            <Eyebrow className="border-white/20 text-white/60">For groomers</Eyebrow>
+            <Eyebrow className="border-white/20 text-white/60">Are you a dog groomer?</Eyebrow>
             <h2 className="font-fredoka text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
-              Are you a dog groomer?
+              Your business,<br />finally organised.
             </h2>
             <p className="text-white/65 text-lg leading-relaxed font-nunito max-w-md">
               Online booking, automatic reminders, client profiles, and payments — all in one place.

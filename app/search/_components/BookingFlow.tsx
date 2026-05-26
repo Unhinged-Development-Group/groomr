@@ -3,10 +3,61 @@
 import { useState, useEffect, useRef } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { getDogs } from "@/app/actions/dogs";
 import { getAvailableSlots, createAppointment } from "@/app/actions/booking";
+import { createBookingPaymentIntent } from "@/app/actions/payments";
 import type { Dog } from "@/app/actions/dogs";
 import type { AvailableSlot } from "@/app/actions/booking";
+
+// Stripe singleton — initialised once at module level, never inside a component
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
+);
+
+// Stripe Elements appearance — matches Groomr design system
+const STRIPE_APPEARANCE = {
+  theme: "stripe" as const,
+  variables: {
+    colorPrimary: "#2c3e50",
+    colorBackground: "#ffffff",
+    colorText: "#2c3e50",
+    colorDanger: "#c87964",
+    colorSuccess: "#88a096",
+    fontFamily: "Nunito, system-ui, sans-serif",
+    fontSizeBase: "14px",
+    borderRadius: "12px",
+    spacingUnit: "5px",
+  },
+  rules: {
+    ".Input": {
+      border: "1px solid rgba(149,165,166,0.3)",
+      boxShadow: "none",
+      padding: "10px 14px",
+    },
+    ".Input:focus": {
+      border: "1px solid #2c3e50",
+      boxShadow: "0 0 0 2px rgba(234,228,92,0.4)",
+    },
+    ".Label": {
+      fontWeight: "700",
+      fontSize: "12px",
+      letterSpacing: "0.05em",
+      textTransform: "uppercase",
+      color: "#2c3e50",
+    },
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface Service {
   id: string;
@@ -37,11 +88,155 @@ interface BookingFlowProps {
   onClose: () => void;
 }
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 
-const STEP_LABELS = ["Service", "Date & Time", "Your Dog", "Confirm"];
-// Mon-first week header (UK standard)
+const STEP_LABELS = ["Service", "Date & Time", "Your Dog", "Confirm", "Payment"];
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// ---------------------------------------------------------------------------
+// PaymentStep — wraps Stripe Elements then renders CheckoutForm inside
+// ---------------------------------------------------------------------------
+
+function CheckoutForm({
+  amountPence,
+  depositPolicy,
+  groomerName,
+  onSuccess,
+  onError,
+}: {
+  amountPence: number;
+  depositPolicy: DepositPolicy;
+  groomerName: string;
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [submitting, setSubmitting] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  const isDeposit = depositPolicy.type === "percentage";
+  const label = isDeposit
+    ? `Pay deposit — £${(amountPence / 100).toFixed(2)}`
+    : `Pay — £${(amountPence / 100).toFixed(2)}`;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setSubmitting(true);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        // Redirect after 3DS if needed; for non-3DS cards this won't be visited
+        return_url: `${window.location.origin}/dashboard/owner?booking=confirmed`,
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      onError(error.message ?? "Payment failed. Please try again.");
+      setSubmitting(false);
+    } else {
+      onSuccess();
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Amount chip */}
+      <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-pebble-grey/15">
+        <span className="text-sm font-bold text-deep-slate font-nunito">
+          {isDeposit
+            ? `${depositPolicy.percentage}% deposit to confirm with ${groomerName}`
+            : `Full payment to ${groomerName}`}
+        </span>
+        <span className="font-fredoka text-xl text-deep-slate">
+          £{(amountPence / 100).toFixed(2)}
+        </span>
+      </div>
+
+      {/* Stripe PaymentElement */}
+      <div className={`transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}>
+        <PaymentElement
+          onReady={() => setReady(true)}
+          options={{ layout: "tabs" }}
+        />
+      </div>
+
+      {!ready && (
+        <div className="space-y-3">
+          {[56, 48, 56].map((h, i) => (
+            <div
+              key={i}
+              className={`bg-pebble-grey/15 rounded-xl animate-pulse`}
+              style={{ height: h }}
+            />
+          ))}
+        </div>
+      )}
+
+      <p className="text-xs text-pebble-grey font-nunito flex items-center gap-1.5">
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        Payments processed securely by Stripe. Groomr never stores card details.
+      </p>
+
+      <button
+        type="submit"
+        disabled={submitting || !stripe || !elements || !ready}
+        className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-base shadow-subtle focus-ring disabled:opacity-60"
+      >
+        {submitting ? "Processing…" : label}
+      </button>
+    </form>
+  );
+}
+
+function PaymentStep({
+  clientSecret,
+  amountPence,
+  depositPolicy,
+  groomerName,
+  onSuccess,
+}: {
+  clientSecret: string;
+  amountPence: number;
+  depositPolicy: DepositPolicy;
+  groomerName: string;
+  onSuccess: () => void;
+}) {
+  const [payError, setPayError] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-4">
+      {payError && (
+        <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl px-4 py-3">
+          <p className="text-sm font-bold text-muted-terracotta">{payError}</p>
+        </div>
+      )}
+      <Elements
+        stripe={stripePromise}
+        options={{ clientSecret, appearance: STRIPE_APPEARANCE }}
+      >
+        <CheckoutForm
+          amountPence={amountPence}
+          depositPolicy={depositPolicy}
+          groomerName={groomerName}
+          onSuccess={onSuccess}
+          onError={setPayError}
+        />
+      </Elements>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BookingFlow
+// ---------------------------------------------------------------------------
 
 export function BookingFlow({
   groomerProfileId,
@@ -62,6 +257,10 @@ export function BookingFlow({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedTimeLabel, setSelectedTimeLabel] = useState<string | null>(null);
   const [selectedDog, setSelectedDog] = useState<Dog | null>(null);
+
+  // Payment state
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
+  const [paymentAmountPence, setPaymentAmountPence] = useState<number>(0);
 
   // Restore state saved before sign-in redirect
   const restored = useRef(false);
@@ -105,7 +304,6 @@ export function BookingFlow({
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Fetch dogs once when step 3 is reached and user is signed in
   useEffect(() => {
     if (step === 3 && user && !dogsFetched) {
       setDogsLoading(true);
@@ -117,14 +315,12 @@ export function BookingFlow({
     }
   }, [step, user, dogsFetched]);
 
-  // Set of day_of_week values the groomer works
   const availableDaySet = new Set(availability.map((a) => a.day_of_week));
 
-  // Calendar helpers
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const minDate = new Date(today);
-  minDate.setDate(minDate.getDate() + 1); // earliest selectable = tomorrow
+  minDate.setDate(minDate.getDate() + 1);
 
   function isDateSelectable(date: Date): boolean {
     if (date < minDate) return false;
@@ -148,14 +344,12 @@ export function BookingFlow({
     });
   }
 
-  // Build Mon-first calendar grid (nulls = padding cells before the 1st)
   function buildCalendarDays(monthStart: Date): (Date | null)[] {
     const y = monthStart.getFullYear();
     const mo = monthStart.getMonth();
     const daysInMonth = new Date(y, mo + 1, 0).getDate();
-    const rawDow = new Date(y, mo, 1).getDay(); // 0=Sun
-    const offset = (rawDow + 6) % 7; // Mon=0
-
+    const rawDow = new Date(y, mo, 1).getDay();
+    const offset = (rawDow + 6) % 7;
     const cells: (Date | null)[] = Array(offset).fill(null);
     for (let day = 1; day <= daysInMonth; day++) {
       cells.push(new Date(y, mo, day));
@@ -164,9 +358,7 @@ export function BookingFlow({
   }
 
   const calendarDays = buildCalendarDays(calendarMonth);
-
-  const canPrevMonth =
-    calendarMonth > new Date(today.getFullYear(), today.getMonth(), 1);
+  const canPrevMonth = calendarMonth > new Date(today.getFullYear(), today.getMonth(), 1);
 
   async function handleDateSelect(dateStr: string) {
     setSelectedDate(dateStr);
@@ -175,11 +367,7 @@ export function BookingFlow({
     setSlots([]);
     if (!selectedService) return;
     setLoadingSlots(true);
-    const result = await getAvailableSlots(
-      groomerProfileId,
-      selectedService.id,
-      dateStr,
-    );
+    const result = await getAvailableSlots(groomerProfileId, selectedService.id, dateStr);
     setSlots(result);
     setLoadingSlots(false);
   }
@@ -193,36 +381,66 @@ export function BookingFlow({
     return null;
   }
 
+  // Step 4 → "Confirm" button handler
+  // Creates the appointment, then either creates a PaymentIntent (→ step 5)
+  // or goes straight to success if no payment is required.
   async function handleConfirm() {
     if (!selectedService || !selectedDate || !selectedTime || !selectedDog) return;
     setSubmitting(true);
     setBookingError(null);
 
-    const result = await createAppointment({
+    // 1. Create the appointment
+    const apptResult = await createAppointment({
       groomerProfileId,
       serviceId: selectedService.id,
       dogId: selectedDog.id,
       scheduledAt: `${selectedDate}T${selectedTime}:00.000Z`,
     });
 
-    setSubmitting(false);
-    if ("error" in result) {
-      setBookingError(result.error);
-    } else {
-      setSuccess(true);
+    if ("error" in apptResult) {
+      setBookingError(apptResult.error);
+      setSubmitting(false);
+      return;
     }
+
+    const { appointmentId } = apptResult;
+
+    // 2. No deposit required → done
+    if (depositPolicy.type === "none") {
+      setSubmitting(false);
+      setSuccess(true);
+      return;
+    }
+
+    // 3. Deposit / full payment required → create PaymentIntent
+    const piResult = await createBookingPaymentIntent({ appointmentId });
+
+    if ("error" in piResult) {
+      // Groomer hasn't connected Stripe yet — booking is still confirmed,
+      // payment will be collected at the appointment.
+      console.warn("[BookingFlow] PaymentIntent failed:", piResult.error);
+      setSubmitting(false);
+      setSuccess(true);
+      return;
+    }
+
+    setPaymentClientSecret(piResult.clientSecret);
+    setPaymentAmountPence(piResult.amountPence);
+    setSubmitting(false);
+    setStep(5);
   }
+
+  // Number of visible progress steps (hide "Payment" dot if no payment needed)
+  const visibleSteps = depositPolicy.type === "none" ? 4 : 5;
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 py-6">
       {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-deep-slate/60 backdrop-blur-sm"
-      />
+      <div onClick={onClose} className="absolute inset-0 bg-deep-slate/60 backdrop-blur-sm" />
 
       {/* Card */}
       <div className="relative bg-alabaster-cream w-full max-w-xl max-h-[92vh] rounded-[28px] shadow-modal border border-pebble-grey/20 z-10 flex flex-col overflow-hidden">
+
         {/* Header */}
         <div className="px-7 pt-7 pb-5 border-b border-pebble-grey/15 shrink-0">
           <div className="flex items-start justify-between gap-4">
@@ -236,7 +454,7 @@ export function BookingFlow({
                     {STEP_LABELS[step - 1]}
                   </h2>
                   <div className="flex items-center gap-1.5 mt-3">
-                    {STEP_LABELS.map((_, i) => (
+                    {Array.from({ length: visibleSteps }).map((_, i) => (
                       <div
                         key={i}
                         className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -258,26 +476,19 @@ export function BookingFlow({
               className="shrink-0 text-deep-slate hover:text-muted-terracotta transition-colors focus-ring rounded-full p-2 bg-white/80 border border-pebble-grey/10"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
         </div>
 
         {/* Scrollable body */}
-        <div
-          className="flex-1 overflow-y-auto px-7 py-6"
-          style={{ scrollbarWidth: "none" }}
-        >
+        <div className="flex-1 overflow-y-auto px-7 py-6" style={{ scrollbarWidth: "none" }}>
           {success ? (
             <SuccessState groomerName={groomerName} onClose={onClose} />
+
           ) : step === 1 ? (
-            // ── STEP 1: SERVICE ───────────────────────────────────────
+            // ── STEP 1: SERVICE ─────────────────────────────────────────────────
             <div className="space-y-3">
               {services.length === 0 ? (
                 <p className="text-pebble-grey text-sm font-nunito py-6 text-center">
@@ -287,26 +498,17 @@ export function BookingFlow({
                 services.map((svc) => (
                   <button
                     key={svc.id}
-                    onClick={() => {
-                      setSelectedService(svc);
-                      setStep(2);
-                    }}
+                    onClick={() => { setSelectedService(svc); setStep(2); }}
                     className="w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-5 hover:border-deep-slate hover:shadow-sm transition-all focus-ring group"
                   >
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex-1 min-w-0">
-                        <p className="font-fredoka text-lg text-deep-slate">
-                          {svc.name}
-                        </p>
+                        <p className="font-fredoka text-lg text-deep-slate">{svc.name}</p>
                         {svc.description && (
-                          <p className="text-xs text-pebble-grey mt-1 leading-relaxed">
-                            {svc.description}
-                          </p>
+                          <p className="text-xs text-pebble-grey mt-1 leading-relaxed">{svc.description}</p>
                         )}
                         {svc.duration_minutes && (
-                          <p className="text-xs font-bold text-sage-leaf mt-2">
-                            {svc.duration_minutes} min
-                          </p>
+                          <p className="text-xs font-bold text-sage-leaf mt-2">{svc.duration_minutes} min</p>
                         )}
                       </div>
                       <span className="font-fredoka text-2xl text-deep-slate shrink-0">
@@ -317,31 +519,22 @@ export function BookingFlow({
                 ))
               )}
             </div>
+
           ) : step === 2 ? (
-            // ── STEP 2: DATE & TIME ───────────────────────────────────
+            // ── STEP 2: DATE & TIME ─────────────────────────────────────────────
             <div className="space-y-6">
-              {/* Service recap chip */}
               {selectedService && (
                 <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-pebble-grey/15">
-                  <span className="font-bold text-sm text-deep-slate">
-                    {selectedService.name}
-                  </span>
+                  <span className="font-bold text-sm text-deep-slate">{selectedService.name}</span>
                   <span className="font-fredoka text-deep-slate">
                     £{(selectedService.price_pence / 100).toFixed(0)}
                   </span>
                 </div>
               )}
-
-              {/* Calendar */}
               <div>
-                {/* Month navigation */}
                 <div className="flex items-center justify-between mb-4">
                   <button
-                    onClick={() =>
-                      setCalendarMonth(
-                        (p) => new Date(p.getFullYear(), p.getMonth() - 1, 1),
-                      )
-                    }
+                    onClick={() => setCalendarMonth((p) => new Date(p.getFullYear(), p.getMonth() - 1, 1))}
                     disabled={!canPrevMonth}
                     aria-label="Previous month"
                     className="p-2 rounded-full hover:bg-pebble-grey/10 transition-colors disabled:opacity-25 focus-ring"
@@ -351,17 +544,10 @@ export function BookingFlow({
                     </svg>
                   </button>
                   <span className="font-fredoka text-lg text-deep-slate">
-                    {calendarMonth.toLocaleDateString("en-GB", {
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    {calendarMonth.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
                   </span>
                   <button
-                    onClick={() =>
-                      setCalendarMonth(
-                        (p) => new Date(p.getFullYear(), p.getMonth() + 1, 1),
-                      )
-                    }
+                    onClick={() => setCalendarMonth((p) => new Date(p.getFullYear(), p.getMonth() + 1, 1))}
                     aria-label="Next month"
                     className="p-2 rounded-full hover:bg-pebble-grey/10 transition-colors focus-ring"
                   >
@@ -370,20 +556,11 @@ export function BookingFlow({
                     </svg>
                   </button>
                 </div>
-
-                {/* Day-of-week headers */}
                 <div className="grid grid-cols-7 mb-1">
                   {DAY_NAMES.map((d) => (
-                    <p
-                      key={d}
-                      className="text-center text-xs font-bold text-pebble-grey py-1"
-                    >
-                      {d}
-                    </p>
+                    <p key={d} className="text-center text-xs font-bold text-pebble-grey py-1">{d}</p>
                   ))}
                 </div>
-
-                {/* Day cells */}
                 <div className="grid grid-cols-7 gap-y-1">
                   {calendarDays.map((day, i) => {
                     if (!day) return <div key={`pad-${i}`} />;
@@ -409,8 +586,6 @@ export function BookingFlow({
                   })}
                 </div>
               </div>
-
-              {/* Time slots */}
               {selectedDate && (
                 <div className="space-y-3">
                   <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
@@ -419,10 +594,7 @@ export function BookingFlow({
                   {loadingSlots ? (
                     <div className="grid grid-cols-4 gap-2">
                       {Array.from({ length: 8 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="h-10 bg-pebble-grey/15 rounded-lg animate-pulse"
-                        />
+                        <div key={i} className="h-10 bg-pebble-grey/15 rounded-lg animate-pulse" />
                       ))}
                     </div>
                   ) : slots.length === 0 ? (
@@ -449,8 +621,9 @@ export function BookingFlow({
                 </div>
               )}
             </div>
+
           ) : step === 3 ? (
-            // ── STEP 3: DOG ───────────────────────────────────────────
+            // ── STEP 3: DOG ─────────────────────────────────────────────────────
             <div className="space-y-4">
               {!isLoaded ? (
                 <div className="py-8 text-center">
@@ -459,9 +632,7 @@ export function BookingFlow({
               ) : !user ? (
                 <div className="text-center py-10 space-y-4">
                   <div className="text-4xl">🐾</div>
-                  <p className="font-fredoka text-xl text-deep-slate">
-                    Sign in to book
-                  </p>
+                  <p className="font-fredoka text-xl text-deep-slate">Sign in to book</p>
                   <p className="text-pebble-grey text-sm font-nunito">
                     You need a Groomr account to request appointments.
                   </p>
@@ -486,62 +657,39 @@ export function BookingFlow({
               ) : dogsLoading ? (
                 <div className="space-y-3">
                   {[0, 1].map((i) => (
-                    <div
-                      key={i}
-                      className="h-20 bg-pebble-grey/15 rounded-xl animate-pulse"
-                    />
+                    <div key={i} className="h-20 bg-pebble-grey/15 rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : dogs.length === 0 ? (
                 <div className="text-center py-10 space-y-4">
                   <div className="text-4xl">🐶</div>
-                  <p className="font-fredoka text-xl text-deep-slate">
-                    Add a dog first
-                  </p>
+                  <p className="font-fredoka text-xl text-deep-slate">Add a dog first</p>
                   <p className="text-pebble-grey text-sm font-nunito">
                     Add your dog&apos;s details to your owner dashboard before booking.
                   </p>
-                  <Link
-                    href="/dashboard/owner"
-                    className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring inline-block"
-                  >
+                  <Link href="/dashboard/owner" className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring inline-block">
                     Go to Owner Dashboard
                   </Link>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-pebble-grey font-nunito">
-                    Which dog is this booking for?
-                  </p>
+                  <p className="text-sm text-pebble-grey font-nunito">Which dog is this booking for?</p>
                   {dogs.map((dog) => (
                     <button
                       key={dog.id}
-                      onClick={() => {
-                        setSelectedDog(dog);
-                        setStep(4);
-                      }}
+                      onClick={() => { setSelectedDog(dog); setStep(4); }}
                       className="w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-4 hover:border-deep-slate hover:shadow-sm transition-all focus-ring flex items-center gap-4"
                     >
                       {dog.profile_image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={dog.profile_image_url}
-                          alt={dog.name}
-                          className="w-12 h-12 rounded-full object-cover shrink-0"
-                        />
+                        <img src={dog.profile_image_url} alt={dog.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0 text-xl">
-                          🐾
-                        </div>
+                        <div className="w-12 h-12 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0 text-xl">🐾</div>
                       )}
                       <div className="min-w-0">
-                        <p className="font-fredoka text-lg text-deep-slate leading-tight">
-                          {dog.name}
-                        </p>
+                        <p className="font-fredoka text-lg text-deep-slate leading-tight">{dog.name}</p>
                         <p className="text-xs text-pebble-grey mt-0.5">
-                          {[dog.breed, dog.size]
-                            .filter(Boolean)
-                            .join(" · ") || "Dog"}
+                          {[dog.breed, dog.size].filter(Boolean).join(" · ") || "Dog"}
                         </p>
                       </div>
                     </button>
@@ -549,16 +697,13 @@ export function BookingFlow({
                 </>
               )}
             </div>
-          ) : (
-            // ── STEP 4: CONFIRM ───────────────────────────────────────
+
+          ) : step === 4 ? (
+            // ── STEP 4: CONFIRM ─────────────────────────────────────────────────
             <div className="space-y-5">
-              {/* Summary */}
               <div className="bg-white rounded-xl border border-pebble-grey/15 overflow-hidden divide-y divide-pebble-grey/10">
                 <SummaryRow label="Service" value={selectedService?.name ?? ""} />
-                <SummaryRow
-                  label="Date"
-                  value={selectedDate ? formatDateLong(selectedDate) : ""}
-                />
+                <SummaryRow label="Date" value={selectedDate ? formatDateLong(selectedDate) : ""} />
                 <SummaryRow label="Time" value={selectedTimeLabel ?? ""} />
                 <SummaryRow label="Dog" value={selectedDog?.name ?? ""} />
                 <SummaryRow
@@ -571,25 +716,21 @@ export function BookingFlow({
                     <p className="text-xs font-bold text-deep-slate">
                       💳 {depositDisplay(selectedService)}
                     </p>
-                    <p className="text-xs text-pebble-grey mt-0.5 font-nunito">
-                      Payment will be collected at the appointment (Phase 3).
-                    </p>
                   </div>
                 )}
               </div>
 
-              {/* Instant booking note */}
-              <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl px-4 py-3">
-                <p className="text-sm font-nunito text-deep-slate">
-                  <span className="font-bold">Instant booking</span> — your appointment is confirmed straight away and will appear in your dashboard immediately.
-                </p>
-              </div>
+              {depositPolicy.type === "none" && (
+                <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl px-4 py-3">
+                  <p className="text-sm font-nunito text-deep-slate">
+                    <span className="font-bold">Instant booking</span> — confirmed straight away. Payment collected at the appointment.
+                  </p>
+                </div>
+              )}
 
               {bookingError && (
                 <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl px-4 py-3">
-                  <p className="text-sm font-bold text-muted-terracotta">
-                    {bookingError}
-                  </p>
+                  <p className="text-sm font-bold text-muted-terracotta">{bookingError}</p>
                 </div>
               )}
 
@@ -598,14 +739,29 @@ export function BookingFlow({
                 disabled={submitting}
                 className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-base shadow-subtle focus-ring disabled:opacity-60"
               >
-                {submitting ? "Booking…" : "Confirm Booking"}
+                {submitting
+                  ? "Reserving your slot…"
+                  : depositPolicy.type === "none"
+                  ? "Confirm Booking"
+                  : "Continue to Payment →"}
               </button>
             </div>
-          )}
+
+          ) : step === 5 && paymentClientSecret ? (
+            // ── STEP 5: PAYMENT ─────────────────────────────────────────────────
+            <PaymentStep
+              clientSecret={paymentClientSecret}
+              amountPence={paymentAmountPence}
+              depositPolicy={depositPolicy}
+              groomerName={groomerName}
+              onSuccess={() => setSuccess(true)}
+            />
+
+          ) : null}
         </div>
 
-        {/* Back button */}
-        {!success && step > 1 && (
+        {/* Back button — not shown on payment step (can't undo appointment creation) */}
+        {!success && step > 1 && step < 5 && (
           <div className="px-7 py-4 border-t border-pebble-grey/10 shrink-0">
             <button
               onClick={() => setStep((s) => (s - 1) as Step)}
@@ -620,54 +776,35 @@ export function BookingFlow({
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-  bold,
-}: {
-  label: string;
-  value: string;
-  bold?: boolean;
-}) {
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function SummaryRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between items-center px-5 py-3">
-      <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
-        {label}
-      </span>
-      <span
-        className={`text-sm text-deep-slate ${bold ? "font-fredoka text-lg" : "font-bold"}`}
-      >
+      <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">{label}</span>
+      <span className={`text-sm text-deep-slate ${bold ? "font-fredoka text-lg" : "font-bold"}`}>
         {value}
       </span>
     </div>
   );
 }
 
-function SuccessState({
-  groomerName,
-  onClose,
-}: {
-  groomerName: string;
-  onClose: () => void;
-}) {
+function SuccessState({ groomerName, onClose }: { groomerName: string; onClose: () => void }) {
   return (
     <div className="text-center py-10 space-y-5">
       <div className="w-16 h-16 bg-groomr-gold rounded-full flex items-center justify-center mx-auto text-3xl shadow-subtle">
         🐾
       </div>
       <div className="space-y-2">
-        <h3 className="font-fredoka text-3xl text-deep-slate">
-          You&apos;re booked in!
-        </h3>
+        <h3 className="font-fredoka text-3xl text-deep-slate">You&apos;re booked in!</h3>
         <p className="text-pebble-grey font-nunito text-sm max-w-xs mx-auto">
           Your appointment with {groomerName} is confirmed. See you there!
         </p>
       </div>
       <div className="flex flex-col gap-3 pt-2">
-        <Link
-          href="/dashboard/owner"
-          className="btn-primary font-nunito font-bold px-8 py-3 rounded-full focus-ring inline-block"
-        >
+        <Link href="/dashboard/owner" className="btn-primary font-nunito font-bold px-8 py-3 rounded-full focus-ring inline-block">
           View My Bookings
         </Link>
         <button

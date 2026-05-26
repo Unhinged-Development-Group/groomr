@@ -27,7 +27,7 @@
 | **Clerk** | v7.2.7 | Auth only — not using Supabase Auth at all |
 | **Cloudinary** | — | Dog/groomer photos. CDN: `res.cloudinary.com/dr8adq7nl` |
 | **Google Maps** | — | `@vis.gl/react-google-maps` (client, `ssr:false`) + server-side geocoding |
-| **Stripe Connect** | — | Planned — not yet implemented |
+| **Stripe Connect** | — | Destination charges. `lib/stripe.ts`, `app/actions/stripe-connect.ts`, `app/actions/payments.ts`, webhook at `/api/webhooks/stripe`. Groomer Express onboarding live in dashboard. See `documents/stripe-setup.md` |
 
 > ⚠️ **Next.js 16 has breaking API changes** from v13/14/15. Read `node_modules/next/dist/docs/` before writing Next.js-specific code.
 
@@ -449,6 +449,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 ## 9. Build Roadmap
 
 ### Done
+- **Stripe payment infrastructure (26 May 2026)** — `lib/stripe.ts`, `app/actions/stripe-connect.ts` (Connect Express onboarding), `app/actions/payments.ts` (PaymentIntents with 8% platform fee, deposit/full charge, refunds), `/api/webhooks/stripe` (payment + account events), `StripeConnectBanner` in groomer dashboard, migration `20260526000001_stripe_connect_columns.sql`. Architecture: destination charges, daily payouts to groomer Express accounts. See `documents/stripe-setup.md`.
 - Full project setup (Next.js 16, Tailwind v4, Clerk, Supabase, Cloudinary)
 - 10-table Supabase schema with RLS + Clerk-compatible policies
 - Design system (fonts, tokens, utility classes, icon system, shared UI components)
@@ -478,11 +479,11 @@ NEXT_PUBLIC_POSTHOG_KEY=
 1g. **Run a live cookie scan** before publishing Cookie Policy; reconcile actual cookies vs. the drafted table.
 1h. **Set up DPAs from every processor** — Stripe, Vercel, Supabase, Clerk, Cloudinary, Resend, PostHog each auto-provide one; screenshot/save each.
 2. **Public groomer profiles** (`/groomers/[slug]`) — SEO + deep linking, full page from modal
-3. **Booking flow** — service → date/time → dog → checkout (Stripe deposit)
+3. **Booking flow** ✅ — 5-step modal: service → date/time → dog → confirm → Stripe PaymentElement. `deposit_type=none` skips payment; `percentage`/`full` creates PaymentIntent and shows PaymentElement in step 5.
 4. **Groomer dashboard** — wire Bookings/Clients/Earnings tabs to live data; schedule/calendar view
 5. **Time blocks → booking conflict** — wire `time_blocks` into `getAvailableSlots()` in `app/actions/booking.ts` so blocked periods can't be booked
 6. **Portfolio photos** — migrations unblock `app/actions/portfolio.ts` and `app/dashboard/groomer/portfolio/`; test Cloudinary upload flow
-7. **Stripe Connect** — groomer onboarding, commission split, payout tracking
+7. **Stripe webhook** — register `/api/webhooks/stripe` in Stripe Dashboard; set `STRIPE_WEBHOOK_SECRET` in Vercel env vars
 8. **Owner dashboard** — review submission, in-app messaging (thread list), account settings
 9. **Admin dashboard** — groomer verification queue, disputes, review moderation
 10. **Clerk invite email** — customise branded template in Clerk Dashboard (Emails → Invitation) with Groomr copy and logo

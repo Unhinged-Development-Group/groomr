@@ -1,0 +1,176 @@
+import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
+import { stripe } from "@/lib/stripe";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+
+// Stripe requires the raw body for signature verification — disable body parsing
+export const config = { api: { bodyParser: false } };
+
+export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("[stripe-webhook] STRIPE_WEBHOOK_SECRET not set");
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+  }
+
+  const sig = req.headers.get("stripe-signature");
+  if (!sig) {
+    return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
+  try {
+    const body = await req.text();
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+  } catch (err) {
+    console.error("[stripe-webhook] Signature verification failed:", err);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  try {
+    await handleEvent(event);
+  } catch (err) {
+    console.error(`[stripe-webhook] Handler error for ${event.type}:`, err);
+    // Return 200 anyway — Stripe will retry on 4xx/5xx; handler errors shouldn't cause retries
+  }
+
+  return NextResponse.json({ received: true });
+}
+
+// ---------------------------------------------------------------------------
+// Event router
+// ---------------------------------------------------------------------------
+
+async function handleEvent(event: Stripe.Event) {
+  switch (event.type) {
+    // ---- PaymentIntent events -----------------------------------------------
+    case "payment_intent.succeeded":
+      await onPaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+      break;
+
+    case "payment_intent.payment_failed":
+      await onPaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+      break;
+
+    // ---- Connect account events ----------------------------------------------
+    case "account.updated":
+      await onAccountUpdated(event.data.object as Stripe.Account);
+      break;
+
+    // ---- Transfer / payout events -------------------------------------------
+    case "transfer.created":
+      await onTransferCreated(event.data.object as Stripe.Transfer);
+      break;
+
+    default:
+      // Silently ignore events we don't handle
+      break;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Handlers
+// ---------------------------------------------------------------------------
+
+async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
+  const appointmentId = pi.metadata?.appointment_id;
+  if (!appointmentId) return;
+
+  const isDeposit = pi.metadata?.is_deposit === "true";
+  const now = new Date().toISOString();
+
+  const { data: payment } = await supabaseAdmin
+    .from("payments")
+    .select("id, stripe_payment_intent_id, full_payment_intent_id")
+    .eq("appointment_id", appointmentId)
+    .maybeSingle();
+
+  if (!payment) {
+    console.warn(`[stripe-webhook] No payment row for appointment ${appointmentId}`);
+    return;
+  }
+
+  if (isDeposit) {
+    await supabaseAdmin
+      .from("payments")
+      .update({
+        deposit_paid_at: now,
+        deposit_status: "paid",
+      })
+      .eq("id", payment.id);
+  } else {
+    await supabaseAdmin
+      .from("payments")
+      .update({
+        full_payment_paid_at: now,
+      })
+      .eq("id", payment.id);
+  }
+
+  console.log(`[stripe-webhook] payment_intent.succeeded → appointment ${appointmentId}`);
+}
+
+async function onPaymentIntentFailed(pi: Stripe.PaymentIntent) {
+  const appointmentId = pi.metadata?.appointment_id;
+  if (!appointmentId) return;
+
+  const isDeposit = pi.metadata?.is_deposit === "true";
+
+  if (isDeposit) {
+    await supabaseAdmin
+      .from("payments")
+      .update({ deposit_status: "failed" })
+      .eq("appointment_id", appointmentId);
+  }
+
+  console.warn(`[stripe-webhook] payment_intent.payment_failed → appointment ${appointmentId}`);
+}
+
+async function onAccountUpdated(account: Stripe.Account) {
+  // Sync charges_enabled / details_submitted to groomer_profiles
+  const { data: groomer } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("id")
+    .eq("stripe_account_id", account.id)
+    .maybeSingle();
+
+  if (!groomer) return;
+
+  await supabaseAdmin
+    .from("groomer_profiles")
+    .update({
+      stripe_charges_enabled: account.charges_enabled ?? false,
+      stripe_details_submitted: account.details_submitted ?? false,
+    })
+    .eq("id", groomer.id);
+
+  console.log(
+    `[stripe-webhook] account.updated → groomer ${groomer.id}`,
+    `charges_enabled=${account.charges_enabled}`,
+  );
+}
+
+async function onTransferCreated(transfer: Stripe.Transfer) {
+  // Transfers fire when funds move from Groomr platform → groomer's connected account.
+  // Update the payments row with the transfer ID and mark payout as paid.
+  const { data: payment } = await supabaseAdmin
+    .from("payments")
+    .select("id")
+    .or(
+      `stripe_payment_intent_id.eq.${transfer.source_transaction},full_payment_intent_id.eq.${transfer.source_transaction}`,
+    )
+    .maybeSingle();
+
+  if (!payment) return;
+
+  await supabaseAdmin
+    .from("payments")
+    .update({
+      stripe_transfer_id: transfer.id,
+      payout_status: "paid",
+      payout_initiated_at: new Date(transfer.created * 1000).toISOString(),
+    })
+    .eq("id", payment.id);
+
+  console.log(`[stripe-webhook] transfer.created → payment ${payment.id}`);
+}

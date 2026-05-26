@@ -10,6 +10,7 @@ import { ClientsView } from "./ClientsView";
 import { EarningsView } from "./EarningsView";
 import { ReviewsView } from "./ReviewsView";
 import { ProfileEditor } from "./ProfileEditor";
+import { StripeConnectBanner } from "./StripeConnectBanner";
 import { NewBookingModal } from "./NewBookingModal";
 import { BlockTimeModal } from "./BlockTimeModal";
 import { LiveGroomTracker } from "./LiveGroomTracker";
@@ -116,11 +117,19 @@ function ScopeSelector({
   );
 }
 
+interface StripeConnectStatus {
+  connected: boolean;
+  chargesEnabled: boolean;
+  detailsSubmitted: boolean;
+  stripeAccountId: string | null;
+}
+
 interface Props {
   businessName: string;
   ownerName: string;
   unrespondedReviews?: number;
   showWelcome?: boolean;
+  stripeStatus?: StripeConnectStatus;
   initialAppointments: any[];
   initialReviews: any[];
   initialPayments: any[];
@@ -133,6 +142,7 @@ export function GroomerDashboardClient({
   ownerName,
   unrespondedReviews = 0,
   showWelcome = false,
+  stripeStatus,
   initialAppointments,
   initialReviews,
   initialPayments,
@@ -242,6 +252,15 @@ export function GroomerDashboardClient({
             ×
           </button>
         </div>
+      )}
+
+      {/* Stripe Connect banner — shown to salon owner only */}
+      {stripeStatus && editorData.viewerRole === "owner" && (
+        <StripeConnectBanner
+          chargesEnabled={stripeStatus.chargesEnabled}
+          detailsSubmitted={stripeStatus.detailsSubmitted}
+          stripeAccountId={stripeStatus.stripeAccountId}
+        />
       )}
 
       {/* Header */}

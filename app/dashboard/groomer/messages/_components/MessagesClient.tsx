@@ -382,8 +382,8 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto">
-          {threads.length === 0 && !newChatOpen && (
+        {!newChatOpen && <div className="flex-1 overflow-y-auto">
+          {threads.length === 0 && (
             <div className="p-8 text-center text-pebble-grey text-sm font-bold">
               No messages yet.<br />
               <span className="text-xs font-normal opacity-70">Tap + to start a conversation with a client.</span>
@@ -417,7 +417,7 @@ export function MessagesClient({ initialThreads, initialBookings, profileId }: P
               )}
             </button>
           ))}
-        </div>
+        </div>}
       </aside>
 
       {/* Active conversation */}

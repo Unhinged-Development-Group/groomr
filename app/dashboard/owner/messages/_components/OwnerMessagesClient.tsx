@@ -431,8 +431,8 @@ export function OwnerMessagesClient({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto">
-          {threads.length === 0 && !newChatOpen && (
+        {!newChatOpen && <div className="flex-1 overflow-y-auto">
+          {threads.length === 0 && (
             <div className="p-8 text-center text-pebble-grey text-sm font-bold">
               No messages yet.
               {initialBookings.length > 0 && (
@@ -490,7 +490,7 @@ export function OwnerMessagesClient({
               )}
             </button>
           ))}
-        </div>
+        </div>}
       </aside>
 
       {/* Active conversation */}

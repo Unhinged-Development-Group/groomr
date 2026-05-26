@@ -3,8 +3,8 @@ import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-// Stripe requires the raw body for signature verification — disable body parsing
-export const config = { api: { bodyParser: false } };
+// In Next.js App Router, req.text() already returns the raw body —
+// no bodyParser config needed (that was Pages Router only).
 
 export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

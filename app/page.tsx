@@ -143,7 +143,7 @@ export default function LandingPage() {
           <div className="space-y-6">
             <Eyebrow className="border-white/20 text-white/60">For groomers</Eyebrow>
             <h2 className="font-fredoka text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
-              Your business,<br />finally organised.
+              Are you a dog groomer?
             </h2>
             <p className="text-white/65 text-lg leading-relaxed font-nunito max-w-md">
               Online booking, automatic reminders, client profiles, and payments — all in one place.
@@ -154,7 +154,7 @@ export default function LandingPage() {
                 href="/become-a-groomer"
                 className="btn-gold-on-dark font-nunito font-bold px-7 py-3 rounded-full focus-ring inline-flex items-center"
               >
-                Become a Groomr
+                Find out more
               </Link>
             </div>
             <div className="flex flex-wrap items-center gap-8 pt-6 border-t border-white/10">

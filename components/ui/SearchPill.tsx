@@ -31,10 +31,7 @@ export function SearchPill({
     else setInternalValue(v);
   };
 
-  const padY = size === "sm" ? "py-2" : "py-3";
-  const iconSize = size === "sm" ? 18 : 22;
-  const textSize = size === "sm" ? "text-sm" : "text-lg";
-  const btnPad = size === "sm" ? "px-5 py-2 text-sm" : "px-7 py-3 text-base";
+  const isLg = size === "lg";
 
   return (
     <form
@@ -44,9 +41,9 @@ export function SearchPill({
       }}
       className={cn("w-full", className)}
     >
-      <div className="bg-white rounded-full p-2 flex items-center shadow-subtle border border-pebble-grey/20 focus-within:ring-2 focus-within:ring-groomr-gold transition-shadow">
-        <div className="pl-4 text-pebble-grey">
-          <SearchIcon size={iconSize} />
+      <div className="bg-white rounded-full p-1.5 sm:p-2 flex items-center shadow-subtle border border-pebble-grey/20 focus-within:ring-2 focus-within:ring-groomr-gold transition-shadow">
+        <div className="pl-3 sm:pl-4 text-pebble-grey shrink-0">
+          <SearchIcon size={isLg ? 20 : 18} />
         </div>
         <input
           type="text"
@@ -54,14 +51,16 @@ export function SearchPill({
           onChange={(e) => handleChange(e.target.value)}
           placeholder={placeholder}
           className={cn(
-            "flex-grow bg-transparent font-nunito text-deep-slate placeholder-pebble-grey/70 px-3 outline-none border-none min-w-0",
-            textSize,
-            padY
+            "flex-1 min-w-0 bg-transparent font-nunito text-deep-slate placeholder-pebble-grey/70 px-2 sm:px-3 outline-none border-none",
+            isLg ? "py-2 text-base sm:py-3 sm:text-lg" : "py-2 text-sm"
           )}
         />
         <button
           type="submit"
-          className={cn("btn-primary font-nunito font-bold rounded-full whitespace-nowrap focus-ring", btnPad)}
+          className={cn(
+            "btn-primary font-nunito font-bold rounded-full whitespace-nowrap focus-ring shrink-0",
+            isLg ? "px-4 py-2 text-sm sm:px-7 sm:py-3 sm:text-base" : "px-5 py-2 text-sm"
+          )}
         >
           {ctaLabel}
         </button>

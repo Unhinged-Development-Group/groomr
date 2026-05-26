@@ -11,8 +11,8 @@ cloudinary.config({
 });
 
 /**
- * Returns a signed Cloudinary upload ticket for an insurance document.
- * Auth is NOT required — insurance is uploaded during the wizard before
+ * Returns a signed Cloudinary upload ticket for verification documents.
+ * Auth is NOT required — documents are uploaded during the wizard before
  * the Clerk account exists. The signature itself provides security.
  */
 export async function getInsuranceUploadSignature(): Promise<{
@@ -23,30 +23,29 @@ export async function getInsuranceUploadSignature(): Promise<{
   folder: string;
 }> {
   const timestamp = Math.round(Date.now() / 1000);
-  const folder = "groomr/insurance";
+  const folder    = "groomr/verification";
   const signature = cloudinary.utils.api_sign_request(
     { folder, timestamp },
     process.env.CLOUDINARY_API_SECRET!
   );
-
   return {
     signature,
     timestamp,
     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
-    apiKey: process.env.CLOUDINARY_API_KEY!,
+    apiKey:    process.env.CLOUDINARY_API_KEY!,
     folder,
   };
 }
 
 interface ServiceInput {
   name: string;
-  price: number; // in £ — converted to pence before insert
+  price: number; // £ — converted to pence on insert
 }
 
 interface DaySlotInput {
   on: boolean;
   start: string; // "HH:MM"
-  end: string;   // "HH:MM"
+  end: string;
 }
 
 interface RegisterGroomerInput {
@@ -60,15 +59,18 @@ interface RegisterGroomerInput {
   postcode: string;
   radiusMiles: number;
   services: ServiceInput[];
-  depositType: 'none' | 'percentage' | 'full';
+  depositType: "none" | "percentage" | "full";
   depositPercentage: number | null;
   days: Record<string, DaySlotInput>;
   leadHours: number;
+  // Verification documents (all optional — "skipped" means user deferred)
   insuranceDocUrl?: string | null;
-  bankAccountHolder?: string | null;
-  bankSortCode?: string | null;
-  bankAccountNumber?: string | null;
-  // Supplied only when the user doesn't have an account yet
+  qualificationDocUrl?: string | null;
+  firstAidDocUrl?: string | null;
+  photoIdDocUrl?: string | null;
+  employersLiabilityDocUrl?: string | null;
+  hasEmployees?: boolean | null;
+  // Supplied only when the user doesn't have a Clerk account yet
   email?: string;
   password?: string;
 }
@@ -80,6 +82,9 @@ type RegisterResult =
 const DAY_OF_WEEK: Record<string, number> = {
   mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 0,
 };
+
+/** Treat "skipped" sentinel as null — store nothing for deferred docs */
+const docUrl = (v?: string | null) => (v && v !== "skipped" ? v : null);
 
 export async function registerGroomer(input: RegisterGroomerInput): Promise<RegisterResult> {
   let clerkId: string;
@@ -93,19 +98,18 @@ export async function registerGroomer(input: RegisterGroomerInput): Promise<Regi
     const lastName  = nameParts.slice(1).join(" ") || undefined;
 
     try {
-      const clerk = await clerkClient();
+      const clerk    = await clerkClient();
       const clerkUser = await clerk.users.createUser({
         emailAddress: [input.email],
-        password: input.password,
+        password:     input.password,
         firstName,
         lastName: lastName ?? undefined,
       });
-      clerkId = clerkUser.id;
+      clerkId      = clerkUser.id;
       profileEmail = input.email;
 
-      // Create a short-lived sign-in token so the client can establish a session
       const tokenRes = await clerk.signInTokens.createSignInToken({
-        userId: clerkId,
+        userId:           clerkId,
         expiresInSeconds: 300,
       });
       signInToken = tokenRes.token;
@@ -120,8 +124,8 @@ export async function registerGroomer(input: RegisterGroomerInput): Promise<Regi
   } else {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Not authenticated." };
-    clerkId = userId;
-    const user = await currentUser();
+    clerkId      = userId;
+    const user   = await currentUser();
     profileEmail = user?.emailAddresses?.[0]?.emailAddress ?? null;
   }
 
@@ -158,33 +162,35 @@ export async function registerGroomer(input: RegisterGroomerInput): Promise<Regi
   }
 
   /* ── 2. Add groomer role ────────────────────────────────────────────── */
-  const currentRoles: string[] = currentRolesInit;
-  if (!currentRoles.includes("groomer")) {
+  if (!currentRolesInit.includes("groomer")) {
     await supabaseAdmin
       .from("profiles")
-      .update({ roles: [...currentRoles, "groomer"] })
+      .update({ roles: [...currentRolesInit, "groomer"] })
       .eq("id", profileId);
   }
 
   /* ── 3. Upsert groomer profile ─────────────────────────────────────── */
   const profilePayload = {
-    user_id:             profileId,
-    business_name:       input.businessName,
-    address_line_1:      input.addressLine1,
-    address_line_2:      input.addressLine2 || null,
-    city:                input.city,
-    postcode:            input.postcode,
-    is_mobile:           input.bizType === "mobile",
-    travel_radius_miles: input.bizType === "mobile" ? input.radiusMiles : null,
-    is_listed:           false,
-    is_verified:         false,
-    is_accepting_bookings: false,
-    deposit_type:        input.depositType,
-    deposit_percentage:  input.depositPercentage,
-    insurance_doc_url:   input.insuranceDocUrl ?? null,
-    bank_account_holder: input.bankAccountHolder ?? null,
-    bank_sort_code:      input.bankSortCode ?? null,
-    bank_account_number: input.bankAccountNumber ?? null,
+    user_id:                    profileId,
+    business_name:              input.businessName,
+    address_line_1:             input.addressLine1,
+    address_line_2:             input.addressLine2 || null,
+    city:                       input.city,
+    postcode:                   input.postcode,
+    is_mobile:                  input.bizType === "mobile",
+    travel_radius_miles:        input.bizType === "mobile" ? input.radiusMiles : null,
+    is_listed:                  false,
+    is_verified:                false,
+    is_accepting_bookings:      false,
+    deposit_type:               input.depositType,
+    deposit_percentage:         input.depositPercentage,
+    // Verification documents
+    insurance_doc_url:          docUrl(input.insuranceDocUrl),
+    qualification_doc_url:      docUrl(input.qualificationDocUrl),
+    first_aid_doc_url:          docUrl(input.firstAidDocUrl),
+    photo_id_doc_url:           docUrl(input.photoIdDocUrl),
+    employers_liability_doc_url: docUrl(input.employersLiabilityDocUrl),
+    has_employees:              input.hasEmployees ?? null,
   };
 
   const { data: existingGroomerProfile } = await supabaseAdmin
@@ -226,7 +232,6 @@ export async function registerGroomer(input: RegisterGroomerInput): Promise<Regi
       is_active:          true,
       sort_order:         i,
     }));
-
     const { error } = await supabaseAdmin.from("services").insert(serviceRows);
     if (error) return { success: false, error: "Failed to save services." };
   }

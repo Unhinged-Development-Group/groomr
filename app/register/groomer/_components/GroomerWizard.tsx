@@ -3,16 +3,19 @@
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSignIn, useClerk } from "@clerk/nextjs";
-import { Info, Building2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Info, AlertCircle, Eye, EyeOff, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { UploadIcon, CheckIcon, PlusIcon, CloseIcon, ShieldIcon } from "@/components/ui/GroomrIcons";
+import {
+  UploadIcon, CheckIcon, PlusIcon, CloseIcon, ShieldIcon,
+  FinancialsIcon,
+} from "@/components/ui/GroomrIcons";
 import { registerGroomer, getInsuranceUploadSignature } from "@/app/actions/groomer-registration";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
 type BizType = "studio" | "home" | "mobile";
-type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+type DayKey  = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 interface DaySlot {
   on: boolean;
@@ -45,7 +48,7 @@ interface FormState {
   selectedServices: string[];
   servicePrices: Record<string, number>;
   customServices: CustomService[];
-  depositType: 'none' | 'percentage' | 'full';
+  depositType: "none" | "percentage" | "full";
   depositPercentage: number;
   // Step 3 — Availability
   days: Record<DayKey, DaySlot>;
@@ -53,9 +56,15 @@ interface FormState {
   // Step 4 — Verify & launch
   insuranceDocUrl: string | null;
   insuranceFileName: string | null;
-  bankHolderName: string;
-  bankSortCode: string;
-  bankAccountNumber: string;
+  qualificationDocUrl: string | null;
+  qualificationFileName: string | null;
+  firstAidDocUrl: string | null;
+  firstAidFileName: string | null;
+  photoIdDocUrl: string | null;
+  photoIdFileName: string | null;
+  employersLiabilityDocUrl: string | null;
+  employersLiabilityFileName: string | null;
+  hasEmployees: boolean | null;
 }
 
 /* ── Constants ────────────────────────────────────────────────────────── */
@@ -65,26 +74,14 @@ const STEPS = [
   { id: "biz",      t: "Your business",     s: "Trading name, type, address." },
   { id: "services", t: "Services & prices", s: "What you offer, what you charge." },
   { id: "avail",    t: "Availability",      s: "When you work, lead time." },
-  { id: "verify",   t: "Verify & launch",   s: "Insurance & payout." },
+  { id: "verify",   t: "Verify & launch",   s: "Documents & compliance." },
 ];
 
 const PRESET_SERVICES = [
-  "Bath & Brush",
-  "Full Groom",
-  "Hand-Strip",
-  "Puppy First",
-  "Nail Clip",
-  "De-shed Treatment",
-  "Anal Gland Expression",
-  "Teeth Cleaning",
-  "Ear Cleaning",
-  "Paw Trim & Balm",
-  "De-mat & Tidy",
-  "Mini Groom / Tidy Up",
-  "Blueberry Facial",
-  "Flea & Tick Treatment",
-  "Bandana / Bow Finish",
-  "Senior Dog Groom",
+  "Bath & Brush", "Full Groom", "Hand-Strip", "Puppy First", "Nail Clip",
+  "De-shed Treatment", "Anal Gland Expression", "Teeth Cleaning", "Ear Cleaning",
+  "Paw Trim & Balm", "De-mat & Tidy", "Mini Groom / Tidy Up", "Blueberry Facial",
+  "Flea & Tick Treatment", "Bandana / Bow Finish", "Senior Dog Groom",
   "Show Trim / Breed Standard",
 ];
 
@@ -117,24 +114,27 @@ export function GroomerWizard({
 }: {
   initialName?: string;
   initialEmail?: string;
-  /** True when the visitor already has a Clerk session (e.g. an owner adding
-   *  the groomer role). Password fields are hidden and account creation is
-   *  skipped — their existing session is used on submit. */
   startAuthenticated?: boolean;
 }) {
-  const router = useRouter();
-  const { signIn }   = useSignIn();   // v7 signals-based hook
-  const { setActive } = useClerk();   // setActive lives on useClerk in v7
+  const router  = useRouter();
+  const { signIn }    = useSignIn();
+  const { setActive } = useClerk();
 
   const [step, setStep] = useState(0);
   const [isPending, startTransition] = useTransition();
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [insuranceUploading, setInsuranceUploading] = useState(false);
-  const [insuranceError, setInsuranceError] = useState<string | null>(null);
+  const [showConfirm,  setShowConfirm]  = useState(false);
+
+  // Upload state — single shared file input, track which doc is uploading
+  const fileInputRef      = useRef<HTMLInputElement>(null);
+  const pendingUploadRef  = useRef<((file: File) => void) | null>(null);
+  const [uploadingDoc, setUploadingDoc]   = useState<string | null>(null);
+  const [uploadErrors, setUploadErrors]   = useState<Record<string, string>>({});
+
+  // Agreement checkboxes
   const [policyAgreed, setPolicyAgreed] = useState(false);
-  const insuranceInputRef = useRef<HTMLInputElement>(null);
+  const [termsAgreed,  setTermsAgreed]  = useState(false);
 
   const [form, setForm] = useState<FormState>({
     fullName: initialName,
@@ -152,24 +152,30 @@ export function GroomerWizard({
     selectedServices: [],
     servicePrices: {},
     customServices: [],
-    depositType: 'none',
+    depositType: "none",
     depositPercentage: 10,
     days: DEFAULT_DAYS,
     lead: 24,
     insuranceDocUrl: null,
     insuranceFileName: null,
-    bankHolderName: "",
-    bankSortCode: "",
-    bankAccountNumber: "",
+    qualificationDocUrl: null,
+    qualificationFileName: null,
+    firstAidDocUrl: null,
+    firstAidFileName: null,
+    photoIdDocUrl: null,
+    photoIdFileName: null,
+    employersLiabilityDocUrl: null,
+    employersLiabilityFileName: null,
+    hasEmployees: null,
   });
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const isLast    = step === STEPS.length - 1;
-  const progress  = ((step + 1) / STEPS.length) * 100;
+  const isLast   = step === STEPS.length - 1;
+  const progress = ((step + 1) / STEPS.length) * 100;
 
-  /* ── Step 0 validation (About you) ── */
+  /* ── Step 0 validation ── */
   const step0Valid = (() => {
     if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim()) return false;
     if (!startAuthenticated) {
@@ -184,12 +190,8 @@ export function GroomerWizard({
     const on = form.selectedServices.includes(name);
     set("selectedServices", on
       ? form.selectedServices.filter((s) => s !== name)
-      : [...form.selectedServices, name]
-    );
+      : [...form.selectedServices, name]);
   };
-
-  const setServicePrice = (name: string, price: number) =>
-    set("servicePrices", { ...form.servicePrices, [name]: price });
 
   const addCustomService = () =>
     set("customServices", [
@@ -199,8 +201,7 @@ export function GroomerWizard({
 
   const updateCustomService = (id: string, field: "name" | "price", value: string | number) =>
     set("customServices", form.customServices.map((s) =>
-      s.id === id ? { ...s, [field]: value } : s
-    ));
+      s.id === id ? { ...s, [field]: value } : s));
 
   const removeCustomService = (id: string) =>
     set("customServices", form.customServices.filter((s) => s.id !== id));
@@ -214,40 +215,39 @@ export function GroomerWizard({
 
   const activeDays = (Object.keys(form.days) as DayKey[]).filter((k) => form.days[k].on);
 
-  /* ── Insurance upload ── */
-  const handleInsuranceUpload = async (file: File) => {
-    setInsuranceUploading(true);
-    setInsuranceError(null);
+  /* ── Shared document upload ── */
+  const openFilePicker = (callback: (file: File) => void) => {
+    pendingUploadRef.current = callback;
+    fileInputRef.current?.click();
+  };
+
+  const uploadDoc = async (
+    docKey: string,
+    file: File,
+    onSuccess: (url: string, name: string) => void
+  ) => {
+    setUploadingDoc(docKey);
+    setUploadErrors((e) => ({ ...e, [docKey]: "" }));
     try {
       const sig = await getInsuranceUploadSignature();
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", sig.apiKey);
-      formData.append("timestamp", String(sig.timestamp));
-      formData.append("signature", sig.signature);
-      formData.append("folder", sig.folder);
+      const fd  = new FormData();
+      fd.append("file",      file);
+      fd.append("api_key",   sig.apiKey);
+      fd.append("timestamp", String(sig.timestamp));
+      fd.append("signature", sig.signature);
+      fd.append("folder",    sig.folder);
       const res  = await fetch(
         `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
-        { method: "POST", body: formData }
+        { method: "POST", body: fd }
       );
       const json = await res.json();
       if (!json.secure_url) throw new Error("Upload failed");
-      set("insuranceDocUrl", json.secure_url);
-      set("insuranceFileName", file.name);
+      onSuccess(json.secure_url, file.name);
     } catch {
-      setInsuranceError("Upload failed — please try again.");
+      setUploadErrors((e) => ({ ...e, [docKey]: "Upload failed — please try again." }));
     } finally {
-      setInsuranceUploading(false);
+      setUploadingDoc(null);
     }
-  };
-
-  /* ── Sort code formatter ── */
-  const handleSortCode = (raw: string) => {
-    const digits    = raw.replace(/\D/g, "").slice(0, 6);
-    const formatted = digits.replace(/(\d{2})(\d{1,2})?(\d{1,2})?/, (_, a, b, c) =>
-      [a, b, c].filter(Boolean).join("-")
-    );
-    set("bankSortCode", formatted);
   };
 
   /* ── Submit ── */
@@ -265,27 +265,28 @@ export function GroomerWizard({
       ];
 
       const result = await registerGroomer({
-        fullName:           form.fullName,
-        phone:              form.phone,
-        businessName:       form.biz,
-        bizType:            form.type,
-        addressLine1:       form.addressLine1,
-        addressLine2:       form.addressLine2,
-        city:               form.city,
-        postcode:           form.postcode,
-        radiusMiles:        form.type === "mobile" ? form.radius : 0,
-        services:           allServices,
-        depositType:        form.depositType,
-        depositPercentage:  form.depositType === "percentage" ? form.depositPercentage : null,
-        days:               Object.fromEntries(
+        fullName:     form.fullName,
+        phone:        form.phone,
+        businessName: form.biz,
+        bizType:      form.type,
+        addressLine1: form.addressLine1,
+        addressLine2: form.addressLine2,
+        city:         form.city,
+        postcode:     form.postcode,
+        radiusMiles:  form.type === "mobile" ? form.radius : 0,
+        services:     allServices,
+        depositType:  form.depositType,
+        depositPercentage: form.depositType === "percentage" ? form.depositPercentage : null,
+        days: Object.fromEntries(
           (Object.keys(form.days) as DayKey[]).map((k) => [k, form.days[k]])
         ),
-        leadHours:          form.lead,
-        insuranceDocUrl:    form.insuranceDocUrl,
-        bankAccountHolder:  form.bankHolderName || null,
-        bankSortCode:       form.bankSortCode || null,
-        bankAccountNumber:  form.bankAccountNumber || null,
-        // Only passed for new users — existing sessions skip account creation
+        leadHours:                form.lead,
+        insuranceDocUrl:          form.insuranceDocUrl,
+        qualificationDocUrl:      form.qualificationDocUrl,
+        firstAidDocUrl:           form.firstAidDocUrl,
+        photoIdDocUrl:            form.photoIdDocUrl,
+        employersLiabilityDocUrl: form.employersLiabilityDocUrl,
+        hasEmployees:             form.hasEmployees,
         ...(!startAuthenticated && {
           email:    form.email,
           password: form.password,
@@ -297,33 +298,41 @@ export function GroomerWizard({
         return;
       }
 
-      // New user — use the sign-in token to silently establish a Clerk session,
-      // then hard-reload so the server picks up the new session cookie.
       if (result.signInToken) {
         if (!signIn) {
-          // Clerk not ready — fall back to manual sign-in
           router.push("/sign-in?redirect_url=/dashboard/groomer");
           return;
         }
         const { error } = await signIn.ticket({ ticket: result.signInToken });
         if (error) {
-          // Account was created but auto sign-in failed — send to sign-in page
           setLaunchError("Profile created! Please sign in to access your dashboard.");
           router.push("/sign-in?redirect_url=/dashboard/groomer");
           return;
         }
-        // Session is now active — hard navigate so the server sees the new cookie
         window.location.href = "/dashboard/groomer";
         return;
       }
 
-      // Existing authenticated user — soft navigate
       router.push("/dashboard/groomer");
     });
   };
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-10">
+      {/* Shared hidden file input for all document uploads */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && pendingUploadRef.current) pendingUploadRef.current(file);
+          e.target.value = "";
+          pendingUploadRef.current = null;
+        }}
+      />
+
       <div className="grid lg:grid-cols-[280px_1fr] gap-10 max-w-6xl mx-auto">
 
         {/* ── Left rail ── */}
@@ -394,7 +403,6 @@ export function GroomerWizard({
                   </p>
                 )}
               </header>
-
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Your name">
                   <input className="field" value={form.fullName} onChange={(e) => set("fullName", e.target.value)}
@@ -408,45 +416,30 @@ export function GroomerWizard({
                   <input className="field" value={form.email} onChange={(e) => set("email", e.target.value)}
                     placeholder="you@example.com" type="email" autoComplete="email" />
                 </Field>
-
                 {!startAuthenticated && (
                   <>
                     <Field label="Password">
                       <div className="relative">
-                        <input
-                          className="field pr-10"
-                          value={form.password}
+                        <input className="field pr-10" value={form.password}
                           onChange={(e) => set("password", e.target.value)}
                           type={showPassword ? "text" : "password"}
-                          placeholder="Min. 8 characters"
-                          autoComplete="new-password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(v => !v)}
+                          placeholder="Min. 8 characters" autoComplete="new-password" />
+                        <button type="button" onClick={() => setShowPassword(v => !v)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-pebble-grey hover:text-deep-slate transition-colors focus-ring rounded"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
+                          aria-label={showPassword ? "Hide password" : "Show password"}>
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
                     </Field>
                     <Field label="Confirm password">
                       <div className="relative">
-                        <input
-                          className="field pr-10"
-                          value={form.confirmPassword}
+                        <input className="field pr-10" value={form.confirmPassword}
                           onChange={(e) => set("confirmPassword", e.target.value)}
                           type={showConfirm ? "text" : "password"}
-                          placeholder="Repeat your password"
-                          autoComplete="new-password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirm(v => !v)}
+                          placeholder="Repeat your password" autoComplete="new-password" />
+                        <button type="button" onClick={() => setShowConfirm(v => !v)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-pebble-grey hover:text-deep-slate transition-colors focus-ring rounded"
-                          aria-label={showConfirm ? "Hide password" : "Show password"}
-                        >
+                          aria-label={showConfirm ? "Hide password" : "Show password"}>
                           {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
@@ -467,35 +460,25 @@ export function GroomerWizard({
                 <Eyebrow>Step 2</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">About your business.</h2>
               </header>
-
               <Field label="Trading name">
                 <input className="field" value={form.biz} onChange={(e) => set("biz", e.target.value)}
                   placeholder="e.g. Wagington & Co." />
               </Field>
-
-              {/* Business type */}
               <div>
-                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider mb-2">
-                  Where do you groom?
-                </p>
+                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider mb-2">Where do you groom?</p>
                 <div className="grid sm:grid-cols-3 gap-2">
                   {BIZ_TYPES.map((o) => (
                     <button key={o.id} onClick={() => set("type", o.id)}
                       className={cn(
                         "text-left p-4 rounded-2xl border-2 transition-colors focus-ring",
-                        form.type === o.id
-                          ? "bg-alabaster-cream border-deep-slate"
-                          : "bg-white border-pebble-grey/20 hover:border-deep-slate"
-                      )}
-                    >
+                        form.type === o.id ? "bg-alabaster-cream border-deep-slate" : "bg-white border-pebble-grey/20 hover:border-deep-slate"
+                      )}>
                       <p className="font-fredoka text-lg text-deep-slate">{o.t}</p>
                       <p className="text-xs text-pebble-grey">{o.d}</p>
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Address */}
               <div className="space-y-3">
                 <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
                   {form.type === "mobile" ? "Base address" : "Business address"}
@@ -520,26 +503,19 @@ export function GroomerWizard({
                     placeholder="Postcode" autoComplete="postal-code" />
                 </div>
               </div>
-
-              {/* Radius — mobile only */}
               {form.type === "mobile" && (
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-deep-slate uppercase tracking-wider">
-                      Service radius
-                    </label>
+                    <label className="text-xs font-bold text-deep-slate uppercase tracking-wider">Service radius</label>
                     <span className="font-fredoka text-xl text-deep-slate">{form.radius} miles</span>
                   </div>
                   <div className="flex items-start gap-2 mb-2">
                     <Info size={14} className="text-pebble-grey shrink-0 mt-0.5" />
-                    <p className="text-xs text-pebble-grey">
-                      How far you&apos;re willing to travel from your base address.
-                    </p>
+                    <p className="text-xs text-pebble-grey">How far you&apos;re willing to travel from your base address.</p>
                   </div>
                   <input type="range" min="1" max="30" value={form.radius}
                     onChange={(e) => set("radius", +e.target.value)}
-                    className="w-full accent-groomr-gold h-2"
-                    aria-label="Service radius in miles" />
+                    className="w-full accent-groomr-gold h-2" aria-label="Service radius in miles" />
                   <div className="flex justify-between text-xs text-pebble-grey mt-1">
                     <span>1 mile</span><span>30 miles</span>
                   </div>
@@ -558,102 +534,65 @@ export function GroomerWizard({
               <p className="text-pebble-grey text-sm">
                 Select each service you offer and set your starting price. You can add more detail from your dashboard later.
               </p>
-
               <div className="space-y-2">
                 {PRESET_SERVICES.map((name) => {
                   const on = form.selectedServices.includes(name);
                   return (
-                    <div key={name}
-                      className={cn(
-                        "flex items-center gap-3 p-4 rounded-2xl border-2 transition-colors",
-                        on ? "bg-alabaster-cream border-deep-slate" : "bg-white border-pebble-grey/20"
-                      )}
-                    >
+                    <div key={name} className={cn(
+                      "flex items-center gap-3 p-4 rounded-2xl border-2 transition-colors",
+                      on ? "bg-alabaster-cream border-deep-slate" : "bg-white border-pebble-grey/20"
+                    )}>
                       <button onClick={() => toggleService(name)} aria-pressed={on}
                         className={cn(
                           "w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors focus-ring",
                           on ? "bg-deep-slate border-deep-slate text-alabaster-cream" : "border-pebble-grey/40"
-                        )}
-                      >
+                        )}>
                         {on && <CheckIcon size={14} />}
                       </button>
                       <p className="font-bold text-deep-slate flex-1 text-sm">{name}</p>
                       <div className={cn("flex items-center gap-1.5 shrink-0", !on && "invisible pointer-events-none")}>
                         <span className="text-pebble-grey font-bold text-sm">£</span>
-                        <input type="number"
-                          value={form.servicePrices[name] ?? ""}
-                          onChange={(e) => setServicePrice(name, +e.target.value)}
-                          placeholder="0"
-                          className="field w-20 text-right py-2 text-sm"
-                          min="0" step="1"
-                          tabIndex={on ? 0 : -1}
-                          aria-label={`Price for ${name}`}
-                        />
+                        <input type="number" value={form.servicePrices[name] ?? ""} placeholder="0"
+                          onChange={(e) => set("servicePrices", { ...form.servicePrices, [name]: +e.target.value })}
+                          className="field w-20 text-right py-2 text-sm" min="0" step="1"
+                          tabIndex={on ? 0 : -1} aria-label={`Price for ${name}`} />
                       </div>
                     </div>
                   );
                 })}
               </div>
-
-              {/* Custom services */}
               <div className="space-y-2">
-                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
-                  Additional services
-                </p>
+                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">Additional services</p>
                 {form.customServices.map((svc) => (
-                  <div key={svc.id}
-                    className="flex items-center gap-3 p-4 rounded-2xl border-2 bg-alabaster-cream border-deep-slate"
-                  >
+                  <div key={svc.id} className="flex items-center gap-3 p-4 rounded-2xl border-2 bg-alabaster-cream border-deep-slate">
                     <div className="w-6 h-6 rounded-md bg-deep-slate border-2 border-deep-slate flex items-center justify-center shrink-0">
                       <CheckIcon size={14} className="text-alabaster-cream" />
                     </div>
-                    <input
-                      className="flex-1 bg-transparent font-bold text-deep-slate text-sm outline-none border-none placeholder-pebble-grey/50 min-w-0"
-                      value={svc.name}
-                      onChange={(e) => updateCustomService(svc.id, "name", e.target.value)}
-                      placeholder="Service name"
-                    />
+                    <input className="flex-1 bg-transparent font-bold text-deep-slate text-sm outline-none border-none placeholder-pebble-grey/50 min-w-0"
+                      value={svc.name} onChange={(e) => updateCustomService(svc.id, "name", e.target.value)} placeholder="Service name" />
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-pebble-grey font-bold text-sm">£</span>
-                      <input type="number"
-                        value={svc.price || ""}
+                      <input type="number" value={svc.price || ""}
                         onChange={(e) => updateCustomService(svc.id, "price", +e.target.value)}
-                        placeholder="0"
-                        className="field w-20 text-right py-2 text-sm"
-                        min="0" step="1"
-                        aria-label="Custom service price"
-                      />
+                        placeholder="0" className="field w-20 text-right py-2 text-sm" min="0" step="1" aria-label="Custom service price" />
                     </div>
-                    <button
-                      onClick={() => removeCustomService(svc.id)}
-                      className="text-pebble-grey hover:text-muted-terracotta transition-colors focus-ring rounded p-1 shrink-0"
-                      aria-label="Remove service"
-                    >
+                    <button onClick={() => removeCustomService(svc.id)}
+                      className="text-pebble-grey hover:text-muted-terracotta transition-colors focus-ring rounded p-1 shrink-0" aria-label="Remove service">
                       <CloseIcon size={16} />
                     </button>
                   </div>
                 ))}
-                <button
-                  onClick={addCustomService}
-                  className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-pebble-grey/30 hover:border-deep-slate hover:bg-alabaster-cream/60 transition-colors focus-ring group"
-                >
+                <button onClick={addCustomService}
+                  className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-pebble-grey/30 hover:border-deep-slate hover:bg-alabaster-cream/60 transition-colors focus-ring group">
                   <div className="w-6 h-6 rounded-md border-2 border-pebble-grey/40 group-hover:border-deep-slate flex items-center justify-center shrink-0 transition-colors">
                     <PlusIcon size={14} className="text-pebble-grey group-hover:text-deep-slate transition-colors" />
                   </div>
-                  <span className="text-sm font-bold text-pebble-grey group-hover:text-deep-slate transition-colors">
-                    Add a service
-                  </span>
+                  <span className="text-sm font-bold text-pebble-grey group-hover:text-deep-slate transition-colors">Add a service</span>
                 </button>
               </div>
-
-              {/* Deposit policy */}
               <div className="space-y-3 pt-2">
-                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
-                  Deposit policy
-                </p>
-                <p className="text-sm text-pebble-grey">
-                  Set a single policy for all bookings. You can change this any time from your dashboard.
-                </p>
+                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">Deposit policy</p>
+                <p className="text-sm text-pebble-grey">Set a single policy for all bookings. You can change this any time from your dashboard.</p>
                 <div className="grid sm:grid-cols-3 gap-2">
                   {([
                     { k: "none" as const,       t: "No deposit",       d: "Pay in full on the day" },
@@ -663,11 +602,8 @@ export function GroomerWizard({
                     <button key={o.k} type="button" onClick={() => set("depositType", o.k)}
                       className={cn(
                         "text-left p-4 rounded-2xl border-2 transition-colors focus-ring",
-                        form.depositType === o.k
-                          ? "bg-alabaster-cream border-deep-slate"
-                          : "bg-white border-pebble-grey/20 hover:border-deep-slate"
-                      )}
-                    >
+                        form.depositType === o.k ? "bg-alabaster-cream border-deep-slate" : "bg-white border-pebble-grey/20 hover:border-deep-slate"
+                      )}>
                       <p className="font-fredoka text-lg text-deep-slate">{o.t}</p>
                       <p className="text-xs text-pebble-grey">{o.d}</p>
                     </button>
@@ -675,14 +611,10 @@ export function GroomerWizard({
                 </div>
                 {form.depositType === "percentage" && (
                   <div className="flex items-center gap-3 pt-1">
-                    <label className="text-xs font-bold text-deep-slate uppercase tracking-wider whitespace-nowrap">
-                      Deposit %
-                    </label>
-                    <select
-                      value={form.depositPercentage}
+                    <label className="text-xs font-bold text-deep-slate uppercase tracking-wider whitespace-nowrap">Deposit %</label>
+                    <select value={form.depositPercentage}
                       onChange={(e) => set("depositPercentage", Number(e.target.value))}
-                      className="bg-alabaster-cream border border-pebble-grey/20 text-deep-slate text-sm rounded-full focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold px-4 py-2 outline-none font-bold cursor-pointer"
-                    >
+                      className="bg-alabaster-cream border border-pebble-grey/20 text-deep-slate text-sm rounded-full focus:ring-2 focus:ring-groomr-gold focus:border-groomr-gold px-4 py-2 outline-none font-bold cursor-pointer">
                       {[10, 15, 20, 25, 30, 33, 50].map((pct) => (
                         <option key={pct} value={pct}>{pct}%</option>
                       ))}
@@ -700,11 +632,8 @@ export function GroomerWizard({
                 <Eyebrow>Step 4</Eyebrow>
                 <h2 className="font-fredoka text-3xl text-deep-slate">When are you working?</h2>
               </header>
-
               <div>
-                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider mb-3">
-                  Working days
-                </p>
+                <p className="text-xs font-bold text-deep-slate uppercase tracking-wider mb-3">Working days</p>
                 <div className="grid grid-cols-7 gap-2">
                   {(Object.keys(form.days) as DayKey[]).map((k) => {
                     const on = form.days[k].on;
@@ -712,23 +641,18 @@ export function GroomerWizard({
                       <button key={k} onClick={() => toggleDay(k)} aria-pressed={on}
                         className={cn(
                           "py-3 rounded-2xl border-2 font-fredoka text-sm transition-colors focus-ring",
-                          on
-                            ? "bg-groomr-gold border-groomr-gold text-deep-slate"
-                            : "bg-white border-pebble-grey/20 hover:border-deep-slate text-pebble-grey"
-                        )}
-                      >
+                          on ? "bg-groomr-gold border-groomr-gold text-deep-slate"
+                             : "bg-white border-pebble-grey/20 hover:border-deep-slate text-pebble-grey"
+                        )}>
                         {DAY_LABELS[k]}
                       </button>
                     );
                   })}
                 </div>
               </div>
-
               {activeDays.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">
-                    Working hours
-                  </p>
+                  <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">Working hours</p>
                   <div className="space-y-2">
                     {activeDays.map((k) => (
                       <div key={k} className="flex items-center gap-3 bg-alabaster-cream rounded-xl px-4 py-3">
@@ -736,53 +660,38 @@ export function GroomerWizard({
                         <div className="flex items-center gap-2 flex-1">
                           <input type="time" value={form.days[k].start}
                             onChange={(e) => setDayTime(k, "start", e.target.value)}
-                            className="field py-1.5 text-sm w-32"
-                            aria-label={`${DAY_LABELS[k]} start time`}
-                          />
+                            className="field py-1.5 text-sm w-32" aria-label={`${DAY_LABELS[k]} start time`} />
                           <span className="text-pebble-grey text-sm font-bold">to</span>
                           <input type="time" value={form.days[k].end}
                             onChange={(e) => setDayTime(k, "end", e.target.value)}
-                            className="field py-1.5 text-sm w-32"
-                            aria-label={`${DAY_LABELS[k]} end time`}
-                          />
+                            className="field py-1.5 text-sm w-32" aria-label={`${DAY_LABELS[k]} end time`} />
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
               {activeDays.length === 0 && (
                 <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl p-4">
                   <p className="text-sm text-deep-slate font-bold">Select at least one working day above.</p>
                 </div>
               )}
-
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-deep-slate uppercase tracking-wider">
-                    Minimum notice
-                  </label>
-                  <span className="font-fredoka text-xl text-deep-slate">
-                    {form.lead === 0 ? "None" : `${form.lead}h`}
-                  </span>
+                  <label className="text-xs font-bold text-deep-slate uppercase tracking-wider">Minimum notice</label>
+                  <span className="font-fredoka text-xl text-deep-slate">{form.lead === 0 ? "None" : `${form.lead}h`}</span>
                 </div>
                 <div className="flex items-start gap-2 mb-2">
                   <Info size={14} className="text-pebble-grey shrink-0 mt-0.5" />
-                  <p className="text-xs text-pebble-grey">
-                    How much notice you need before a booking. Set to 0 for same-day bookings.
-                  </p>
+                  <p className="text-xs text-pebble-grey">How much notice you need before a booking. Set to 0 for same-day bookings.</p>
                 </div>
                 <input type="range" min="0" max="72" step="6" value={form.lead}
                   onChange={(e) => set("lead", +e.target.value)}
-                  className="w-full accent-groomr-gold h-2"
-                  aria-label="Minimum notice in hours"
-                />
+                  className="w-full accent-groomr-gold h-2" aria-label="Minimum notice in hours" />
                 <div className="flex justify-between text-xs text-pebble-grey mt-1">
                   <span>Same day</span><span>72h</span>
                 </div>
               </div>
-
               <div className="bg-alabaster-cream rounded-2xl p-5 border border-pebble-grey/15">
                 <p className="text-xs font-bold uppercase tracking-wider text-sage-leaf mb-1">Tip</p>
                 <p className="text-sm text-deep-slate">
@@ -797,179 +706,263 @@ export function GroomerWizard({
             <>
               <header className="space-y-2">
                 <Eyebrow>Step 5 — last one</Eyebrow>
-                <h2 className="font-fredoka text-3xl text-deep-slate">Verify &amp; get paid.</h2>
-                <p className="text-sm text-pebble-grey">
-                  Both sections are optional — you can launch now and add them from your dashboard later.
+                <h2 className="font-fredoka text-3xl text-deep-slate">Verify &amp; launch.</h2>
+                <p className="text-sm text-pebble-grey font-nunito">
+                  Everything below is optional — upload what you have now and complete the rest from your dashboard at any time.
                 </p>
               </header>
 
-              {/* Insurance */}
-              <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
-                <div className="flex items-center gap-4 p-5 border-b border-pebble-grey/10">
-                  <ShieldIcon size={28} className={form.insuranceDocUrl ? "text-sage-leaf" : "text-pebble-grey"} />
+              {/* ── Stripe Connect info ── */}
+              <div className="rounded-2xl overflow-hidden border border-deep-slate/15">
+                <div className="bg-deep-slate px-5 py-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-groomr-gold flex items-center justify-center shrink-0">
+                    <CreditCard size={20} className="text-deep-slate" />
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-deep-slate">Public liability insurance</p>
-                    <p className="text-xs text-pebble-grey">PDF or image of your certificate. Required for the verified badge.</p>
+                    <p className="font-fredoka text-lg text-white leading-tight">Payments via Stripe Connect</p>
+                    <p className="text-xs text-white/55 font-nunito mt-0.5">Set up from your dashboard after launching</p>
                   </div>
+                  <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white/70 px-2.5 py-1 rounded-full">
+                    Required to go live
+                  </span>
                 </div>
-                <div className="p-5 space-y-3">
-                  {form.insuranceDocUrl && form.insuranceDocUrl !== "skipped" ? (
-                    <div className="flex items-center gap-3 bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl px-4 py-3">
-                      <div className="w-7 h-7 rounded-full bg-sage-leaf flex items-center justify-center shrink-0">
-                        <CheckIcon size={14} className="text-white" />
-                      </div>
-                      <p className="text-sm font-bold text-deep-slate flex-1 truncate">
-                        {form.insuranceFileName ?? "Document uploaded"}
-                      </p>
-                      <button
-                        onClick={() => { set("insuranceDocUrl", null); set("insuranceFileName", null); }}
-                        className="text-xs font-bold text-pebble-grey hover:text-muted-terracotta focus-ring rounded"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <input
-                        ref={insuranceInputRef}
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png,.webp"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleInsuranceUpload(file);
-                          e.target.value = "";
-                        }}
-                      />
-                      <button
-                        onClick={() => insuranceInputRef.current?.click()}
-                        disabled={insuranceUploading}
-                        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-pebble-grey/30 rounded-xl hover:border-deep-slate/40 hover:bg-alabaster-cream/60 transition-colors focus-ring font-bold text-sm text-deep-slate disabled:opacity-50"
-                      >
-                        <UploadIcon size={16} />
-                        {insuranceUploading ? "Uploading…" : "Upload certificate"}
-                      </button>
-                      {insuranceError && (
-                        <p className="text-xs font-bold text-muted-terracotta flex items-center gap-1.5">
-                          <AlertCircle size={12} /> {insuranceError}
-                        </p>
-                      )}
-                      <div className="flex items-start gap-2 bg-groomr-gold/15 border border-groomr-gold/30 rounded-xl px-4 py-3">
-                        <AlertCircle size={14} className="text-deep-slate shrink-0 mt-0.5" />
-                        <p className="text-xs font-bold text-deep-slate">
-                          Without insurance, your profile won&apos;t receive the verified badge and may have lower visibility in search.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => set("insuranceDocUrl", "skipped")}
-                        className="text-xs font-bold text-pebble-grey hover:text-deep-slate underline focus-ring rounded"
-                      >
-                        I&apos;ll add this later →
-                      </button>
-                    </div>
-                  )}
-                  {form.insuranceDocUrl === "skipped" && (
-                    <div className="flex items-center gap-2 text-pebble-grey">
-                      <p className="text-xs font-bold">Skipped — add from your dashboard after launch.</p>
-                      <button
-                        onClick={() => set("insuranceDocUrl", null)}
-                        className="text-xs font-bold text-sage-leaf hover:underline focus-ring rounded"
-                      >
-                        Upload now
-                      </button>
-                    </div>
-                  )}
+                <div className="bg-alabaster-cream px-5 py-4 space-y-2">
+                  <p className="text-sm font-nunito text-deep-slate leading-relaxed">
+                    Groomr uses <span className="font-bold">Stripe Connect</span> to process booking payments and send your weekly payouts.
+                    You&apos;ll need a Stripe account to accept bookings — it takes about 5 minutes and you&apos;ll need your bank details and photo ID to hand.
+                  </p>
+                  <p className="text-xs text-pebble-grey font-nunito">
+                    Find the setup under <span className="font-bold text-deep-slate">Dashboard → Financials</span> once you&apos;ve launched.
+                    You can still list your profile and receive enquiries before connecting.
+                  </p>
                 </div>
               </div>
 
-              {/* Bank details */}
-              <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
-                <div className="flex items-center gap-4 p-5 border-b border-pebble-grey/10">
-                  <Building2 size={28} className={form.bankHolderName && form.bankSortCode && form.bankAccountNumber ? "text-sage-leaf" : "text-pebble-grey"} />
-                  <div className="flex-1">
-                    <p className="font-bold text-deep-slate">Bank account for payouts</p>
-                    <p className="text-xs text-pebble-grey">UK bank account. Used for weekly payout transfers and fee collection.</p>
-                  </div>
+              {/* ── Verification documents ── */}
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">Verification documents</p>
+                  <p className="text-xs text-pebble-grey mt-1 font-nunito">
+                    Upload these to earn your <span className="font-bold text-deep-slate">Verified badge</span>, which boosts your visibility in search.
+                    All are optional at launch — complete from your dashboard whenever you&apos;re ready.
+                  </p>
                 </div>
-                <div className="p-5 space-y-3">
-                  <Field label="Account holder name">
-                    <input
-                      className="field"
-                      placeholder="e.g. Lola García"
-                      value={form.bankHolderName}
-                      onChange={(e) => set("bankHolderName", e.target.value)}
-                      autoComplete="name"
-                    />
-                  </Field>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <Field label="Sort code">
-                      <input
-                        className="field"
-                        placeholder="12-34-56"
-                        value={form.bankSortCode}
-                        onChange={(e) => handleSortCode(e.target.value)}
-                        maxLength={8}
-                        inputMode="numeric"
-                      />
-                    </Field>
-                    <Field label="Account number">
-                      <input
-                        className="field"
-                        placeholder="12345678"
-                        value={form.bankAccountNumber}
-                        onChange={(e) => set("bankAccountNumber", e.target.value.replace(/\D/g, "").slice(0, 8))}
-                        maxLength={8}
-                        inputMode="numeric"
-                      />
-                    </Field>
-                  </div>
-                  {(!form.bankHolderName || !form.bankSortCode || !form.bankAccountNumber) && (
-                    <div className="flex items-start gap-2 bg-groomr-gold/15 border border-groomr-gold/30 rounded-xl px-4 py-3">
-                      <AlertCircle size={14} className="text-deep-slate shrink-0 mt-0.5" />
-                      <p className="text-xs font-bold text-deep-slate">
-                        Without bank details you won&apos;t be able to receive payouts or pay Groomr&apos;s platform fee.
+
+                {/* 1. Public Liability Insurance */}
+                <DocUploadCard
+                  icon={<ShieldIcon size={22} />}
+                  title="Public liability insurance"
+                  subtitle="Min. £1M cover — must explicitly cover professional dog grooming"
+                  docKey="insurance"
+                  url={form.insuranceDocUrl}
+                  fileName={form.insuranceFileName}
+                  uploading={uploadingDoc === "insurance"}
+                  error={uploadErrors["insurance"] ?? null}
+                  onUpload={() =>
+                    openFilePicker((file) =>
+                      uploadDoc("insurance", file, (url, name) => {
+                        set("insuranceDocUrl", url);
+                        set("insuranceFileName", name);
+                      })
+                    )
+                  }
+                  onRemove={() => { set("insuranceDocUrl", null); set("insuranceFileName", null); }}
+                  onSkip={() => set("insuranceDocUrl", "skipped")}
+                  onUnskip={() => set("insuranceDocUrl", null)}
+                />
+
+                {/* 2. Professional grooming qualification */}
+                <DocUploadCard
+                  icon={<FinancialsIcon size={22} />}
+                  title="Grooming qualification"
+                  subtitle="Level 2+ from an Ofqual-regulated awarding body (City & Guilds, iPET Network, etc.)"
+                  docKey="qualification"
+                  url={form.qualificationDocUrl}
+                  fileName={form.qualificationFileName}
+                  uploading={uploadingDoc === "qualification"}
+                  error={uploadErrors["qualification"] ?? null}
+                  onUpload={() =>
+                    openFilePicker((file) =>
+                      uploadDoc("qualification", file, (url, name) => {
+                        set("qualificationDocUrl", url);
+                        set("qualificationFileName", name);
+                      })
+                    )
+                  }
+                  onRemove={() => { set("qualificationDocUrl", null); set("qualificationFileName", null); }}
+                  onSkip={() => set("qualificationDocUrl", "skipped")}
+                  onUnskip={() => set("qualificationDocUrl", null)}
+                />
+
+                {/* 3. Canine first aid certificate */}
+                <DocUploadCard
+                  icon={
+                    <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <rect x="3" y="3" width="18" height="18" rx="3" strokeWidth={1.8} />
+                    </svg>
+                  }
+                  title="Canine first aid certificate"
+                  subtitle="Recognised canine/pet first aid course, dated within the last 3 years"
+                  docKey="firstAid"
+                  url={form.firstAidDocUrl}
+                  fileName={form.firstAidFileName}
+                  uploading={uploadingDoc === "firstAid"}
+                  error={uploadErrors["firstAid"] ?? null}
+                  onUpload={() =>
+                    openFilePicker((file) =>
+                      uploadDoc("firstAid", file, (url, name) => {
+                        set("firstAidDocUrl", url);
+                        set("firstAidFileName", name);
+                      })
+                    )
+                  }
+                  onRemove={() => { set("firstAidDocUrl", null); set("firstAidFileName", null); }}
+                  onSkip={() => set("firstAidDocUrl", "skipped")}
+                  onUnskip={() => set("firstAidDocUrl", null)}
+                />
+
+                {/* 4. Government-issued photo ID */}
+                <DocUploadCard
+                  icon={
+                    <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth={1.8} />
+                      <circle cx="8" cy="12" r="2.5" strokeWidth={1.8} />
+                      <path strokeLinecap="round" strokeWidth={1.8} d="M13 10h5M13 14h3" />
+                    </svg>
+                  }
+                  title="Government-issued photo ID"
+                  subtitle="UK passport or UK driving licence — inspected and discarded immediately after review"
+                  docKey="photoId"
+                  url={form.photoIdDocUrl}
+                  fileName={form.photoIdFileName}
+                  uploading={uploadingDoc === "photoId"}
+                  error={uploadErrors["photoId"] ?? null}
+                  onUpload={() =>
+                    openFilePicker((file) =>
+                      uploadDoc("photoId", file, (url, name) => {
+                        set("photoIdDocUrl", url);
+                        set("photoIdFileName", name);
+                      })
+                    )
+                  }
+                  onRemove={() => { set("photoIdDocUrl", null); set("photoIdFileName", null); }}
+                  onSkip={() => set("photoIdDocUrl", "skipped")}
+                  onUnskip={() => set("photoIdDocUrl", null)}
+                />
+
+                {/* 5. Employers' liability (conditional) */}
+                <div className="border border-pebble-grey/20 rounded-2xl overflow-hidden">
+                  <div className="flex items-start gap-4 p-5">
+                    <div className="w-10 h-10 rounded-xl bg-alabaster-cream border border-pebble-grey/15 flex items-center justify-center shrink-0 text-pebble-grey">
+                      <ShieldIcon size={22} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-deep-slate">Employers&apos; liability insurance</p>
+                      <p className="text-xs text-pebble-grey font-nunito mt-0.5">
+                        Required by law if you employ any staff. Min. £5M cover.
                       </p>
                     </div>
-                  )}
+                  </div>
+
+                  <div className="px-5 pb-5 space-y-3">
+                    {/* Yes/No toggle */}
+                    <div>
+                      <p className="text-xs font-bold text-deep-slate uppercase tracking-wider mb-2">Do you employ any staff?</p>
+                      <div className="flex gap-2">
+                        {([
+                          { v: true,  label: "Yes" },
+                          { v: false, label: "No" },
+                        ] as const).map(({ v, label }) => (
+                          <button key={label} type="button" onClick={() => set("hasEmployees", v)}
+                            className={cn(
+                              "px-5 py-2 rounded-full border-2 text-sm font-bold transition-colors focus-ring",
+                              form.hasEmployees === v
+                                ? "bg-deep-slate border-deep-slate text-white"
+                                : "bg-white border-pebble-grey/20 text-deep-slate hover:border-deep-slate"
+                            )}>
+                            {label}
+                          </button>
+                        ))}
+                        {form.hasEmployees !== null && (
+                          <button type="button" onClick={() => set("hasEmployees", null)}
+                            className="text-xs font-bold text-pebble-grey hover:text-deep-slate focus-ring rounded px-2">
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {form.hasEmployees === true && (
+                      <DocUploadCard
+                        icon={<ShieldIcon size={22} />}
+                        title=""
+                        subtitle=""
+                        docKey="employersLiability"
+                        url={form.employersLiabilityDocUrl}
+                        fileName={form.employersLiabilityFileName}
+                        uploading={uploadingDoc === "employersLiability"}
+                        error={uploadErrors["employersLiability"] ?? null}
+                        compact
+                        onUpload={() =>
+                          openFilePicker((file) =>
+                            uploadDoc("employersLiability", file, (url, name) => {
+                              set("employersLiabilityDocUrl", url);
+                              set("employersLiabilityFileName", name);
+                            })
+                          )
+                        }
+                        onRemove={() => { set("employersLiabilityDocUrl", null); set("employersLiabilityFileName", null); }}
+                        onSkip={() => set("employersLiabilityDocUrl", "skipped")}
+                        onUnskip={() => set("employersLiabilityDocUrl", null)}
+                      />
+                    )}
+
+                    {form.hasEmployees === false && (
+                      <p className="text-xs font-bold text-sage-leaf flex items-center gap-1.5">
+                        <CheckIcon size={13} /> Not required — no staff employed.
+                      </p>
+                    )}
+
+                    {form.hasEmployees === null && (
+                      <p className="text-xs text-pebble-grey font-nunito italic">
+                        Select an answer above — or leave it and complete from your dashboard later.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Policy agreement */}
-              <label className="flex items-start gap-3 p-4 bg-alabaster-cream border-2 border-pebble-grey/20 rounded-2xl cursor-pointer hover:border-deep-slate transition-colors group">
-                <button
-                  type="button"
-                  onClick={() => setPolicyAgreed(v => !v)}
-                  aria-checked={policyAgreed}
-                  role="checkbox"
-                  className={cn(
-                    "mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors focus-ring",
-                    policyAgreed ? "bg-deep-slate border-deep-slate text-alabaster-cream" : "border-pebble-grey/40 group-hover:border-deep-slate"
-                  )}
+              {/* ── Agreements ── */}
+              <div className="space-y-3">
+                {/* Verification policy */}
+                <AgreementCheckbox
+                  checked={policyAgreed}
+                  onChange={() => setPolicyAgreed(v => !v)}
                 >
-                  {policyAgreed && <CheckIcon size={12} />}
-                </button>
-                <span className="text-sm text-deep-slate font-bold leading-snug">
                   I have read and agree to the{" "}
-                  <a
-                    href="/verification-policy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sage-leaf underline hover:text-sage-leaf/80"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    Groomr Verification Policy
-                  </a>
+                  <DocLink href="/verification-policy">Groomr Verification Policy</DocLink>
                   , including the animal welfare standards and document requirements.
-                </span>
-              </label>
+                </AgreementCheckbox>
 
+                {/* Platform + Groomer terms */}
+                <AgreementCheckbox
+                  checked={termsAgreed}
+                  onChange={() => setTermsAgreed(v => !v)}
+                >
+                  I agree to the{" "}
+                  <DocLink href="/terms/platform">Platform Terms of Service</DocLink>
+                  {" "}and the{" "}
+                  <DocLink href="/terms/groomer">Groomer Terms of Service</DocLink>.
+                </AgreementCheckbox>
+              </div>
+
+              {/* You're ready */}
               <div className="bg-deep-slate text-alabaster-cream rounded-2xl p-5">
                 <p className="font-fredoka text-xl">You&apos;re ready.</p>
                 <p className="text-sage-leaf text-sm mt-1">
                   Hit launch and your profile goes live in your area.
-                  {(!form.insuranceDocUrl || form.insuranceDocUrl === "skipped" || !form.bankHolderName) && (
-                    <span className="text-alabaster-cream/50"> You can complete verification from your dashboard.</span>
-                  )}
+                  <span className="text-alabaster-cream/50"> Complete verification and Stripe Connect from your dashboard whenever you&apos;re ready.</span>
                 </p>
               </div>
 
@@ -997,11 +990,11 @@ export function GroomerWizard({
               disabled={
                 isPending ||
                 (step === 0 && !step0Valid) ||
-                (isLast && !policyAgreed)
+                (isLast && (!policyAgreed || !termsAgreed))
               }
               title={
                 step === 0 && !step0Valid ? "Please fill in all fields above" :
-                isLast && !policyAgreed ? "Please agree to the Verification Policy to continue" :
+                isLast && (!policyAgreed || !termsAgreed) ? "Please agree to the terms above to continue" :
                 undefined
               }
               className="btn-primary font-nunito font-bold px-7 py-3 rounded-full focus-ring shadow-subtle disabled:opacity-70 disabled:cursor-not-allowed"
@@ -1015,14 +1008,133 @@ export function GroomerWizard({
   );
 }
 
+/* ── DocUploadCard ────────────────────────────────────────────────────── */
+
+function DocUploadCard({
+  icon, title, subtitle, docKey, url, fileName,
+  uploading, error, compact = false,
+  onUpload, onRemove, onSkip, onUnskip,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  subtitle: string;
+  docKey: string;
+  url: string | null;
+  fileName: string | null;
+  uploading: boolean;
+  error: string | null;
+  compact?: boolean;
+  onUpload: () => void;
+  onRemove: () => void;
+  onSkip: () => void;
+  onUnskip: () => void;
+}) {
+  const isSkipped   = url === "skipped";
+  const isUploaded  = url && url !== "skipped";
+
+  return (
+    <div className={cn(
+      "border border-pebble-grey/20 rounded-2xl overflow-hidden",
+      compact && "border-pebble-grey/10"
+    )}>
+      {!compact && (
+        <div className="flex items-start gap-4 p-5 border-b border-pebble-grey/10">
+          <div className={cn(
+            "w-10 h-10 rounded-xl border flex items-center justify-center shrink-0",
+            isUploaded
+              ? "bg-sage-leaf/10 border-sage-leaf/20 text-sage-leaf"
+              : "bg-alabaster-cream border-pebble-grey/15 text-pebble-grey"
+          )}>
+            {isUploaded ? <CheckIcon size={18} className="text-sage-leaf" /> : icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-deep-slate">{title}</p>
+            {subtitle && <p className="text-xs text-pebble-grey font-nunito mt-0.5">{subtitle}</p>}
+          </div>
+        </div>
+      )}
+
+      <div className={cn("space-y-2", compact ? "p-0" : "p-5")}>
+        {isUploaded ? (
+          <div className="flex items-center gap-3 bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl px-4 py-3">
+            <div className="w-6 h-6 rounded-full bg-sage-leaf flex items-center justify-center shrink-0">
+              <CheckIcon size={12} className="text-white" />
+            </div>
+            <p className="text-sm font-bold text-deep-slate flex-1 truncate">{fileName ?? "Document uploaded"}</p>
+            <button onClick={onRemove} className="text-xs font-bold text-pebble-grey hover:text-muted-terracotta focus-ring rounded">
+              Remove
+            </button>
+          </div>
+        ) : isSkipped ? (
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-bold text-pebble-grey">Skipped — add from your dashboard after launch.</p>
+            <button onClick={onUnskip} className="text-xs font-bold text-sage-leaf hover:underline focus-ring rounded">
+              Upload now
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <button onClick={onUpload} disabled={uploading}
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-pebble-grey/30 rounded-xl hover:border-deep-slate/40 hover:bg-alabaster-cream/60 transition-colors focus-ring font-bold text-sm text-deep-slate disabled:opacity-50">
+              <UploadIcon size={15} />
+              {uploading ? "Uploading…" : "Upload document"}
+            </button>
+            {error && (
+              <p className="text-xs font-bold text-muted-terracotta flex items-center gap-1.5">
+                <AlertCircle size={12} /> {error}
+              </p>
+            )}
+            <button onClick={onSkip} className="text-xs font-bold text-pebble-grey hover:text-deep-slate underline focus-ring rounded">
+              I&apos;ll complete this later →
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── AgreementCheckbox ────────────────────────────────────────────────── */
+
+function AgreementCheckbox({
+  checked, onChange, children,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex items-start gap-3 p-4 bg-alabaster-cream border-2 border-pebble-grey/20 rounded-2xl cursor-pointer hover:border-deep-slate transition-colors group">
+      <button type="button" onClick={onChange} aria-checked={checked} role="checkbox"
+        className={cn(
+          "mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors focus-ring",
+          checked ? "bg-deep-slate border-deep-slate text-alabaster-cream" : "border-pebble-grey/40 group-hover:border-deep-slate"
+        )}>
+        {checked && <CheckIcon size={12} />}
+      </button>
+      <span className="text-sm text-deep-slate font-bold leading-snug">{children}</span>
+    </label>
+  );
+}
+
+/* ── DocLink ──────────────────────────────────────────────────────────── */
+
+function DocLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+      className="text-sage-leaf underline hover:text-sage-leaf/80"
+      onClick={(e) => e.stopPropagation()}>
+      {children}
+    </a>
+  );
+}
+
 /* ── Field wrapper ────────────────────────────────────────────────────── */
 
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
     <label className={`block ${full ? "md:col-span-2" : ""}`}>
-      <span className="text-xs font-bold text-deep-slate uppercase tracking-wider block mb-2">
-        {label}
-      </span>
+      <span className="text-xs font-bold text-deep-slate uppercase tracking-wider block mb-2">{label}</span>
       {children}
     </label>
   );

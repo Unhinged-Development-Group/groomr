@@ -14,15 +14,14 @@ export default async function Icon() {
   )
   const logoSrc = `data:image/png;base64,${logoData.toString('base64')}`
 
-  // Fill 68 % of the icon — leaves visible padding on all sides
-  const logoW = Math.round(size.width * 0.68)
+  // Fill 90 % — no background so the mark should fill the canvas
+  const logoW = Math.round(size.width * 0.90)
   const logoH = Math.round(logoW / LOGO_ASPECT)
 
   return new ImageResponse(
     (
       <div
         style={{
-          background: '#2c3e50',
           width: '100%',
           height: '100%',
           display: 'flex',

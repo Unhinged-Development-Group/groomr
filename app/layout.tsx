@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,9 +10,20 @@ export const metadata: Metadata = {
   title: "Groomr — Find local dog groomers",
   description:
     "Book your dog's next groom in minutes. Local, independent, verified groomers across the UK.",
-  icons: {
-    icon: [{ url: "/icon.png", type: "image/png" }],
+  applicationName: "Groomr",
+  // app/icon.tsx and app/apple-icon.tsx handle favicon + Apple touch icon automatically
+  appleWebApp: {
+    capable: true,
+    title: "Groomr",
+    statusBarStyle: "black-translucent", // deep-slate chrome on iOS
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2c3e50", // deep-slate — colours browser chrome on Android Chrome
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

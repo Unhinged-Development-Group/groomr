@@ -101,31 +101,44 @@ export function AppointmentsSection({
                   key={apt.id}
                   className="bg-white rounded-[12px] p-4 flex gap-3 items-start border border-pebble-grey/20"
                 >
-                  {/* Groomer avatar */}
-                  <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-sage-leaf/15 focus-ring">
-                    {groomerImg ? (
-                      <Image src={groomerImg} alt={groomerName} width={44} height={44} className="object-cover w-full h-full" />
-                    ) : (
-                      <span className="flex items-center justify-center w-full h-full font-fredoka text-lg text-sage-leaf">
-                        {groomerName.charAt(0)}
-                      </span>
-                    )}
-                  </Link>
+                  {/* Date block */}
+                  <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl p-2.5 flex flex-col items-center w-14 shrink-0 text-center">
+                    <span className="font-nunito font-bold text-sage-leaf uppercase tracking-widest text-[10px]">
+                      {month}
+                    </span>
+                    <span className="font-fredoka text-2xl text-deep-slate leading-none mt-0.5">
+                      {day}
+                    </span>
+                    <span className="font-nunito text-[10px] text-pebble-grey mt-0.5">
+                      {weekday}
+                    </span>
+                  </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    {/* Service + date + status */}
-                    <div className="flex items-start gap-2">
-                      <p className="font-fredoka text-base text-deep-slate leading-tight flex-1 min-w-0">
-                        {apt.service_snapshot_name || "Grooming"} for {apt.dogs?.name}
-                        <span className="text-pebble-grey font-nunito font-normal text-xs ml-1.5">
-                          · {weekday} {day} {month}
-                        </span>
-                      </p>
+                    {/* Groomer + status row */}
+                    <div className="flex items-center gap-2">
+                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-6 h-6 rounded-full overflow-hidden shrink-0 bg-sage-leaf/15 focus-ring">
+                        {groomerImg ? (
+                          <Image src={groomerImg} alt={groomerName} width={24} height={24} className="object-cover w-full h-full" />
+                        ) : (
+                          <span className="flex items-center justify-center w-full h-full font-fredoka text-xs text-sage-leaf">
+                            {groomerName.charAt(0)}
+                          </span>
+                        )}
+                      </Link>
+                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="text-xs font-nunito font-bold text-pebble-grey hover:text-sage-leaf transition-colors truncate flex-1 focus-ring rounded">
+                        {groomerName}
+                      </Link>
                       <span className="shrink-0 bg-groomr-gold/20 text-deep-slate text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                         {apt.status}
                       </span>
                     </div>
+
+                    {/* Service name */}
+                    <p className="font-fredoka text-base text-deep-slate leading-tight mt-1.5">
+                      {apt.service_snapshot_name || "Grooming"} for {apt.dogs?.name}
+                    </p>
 
                     {/* Time + location */}
                     <div className="flex items-center gap-3 mt-1 font-nunito text-xs text-pebble-grey flex-wrap">

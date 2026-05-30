@@ -192,7 +192,7 @@ export function AddDogModal({ open, onClose, onSaved, editing }: AddDogModalProp
             type="date"
             value={dob}
             onChange={e => setDob(e.target.value)}
-            className="w-full border border-pebble-grey/30 rounded-xl px-4 py-2.5 text-deep-slate font-nunito text-sm focus:outline-none focus:ring-2 focus:ring-sage-leaf/40 bg-white"
+            className="w-full border border-pebble-grey/30 rounded-xl px-4 py-2.5 text-deep-slate font-nunito text-sm focus:outline-none focus:ring-2 focus:ring-sage-leaf/40 bg-white appearance-none leading-tight"
           />
         </div>
 

@@ -21,7 +21,14 @@ interface DogCardProps {
 
 export function DogCard({ dog, onEdit, onDelete }: DogCardProps) {
   return (
-    <div className="bg-white border border-pebble-grey/20 rounded-[16px] p-3 flex gap-3 items-start group">
+    <div
+      className="bg-white border border-pebble-grey/20 rounded-[16px] p-3 flex gap-3 items-start group cursor-pointer active:bg-alabaster-cream/60 transition-colors"
+      onClick={() => onEdit(dog)}
+      role="button"
+      tabIndex={0}
+      aria-label={`Edit ${dog.name}`}
+      onKeyDown={e => (e.key === "Enter" || e.key === " ") && onEdit(dog)}
+    >
       <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-alabaster-cream border border-pebble-grey/15 group-hover:ring-2 group-hover:ring-groomr-gold/30 transition-all">
         {dog.profile_image_url ? (
           <Image
@@ -61,7 +68,7 @@ export function DogCard({ dog, onEdit, onDelete }: DogCardProps) {
           <PencilIcon size={14} />
         </button>
         <button
-          onClick={() => onDelete(dog.id)}
+          onClick={e => { e.stopPropagation(); onDelete(dog.id); }}
           aria-label={`Delete ${dog.name}`}
           className="p-1.5 rounded-lg text-pebble-grey hover:text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors focus-ring"
         >

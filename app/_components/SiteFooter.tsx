@@ -4,11 +4,11 @@ import { FooterCTA } from "./FooterCTA";
 
 export function SiteFooter() {
   return (
-    <footer className="w-full bg-deep-slate pt-12 pb-8 border-t-[8px] border-groomr-gold mt-auto">
-      <div className="w-full px-6 lg:px-12 xl:px-20 space-y-10">
+    <footer className="w-full bg-deep-slate pt-8 pb-6 md:pt-12 md:pb-8 border-t-[8px] border-groomr-gold mt-auto">
+      <div className="w-full px-6 lg:px-12 xl:px-20 space-y-6 md:space-y-10">
         {/* CTA band */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
-          <h3 className="font-fredoka text-3xl text-groomr-gold max-w-md">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 text-center md:text-left">
+          <h3 className="font-fredoka text-2xl md:text-3xl text-groomr-gold max-w-md">
             Your dog&apos;s best day starts here.
           </h3>
           <FooterCTA />
@@ -30,7 +30,7 @@ export function SiteFooter() {
             />
           </Link>
 
-          <nav className="flex flex-wrap justify-center gap-6 text-sm font-bold tracking-[0.1em] uppercase text-sage-leaf">
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2 md:gap-6 text-sm font-bold tracking-[0.1em] uppercase text-sage-leaf">
             {[
               { label: "Our Founder", href: "/founder" },
               { label: "For Groomers", href: "/become-a-groomer" },

@@ -1,12 +1,15 @@
 "use client";
 
 import { SignUpButton, useUser } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 export function FooterCTA() {
   const { isSignedIn, isLoaded } = useUser();
+  const pathname = usePathname();
 
-  if (!isLoaded) return null;
+  // Dashboard pages have their own CTAs — don't show a marketing button there
+  if (!isLoaded || pathname?.startsWith("/dashboard")) return null;
 
   if (isSignedIn) {
     return (

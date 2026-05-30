@@ -528,7 +528,7 @@ export function ProfileEditor({
                 <span>Service</span><span>Duration</span><span>Price</span><span />
               </div>
               {services.map((s, i) => (
-                <div key={i} className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_100px_100px_40px] gap-2 sm:gap-3 items-start sm:items-center">
+                <div key={i} className="grid grid-cols-[1fr_76px_76px_36px] sm:grid-cols-[1fr_100px_100px_40px] gap-2 sm:gap-3 items-center">
                   <input
                     className="field"
                     value={s.name}
@@ -536,17 +536,17 @@ export function ProfileEditor({
                   />
                   <div className="relative">
                     <input
-                      className="field pr-10"
+                      className="field w-full pr-8 sm:pr-10"
                       type="number"
                       value={s.duration}
                       onChange={(e) => updateService(i, { duration: Number(e.target.value) })}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-pebble-grey">min</span>
+                    <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-pebble-grey">min</span>
                   </div>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-pebble-grey">£</span>
+                    <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-pebble-grey">£</span>
                     <input
-                      className="field pl-7"
+                      className="field w-full pl-5 sm:pl-7"
                       type="number"
                       step="0.01"
                       value={(s.price / 100).toFixed(2)}
@@ -555,10 +555,10 @@ export function ProfileEditor({
                   </div>
                   <button
                     onClick={() => setServices((arr) => arr.filter((_, j) => j !== i))}
-                    className="rounded-full p-2 text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors focus-ring"
+                    className="rounded-full p-1.5 sm:p-2 text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors focus-ring justify-self-center"
                     aria-label="Remove"
                   >
-                    <TrashIcon size={16} />
+                    <TrashIcon size={15} />
                   </button>
                 </div>
               ))}
@@ -658,89 +658,95 @@ export function ProfileEditor({
                     row.isActive ? "border-deep-slate/20 bg-alabaster-cream" : "border-pebble-grey/15 bg-white opacity-60"
                   )}>
                     {/* Main hours row */}
-                    <div className="grid grid-cols-[80px_1fr] sm:grid-cols-[80px_auto_auto_1fr] gap-3 items-center px-4 py-3">
-                      <button
-                        onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
-                        className={cn(
-                          "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors",
-                          row.isActive ? "text-deep-slate" : "text-pebble-grey"
-                        )}
-                        aria-label={`Toggle ${DAY_LABELS[dow]}`}
-                      >
-                        <span className={cn(
-                          "w-8 h-4 rounded-full transition-colors relative shrink-0",
-                          row.isActive ? "bg-deep-slate" : "bg-pebble-grey/30"
-                        )}>
+                    <div className="px-4 py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Day toggle */}
+                        <button
+                          onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
+                          className={cn(
+                            "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors shrink-0",
+                            row.isActive ? "text-deep-slate" : "text-pebble-grey"
+                          )}
+                          aria-label={`Toggle ${DAY_LABELS[dow]}`}
+                        >
                           <span className={cn(
-                            "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
-                            row.isActive ? "left-4" : "left-0.5"
-                          )} />
-                        </span>
-                        <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
-                      </button>
+                            "w-8 h-4 rounded-full transition-colors relative shrink-0",
+                            row.isActive ? "bg-deep-slate" : "bg-pebble-grey/30"
+                          )}>
+                            <span className={cn(
+                              "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
+                              row.isActive ? "left-4" : "left-0.5"
+                            )} />
+                          </span>
+                          <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
+                        </button>
 
-                      <div className="flex items-center gap-2 col-span-1 sm:col-span-3">
-                        <input
-                          type="time"
-                          value={row.startTime}
-                          disabled={!row.isActive}
-                          onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
-                          className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
-                        />
-                        <span className="text-xs font-bold text-pebble-grey">to</span>
-                        <input
-                          type="time"
-                          value={row.endTime}
-                          disabled={!row.isActive}
-                          onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
-                          className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed"
-                        />
-                        {row.isActive && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              hasBreak
-                                ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
-                                : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })
-                            }
-                            className={cn(
-                              "ml-1 text-[10px] font-bold px-2.5 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
-                              hasBreak
-                                ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
-                                : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate"
-                            )}
-                          >
-                            {hasBreak ? "− Break" : "+ Break"}
-                          </button>
-                        )}
+                        {/* Time range + break toggle */}
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          <input
+                            type="time"
+                            value={row.startTime}
+                            disabled={!row.isActive}
+                            onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
+                            className="field py-1.5 text-sm flex-1 min-w-0 sm:flex-none sm:w-32 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
+                          <input
+                            type="time"
+                            value={row.endTime}
+                            disabled={!row.isActive}
+                            onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
+                            className="field py-1.5 text-sm flex-1 min-w-0 sm:flex-none sm:w-32 disabled:cursor-not-allowed"
+                          />
+                          {row.isActive && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                hasBreak
+                                  ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
+                                  : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })
+                              }
+                              className={cn(
+                                "shrink-0 text-[10px] font-bold px-2 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
+                                hasBreak
+                                  ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
+                                  : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate"
+                              )}
+                            >
+                              {hasBreak ? "− Break" : "+ Break"}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     {/* Break row */}
                     {row.isActive && hasBreak && (
-                      <div className="px-4 pb-3 flex items-center gap-2 ml-[80px] sm:ml-[80px]">
-                        <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider w-8 shrink-0">Break</span>
-                        <input
-                          type="time"
-                          value={row.breakStartTime ?? "12:00"}
-                          onChange={(e) => updateAvailability(dow, { breakStartTime: e.target.value })}
-                          className="field py-1 text-xs w-28"
-                        />
-                        <span className="text-xs font-bold text-pebble-grey">to</span>
-                        <input
-                          type="time"
-                          value={row.breakEndTime ?? "13:00"}
-                          onChange={(e) => updateAvailability(dow, { breakEndTime: e.target.value })}
-                          className="field py-1 text-xs w-28"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => applyBreakToAllDays(row.breakStartTime!, row.breakEndTime!)}
-                          className="text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap"
-                          title="Apply this break time to all active days"
-                        >
-                          Copy to all days
-                        </button>
+                      <div className="px-4 pb-3">
+                        <div className="flex items-center gap-1.5 pl-[52px] sm:pl-[80px]">
+                          <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0">Break</span>
+                          <input
+                            type="time"
+                            value={row.breakStartTime ?? "12:00"}
+                            onChange={(e) => updateAvailability(dow, { breakStartTime: e.target.value })}
+                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28"
+                          />
+                          <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
+                          <input
+                            type="time"
+                            value={row.breakEndTime ?? "13:00"}
+                            onChange={(e) => updateAvailability(dow, { breakEndTime: e.target.value })}
+                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => applyBreakToAllDays(row.breakStartTime!, row.breakEndTime!)}
+                            className="hidden sm:inline text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap shrink-0"
+                            title="Apply this break time to all active days"
+                          >
+                            Copy to all days
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

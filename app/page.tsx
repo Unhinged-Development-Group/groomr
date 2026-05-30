@@ -11,16 +11,19 @@ const TESTIMONIALS = [
     name: "Anya",
     dog: "Lab cross",
     text: "I used to forget to book until Marlow was a tangled mess. Groomr just… does it for me.",
+    avatar: "https://i.pravatar.cc/80?img=47",
   },
   {
     name: "Tom",
     dog: "Bichon",
     text: "Finding a groomer who's good with anxious dogs was impossible. Found two within 1 mile.",
+    avatar: "https://i.pravatar.cc/80?img=33",
   },
   {
-    name: "Priya",
-    dog: "Yorkie · 13yrs",
-    text: "Senior-care filter is a quiet miracle. Bramble actually enjoys it now.",
+    name: "Sophie",
+    dog: "Cavapoo",
+    text: "Booked our first groom in about three minutes. Never thought finding someone local and reliable could be that easy.",
+    avatar: "https://i.pravatar.cc/80?img=21",
   },
 ];
 
@@ -141,10 +144,12 @@ export default function LandingPage() {
 
           {/* Left — text */}
           <div className="space-y-6">
-            <Eyebrow className="border-white/20 text-white/60">Are you a dog groomer?</Eyebrow>
-            <h2 className="font-fredoka text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
-              Your business,<br />finally organised.
+            <h2 className="font-fredoka text-[2.4rem] sm:text-5xl md:text-6xl text-white leading-tight">
+              Are you a<br />dog groomer?
             </h2>
+            <p className="font-fredoka text-xl sm:text-2xl text-groomr-gold leading-snug">
+              Your business, finally organised.
+            </p>
             <p className="text-white/65 text-lg leading-relaxed font-nunito max-w-md">
               Online booking, automatic reminders, client profiles, and payments — all in one place.
               A profile that shows up where dog owners actually look. Free to list.
@@ -159,13 +164,13 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap items-center gap-8 pt-6 border-t border-white/10">
               <div>
-                <p className="font-fredoka text-3xl text-groomr-gold">2,400+</p>
+                <p className="font-fredoka text-3xl text-groomr-gold">340+</p>
                 <p className="text-xs font-bold text-white/50 uppercase tracking-wider mt-0.5">
                   Active groomers
                 </p>
               </div>
               <div>
-                <p className="font-fredoka text-3xl text-groomr-gold">38 hrs</p>
+                <p className="font-fredoka text-3xl text-groomr-gold">6 hrs</p>
                 <p className="text-xs font-bold text-white/50 uppercase tracking-wider mt-0.5">
                   Saved monthly avg
                 </p>
@@ -317,22 +322,27 @@ export default function LandingPage() {
             Real dogs. Real regulars.
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto">
           {TESTIMONIALS.map((t, i) => (
             <figure
               key={i}
-              className="bg-white border border-pebble-grey/20 rounded-[20px] p-7 card-lift relative flex flex-col"
+              className="bg-white border border-pebble-grey/20 rounded-[18px] p-5 sm:p-6 card-lift relative flex flex-col"
             >
-              <div className="absolute -top-4 left-7 text-6xl font-fredoka text-groomr-gold leading-none">
+              <div className="absolute -top-3 left-5 text-5xl font-fredoka text-groomr-gold leading-none">
                 &ldquo;
               </div>
-              <blockquote className="text-deep-slate font-nunito text-lg leading-relaxed pt-4 flex-1">
+              <blockquote className="text-deep-slate font-nunito text-sm sm:text-base leading-relaxed pt-3 flex-1">
                 {t.text}
               </blockquote>
-              <figcaption className="mt-5 pt-5 border-t border-pebble-grey/10 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-sage-leaf text-white font-fredoka flex items-center justify-center">
-                  {t.name.charAt(0)}
-                </div>
+              <figcaption className="mt-4 pt-4 border-t border-pebble-grey/10 flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={t.avatar}
+                  alt={t.name}
+                  width={36}
+                  height={36}
+                  className="w-9 h-9 rounded-full object-cover shrink-0"
+                />
                 <div>
                   <p className="font-bold text-sm text-deep-slate">{t.name}</p>
                   <p className="text-xs text-pebble-grey">{t.dog}</p>

@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { SearchIcon, CalendarIcon, FavoritesIcon } from "@/components/ui/GroomrIcons";
+import { PinIcon, CalendarIcon, FavoritesIcon } from "@/components/ui/GroomrIcons";
 
 const STEPS = [
   {
-    Icon: SearchIcon,
+    Icon: PinIcon,
     number: "01",
     tab: "Find",
     title: "Find your match",
     body: "Search by location. See real availability, prices, and reviews from neighbours — not a directory, a discovery.",
-    accent: "bg-groomr-gold",
-    iconBg: "bg-groomr-gold/15",
+    accent: "bg-muted-terracotta",
+    iconBg: "bg-muted-terracotta/10",
   },
   {
     Icon: CalendarIcon,
@@ -155,24 +155,24 @@ export function HowItWorksCarousel() {
 
         <div className="relative z-10 grid md:grid-cols-2 gap-0">
           {/* Left — text */}
-          <div className="p-6 sm:p-10 md:p-14 flex flex-col justify-center space-y-6">
+          <div className="p-5 sm:p-8 md:p-10 flex flex-col justify-center space-y-5">
             <div
               className={[
-                "w-16 h-16 rounded-2xl flex items-center justify-center transition-colors duration-300",
+                "w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300",
                 step.iconBg,
               ].join(" ")}
             >
-              <step.Icon size={30} className="text-deep-slate" />
+              <step.Icon size={24} className="text-deep-slate" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <p className="font-fredoka text-xs tracking-widest text-pebble-grey/60 uppercase">
                 Step {step.number}
               </p>
-              <h3 className="font-fredoka text-3xl sm:text-4xl text-deep-slate leading-tight">
+              <h3 className="font-fredoka text-2xl sm:text-3xl text-deep-slate leading-tight">
                 {step.title}
               </h3>
-              <p className="text-pebble-grey font-nunito text-lg leading-relaxed max-w-sm">
+              <p className="text-pebble-grey font-nunito text-sm sm:text-base leading-relaxed max-w-sm">
                 {step.body}
               </p>
             </div>
@@ -198,7 +198,7 @@ export function HowItWorksCarousel() {
           {/* Right — visual accent panel */}
           <div
             className={[
-              "hidden md:flex items-center justify-center p-14 transition-colors duration-500",
+              "hidden md:flex items-center justify-center p-10 transition-colors duration-500",
               step.iconBg,
             ].join(" ")}
           >

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon } from "@/components/ui/GroomrIcons";
+import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/GroomrIcons";
 import { toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { BookingsView } from "./BookingsView";
 import { ClientsView } from "./ClientsView";
@@ -34,13 +34,13 @@ interface StatCardProps { label: string; value: string; sub: string; tone?: "gol
 function StatCard({ label, value, sub, tone = "sage" }: StatCardProps) {
   const dot: Record<string, string> = { gold: "#eae45c", sage: "#88a096", terra: "#c87964", slate: "#2c3e50" };
   return (
-    <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full" style={{ background: dot[tone] }} />
-        <span className="text-xs font-bold uppercase tracking-[0.15em] text-pebble-grey">{label}</span>
+    <div className="bg-white border border-pebble-grey/20 rounded-[14px] sm:rounded-[20px] p-3 sm:p-5">
+      <div className="flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0" style={{ background: dot[tone] }} />
+        <span className="text-[9px] sm:text-xs font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-pebble-grey leading-tight">{label}</span>
       </div>
-      <p className="font-fredoka text-3xl text-deep-slate mt-2 leading-none">{value}</p>
-      <p className="text-xs text-pebble-grey font-bold mt-2">{sub}</p>
+      <p className="font-fredoka text-xl sm:text-3xl text-deep-slate mt-1.5 leading-none">{value}</p>
+      <p className="text-[9px] sm:text-xs text-pebble-grey font-bold mt-1.5 leading-tight">{sub}</p>
     </div>
   );
 }
@@ -156,6 +156,24 @@ export function GroomerDashboardClient({
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>(initialTimeBlocks);
   const [activeGroom, setActiveGroom] = useState<ActiveGroom | null>(null);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(showWelcome);
+
+  // Tab bar horizontal scroll state (mobile only)
+  const tabScrollRef = useRef<HTMLDivElement>(null);
+  const [tabScroll, setTabScroll] = useState({ left: false, right: true });
+
+  function updateTabScroll() {
+    const el = tabScrollRef.current;
+    if (!el) return;
+    setTabScroll({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft < el.scrollWidth - el.clientWidth - 4,
+    });
+  }
+
+  useEffect(() => {
+    // Initialise after mount so we know the real scrollWidth
+    updateTabScroll();
+  }, []);
 
   useEffect(() => {
     try {
@@ -302,7 +320,7 @@ export function GroomerDashboardClient({
       </header>
 
       {/* Stat strip */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-4 gap-2 sm:gap-4">
         <StatCard label="Today"       value={todayAppointments.length.toString()}    sub={`bookings · ${todayHours.toFixed(1)} hrs`} tone="gold" />
         <StatCard label="This week"   value={`£${weekRevenue.toFixed(0)}`}          sub={`${weekAppointments.length} bookings this week`} tone="sage" />
         <StatCard label="Next payout" value={`£${nextPayoutAmount.toFixed(2)}`}     sub={`Est. ${nextPayoutDate}`} tone="terra" />
@@ -310,8 +328,23 @@ export function GroomerDashboardClient({
       </section>
 
       {/* Tab nav */}
-      <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle">
-        <div className="flex sm:grid sm:grid-cols-5 gap-1 overflow-x-auto pb-0.5 sm:overflow-visible scrollbar-none">
+      <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle relative">
+        {/* Left scroll chevron — mobile only */}
+        {tabScroll.left && (
+          <button
+            aria-hidden
+            onClick={() => { tabScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" }); }}
+            className="sm:hidden absolute left-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
+          >
+            <ChevronLeftIcon size={14} />
+          </button>
+        )}
+
+        <div
+          ref={tabScrollRef}
+          onScroll={updateTabScroll}
+          className="flex sm:grid sm:grid-cols-5 gap-1 overflow-x-auto pb-0.5 sm:overflow-visible scrollbar-none"
+        >
           {TABS.map((t) => {
             const active = tab === t.id;
             const showDot = t.id === "reviews" && unrespondedReviews > 0;
@@ -331,6 +364,17 @@ export function GroomerDashboardClient({
             );
           })}
         </div>
+
+        {/* Right scroll chevron — mobile only */}
+        {tabScroll.right && (
+          <button
+            aria-hidden
+            onClick={() => { tabScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" }); }}
+            className="sm:hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
+          >
+            <ChevronRightIcon size={14} />
+          </button>
+        )}
       </nav>
 
       {/* Tab content */}

@@ -10,6 +10,12 @@ const isPublicRoute = createRouteMatcher([
   '/founder(.*)',
   '/search(.*)',
   '/groomers(.*)',
+  // Legal & policy pages — must be readable without an account
+  '/terms(.*)',
+  '/privacy-policy(.*)',
+  '/cookie-policy(.*)',
+  '/verification-policy(.*)',
+  '/acceptable-use(.*)',
 ])
 
 export default clerkMiddleware(async (auth, request) => {

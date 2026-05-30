@@ -13,7 +13,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Become a Groomr — Less admin, more grooming",
   description:
-    "Join 2,400+ verified groomers. Online booking, automatic reminders, payments — all in one. Free to list.",
+    "Join 340+ verified groomers. Online booking, automatic reminders, payments — all in one. Free to list.",
 };
 
 const TOOLKIT = [
@@ -57,7 +57,7 @@ const TOOLKIT = [
     title: "Deposits & payouts",
     sub: "Get paid, on your terms.",
     bullets: [
-      "Set any deposit % per service type",
+      "Set any deposit %",
       "Weekly bank transfer every Monday",
       "Flat 8% fee per completed appointment — no surprises",
     ],
@@ -106,7 +106,7 @@ const FAQS = [
   },
   {
     q: "Do I have to use the Groomr calendar?",
-    a: "No. You can operate in enquiry-only mode if you prefer to confirm bookings manually. You can also sync with Google or Apple Calendar so your existing schedule blocks out your Groomr availability automatically.",
+    a: "It's central to how Groomr works — it's what lets owners book directly and keeps your availability up to date. You can sync Google or Apple Calendar so out-of-Groomr appointments block your slots automatically.",
   },
   {
     q: "What if a client no-shows or cancels last minute?",
@@ -180,13 +180,13 @@ export default function BecomeAGroomerPage() {
             </div>
             <div className="grid grid-cols-3 gap-6 pt-6 border-t border-pebble-grey/20 mt-8">
               <div>
-                <p className="font-fredoka text-3xl text-deep-slate">2,400+</p>
+                <p className="font-fredoka text-3xl text-deep-slate">340+</p>
                 <p className="text-xs font-bold text-sage-leaf uppercase tracking-wider">
                   Verified groomers
                 </p>
               </div>
               <div>
-                <p className="font-fredoka text-3xl text-deep-slate">38hrs</p>
+                <p className="font-fredoka text-3xl text-deep-slate">6 hrs</p>
                 <p className="text-xs font-bold text-sage-leaf uppercase tracking-wider">
                   Saved monthly
                 </p>
@@ -428,20 +428,20 @@ export default function BecomeAGroomerPage() {
       </section>
 
       {/* ── GROOMER TESTIMONIALS ─────────────────────────────────────── */}
-      <section className="bg-sage-leaf/10 py-20">
-        <div className="w-full px-6 lg:px-12 xl:px-20 grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <section className="bg-sage-leaf/10 py-12 md:py-16">
+        <div className="w-full px-6 lg:px-12 xl:px-20 grid lg:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto">
           {GROOMER_TESTIMONIALS.map((t, i) => (
             <figure
               key={i}
-              className="bg-white rounded-[20px] p-7 border border-pebble-grey/20 card-lift relative"
+              className="bg-white rounded-[18px] p-5 sm:p-6 border border-pebble-grey/20 card-lift relative"
             >
-              <div className="absolute -top-4 left-7 text-6xl font-fredoka text-groomr-gold leading-none">
+              <div className="absolute -top-3 left-5 text-5xl font-fredoka text-groomr-gold leading-none">
                 &ldquo;
               </div>
-              <blockquote className="text-deep-slate font-nunito text-lg leading-relaxed pt-4">
+              <blockquote className="text-deep-slate font-nunito text-sm sm:text-base leading-relaxed pt-3">
                 {t.text}
               </blockquote>
-              <figcaption className="mt-5 pt-5 border-t border-pebble-grey/10">
+              <figcaption className="mt-4 pt-4 border-t border-pebble-grey/10">
                 <p className="font-bold text-sm text-deep-slate">{t.name}</p>
                 <p className="text-xs text-pebble-grey">{t.biz}</p>
               </figcaption>

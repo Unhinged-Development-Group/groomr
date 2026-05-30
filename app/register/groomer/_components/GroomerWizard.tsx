@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSignIn, useClerk } from "@clerk/nextjs";
 import { Info, AlertCircle, Eye, EyeOff, CreditCard } from "lucide-react";
@@ -175,6 +175,11 @@ export function GroomerWizard({
   const isLast   = step === STEPS.length - 1;
   const progress = ((step + 1) / STEPS.length) * 100;
 
+  // Scroll to top whenever the active step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   /* ── Step 0 validation ── */
   const step0Valid = (() => {
     if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim()) return false;
@@ -340,7 +345,7 @@ export function GroomerWizard({
           <div className="space-y-1 mb-6">
             <Eyebrow>List your business</Eyebrow>
             <h1 className="font-fredoka text-3xl text-deep-slate">
-              5 minutes.<br />That&apos;s all.
+              10 minutes.<br />That&apos;s all.
             </h1>
           </div>
           <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-2">
@@ -539,7 +544,7 @@ export function GroomerWizard({
                   const on = form.selectedServices.includes(name);
                   return (
                     <div key={name} className={cn(
-                      "flex items-center gap-3 p-4 rounded-2xl border-2 transition-colors",
+                      "flex items-center gap-2 px-3 py-2.5 rounded-2xl border-2 transition-colors",
                       on ? "bg-alabaster-cream border-deep-slate" : "bg-white border-pebble-grey/20"
                     )}>
                       <button onClick={() => toggleService(name)} aria-pressed={on}
@@ -549,14 +554,16 @@ export function GroomerWizard({
                         )}>
                         {on && <CheckIcon size={14} />}
                       </button>
-                      <p className="font-bold text-deep-slate flex-1 text-sm">{name}</p>
-                      <div className={cn("flex items-center gap-1.5 shrink-0", !on && "invisible pointer-events-none")}>
-                        <span className="text-pebble-grey font-bold text-sm">£</span>
-                        <input type="number" value={form.servicePrices[name] ?? ""} placeholder="0"
-                          onChange={(e) => set("servicePrices", { ...form.servicePrices, [name]: +e.target.value })}
-                          className="field w-20 text-right py-2 text-sm" min="0" step="1"
-                          tabIndex={on ? 0 : -1} aria-label={`Price for ${name}`} />
-                      </div>
+                      <p className="font-bold text-deep-slate flex-1 text-sm min-w-0 truncate">{name}</p>
+                      {on && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-pebble-grey font-bold text-sm">£</span>
+                          <input type="number" value={form.servicePrices[name] ?? ""} placeholder="0"
+                            onChange={(e) => set("servicePrices", { ...form.servicePrices, [name]: +e.target.value })}
+                            className="field w-16 text-right py-1.5 text-sm" min="0" step="1"
+                            aria-label={`Price for ${name}`} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -564,17 +571,17 @@ export function GroomerWizard({
               <div className="space-y-2">
                 <p className="text-xs font-bold text-deep-slate uppercase tracking-wider">Additional services</p>
                 {form.customServices.map((svc) => (
-                  <div key={svc.id} className="flex items-center gap-3 p-4 rounded-2xl border-2 bg-alabaster-cream border-deep-slate">
+                  <div key={svc.id} className="flex items-center gap-2 px-3 py-2.5 rounded-2xl border-2 bg-alabaster-cream border-deep-slate">
                     <div className="w-6 h-6 rounded-md bg-deep-slate border-2 border-deep-slate flex items-center justify-center shrink-0">
                       <CheckIcon size={14} className="text-alabaster-cream" />
                     </div>
                     <input className="flex-1 bg-transparent font-bold text-deep-slate text-sm outline-none border-none placeholder-pebble-grey/50 min-w-0"
                       value={svc.name} onChange={(e) => updateCustomService(svc.id, "name", e.target.value)} placeholder="Service name" />
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
                       <span className="text-pebble-grey font-bold text-sm">£</span>
                       <input type="number" value={svc.price || ""}
                         onChange={(e) => updateCustomService(svc.id, "price", +e.target.value)}
-                        placeholder="0" className="field w-20 text-right py-2 text-sm" min="0" step="1" aria-label="Custom service price" />
+                        placeholder="0" className="field w-16 text-right py-1.5 text-sm" min="0" step="1" aria-label="Custom service price" />
                     </div>
                     <button onClick={() => removeCustomService(svc.id)}
                       className="text-pebble-grey hover:text-muted-terracotta transition-colors focus-ring rounded p-1 shrink-0" aria-label="Remove service">
@@ -714,26 +721,25 @@ export function GroomerWizard({
 
               {/* ── Stripe Connect info ── */}
               <div className="rounded-2xl overflow-hidden border border-deep-slate/15">
-                <div className="bg-deep-slate px-5 py-4 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-groomr-gold flex items-center justify-center shrink-0">
+                <div className="bg-deep-slate px-5 py-4 flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-groomr-gold flex items-center justify-center shrink-0 mt-0.5">
                     <CreditCard size={20} className="text-deep-slate" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0">
                     <p className="font-fredoka text-lg text-white leading-tight">Payments via Stripe Connect</p>
-                    <p className="text-xs text-white/55 font-nunito mt-0.5">Set up from your dashboard after launching</p>
+                    <span className="inline-block mt-1.5 text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white/70 px-2.5 py-1 rounded-full">
+                      Required to go live
+                    </span>
+                    <p className="text-xs text-white/55 font-nunito mt-1.5">Set up from your dashboard after launching</p>
                   </div>
-                  <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white/70 px-2.5 py-1 rounded-full">
-                    Required to go live
-                  </span>
                 </div>
-                <div className="bg-alabaster-cream px-5 py-4 space-y-2">
+                <div className="bg-alabaster-cream px-5 py-4">
                   <p className="text-sm font-nunito text-deep-slate leading-relaxed">
                     Groomr uses <span className="font-bold">Stripe Connect</span> to process booking payments and send your weekly payouts.
                     You&apos;ll need a Stripe account to accept bookings — it takes about 5 minutes and you&apos;ll need your bank details and photo ID to hand.
                   </p>
-                  <p className="text-xs text-pebble-grey font-nunito">
+                  <p className="text-xs text-pebble-grey font-nunito mt-2">
                     Find the setup under <span className="font-bold text-deep-slate">Dashboard → Financials</span> once you&apos;ve launched.
-                    You can still list your profile and receive enquiries before connecting.
                   </p>
                 </div>
               </div>
@@ -961,8 +967,7 @@ export function GroomerWizard({
               <div className="bg-deep-slate text-alabaster-cream rounded-2xl p-5">
                 <p className="font-fredoka text-xl">You&apos;re ready.</p>
                 <p className="text-sage-leaf text-sm mt-1">
-                  Hit launch and your profile goes live in your area.
-                  <span className="text-alabaster-cream/50"> Complete verification and Stripe Connect from your dashboard whenever you&apos;re ready.</span>
+                  Hit launch to be taken to your profile setup. Your profile won&apos;t go live until you open for bookings.
                 </p>
               </div>
 

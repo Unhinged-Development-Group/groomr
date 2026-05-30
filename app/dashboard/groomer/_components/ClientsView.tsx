@@ -231,7 +231,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search by dog or owner name…"
+            placeholder="Search clients…"
             className="flex-1 bg-transparent px-3 py-2 text-sm font-bold text-deep-slate placeholder:text-pebble-grey/70 outline-none"
           />
           {query && (

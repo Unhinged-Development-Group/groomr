@@ -82,7 +82,9 @@ export function ActionBar({
 
   function handleContact() {
     if (isLoaded && isSignedIn) {
-      router.push(`/dashboard/owner/messages?groomer=${groomerId}`);
+      // /dashboard/messages checks the user's role and redirects to the
+      // correct messages page (owner or groomer), preserving ?groomer=
+      router.push(`/dashboard/messages?groomer=${groomerId}`);
     } else {
       setContactOpen(true);
     }

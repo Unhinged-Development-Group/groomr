@@ -3,9 +3,15 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getGroomerMessageThreads, getGroomerBookingsForMessaging } from "@/app/actions/messages";
 import { MessagesClient } from "./_components/MessagesClient";
 
-export default async function MessagesPage() {
+interface Props {
+  searchParams: Promise<{ groomer?: string }>;
+}
+
+export default async function MessagesPage({ searchParams }: Props) {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
+
+  const { groomer: initialGroomerId } = await searchParams;
 
   const [{ threads, profileId }, bookings] = await Promise.all([
     getGroomerMessageThreads(),
@@ -20,7 +26,12 @@ export default async function MessagesPage() {
         </h1>
       </header>
 
-      <MessagesClient initialThreads={threads} initialBookings={bookings} profileId={profileId} />
+      <MessagesClient
+        initialThreads={threads}
+        initialBookings={bookings}
+        profileId={profileId}
+        initialGroomerId={initialGroomerId ?? null}
+      />
     </div>
   );
 }

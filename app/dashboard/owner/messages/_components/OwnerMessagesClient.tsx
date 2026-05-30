@@ -8,6 +8,7 @@ import {
   sendMessage,
   markThreadRead,
   deleteThread,
+  getOrCreateConversationWithGroomer,
   type MessageThread,
   type MessageRow,
   type GroomerForMessaging,
@@ -130,38 +131,62 @@ export function OwnerMessagesClient({
     );
   });
 
-  // Auto-open groomer thread if ?groomer= param was supplied
+  // Auto-open (or create) a direct conversation when ?groomer= param supplied
   useEffect(() => {
     if (!initialGroomerId) return;
 
-    // Is there already a thread for this groomer?
+    // Already in thread list?
     const existing = threads.find((t) => t.groomerProfileId === initialGroomerId);
     if (existing) {
       setActiveId(existing.appointmentId);
       return;
     }
 
-    // Is there a booking we can use to start a chat?
-    const booking = initialBookings.find((b) => b.groomerProfileId === initialGroomerId);
-    if (booking) {
-      handleStartChat(booking);
-    }
+    // Create / find a direct conversation with this groomer
+    getOrCreateConversationWithGroomer(initialGroomerId).then((result) => {
+      if (result.error || !result.conversationId) return;
+      const { conversationId, otherProfileId, otherName, otherAvatarUrl } = result;
+
+      setThreads((prev) => {
+        // Might have arrived while loading — check again
+        if (prev.some((t) => t.appointmentId === conversationId)) return prev;
+        const stub: MessageThread = {
+          appointmentId:    conversationId!,
+          isDirect:         true,
+          scheduledAt:      new Date().toISOString(),
+          ownerName:        otherName ?? "Groomer",
+          ownerProfileId:   otherProfileId ?? "",
+          ownerAvatarUrl:   otherAvatarUrl ?? null,
+          groomerName:      otherName ?? "Groomer",
+          groomerProfileId: initialGroomerId,
+          groomerAvatarUrl: otherAvatarUrl ?? null,
+          dogName:          null,
+          lastMessage:      null,
+          lastMessageAt:    null,
+          unreadCount:      0,
+        };
+        return [stub, ...prev];
+      });
+      setActiveId(conversationId!);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialGroomerId]);
 
   // Load messages when thread changes
   useEffect(() => {
     if (!activeId) return;
+    const isDirect = threads.find((t) => t.appointmentId === activeId)?.isDirect ?? false;
     setLoadingMessages(true);
     setDeleteConfirming(false);
-    getMessagesForAppointment(activeId).then((msgs) => {
+    getMessagesForAppointment(activeId, isDirect).then((msgs) => {
       setMessages(msgs);
       setLoadingMessages(false);
-      markThreadRead(activeId);
+      markThreadRead(activeId, isDirect);
       setThreads((prev) =>
         prev.map((t) => (t.appointmentId === activeId ? { ...t, unreadCount: 0 } : t)),
       );
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId]);
 
   // Scroll to bottom on new messages
@@ -232,7 +257,8 @@ export function OwnerMessagesClient({
               : t,
           ),
         );
-        markThreadRead(activeId);
+        const isDirectNow = threads.find((t) => t.appointmentId === activeId)?.isDirect ?? false;
+        markThreadRead(activeId, isDirectNow);
       })
       .subscribe();
 
@@ -291,6 +317,7 @@ export function OwnerMessagesClient({
     }
     const stub: MessageThread = {
       appointmentId:    booking.appointmentId,
+      isDirect:         false,
       scheduledAt:      booking.scheduledAt,
       ownerName:        "",
       ownerProfileId:   profileId,
@@ -308,8 +335,9 @@ export function OwnerMessagesClient({
 
   async function handleDeleteThread() {
     if (!activeId) return;
+    const isDirect = threads.find((t) => t.appointmentId === activeId)?.isDirect ?? false;
     setIsDeleting(true);
-    const result = await deleteThread(activeId);
+    const result = await deleteThread(activeId, isDirect);
     setIsDeleting(false);
     if (result.error) return;
     const remaining = threads.filter((t) => t.appointmentId !== activeId);
@@ -322,6 +350,7 @@ export function OwnerMessagesClient({
   function handleSend() {
     const text = draft.trim();
     if (!text || !activeId) return;
+    const isDirect = threads.find((t) => t.appointmentId === activeId)?.isDirect ?? false;
     setDraft("");
     broadcastTyping(false);
 
@@ -345,7 +374,7 @@ export function OwnerMessagesClient({
     );
 
     startSendTransition(async () => {
-      const result = await sendMessage(activeId, text);
+      const result = await sendMessage(activeId, text, isDirect);
       if (result.error) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
       } else if (result.message) {

@@ -134,14 +134,14 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
       <div className="grid lg:grid-cols-3 gap-8">
         <section className="lg:col-span-2 space-y-6">
           {/* Headline */}
-          <div className="flex flex-wrap gap-4 items-baseline justify-between">
+          <div className="space-y-3">
             <div>
-              <p className="font-fredoka text-5xl text-deep-slate leading-none">
+              <p className="font-fredoka text-4xl sm:text-5xl text-deep-slate leading-none">
                 £{totalGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
-              <p className="text-pebble-grey font-bold mt-2">Total services booked</p>
+              <p className="text-pebble-grey font-bold mt-1.5">Total services booked</p>
             </div>
-            <div className="flex gap-4 text-right items-end">
+            <div className="flex gap-3 items-end flex-wrap">
               <div>
                 <p className="font-fredoka text-2xl text-deep-slate">{totalBookings}</p>
                 <p className="text-xs font-bold text-pebble-grey mt-1">Bookings</p>
@@ -150,9 +150,9 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                 <p className="font-fredoka text-2xl text-deep-slate">£{avgValue.toFixed(2)}</p>
                 <p className="text-xs font-bold text-pebble-grey mt-1">Avg value</p>
               </div>
-              <div className="bg-groomr-gold rounded-2xl px-4 py-2 text-center min-w-[110px]">
-                <p className="font-fredoka text-2xl text-deep-slate leading-none">£{payoutCycleNet.toFixed(2)}</p>
-                <p className="text-[10px] font-bold text-deep-slate/70 mt-1 uppercase tracking-wide">Payout {nextPayoutDate}</p>
+              <div className="bg-groomr-gold rounded-2xl px-3 sm:px-4 py-2 text-center">
+                <p className="font-fredoka text-xl sm:text-2xl text-deep-slate leading-none">£{payoutCycleNet.toFixed(2)}</p>
+                <p className="text-[10px] font-bold text-deep-slate/70 mt-1 uppercase tracking-wide whitespace-nowrap">Payout {nextPayoutDate}</p>
               </div>
             </div>
           </div>

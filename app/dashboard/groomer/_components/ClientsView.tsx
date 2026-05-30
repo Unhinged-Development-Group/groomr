@@ -225,8 +225,8 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         <h2 className="font-fredoka text-2xl text-deep-slate mt-1">{allClients.length} dogs · {allClients.filter(c => c.regular).length} regulars</h2>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-0 bg-white rounded-full p-1.5 flex items-center border border-pebble-grey/20 focus-within:ring-2 focus-within:ring-groomr-gold transition-shadow">
+      <div className="space-y-2">
+        <div className="w-full bg-white rounded-full p-1.5 flex items-center border border-pebble-grey/20 focus-within:ring-2 focus-within:ring-groomr-gold transition-shadow">
           <span className="pl-3 text-pebble-grey"><SearchIcon size={18} /></span>
           <input
             value={query}

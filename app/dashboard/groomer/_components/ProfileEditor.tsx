@@ -658,8 +658,9 @@ export function ProfileEditor({
                     row.isActive ? "border-deep-slate/20 bg-alabaster-cream" : "border-pebble-grey/15 bg-white opacity-60"
                   )}>
                     {/* Main hours row */}
-                    <div className="px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
+                    <div className="px-4 py-3 space-y-2">
+                      {/* Row 1: day toggle (left) + break button on mobile / full time row on desktop */}
+                      <div className="flex items-center justify-between gap-3">
                         {/* Day toggle */}
                         <button
                           onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
@@ -681,69 +682,69 @@ export function ProfileEditor({
                           <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
                         </button>
 
-                        {/* Time range + break toggle */}
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                          <input
-                            type="time"
-                            value={row.startTime}
-                            disabled={!row.isActive}
+                        {/* Desktop: time inputs + break button inline */}
+                        <div className="hidden sm:flex items-center gap-2">
+                          <input type="time" value={row.startTime} disabled={!row.isActive}
                             onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
-                            className="field py-1.5 text-sm flex-1 min-w-0 sm:flex-none sm:w-32 disabled:cursor-not-allowed"
-                          />
-                          <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
-                          <input
-                            type="time"
-                            value={row.endTime}
-                            disabled={!row.isActive}
+                            className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed" />
+                          <span className="text-xs font-bold text-pebble-grey">to</span>
+                          <input type="time" value={row.endTime} disabled={!row.isActive}
                             onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
-                            className="field py-1.5 text-sm flex-1 min-w-0 sm:flex-none sm:w-32 disabled:cursor-not-allowed"
-                          />
+                            className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed" />
                           {row.isActive && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                hasBreak
-                                  ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
-                                  : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })
-                              }
-                              className={cn(
-                                "shrink-0 text-[10px] font-bold px-2 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
-                                hasBreak
-                                  ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
-                                  : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate"
-                              )}
-                            >
+                            <button type="button"
+                              onClick={() => hasBreak
+                                ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
+                                : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })}
+                              className={cn("text-[10px] font-bold px-2.5 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
+                                hasBreak ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
+                                         : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate")}>
                               {hasBreak ? "− Break" : "+ Break"}
                             </button>
                           )}
                         </div>
+
+                        {/* Mobile: break button only (time inputs live in row 2) */}
+                        {row.isActive && (
+                          <button type="button"
+                            onClick={() => hasBreak
+                              ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
+                              : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })}
+                            className={cn("sm:hidden text-[10px] font-bold px-2 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
+                              hasBreak ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
+                                       : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate")}>
+                            {hasBreak ? "− Break" : "+ Break"}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Row 2: mobile-only time inputs (full remaining width) */}
+                      <div className="sm:hidden flex items-center gap-2 pl-10">
+                        <input type="time" value={row.startTime} disabled={!row.isActive}
+                          onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
+                          className="field py-1.5 text-sm flex-1 min-w-0 disabled:cursor-not-allowed" />
+                        <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
+                        <input type="time" value={row.endTime} disabled={!row.isActive}
+                          onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
+                          className="field py-1.5 text-sm flex-1 min-w-0 disabled:cursor-not-allowed" />
                       </div>
                     </div>
 
                     {/* Break row */}
                     {row.isActive && hasBreak && (
                       <div className="px-4 pb-3">
-                        <div className="flex items-center gap-1.5 pl-[52px] sm:pl-[80px]">
+                        <div className="flex items-center gap-2 pl-10 sm:pl-[80px]">
                           <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0">Break</span>
-                          <input
-                            type="time"
-                            value={row.breakStartTime ?? "12:00"}
+                          <input type="time" value={row.breakStartTime ?? "12:00"}
                             onChange={(e) => updateAvailability(dow, { breakStartTime: e.target.value })}
-                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28"
-                          />
+                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28" />
                           <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
-                          <input
-                            type="time"
-                            value={row.breakEndTime ?? "13:00"}
+                          <input type="time" value={row.breakEndTime ?? "13:00"}
                             onChange={(e) => updateAvailability(dow, { breakEndTime: e.target.value })}
-                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28"
-                          />
-                          <button
-                            type="button"
+                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28" />
+                          <button type="button"
                             onClick={() => applyBreakToAllDays(row.breakStartTime!, row.breakEndTime!)}
-                            className="hidden sm:inline text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap shrink-0"
-                            title="Apply this break time to all active days"
-                          >
+                            className="hidden sm:inline text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap shrink-0">
                             Copy to all days
                           </button>
                         </div>

@@ -33,6 +33,12 @@ interface ActionBarProps {
   services: Service[];
   availability: AvailabilityRow[];
   depositPolicy: { type: "none" | "percentage" | "full"; percentage: number | null };
+  /**
+   * "full"    — heart + contact + book in a row (default, used in old layout)
+   * "heart"   — just the heart button; parent handles positioning (banner overlay)
+   * "buttons" — just contact + book; renders inline
+   */
+  variant?: "full" | "heart" | "buttons";
 }
 
 export function ActionBar({
@@ -42,6 +48,7 @@ export function ActionBar({
   services,
   availability,
   depositPolicy,
+  variant = "full",
 }: ActionBarProps) {
   const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
@@ -73,42 +80,108 @@ export function ActionBar({
     setBusy(false);
   }
 
-  return (
+  function handleContact() {
+    if (isLoaded && isSignedIn) {
+      router.push(`/dashboard/owner/messages?groomer=${groomerId}`);
+    } else {
+      setContactOpen(true);
+    }
+  }
+
+  const heartButton = (
+    <button
+      onClick={toggleFavourite}
+      disabled={busy}
+      aria-label={saved ? "Remove from favourites" : "Save to favourites"}
+      className={cn(
+        "flex items-center justify-center w-10 h-10 rounded-full border transition-all focus-ring",
+        saved
+          ? "bg-muted-terracotta/10 border-muted-terracotta text-muted-terracotta"
+          : "bg-white border-pebble-grey/30 text-pebble-grey hover:border-muted-terracotta hover:text-muted-terracotta"
+      )}
+    >
+      <HeartIcon size={18} filled={saved} />
+    </button>
+  );
+
+  const ctaButtons = (
     <>
-      <div className="flex flex-col sm:flex-row gap-3">
+      <button
+        onClick={handleContact}
+        className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm focus-ring"
+      >
+        Contact
+      </button>
+      <button
+        onClick={() => setBookingOpen(true)}
+        className="btn-primary font-nunito font-bold py-2.5 px-6 rounded-full text-sm shadow-subtle focus-ring"
+      >
+        Book Now
+      </button>
+    </>
+  );
+
+  // Heart-only variant: used as banner overlay
+  if (variant === "heart") {
+    return (
+      <>
         <button
           onClick={toggleFavourite}
           disabled={busy}
           aria-label={saved ? "Remove from favourites" : "Save to favourites"}
           className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-full border transition-all focus-ring",
+            "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all focus-ring shadow-md backdrop-blur-sm",
             saved
-              ? "bg-muted-terracotta/10 border-muted-terracotta text-muted-terracotta"
-              : "bg-white border-pebble-grey/30 text-pebble-grey hover:border-muted-terracotta hover:text-muted-terracotta"
+              ? "bg-muted-terracotta/90 border-muted-terracotta text-white"
+              : "bg-white/85 border-white/60 text-pebble-grey hover:border-muted-terracotta hover:text-muted-terracotta"
           )}
         >
           <HeartIcon size={18} filled={saved} />
         </button>
+        <Toast message={toast} onDismiss={() => setToast(null)} />
+      </>
+    );
+  }
 
-        <button
-          onClick={() => {
-            if (isLoaded && isSignedIn) {
-              router.push(`/dashboard/owner/messages?groomer=${groomerId}`);
-            } else {
-              setContactOpen(true);
-            }
-          }}
-          className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm focus-ring"
-        >
-          Contact
-        </button>
+  // Buttons-only variant: Contact + Book, no heart
+  if (variant === "buttons") {
+    return (
+      <>
+        <div className="flex items-center gap-3 flex-wrap">
+          {ctaButtons}
+        </div>
+        <Toast message={toast} onDismiss={() => setToast(null)} />
+        {bookingOpen && (
+          <BookingFlow
+            groomerProfileId={groomerId}
+            groomerName={groomerName}
+            services={services}
+            availability={availability}
+            depositPolicy={depositPolicy}
+            onClose={() => setBookingOpen(false)}
+          />
+        )}
+        {contactOpen && isLoaded && (
+          <ContactModal
+            groomerName={groomerName}
+            groomerId={groomerId}
+            isSignedIn={!!isSignedIn}
+            prefillName={user?.fullName ?? ""}
+            prefillEmail={user?.primaryEmailAddress?.emailAddress ?? ""}
+            onClose={() => setContactOpen(false)}
+            onSent={() => setToast("Message sent! We'll let the groomer know.")}
+          />
+        )}
+      </>
+    );
+  }
 
-        <button
-          onClick={() => setBookingOpen(true)}
-          className="btn-primary font-nunito font-bold py-2.5 px-6 rounded-full text-sm shadow-subtle focus-ring"
-        >
-          Book Now
-        </button>
+  // Full variant (default): heart + contact + book
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row gap-3">
+        {heartButton}
+        {ctaButtons}
       </div>
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

@@ -138,7 +138,8 @@ export default async function GroomerProfilePage({
   };
 
   const bannerUrl = groomer.banner_image_url || groomer.gallery_images?.[0] || null;
-  const avatarUrl = groomer.profile_image_url || null;
+  // Use profile photo; fall back to banner/gallery so the avatar slot always has an image
+  const avatarUrl = groomer.profile_image_url || groomer.banner_image_url || groomer.gallery_images?.[0] || null;
 
   const hoursByDay = UK_DAY_ORDER.reduce<Record<number, AvailabilityRow>>(
     (acc, day) => {
@@ -159,7 +160,7 @@ export default async function GroomerProfilePage({
   return (
     <div className="min-h-screen bg-alabaster-cream">
 
-      {/* ── Hero banner ─────────────────────────────────────────────────────── */}
+      {/* ── Hero banner — heart overlaid top-right ──────────────────────────── */}
       <div className="h-52 sm:h-64 md:h-80 bg-sage-leaf/30 relative">
         {bannerUrl && (
           <Image
@@ -171,13 +172,25 @@ export default async function GroomerProfilePage({
             priority
           />
         )}
+        {/* Heart favourite — overlaid on banner */}
+        <div className="absolute top-4 right-4">
+          <ActionBar
+            groomerId={groomer.id}
+            groomerName={groomer.business_name}
+            initialSaved={initialSaved}
+            services={services}
+            availability={availability}
+            depositPolicy={depositPolicy}
+            variant="heart"
+          />
+        </div>
       </div>
 
-      {/* ── Name + CTAs — avatar overlaps banner, aligned with content ─────── */}
+      {/* ── Avatar + Name + CTAs ─────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
-        <div className="relative flex items-start gap-4 sm:gap-5 pt-2">
+        <div className="relative pt-2">
 
-          {/* Avatar — absolute so it straddles the banner, left-aligned with content */}
+          {/* Avatar — straddles banner */}
           <div className="absolute -top-14 md:-top-16 left-0 shrink-0">
             <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-sage-leaf/20 flex items-center justify-center">
               {avatarUrl ? (
@@ -196,59 +209,62 @@ export default async function GroomerProfilePage({
             </div>
           </div>
 
-          {/* Spacer — pushes name/CTAs past the avatar */}
-          <div className="w-28 md:w-36 shrink-0" aria-hidden="true" />
-
-          {/* Name / tagline / meta */}
-          <div className="flex-1 space-y-1.5 min-w-0">
-            <h1 className="font-fredoka text-2xl sm:text-3xl md:text-4xl text-deep-slate leading-tight">
-              {groomer.business_name}
-            </h1>
-            <div className="flex flex-wrap items-center gap-2">
-              {groomer.is_verified && (
-                <span className="bg-groomr-gold text-deep-slate text-xs font-bold px-3 py-1 rounded-full shrink-0">
-                  Verified
+          {/* Name / tagline / meta — offset past avatar */}
+          <div className="flex items-start gap-4 sm:gap-5">
+            <div className="w-28 md:w-36 shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <h1 className="font-fredoka text-2xl sm:text-3xl md:text-4xl text-deep-slate leading-tight">
+                {groomer.business_name}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2">
+                {groomer.is_verified && (
+                  <span className="bg-groomr-gold text-deep-slate text-xs font-bold px-3 py-1 rounded-full shrink-0">
+                    Verified
+                  </span>
+                )}
+                <span className="text-xs font-bold text-pebble-grey bg-pebble-grey/10 px-3 py-1 rounded-full shrink-0">
+                  {groomer.is_mobile ? "Mobile" : "Salon"}
                 </span>
+              </div>
+              {groomer.tagline && (
+                <p className="text-sm sm:text-base text-sage-leaf font-bold">{groomer.tagline}</p>
               )}
-              <span className="text-xs font-bold text-pebble-grey bg-pebble-grey/10 px-3 py-1 rounded-full shrink-0">
-                {groomer.is_mobile ? "Mobile" : "Salon"}
-              </span>
-            </div>
-
-            {groomer.tagline && (
-              <p className="text-sm sm:text-base text-sage-leaf font-bold">{groomer.tagline}</p>
-            )}
-
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-pebble-grey">
-              {(groomer.average_rating ?? 0) > 0 && (
-                <StarRow
-                  rating={groomer.average_rating!}
-                  count={groomer.total_reviews ?? undefined}
-                />
-              )}
-              <span className="flex items-center gap-1 font-bold">
-                <LocationPinIcon size={14} />
-                {groomer.city ?? groomer.postcode ?? "Location not set"}
-              </span>
-              {groomer.is_mobile && groomer.travel_radius_miles && (
-                <span className="font-bold">
-                  Travels up to {groomer.travel_radius_miles} miles
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-pebble-grey">
+                {(groomer.average_rating ?? 0) > 0 && (
+                  <StarRow
+                    rating={groomer.average_rating!}
+                    count={groomer.total_reviews ?? undefined}
+                  />
+                )}
+                <span className="flex items-center gap-1 font-bold">
+                  <LocationPinIcon size={14} />
+                  {groomer.city ?? groomer.postcode ?? "Location not set"}
                 </span>
-              )}
+                {groomer.is_mobile && groomer.travel_radius_miles && (
+                  <span className="font-bold">
+                    Travels up to {groomer.travel_radius_miles} miles
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* CTA buttons */}
-          <div className="shrink-0">
-            <ActionBar
-              groomerId={groomer.id}
-              groomerName={groomer.business_name}
-              initialSaved={initialSaved}
-              services={services}
-              availability={availability}
-              depositPolicy={depositPolicy}
-            />
+          {/* Contact + Book Now — below name, aligned with avatar left edge */}
+          <div className="flex items-start gap-4 sm:gap-5 mt-4">
+            <div className="w-28 md:w-36 shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <ActionBar
+                groomerId={groomer.id}
+                groomerName={groomer.business_name}
+                initialSaved={initialSaved}
+                services={services}
+                availability={availability}
+                depositPolicy={depositPolicy}
+                variant="buttons"
+              />
+            </div>
           </div>
+
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { HeartIcon, StarIcon, LocationPinIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +30,13 @@ interface GroomerCardProps {
 export function GroomerCard({ groomer, onView, onSave, saved, className }: GroomerCardProps) {
   return (
     <div
+      onClick={() => onView?.(groomer)}
+      role={onView ? "button" : undefined}
+      tabIndex={onView ? 0 : undefined}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onView?.(groomer); }}
       className={cn(
         "flex flex-col text-left bg-white rounded-xl overflow-hidden border border-pebble-grey/20 card-lift w-full",
+        onView ? "cursor-pointer" : "",
         className
       )}
     >
@@ -115,12 +121,13 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
             )}
           </div>
 
-          <button
-            onClick={() => onView?.(groomer)}
+          <Link
+            href={`/groomers/${groomer.id}`}
+            onClick={(e) => e.stopPropagation()}
             className="btn-secondary text-xs px-3 py-1.5 rounded-full font-bold focus-ring whitespace-nowrap"
           >
             View Profile
-          </button>
+          </Link>
         </div>
       </div>
     </div>

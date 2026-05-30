@@ -196,17 +196,17 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
 
             <div className="relative pt-20 pb-12 px-8 md:px-12 space-y-8">
               {/* Buttons — absolute so they sit in the avatar's lower half independent of name layout */}
-              <div className="absolute top-4 right-8 md:right-12 flex gap-3">
+              <div className="absolute top-4 right-5 md:right-12 flex gap-2">
                 <a
                   href={`/groomers/${groomer.id}`}
-                  className="btn-secondary font-nunito font-bold py-2.5 px-5 rounded-full text-sm text-center focus-ring"
+                  className="btn-secondary font-nunito font-bold py-1.5 px-3 sm:py-2.5 sm:px-5 rounded-full text-xs sm:text-sm text-center focus-ring whitespace-nowrap"
                 >
-                  View Full Profile
+                  View Profile
                 </a>
                 <button
                   onClick={() => setBookingOpen(true)}
                   disabled={loading}
-                  className="btn-primary font-nunito font-bold py-2.5 px-6 rounded-full text-sm shadow-subtle focus-ring disabled:opacity-60"
+                  className="btn-primary font-nunito font-bold py-1.5 px-3 sm:py-2.5 sm:px-6 rounded-full text-xs sm:text-sm shadow-subtle focus-ring disabled:opacity-60 whitespace-nowrap"
                 >
                   Book Now
                 </button>

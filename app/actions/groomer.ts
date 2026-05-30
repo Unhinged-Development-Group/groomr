@@ -47,14 +47,18 @@ export interface Payment {
 export interface Review {
   id: string;
   rating: number;
-  comment: string | null;
+  body: string | null;
   groomer_reply: string | null;
+  groomer_replied_at: string | null;
   created_at: string;
   appointment_id: string;
   appointments?: {
     service_snapshot_name: string;
     dogs?: { name: string };
-    profiles?: { first_name: string; last_name: string };
+  };
+  profiles?: {
+    full_name: string | null;
+    avatar_url: string | null;
   };
 }
 
@@ -159,9 +163,9 @@ export async function getGroomerReviews() {
       *,
       appointments (
         service_snapshot_name,
-        dogs (name),
-        profiles!appointments_owner_id_fkey (full_name)
-      )
+        dogs (name)
+      ),
+      profiles!reviews_owner_id_fkey (full_name, avatar_url)
     `)
     .in("appointment_id", appointmentIds)
     .order("created_at", { ascending: false });
@@ -454,7 +458,20 @@ export async function replyToReview(reviewId: string, text: string) {
 
   const { error } = await supabaseAdmin
     .from("reviews")
-    .update({ groomer_reply: text })
+    .update({ groomer_reply: text, groomer_replied_at: new Date().toISOString() })
+    .eq("id", reviewId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function deleteGroomerReply(reviewId: string) {
+  const ctx = await getGroomerContext();
+  if (!ctx) return { error: "Not authorized" };
+
+  const { error } = await supabaseAdmin
+    .from("reviews")
+    .update({ groomer_reply: null, groomer_replied_at: null })
     .eq("id", reviewId);
 
   if (error) return { error: error.message };

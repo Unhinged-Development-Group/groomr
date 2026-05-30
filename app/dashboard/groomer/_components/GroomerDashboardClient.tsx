@@ -381,7 +381,14 @@ export function GroomerDashboardClient({
       {tab === "bookings" && <BookingsView appointments={scopedAppointments} availability={editorData.availability} onBeginGroom={handleBeginGroom} activeGroomId={activeGroom?.appointmentId ?? null} />}
       {tab === "clients"  && <ClientsView appointments={scopedAppointments} />}
       {tab === "earnings" && <EarningsView payments={initialPayments} appointments={scopedAppointments} />}
-      {tab === "reviews"  && <ReviewsView reviews={initialReviews} />}
+      {tab === "reviews"  && (
+        <ReviewsView
+          reviews={initialReviews}
+          groomerProfileImageUrl={editorData.profileImageUrl}
+          groomerName={businessName}
+          groomerProfileId={editorData.groomerProfileId}
+        />
+      )}
       {tab === "profile"  && (
         <ProfileEditor
           groomerProfileId={editorData.groomerProfileId}

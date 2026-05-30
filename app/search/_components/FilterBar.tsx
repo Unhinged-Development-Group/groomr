@@ -122,8 +122,8 @@ export function FilterBar({ filters, sortBy, isGeoSearch, onFiltersChange, onSor
 
   return (
     <div className="w-full bg-white border-b border-pebble-grey/10">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center gap-3 border-t border-pebble-grey/10 py-3" ref={panelRef}>
+      <div className="max-w-7xl mx-auto px-6" ref={panelRef}>
+        <div className="flex items-center gap-3 border-t border-pebble-grey/10 py-3">
 
           {/* Toggle button */}
           <button

@@ -23,6 +23,7 @@ export interface Appointment {
 
   groomer_profiles?: {
     business_name: string;
+    profile_image_url: string | null;
     address_line_1: string | null;
     city: string | null;
     postcode: string | null;
@@ -58,6 +59,7 @@ export async function getOwnerAppointments(): Promise<Appointment[]> {
       *,
       groomer_profiles (
         business_name,
+        profile_image_url,
         address_line_1,
         city,
         postcode,

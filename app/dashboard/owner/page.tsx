@@ -68,7 +68,7 @@ export default async function OwnerDashboardPage() {
       {/* Header */}
       <div className="mb-10 space-y-2">
         <h1 className="font-fredoka text-4xl md:text-5xl text-deep-slate">
-          Hey, {firstName} 👋
+          Hey, {firstName}
         </h1>
       </div>
 

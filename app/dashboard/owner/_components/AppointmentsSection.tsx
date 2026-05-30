@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ClockIcon, PinIcon } from "@/components/ui/GroomrIcons";
 import type { Appointment } from "@/app/actions/appointments";
@@ -81,68 +82,83 @@ export function AppointmentsSection({
             <p className="font-nunito text-pebble-grey">No upcoming appointments found.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {upcoming.map((apt) => {
               const date = new Date(apt.scheduled_at);
               const month = date.toLocaleString("default", { month: "short" });
               const day = date.getDate();
+              const weekday = date.toLocaleString("default", { weekday: "short" });
               const timeString = date.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               });
+              const groomerName = apt.groomer_profiles?.business_name || "Groomer";
+              const groomerImg = apt.groomer_profiles?.profile_image_url ?? null;
+              const location = apt.groomer_profiles?.city || apt.groomer_profiles?.address_line_1 || null;
 
               return (
                 <div
                   key={apt.id}
-                  className="bg-white rounded-[12px] p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center border border-pebble-grey/20"
+                  className="bg-white rounded-[12px] p-4 flex gap-3 items-start border border-pebble-grey/20"
                 >
-                  <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-xl p-4 flex flex-col items-center min-w-[80px] shrink-0">
-                    <span className="font-nunito font-bold text-sage-leaf uppercase tracking-widest text-xs">
-                      {month}
-                    </span>
-                    <span className="font-fredoka text-3xl text-deep-slate leading-none mt-1">
-                      {day}
-                    </span>
-                  </div>
+                  {/* Groomer avatar */}
+                  <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-sage-leaf/15 focus-ring">
+                    {groomerImg ? (
+                      <Image src={groomerImg} alt={groomerName} width={44} height={44} className="object-cover w-full h-full" />
+                    ) : (
+                      <span className="flex items-center justify-center w-full h-full font-fredoka text-lg text-sage-leaf">
+                        {groomerName.charAt(0)}
+                      </span>
+                    )}
+                  </Link>
 
-                  <div className="flex-grow space-y-2">
-                    <span className="inline-block bg-groomr-gold/20 text-deep-slate text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
-                      {apt.status}
-                    </span>
-                    <h3 className="font-fredoka text-xl text-deep-slate">
-                      {apt.service_snapshot_name || "Grooming Service"} for {apt.dogs?.name}
-                    </h3>
-                    <p className="flex items-center gap-2 font-nunito text-sm text-pebble-grey">
-                      <ClockIcon size={14} />
-                      {timeString}
-                    </p>
-                    <p className="flex items-center gap-2 font-nunito text-sm text-pebble-grey">
-                      <PinIcon size={14} />
-                      <Link
-                        href={`/groomers/${apt.groomer_profile_id}`}
-                        className="hover:text-sage-leaf transition-colors focus-ring rounded"
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    {/* Service + date + status */}
+                    <div className="flex items-start gap-2">
+                      <p className="font-fredoka text-base text-deep-slate leading-tight flex-1 min-w-0">
+                        {apt.service_snapshot_name || "Grooming"} for {apt.dogs?.name}
+                        <span className="text-pebble-grey font-nunito font-normal text-xs ml-1.5">
+                          · {weekday} {day} {month}
+                        </span>
+                      </p>
+                      <span className="shrink-0 bg-groomr-gold/20 text-deep-slate text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        {apt.status}
+                      </span>
+                    </div>
+
+                    {/* Time + location */}
+                    <div className="flex items-center gap-3 mt-1 font-nunito text-xs text-pebble-grey flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <ClockIcon size={11} />
+                        {timeString}
+                      </span>
+                      {location && (
+                        <span className="flex items-center gap-1">
+                          <PinIcon size={11} />
+                          {location}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 mt-2.5">
+                      <button
+                        onClick={() => {
+                          setActiveAppointment(apt);
+                          setShowDetails(true);
+                        }}
+                        className="btn-primary font-nunito font-bold px-4 py-1.5 text-xs focus-ring"
                       >
-                        {apt.groomer_profiles?.business_name || "Groomer"}
-                      </Link>
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col gap-3 w-full sm:w-auto shrink-0">
-                    <button
-                      onClick={() => {
-                        setActiveAppointment(apt);
-                        setShowDetails(true);
-                      }}
-                      className="btn-primary font-nunito font-bold px-6 py-2.5 text-sm focus-ring"
-                    >
-                      View Details
-                    </button>
-                    <button
-                      onClick={() => openManage(apt)}
-                      className="text-sm font-bold text-pebble-grey hover:text-muted-terracotta transition-colors font-nunito text-center focus-ring rounded-full py-1"
-                    >
-                      Reschedule / Cancel
-                    </button>
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => openManage(apt)}
+                        className="text-xs font-bold text-pebble-grey hover:text-muted-terracotta transition-colors font-nunito focus-ring rounded-full py-1"
+                      >
+                        Reschedule / Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -163,7 +179,7 @@ export function AppointmentsSection({
             <p className="font-nunito text-pebble-grey">No past appointments found.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             {past.slice(0, 5).map((apt) => {
               const date = new Date(apt.scheduled_at);
               const dateString = date.toLocaleDateString("en-GB", {
@@ -173,26 +189,51 @@ export function AppointmentsSection({
               });
               const priceDisplay = apt.service_snapshot_price
                 ? `£${(apt.service_snapshot_price / 100).toFixed(2)}`
-                : "N/A";
+                : null;
+              const groomerName = apt.groomer_profiles?.business_name || "Groomer";
+              const groomerImg = apt.groomer_profiles?.profile_image_url ?? null;
+
+              // A past "confirmed" appointment should show as completed
+              const pastStatus =
+                apt.status === "cancelled" ? "Cancelled" :
+                apt.status === "no_show" ? "No-show" :
+                "Completed";
+              const statusColour =
+                pastStatus === "Cancelled" ? "bg-muted-terracotta/15 text-muted-terracotta" :
+                pastStatus === "No-show" ? "bg-pebble-grey/15 text-pebble-grey" :
+                "bg-sage-leaf/15 text-sage-leaf";
 
               return (
                 <div
                   key={apt.id}
-                  className="bg-white rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-pebble-grey/20"
+                  className="bg-white rounded-xl p-3.5 flex items-center gap-3 border border-pebble-grey/20"
                 >
-                  <div className="space-y-1">
-                    <p className="font-bold text-deep-slate font-nunito">
-                      {apt.service_snapshot_name || "Service"}
-                      <span className="text-pebble-grey font-normal"> | </span>
-                      <Link
-                        href={`/groomers/${apt.groomer_profile_id}`}
-                        className="text-pebble-grey font-normal hover:text-sage-leaf transition-colors focus-ring rounded"
-                      >
-                        {apt.groomer_profiles?.business_name}
-                      </Link>
-                    </p>
-                    <p className="text-sm text-pebble-grey font-nunito">
-                      {dateString} · {apt.dogs?.name} · {priceDisplay} · Status: {apt.status}
+                  {/* Groomer avatar */}
+                  <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-sage-leaf/15 focus-ring">
+                    {groomerImg ? (
+                      <Image src={groomerImg} alt={groomerName} width={40} height={40} className="object-cover w-full h-full" />
+                    ) : (
+                      <span className="flex items-center justify-center w-full h-full font-fredoka text-base text-sage-leaf">
+                        {groomerName.charAt(0)}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-nunito font-bold text-sm text-deep-slate truncate flex-1">
+                        {apt.service_snapshot_name || "Service"}
+                        <span className="font-normal text-pebble-grey"> for {apt.dogs?.name}</span>
+                      </p>
+                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${statusColour}`}>
+                        {pastStatus}
+                      </span>
+                    </div>
+                    <p className="text-xs text-pebble-grey font-nunito mt-0.5">
+                      {dateString}
+                      {groomerName && <span> · <Link href={`/groomers/${apt.groomer_profile_id}`} className="hover:text-sage-leaf transition-colors">{groomerName}</Link></span>}
+                      {priceDisplay && <span> · {priceDisplay}</span>}
                     </p>
                   </div>
                 </div>

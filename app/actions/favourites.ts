@@ -11,9 +11,10 @@ export interface FavouriteGroomer {
   
   groomer_profiles?: {
     business_name: string;
+    profile_image_url: string | null;
     average_rating: number | null;
     total_reviews: number | null;
-    // Potentially images if there is a cover image logic
+    city: string | null;
   } | null;
 }
 
@@ -40,8 +41,10 @@ export async function getFavouriteGroomers(): Promise<FavouriteGroomer[]> {
       *,
       groomer_profiles (
         business_name,
+        profile_image_url,
         average_rating,
-        total_reviews
+        total_reviews,
+        city
       )
     `)
     .eq("owner_id", profileId)

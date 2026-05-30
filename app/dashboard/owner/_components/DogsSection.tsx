@@ -61,18 +61,18 @@ export function DogsSection({ initialDogs }: DogsSectionProps) {
           </p>
         </button>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {dogs.map(dog => (
             <DogCard key={dog.id} dog={dog} onEdit={openEdit} onDelete={handleDelete} />
           ))}
           <button
             onClick={openAdd}
-            className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-pebble-grey/25 rounded-[20px] p-6 min-h-[120px] hover:border-sage-leaf/50 hover:bg-sage-leaf/5 transition-colors focus-ring group"
+            className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-pebble-grey/25 rounded-[16px] p-4 min-h-[90px] hover:border-sage-leaf/50 hover:bg-sage-leaf/5 transition-colors focus-ring group"
           >
-            <div className="w-10 h-10 rounded-full bg-pebble-grey/10 group-hover:bg-sage-leaf/10 flex items-center justify-center transition-colors">
-              <PlusIcon size={20} className="text-pebble-grey group-hover:text-sage-leaf transition-colors" />
+            <div className="w-8 h-8 rounded-full bg-pebble-grey/10 group-hover:bg-sage-leaf/10 flex items-center justify-center transition-colors">
+              <PlusIcon size={16} className="text-pebble-grey group-hover:text-sage-leaf transition-colors" />
             </div>
-            <span className="font-nunito font-bold text-sm text-pebble-grey group-hover:text-sage-leaf transition-colors">Add dog</span>
+            <span className="font-nunito font-bold text-xs text-pebble-grey group-hover:text-sage-leaf transition-colors">Add dog</span>
           </button>
         </div>
       )}

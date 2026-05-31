@@ -106,7 +106,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
 
         setServices((svcRes.data ?? []) as Service[]);
         setAvailability((availRes.data ?? []) as AvailabilityRow[]);
-        setReviews((revRes.data ?? []) as Review[]);
+        setReviews((revRes.data ?? []) as unknown as Review[]);
         setGalleryImages((portfolioRes.data ?? []).map((p) => p.url as string));
         setDepositPolicy({
           type: groomer.depositType,

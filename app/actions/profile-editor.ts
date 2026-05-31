@@ -101,12 +101,13 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
         photoIdVerified: false,
         employersLiabilityVerified: false,
       },
+      portfolioCount: 0,
     };
   }
 
   const groomerProfileId = groomerProfile.id as string;
 
-  const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }] = await Promise.all([
+  const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }, { count: portfolioCount }] = await Promise.all([
     supabaseAdmin
       .from("services")
       .select("id, name, duration_minutes, price_pence, sort_order")
@@ -123,6 +124,10 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       .select("id, name, role, since_year, email, user_id, invite_status, average_rating, total_reviews, public_slug")
       .eq("groomer_profile_id", groomerProfileId)
       .order("created_at"),
+    supabaseAdmin
+      .from("portfolio_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("groomer_profile_id", groomerProfileId),
   ]);
 
   const profile: ProfileFormData = {
@@ -153,24 +158,39 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   }));
 
   const availMap = new Map(
-    (availabilityRows ?? []).map((a) => [
-      a.day_of_week as number,
-      {
-        startTime:      a.start_time as string,
-        endTime:        a.end_time as string,
-        isActive:       a.is_active as boolean,
-        breakStartTime: (a.break_start_time as string | null) ?? null,
-        breakEndTime:   (a.break_end_time   as string | null) ?? null,
-      },
-    ])
+    (availabilityRows ?? []).map((a) => {
+      const rawStart = (a.break_start_time as string | null) ?? null;
+      const rawEnd   = (a.break_end_time   as string | null) ?? null;
+      // New format: break_start_time is a JSON array e.g. '[{"s":"12:00","e":"13:00"}]'
+      // Legacy format: plain "HH:MM" strings in both columns
+      let breaks: import("@/types/groomer-dashboard").BreakSlot[] = [];
+      if (rawStart?.startsWith("[")) {
+        try {
+          breaks = (JSON.parse(rawStart) as { s: string; e: string }[]).map((b) => ({
+            startTime: b.s,
+            endTime: b.e,
+          }));
+        } catch { /* ignore bad JSON */ }
+      } else if (rawStart && rawEnd) {
+        breaks = [{ startTime: rawStart, endTime: rawEnd }];
+      }
+      return [
+        a.day_of_week as number,
+        {
+          startTime: a.start_time as string,
+          endTime:   a.end_time   as string,
+          isActive:  a.is_active  as boolean,
+          breaks,
+        },
+      ] as const;
+    })
   );
   const availability: AvailabilityRow[] = Array.from({ length: 7 }, (_, dow) => ({
-    dayOfWeek:      dow,
-    startTime:      availMap.get(dow)?.startTime      ?? "09:00",
-    endTime:        availMap.get(dow)?.endTime        ?? "17:00",
-    isActive:       availMap.get(dow)?.isActive       ?? false,
-    breakStartTime: availMap.get(dow)?.breakStartTime ?? null,
-    breakEndTime:   availMap.get(dow)?.breakEndTime   ?? null,
+    dayOfWeek: dow,
+    startTime: availMap.get(dow)?.startTime ?? "09:00",
+    endTime:   availMap.get(dow)?.endTime   ?? "17:00",
+    isActive:  availMap.get(dow)?.isActive  ?? false,
+    breaks:    availMap.get(dow)?.breaks    ?? [],
   }));
 
   const team: TeamMemberRow[] = (teamRows ?? []).map((m) => ({
@@ -210,7 +230,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     employersLiabilityVerified:    (groomerProfile.employers_liability_doc_verified     as boolean) ?? false,
   };
 
-  return { groomerProfileId, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs };
+  return { groomerProfileId, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0 };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
@@ -418,8 +438,10 @@ export async function saveAvailability(
         start_time:         r.startTime,
         end_time:           r.endTime,
         is_active:          true,
-        break_start_time:   r.breakStartTime ?? null,
-        break_end_time:     r.breakEndTime   ?? null,
+        break_start_time:   r.breaks.length > 0
+          ? JSON.stringify(r.breaks.map((b) => ({ s: b.startTime, e: b.endTime })))
+          : null,
+        break_end_time:     null,
       }))
     );
     if (error) return { error: error.message };

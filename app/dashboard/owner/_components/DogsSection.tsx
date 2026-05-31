@@ -78,6 +78,7 @@ export function DogsSection({ initialDogs }: DogsSectionProps) {
       )}
 
       <AddDogModal
+        key={editing?.id ?? "new"}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSaved={handleSaved}

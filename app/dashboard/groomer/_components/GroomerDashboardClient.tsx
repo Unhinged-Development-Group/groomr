@@ -399,6 +399,7 @@ export function GroomerDashboardClient({
           initialTeam={editorData.team}
           viewerRole={editorData.viewerRole}
           initialVerificationDocs={editorData.verificationDocs}
+          portfolioCount={editorData.portfolioCount}
         />
       )}
 

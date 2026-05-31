@@ -135,14 +135,14 @@ export function AppointmentsSection({
                   <div className="flex-1 min-w-0">
                     {/* Groomer + status row */}
                     <div className="flex items-center gap-2">
-                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-6 h-6 rounded-full overflow-hidden shrink-0 bg-sage-leaf/15 focus-ring">
-                        {groomerImg ? (
-                          <Image src={groomerImg} alt={groomerName} width={24} height={24} className="object-cover w-full h-full" />
-                        ) : (
-                          <span className="flex items-center justify-center w-full h-full font-fredoka text-xs text-sage-leaf">
-                            {groomerName.charAt(0)}
-                          </span>
-                        )}
+                      <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-6 h-6 rounded-full overflow-hidden shrink-0 bg-alabaster-cream focus-ring">
+                        <Image
+                          src={groomerImg || "/assets/default-profile-photo.svg"}
+                          alt={groomerName}
+                          width={24}
+                          height={24}
+                          className={groomerImg ? "object-cover w-full h-full" : "object-contain w-full h-full p-0.5"}
+                        />
                       </Link>
                       <Link href={`/groomers/${apt.groomer_profile_id}`} className="text-xs font-nunito font-bold text-pebble-grey hover:text-sage-leaf transition-colors truncate flex-1 focus-ring rounded">
                         {groomerName}
@@ -239,14 +239,14 @@ export function AppointmentsSection({
                   className="bg-white rounded-xl p-3.5 flex items-center gap-3 border border-pebble-grey/20"
                 >
                   {/* Groomer avatar */}
-                  <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-sage-leaf/15 focus-ring">
-                    {groomerImg ? (
-                      <Image src={groomerImg} alt={groomerName} width={40} height={40} className="object-cover w-full h-full" />
-                    ) : (
-                      <span className="flex items-center justify-center w-full h-full font-fredoka text-base text-sage-leaf">
-                        {groomerName.charAt(0)}
-                      </span>
-                    )}
+                  <Link href={`/groomers/${apt.groomer_profile_id}`} className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-alabaster-cream focus-ring">
+                    <Image
+                      src={groomerImg || "/assets/default-profile-photo.svg"}
+                      alt={groomerName}
+                      width={40}
+                      height={40}
+                      className={groomerImg ? "object-cover w-full h-full" : "object-contain w-full h-full p-1.5"}
+                    />
                   </Link>
 
                   {/* Content */}

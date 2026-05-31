@@ -37,20 +37,14 @@ export function FavouriteGroomersSection({ initialFavourites }: { initialFavouri
           {favourites.map(fav => (
             <div key={fav.id} className="bg-white rounded-[12px] p-5 border border-pebble-grey/20 card-lift flex items-center justify-between gap-4">
               <Link href={`/groomers/${fav.groomer_profile_id}`} className="flex items-center gap-4 min-w-0 flex-1 focus-ring rounded-xl">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-sage-leaf/15 shrink-0">
-                  {fav.groomer_profiles?.profile_image_url ? (
-                    <Image
-                      src={fav.groomer_profiles.profile_image_url}
-                      alt={fav.groomer_profiles.business_name}
-                      width={56}
-                      height={56}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sage-leaf font-fredoka text-xl">
-                      {fav.groomer_profiles?.business_name.charAt(0)}
-                    </div>
-                  )}
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-alabaster-cream shrink-0">
+                  <Image
+                    src={fav.groomer_profiles?.profile_image_url || "/assets/default-profile-photo.svg"}
+                    alt={fav.groomer_profiles?.business_name ?? "Groomer"}
+                    width={56}
+                    height={56}
+                    className={fav.groomer_profiles?.profile_image_url ? "object-cover w-full h-full" : "object-contain w-full h-full p-2"}
+                  />
                 </div>
                 <div>
                   <p className="font-bold text-deep-slate font-nunito hover:text-sage-leaf transition-colors">

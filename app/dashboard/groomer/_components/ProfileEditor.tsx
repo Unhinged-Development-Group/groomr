@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
@@ -9,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, deleteCoverPhoto, getProfileImageSignature, saveProfileImage, deleteProfileImage, toggleAcceptingBookings, getVerificationDocSignature, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
-import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow, VerificationDocs, VerificationDocType } from "@/types/groomer-dashboard";
+import type { ProfileFormData, ServiceRow, AvailabilityRow, BreakSlot, TeamMemberRow, VerificationDocs, VerificationDocType } from "@/types/groomer-dashboard";
 
 const SERVICE_TEMPLATES: Array<{ name: string; duration: number; price: number }> = [
   { name: "Bath & Brush",          duration: 45,  price: 3800 },
@@ -38,22 +39,23 @@ function SectionCard({
   headerRight,
   description,
   children,
-  defaultOpen = false,
+  open,
+  onToggle,
 }: {
   id?: string;
   eyebrow: string;
   headerRight?: React.ReactNode;
   description?: string;
   children: React.ReactNode;
-  defaultOpen?: boolean;
+  open: boolean;
+  onToggle: () => void;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
   return (
     <div id={id} className="bg-white border border-pebble-grey/20 rounded-[20px]">
       <div className="flex items-center justify-between gap-3 px-6 pt-5 pb-4">
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
+          onClick={onToggle}
           className="flex items-center gap-2 min-w-0 focus-ring rounded-lg py-0.5 group"
         >
           <Eyebrow>{eyebrow}</Eyebrow>
@@ -163,6 +165,7 @@ interface Props {
   initialTeam: TeamMemberRow[];
   viewerRole: "owner" | "team_member";
   initialVerificationDocs: VerificationDocs;
+  portfolioCount: number;
 }
 
 export function ProfileEditor({
@@ -175,6 +178,7 @@ export function ProfileEditor({
   initialTeam,
   viewerRole,
   initialVerificationDocs,
+  portfolioCount,
 }: Props) {
   const [formData, setFormData] = useState<ProfileFormData>(initialProfile);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialCoverPhotoUrl);
@@ -207,6 +211,13 @@ export function ProfileEditor({
   const docInputRefs = useRef<Partial<Record<VerificationDocType, HTMLInputElement | null>>>({});
   const [hasEmployeesSaving, setHasEmployeesSaving] = useState(false);
 
+  // Accordion state — only one section open at a time
+  type SectionId = "basics" | "operation" | "services" | "availability" | "team" | "verification" | "danger";
+  const [openSection, setOpenSection] = useState<SectionId>("basics");
+  function toggleSection(id: SectionId) {
+    setOpenSection((cur) => (cur === id ? ("" as SectionId) : id));
+  }
+
   const isDirty = useMemo(
     () =>
       JSON.stringify(formData) !== JSON.stringify(initialProfile) ||
@@ -218,6 +229,42 @@ export function ProfileEditor({
   function updateAvailability(dayOfWeek: number, patch: Partial<AvailabilityRow>) {
     setAvailability((arr) =>
       arr.map((row) => (row.dayOfWeek === dayOfWeek ? { ...row, ...patch } : row))
+    );
+  }
+
+  function addBreak(dayOfWeek: number) {
+    setAvailability((arr) =>
+      arr.map((row) =>
+        row.dayOfWeek === dayOfWeek
+          ? { ...row, breaks: [...row.breaks, { startTime: "12:00", endTime: "13:00" }] }
+          : row
+      )
+    );
+  }
+
+  function updateBreak(dayOfWeek: number, index: number, patch: Partial<BreakSlot>) {
+    setAvailability((arr) =>
+      arr.map((row) =>
+        row.dayOfWeek === dayOfWeek
+          ? { ...row, breaks: row.breaks.map((b, i) => (i === index ? { ...b, ...patch } : b)) }
+          : row
+      )
+    );
+  }
+
+  function removeBreak(dayOfWeek: number, index: number) {
+    setAvailability((arr) =>
+      arr.map((row) =>
+        row.dayOfWeek === dayOfWeek
+          ? { ...row, breaks: row.breaks.filter((_, i) => i !== index) }
+          : row
+      )
+    );
+  }
+
+  function applyBreaksToAllDays(breaks: BreakSlot[]) {
+    setAvailability((arr) =>
+      arr.map((row) => (row.isActive ? { ...row, breaks } : row))
     );
   }
 
@@ -235,14 +282,6 @@ export function ProfileEditor({
       ...arr,
       { id: null, name: tpl.name, duration: tpl.duration, price: tpl.price, sortOrder: arr.length },
     ]);
-  }
-
-  function applyBreakToAllDays(breakStartTime: string, breakEndTime: string) {
-    setAvailability((arr) =>
-      arr.map((row) =>
-        row.isActive ? { ...row, breakStartTime, breakEndTime } : row
-      )
-    );
   }
 
   async function handleCoverPhotoUpload(file: File) {
@@ -437,8 +476,18 @@ export function ProfileEditor({
         <SectionCard
           id="section-basics"
           eyebrow="Business basics"
+          open={openSection === "basics"}
+          onToggle={() => toggleSection("basics")}
           headerRight={
-            <button className="text-xs font-bold text-deep-slate text-link shrink-0">Preview public profile →</button>
+            <Link
+              href={`/groomers/${groomerProfileId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs font-bold text-deep-slate text-link shrink-0"
+            >
+              Preview public profile →
+            </Link>
           }
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -501,7 +550,7 @@ export function ProfileEditor({
 
         {/* Mode + radius — owner only */}
         {viewerRole === "owner" && (
-          <SectionCard id="section-operation" eyebrow="How you operate">
+          <SectionCard id="section-operation" eyebrow="How you operate" open={openSection === "operation"} onToggle={() => toggleSection("operation")}>
             <div className="grid grid-cols-2 gap-3">
               {([
                 { k: "studio", l: "Studio (clients come to us)", sub: "Fixed location" },
@@ -565,6 +614,8 @@ export function ProfileEditor({
           <SectionCard
             id="section-services"
             eyebrow="Services & pricing"
+            open={openSection === "services"}
+            onToggle={() => toggleSection("services")}
             headerRight={
               <button
                 onClick={() =>
@@ -704,6 +755,8 @@ export function ProfileEditor({
             id="section-availability"
             eyebrow="Hours & availability"
             description="Set the days and hours owners can book appointments."
+            open={openSection === "availability"}
+            onToggle={() => toggleSection("availability")}
           >
             {/* Accepting bookings toggle */}
             <BookingsToggle
@@ -738,21 +791,19 @@ export function ProfileEditor({
                   startTime: "09:00",
                   endTime: "17:00",
                   isActive: false,
-                  breakStartTime: null,
-                  breakEndTime: null,
+                  breaks: [],
                 };
-                const hasBreak = !!(row.breakStartTime && row.breakEndTime);
                 return (
                   <div key={dow} className={cn(
                     "rounded-xl border transition-colors",
-                    row.isActive ? "border-deep-slate/20 bg-alabaster-cream" : "border-pebble-grey/15 bg-white opacity-60"
+                    row.isActive ? "border-deep-slate/20 bg-alabaster-cream" : "border-pebble-grey/15 bg-white"
                   )}>
-                    {/* Main hours row */}
-                    <div className="px-4 py-3 space-y-2">
-                      {/* Row 1: day toggle (left) + break button on mobile / full time row on desktop */}
-                      <div className="flex items-center justify-between gap-3">
-                        {/* Day toggle */}
+                    {/* Main hours row — always visible, aligned on all days */}
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        {/* Toggle + day label — fixed width */}
                         <button
+                          type="button"
                           onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
                           className={cn(
                             "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors shrink-0",
@@ -769,75 +820,64 @@ export function ProfileEditor({
                               row.isActive ? "left-4" : "left-0.5"
                             )} />
                           </span>
-                          <span className="font-bold text-sm w-8">{DAY_LABELS[dow]}</span>
+                          <span className={cn("font-bold text-sm w-8 shrink-0", !row.isActive && "opacity-40")}>
+                            {DAY_LABELS[dow]}
+                          </span>
                         </button>
 
-                        {/* Desktop: time inputs + break button inline */}
-                        <div className="hidden sm:flex items-center gap-2">
-                          <input type="time" value={row.startTime} disabled={!row.isActive}
-                            onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
-                            className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed" />
-                          <span className="text-xs font-bold text-pebble-grey">to</span>
-                          <input type="time" value={row.endTime} disabled={!row.isActive}
-                            onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
-                            className="field py-1.5 text-sm w-32 disabled:cursor-not-allowed" />
+                        {/* Time inputs — always visible, disabled when inactive */}
+                        <input type="time" value={row.startTime} disabled={!row.isActive}
+                          onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
+                          className={cn("field py-1.5 text-sm w-28 sm:w-32 min-w-0 disabled:cursor-not-allowed", !row.isActive && "opacity-40")} />
+                        <span className={cn("text-xs font-bold text-pebble-grey shrink-0", !row.isActive && "opacity-40")}>to</span>
+                        <input type="time" value={row.endTime} disabled={!row.isActive}
+                          onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
+                          className={cn("field py-1.5 text-sm w-28 sm:w-32 min-w-0 disabled:cursor-not-allowed", !row.isActive && "opacity-40")} />
+
+                        {/* + Break button — only when active */}
+                        <div className="ml-auto shrink-0">
                           {row.isActive && (
                             <button type="button"
-                              onClick={() => hasBreak
-                                ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
-                                : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })}
-                              className={cn("text-[10px] font-bold px-2.5 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
-                                hasBreak ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
-                                         : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate")}>
-                              {hasBreak ? "− Break" : "+ Break"}
+                              onClick={() => addBreak(dow)}
+                              className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate transition-colors focus-ring whitespace-nowrap">
+                              + Break
                             </button>
                           )}
                         </div>
-
-                        {/* Mobile: break button only (time inputs live in row 2) */}
-                        {row.isActive && (
-                          <button type="button"
-                            onClick={() => hasBreak
-                              ? updateAvailability(dow, { breakStartTime: null, breakEndTime: null })
-                              : updateAvailability(dow, { breakStartTime: "12:00", breakEndTime: "13:00" })}
-                            className={cn("sm:hidden text-[10px] font-bold px-2 py-1 rounded-full border transition-colors focus-ring whitespace-nowrap",
-                              hasBreak ? "border-deep-slate/30 text-deep-slate bg-white hover:bg-pebble-grey/10"
-                                       : "border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate")}>
-                            {hasBreak ? "− Break" : "+ Break"}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Row 2: mobile-only time inputs (full remaining width) */}
-                      <div className="sm:hidden flex items-center gap-2 pl-10">
-                        <input type="time" value={row.startTime} disabled={!row.isActive}
-                          onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
-                          className="field py-1.5 text-sm flex-1 min-w-0 disabled:cursor-not-allowed" />
-                        <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
-                        <input type="time" value={row.endTime} disabled={!row.isActive}
-                          onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
-                          className="field py-1.5 text-sm flex-1 min-w-0 disabled:cursor-not-allowed" />
                       </div>
                     </div>
 
-                    {/* Break row */}
-                    {row.isActive && hasBreak && (
-                      <div className="px-4 pb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0 w-10 text-right">Break</span>
-                          <input type="time" value={row.breakStartTime ?? "12:00"}
-                            onChange={(e) => updateAvailability(dow, { breakStartTime: e.target.value })}
-                            className="field py-1 text-xs flex-1 min-w-0" />
-                          <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
-                          <input type="time" value={row.breakEndTime ?? "13:00"}
-                            onChange={(e) => updateAvailability(dow, { breakEndTime: e.target.value })}
-                            className="field py-1 text-xs flex-1 min-w-0" />
-                          <button type="button"
-                            onClick={() => applyBreakToAllDays(row.breakStartTime!, row.breakEndTime!)}
-                            className="hidden sm:inline text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap shrink-0">
-                            Copy to all days
-                          </button>
-                        </div>
+                    {/* Break rows — one per break */}
+                    {row.isActive && row.breaks.length > 0 && (
+                      <div className="px-4 pb-3 space-y-2">
+                        {row.breaks.map((brk, bi) => (
+                          <div key={bi} className="flex items-center gap-2 sm:gap-3">
+                            <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0 w-[4.5rem] text-right">
+                              Break {row.breaks.length > 1 ? bi + 1 : ""}
+                            </span>
+                            <input type="time" value={brk.startTime}
+                              onChange={(e) => updateBreak(dow, bi, { startTime: e.target.value })}
+                              className="field py-1 text-xs w-28 sm:w-32 min-w-0" />
+                            <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
+                            <input type="time" value={brk.endTime}
+                              onChange={(e) => updateBreak(dow, bi, { endTime: e.target.value })}
+                              className="field py-1 text-xs w-28 sm:w-32 min-w-0" />
+                            <div className="ml-auto flex items-center gap-2 shrink-0">
+                              {bi === 0 && (
+                                <button type="button"
+                                  onClick={() => applyBreaksToAllDays(row.breaks)}
+                                  className="hidden sm:inline text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap">
+                                  Copy to all days
+                                </button>
+                              )}
+                              <button type="button"
+                                onClick={() => removeBreak(dow, bi)}
+                                className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-deep-slate/20 text-deep-slate bg-white hover:bg-pebble-grey/10 transition-colors focus-ring whitespace-nowrap">
+                                − Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -852,6 +892,8 @@ export function ProfileEditor({
           id="section-team"
           eyebrow="Team groomers"
           description="Each groomer gets their own public profile under your business."
+          open={openSection === "team"}
+          onToggle={() => toggleSection("team")}
           headerRight={
             viewerRole === "owner" ? (
               <button
@@ -970,6 +1012,8 @@ export function ProfileEditor({
             id="section-verification"
             eyebrow="Verification documents"
             description="Reviewed by the Groomr team before your profile is listed publicly. Accepted formats: PDF, JPG, PNG."
+            open={openSection === "verification"}
+            onToggle={() => toggleSection("verification")}
           >
             {/* Employees toggle */}
             <div className="mb-4 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4">
@@ -1244,7 +1288,7 @@ export function ProfileEditor({
               { label: "Services added",     done: services.length > 0,                                                                                           sectionId: "section-services"     },
               { label: "Availability set",   done: availability.some((r) => r.isActive),                                                                          sectionId: "section-availability" },
               { label: "Location set",       done: formData.businessMode === "studio" ? !!formData.addressLine1 : formData.radius > 0,                           sectionId: "section-operation"    },
-              { label: "Portfolio photos",   done: false,                                                                                                         sectionId: "section-cover"        },
+              { label: "Portfolio photos",   done: portfolioCount > 0,                                                                                            sectionId: "section-cover"        },
               { label: "Insurance document", done: !!verificationDocs.insuranceDocUrl,                                  sectionId: "section-verification" },
               { label: "Photo ID",          done: verificationDocs.photoIdVerified || !!verificationDocs.photoIdDocUrl, sectionId: "section-verification" },
             ];

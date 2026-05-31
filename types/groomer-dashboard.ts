@@ -25,13 +25,17 @@ export interface ServiceRow {
   sortOrder: number;
 }
 
+export interface BreakSlot {
+  startTime: string;  // "HH:MM"
+  endTime: string;    // "HH:MM"
+}
+
 export interface AvailabilityRow {
-  dayOfWeek: number;          // 0=Sun, 1=Mon … 6=Sat
-  startTime: string;          // "HH:MM"
-  endTime: string;            // "HH:MM"
+  dayOfWeek: number;   // 0=Sun, 1=Mon … 6=Sat
+  startTime: string;   // "HH:MM"
+  endTime: string;     // "HH:MM"
   isActive: boolean;
-  breakStartTime: string | null;  // null = no break configured
-  breakEndTime: string | null;
+  breaks: BreakSlot[];
 }
 
 export interface TeamMemberRow {
@@ -82,4 +86,5 @@ export interface ProfileEditorInitialData {
   averageRating: number | null;
   totalReviews: number | null;
   verificationDocs: VerificationDocs;
+  portfolioCount: number;
 }

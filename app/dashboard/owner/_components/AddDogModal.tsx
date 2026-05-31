@@ -6,6 +6,7 @@ import { Camera } from "lucide-react";
 import { ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
+import { BreedSelect } from "@/components/ui/BreedSelect";
 import { addDog, updateDog, getCloudinarySignature } from "@/app/actions/dogs";
 import type { Dog } from "@/app/actions/dogs";
 
@@ -46,7 +47,9 @@ export function AddDogModal({ open, onClose, onSaved, editing }: AddDogModalProp
   const [healthNotes, setHealthNotes] = useState(editing?.health_notes ?? "");
   const [photoUrl, setPhotoUrl]       = useState(editing?.profile_image_url ?? "");
   const [photoPreview, setPhotoPreview] = useState(editing?.profile_image_url ?? "");
-  const [showNotes, setShowNotes]     = useState(false);
+  const [showNotes, setShowNotes]     = useState(
+    !!(editing?.coat_notes || editing?.temperament_notes || editing?.health_notes)
+  );
   const [uploading, setUploading]     = useState(false);
   const [error, setError]             = useState("");
   const [isPending, startTransition]  = useTransition();
@@ -176,13 +179,7 @@ export function AddDogModal({ open, onClose, onSaved, editing }: AddDogModalProp
         {/* Breed */}
         <div>
           <label className="block text-sm font-nunito font-semibold text-deep-slate mb-1.5">Breed</label>
-          <input
-            type="text"
-            value={breed}
-            onChange={e => setBreed(e.target.value)}
-            placeholder="e.g. Cockapoo"
-            className="w-full border border-pebble-grey/30 rounded-xl px-4 py-2.5 text-deep-slate font-nunito text-sm focus:outline-none focus:ring-2 focus:ring-sage-leaf/40 bg-white"
-          />
+          <BreedSelect value={breed} onChange={setBreed} />
         </div>
 
         {/* DOB */}

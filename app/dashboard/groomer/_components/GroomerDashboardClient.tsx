@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/GroomrIcons";
+import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon, UploadIcon } from "@/components/ui/GroomrIcons";
 import { toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { BookingsView } from "./BookingsView";
 import { ClientsView } from "./ClientsView";
@@ -85,6 +85,90 @@ function BookingStatusChip({
         {pending ? "Saving…" : open ? "Open · Accepting bookings" : "Closed · Not accepting bookings"}
       </span>
     </button>
+  );
+}
+
+function ShareBar({ groomerProfileId }: { groomerProfileId: string }) {
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [calOpen, setCalOpen] = useState(false);
+  const [calCopied, setCalCopied] = useState(false);
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+  const bookingUrl = `${appUrl}/groomers/${groomerProfileId}`;
+  const calendarHttpUrl = `${appUrl}/api/calendar/${groomerProfileId}`;
+  const calendarWebcalUrl = calendarHttpUrl.replace(/^https?/, "webcal");
+
+  function copyBookingLink() {
+    navigator.clipboard.writeText(bookingUrl);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2500);
+  }
+
+  function copyCalLink() {
+    navigator.clipboard.writeText(calendarHttpUrl);
+    setCalCopied(true);
+    setTimeout(() => setCalCopied(false), 2500);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {/* Booking link */}
+      <div className="flex items-center gap-1.5 bg-white border border-pebble-grey/20 rounded-full px-3 py-1.5 max-w-xs">
+        <span className="text-xs text-pebble-grey font-bold truncate min-w-0">
+          groomr.com/groomers/{groomerProfileId.slice(0, 8)}…
+        </span>
+        <button
+          onClick={copyBookingLink}
+          title="Copy booking link"
+          className="shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full transition-colors hover:bg-pebble-grey/10 focus-ring"
+        >
+          {linkCopied ? (
+            <><CheckIcon size={13} className="text-sage-leaf" /><span className="text-sage-leaf">Copied</span></>
+          ) : (
+            <><UploadIcon size={13} className="text-pebble-grey" /><span className="text-pebble-grey">Share</span></>
+          )}
+        </button>
+      </div>
+
+      {/* Calendar sync */}
+      <div className="relative">
+        <button
+          onClick={() => setCalOpen((o) => !o)}
+          className="flex items-center gap-1.5 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors px-3 py-1.5 rounded-full border border-pebble-grey/20 bg-white hover:bg-alabaster-cream focus-ring"
+        >
+          <CalendarIcon size={13} />
+          Sync calendar
+        </button>
+        {calOpen && (
+          <div className="absolute top-full mt-2 left-0 z-30 bg-white border border-pebble-grey/20 rounded-2xl shadow-modal p-3 w-64 space-y-2">
+            <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em] pb-1 border-b border-pebble-grey/10">
+              Subscribe to your booking calendar
+            </p>
+            <a
+              href={calendarWebcalUrl}
+              className="flex items-center gap-2 text-sm font-bold text-deep-slate hover:text-sage-leaf transition-colors py-1"
+            >
+              <CalendarIcon size={15} /> Add to Apple Calendar
+            </a>
+            <a
+              href={`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(calendarWebcalUrl)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-bold text-deep-slate hover:text-sage-leaf transition-colors py-1"
+            >
+              <CalendarIcon size={15} /> Add to Google Calendar
+            </a>
+            <div className="flex items-center gap-2 border-t border-pebble-grey/10 pt-2">
+              <span className="text-xs text-pebble-grey font-bold truncate flex-1">{calendarHttpUrl.replace("http://", "").replace("https://", "")}</span>
+              <button onClick={copyCalLink} className="shrink-0 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors flex items-center gap-1">
+                {calCopied ? <CheckIcon size={12} className="text-sage-leaf" /> : <UploadIcon size={12} />}
+                {calCopied ? "Copied" : "Copy URL"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -317,6 +401,11 @@ export function GroomerDashboardClient({
           )}
         </p>
       </header>
+
+      {/* Share & sync bar — owner only */}
+      {viewerRole === "owner" && (
+        <ShareBar groomerProfileId={editorData.groomerProfileId} />
+      )}
 
       {/* Stat strip */}
       <section className="grid grid-cols-4 gap-2 sm:gap-4">

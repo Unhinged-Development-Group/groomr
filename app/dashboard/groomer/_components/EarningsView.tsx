@@ -2,6 +2,7 @@
 
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { useState, useMemo } from "react";
+import { CloseIcon } from "@/components/ui/GroomrIcons";
 import type { Payment } from "@/app/actions/groomer";
 
 const GROOMR_COMMISSION_RATE = 0.08; // 8% — 0% for founding groomers for first 6 months
@@ -19,6 +20,7 @@ function getPayoutWindow(now: Date): { lastMonday: Date; nextMonday: Date } {
 
 export function EarningsView({ payments: _payments, appointments = [] }: { payments: Payment[]; appointments?: any[] }) {
   const [range, setRange] = useState<"7d" | "30d" | "ytd" | "all">("all");
+  const [selectedActivity, setSelectedActivity] = useState<any | null>(null);
 
   const now = new Date();
   const { lastMonday, nextMonday } = getPayoutWindow(now);
@@ -293,14 +295,19 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
         {/* Activity sidebar */}
         <aside className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 flex flex-col h-[500px]">
           <Eyebrow className="mb-4">Activity</Eyebrow>
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2">
+          <div className="flex-1 overflow-y-auto space-y-1 pr-2 -mr-2">
             {activityList.length === 0 ? (
               <p className="text-sm text-pebble-grey font-bold">No bookings in this period.</p>
             ) : activityList.map(a => {
               const isFuture = new Date(a.scheduled_at) > now;
               const price = (a.service_snapshot_price || 0) / 100;
+              const isSelected = selectedActivity?.id === a.id;
               return (
-                <div key={a.id} className="flex justify-between items-start text-sm border-b border-pebble-grey/10 pb-4 last:border-0 last:pb-0">
+                <button
+                  key={a.id}
+                  onClick={() => setSelectedActivity(isSelected ? null : a)}
+                  className={`w-full text-left flex justify-between items-start text-sm rounded-xl px-3 py-3 transition-colors focus-ring ${isSelected ? "bg-alabaster-cream" : "hover:bg-alabaster-cream/60"}`}
+                >
                   <div className="min-w-0 pr-3">
                     <p className="font-bold text-deep-slate truncate">{a.service_snapshot_name || "Appointment"}</p>
                     <p className="text-xs text-pebble-grey mt-0.5">
@@ -316,11 +323,76 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                       {isFuture ? "Upcoming" : "Completed"}
                     </p>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
         </aside>
+
+        {/* Activity detail panel */}
+        {selectedActivity && (() => {
+          const a = selectedActivity;
+          const isFuture = new Date(a.scheduled_at) > now;
+          const gross = (a.service_snapshot_price || 0) / 100;
+          const net = gross * (1 - GROOMR_COMMISSION_RATE);
+          const duration = a.service_snapshot_duration as number | null;
+          const dog = a.dogs as { name?: string; breed?: string; coat_type?: string } | null;
+          const owner = a.profiles as { full_name?: string; email?: string; phone?: string } | null;
+          const statusColour: Record<string, string> = {
+            confirmed: "text-sage-leaf bg-sage-leaf/10",
+            completed: "text-deep-slate bg-pebble-grey/10",
+            pending: "text-groomr-gold bg-groomr-gold/20",
+            no_show: "text-muted-terracotta bg-muted-terracotta/10",
+          };
+          return (
+            <div className="lg:col-span-3 bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <Eyebrow className="mb-1">Booking detail</Eyebrow>
+                  <h3 className="font-fredoka text-xl text-deep-slate leading-tight">
+                    {a.service_snapshot_name || "Appointment"}
+                  </h3>
+                </div>
+                <button onClick={() => setSelectedActivity(null)} className="text-pebble-grey hover:text-deep-slate transition-colors mt-1 focus-ring rounded-full">
+                  <CloseIcon size={18} />
+                </button>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">Date & time</p>
+                  <p className="font-bold text-deep-slate">
+                    {new Date(a.scheduled_at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                  <p className="text-pebble-grey">
+                    {new Date(a.scheduled_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                    {duration ? ` · ${duration} min` : ""}
+                  </p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">Dog</p>
+                  <p className="font-bold text-deep-slate">{dog?.name || "—"}</p>
+                  {(dog?.breed || dog?.coat_type) && (
+                    <p className="text-pebble-grey capitalize">{[dog.breed, dog.coat_type].filter(Boolean).join(" · ")}</p>
+                  )}
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">Client</p>
+                  <p className="font-bold text-deep-slate">{owner?.full_name || "—"}</p>
+                  {owner?.email && <p className="text-pebble-grey text-xs truncate">{owner.email}</p>}
+                  {owner?.phone && <p className="text-pebble-grey text-xs">{owner.phone}</p>}
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">Earnings</p>
+                  <p className="font-fredoka text-xl text-deep-slate leading-none">£{gross.toFixed(2)}</p>
+                  <p className="text-pebble-grey text-xs">£{net.toFixed(2)} after commission</p>
+                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full capitalize mt-1 ${statusColour[a.status as string] ?? "text-pebble-grey bg-pebble-grey/10"}`}>
+                    {isFuture ? "Upcoming" : (a.status || "unknown")}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </section>
   );

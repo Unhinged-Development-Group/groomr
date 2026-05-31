@@ -799,15 +799,15 @@ export function ProfileEditor({
                     {/* Break row */}
                     {row.isActive && hasBreak && (
                       <div className="px-4 pb-3">
-                        <div className="flex items-center gap-2 pl-10 sm:pl-[80px]">
-                          <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0">Break</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0 w-10 text-right">Break</span>
                           <input type="time" value={row.breakStartTime ?? "12:00"}
                             onChange={(e) => updateAvailability(dow, { breakStartTime: e.target.value })}
-                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28" />
+                            className="field py-1 text-xs flex-1 min-w-0" />
                           <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
                           <input type="time" value={row.breakEndTime ?? "13:00"}
                             onChange={(e) => updateAvailability(dow, { breakEndTime: e.target.value })}
-                            className="field py-1 text-xs flex-1 min-w-0 sm:flex-none sm:w-28" />
+                            className="field py-1 text-xs flex-1 min-w-0" />
                           <button type="button"
                             onClick={() => applyBreakToAllDays(row.breakStartTime!, row.breakEndTime!)}
                             className="hidden sm:inline text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap shrink-0">

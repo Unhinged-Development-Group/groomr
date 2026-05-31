@@ -6,7 +6,7 @@ import { appointmentCancelledEmail } from "./appointment-cancelled";
 import { appointmentReminderEmail } from "./appointment-reminder";
 import { reviewReminderEmail } from "./review-reminder";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://groomr.co";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://groomr.uk";
 
 // ---------------------------------------------------------------------------
 // Internal data-fetch helpers
@@ -68,10 +68,13 @@ async function fetchAppointmentEmailData(
 
   const ownerEmail = ownerProfile?.email ?? "";
   const ownerName  = ownerProfile?.full_name ?? "there";
-  const dogName    = (data.dogs as { name: string } | null)?.name ?? "your dog";
+  const dogName    = (data.dogs as { name: string }[] | null)?.[0]?.name ?? "your dog";
   const salonName  = gp?.business_name ?? "the salon";
 
-  const groomerOwnerProfile = gp?.profiles;
+  const groomerOwnerProfileArr = gp?.profiles;
+  const groomerOwnerProfile = Array.isArray(groomerOwnerProfileArr)
+    ? groomerOwnerProfileArr[0] ?? null
+    : groomerOwnerProfileArr ?? null;
   const groomerEmail = groomerOwnerProfile?.email ?? "";
   const groomerName  = groomerOwnerProfile?.full_name ?? "there";
 
@@ -251,13 +254,15 @@ export async function sendAppointmentReminders(): Promise<{ sent: number; errors
   let errors = 0;
 
   for (const apt of appointments) {
-    const ownerProfile = apt.profiles as { full_name: string | null; email: string | null } | null;
-    const gp = apt.groomer_profiles as {
+    const ownerProfileRaw = apt.profiles as { full_name: string | null; email: string | null }[] | null;
+    const ownerProfile = Array.isArray(ownerProfileRaw) ? ownerProfileRaw[0] ?? null : ownerProfileRaw;
+    const gpRaw = apt.groomer_profiles as {
       business_name: string | null;
       address_line_1: string | null;
       city: string | null;
       postcode: string | null;
-    } | null;
+    }[] | null;
+    const gp = Array.isArray(gpRaw) ? gpRaw[0] ?? null : gpRaw;
 
     const ownerEmail = ownerProfile?.email;
     if (!ownerEmail) continue;
@@ -266,7 +271,7 @@ export async function sendAppointmentReminders(): Promise<{ sent: number; errors
 
     const email = appointmentReminderEmail({
       ownerName:   ownerProfile?.full_name ?? "there",
-      dogName:     (apt.dogs as { name: string } | null)?.name ?? "your dog",
+      dogName:     (apt.dogs as { name: string }[] | null)?.[0]?.name ?? "your dog",
       salonName:   gp?.business_name ?? "your groomer",
       serviceName: apt.service_snapshot_name ?? "Grooming",
       scheduledAt: new Date(apt.scheduled_at),
@@ -326,14 +331,18 @@ export async function sendReviewReminders(): Promise<{ sent: number; errors: num
     const reviews = apt.reviews as { id: string }[] | null;
     if (reviews && reviews.length > 0) continue; // already reviewed
 
-    const ownerProfile = apt.profiles as { full_name: string | null; email: string | null } | null;
+    const ownerProfileRaw = apt.profiles as { full_name: string | null; email: string | null }[] | null;
+    const ownerProfile = Array.isArray(ownerProfileRaw) ? ownerProfileRaw[0] ?? null : ownerProfileRaw;
     const ownerEmail = ownerProfile?.email;
     if (!ownerEmail) continue;
 
+    const gpRaw = apt.groomer_profiles as { business_name: string | null }[] | null;
+    const gp2 = Array.isArray(gpRaw) ? gpRaw[0] ?? null : gpRaw;
+
     const email = reviewReminderEmail({
       ownerName:     ownerProfile?.full_name ?? "there",
-      dogName:       (apt.dogs as { name: string } | null)?.name ?? "your dog",
-      salonName:     (apt.groomer_profiles as { business_name: string | null } | null)?.business_name ?? "your groomer",
+      dogName:       (apt.dogs as { name: string }[] | null)?.[0]?.name ?? "your dog",
+      salonName:     gp2?.business_name ?? "your groomer",
       appointmentId: apt.id,
       appUrl:        APP_URL,
     });

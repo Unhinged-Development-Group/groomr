@@ -416,6 +416,7 @@ STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
 RESEND_API_KEY=
+CRON_SECRET=                        # Random secret — set in Vercel env vars; used to authenticate /api/cron/notifications
 NEXT_PUBLIC_POSTHOG_KEY=
 ```
 
@@ -489,7 +490,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 10. **Clerk invite email** — customise branded template in Clerk Dashboard (Emails → Invitation) with Groomr copy and logo
 
 ### Planned (Phase 3+)
-- Resend transactional emails
+- ~~Resend transactional emails~~ **Done (31 May 2026)** — booking confirmation (owner + groomer), cancellation notice (both parties), 24h appointment reminder, review request after completion. Cron route `/api/cron/notifications` runs hourly via `vercel.json`. Requires `RESEND_API_KEY`, `CRON_SECRET`, and `NEXT_PUBLIC_APP_URL` in Vercel env vars. FROM address: `notifications@groomr.uk` (verify domain in Resend dashboard).
 - PostHog analytics + feature flags
 - `disputes` table (needs adding to schema)
 - Google Calendar sync for groomers

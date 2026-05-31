@@ -66,7 +66,7 @@ export function groomCompleteEmail({
 
           <p style="margin:0;font-size:13px;color:#95a5a6;text-align:center;">
             You're receiving this because you have an appointment at ${salonName}.<br>
-            Powered by <a href="https://groomr.co" style="color:#88a096;text-decoration:none;">Groomr</a>
+            Powered by <a href="https://groomr.uk" style="color:#88a096;text-decoration:none;">Groomr</a>
           </p>
 
         </td></tr>
@@ -76,7 +76,7 @@ export function groomCompleteEmail({
 </body>
 </html>`;
 
-  const text = `Hi ${ownerName},\n\n${dogName} is ready for pickup at ${salonName}!\n\n${salonPhone ? `Call us on ${salonPhone} if you have any questions.\n\n` : ""}Powered by Groomr — https://groomr.co`;
+  const text = `Hi ${ownerName},\n\n${dogName} is ready for pickup at ${salonName}!\n\n${salonPhone ? `Call us on ${salonPhone} if you have any questions.\n\n` : ""}Powered by Groomr — https://groomr.uk`;
 
   return { subject, html, text };
 }

@@ -31,7 +31,7 @@ interface Review {
   rating: number;
   body: string | null;
   created_at: string;
-  profiles: { full_name: string | null }[] | null;
+  profiles: { full_name: string | null } | null;
 }
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -87,7 +87,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
             .order("day_of_week", { ascending: true }),
           supabase
             .from("reviews")
-            .select("id, rating, body, created_at, profiles(full_name)")
+            .select("id, rating, body, created_at, profiles!reviews_owner_id_fkey(full_name)")
             .eq("groomer_profile_id", groomer.id)
             .eq("is_visible", true)
             .order("created_at", { ascending: false })
@@ -518,7 +518,7 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-bold text-sm text-deep-slate">
-            {review.profiles?.[0]?.full_name ?? "Anonymous"}
+            {review.profiles?.full_name ?? "Anonymous"}
           </p>
           <p className="text-xs text-pebble-grey">{date}</p>
         </div>

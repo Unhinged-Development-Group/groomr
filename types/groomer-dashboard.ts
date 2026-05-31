@@ -1,5 +1,6 @@
 export interface ProfileFormData {
   businessName: string;
+  tagline: string;
   ownerName: string;       // profiles.full_name — read-only in the form
   email: string;
   phone: string;

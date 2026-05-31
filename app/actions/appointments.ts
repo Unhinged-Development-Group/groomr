@@ -34,6 +34,8 @@ export interface Appointment {
   dogs?: {
     name: string;
   } | null;
+
+  reviews?: { id: string }[] | null;
 }
 
 async function getProfileId(clerkId: string): Promise<string | null> {
@@ -66,9 +68,8 @@ export async function getOwnerAppointments(): Promise<Appointment[]> {
         average_rating,
         total_reviews
       ),
-      dogs (
-        name
-      )
+      dogs (name),
+      reviews (id)
     `)
     .eq("owner_id", profileId)
     .order("scheduled_at", { ascending: false });
@@ -136,5 +137,40 @@ export async function cancelAppointment(appointmentId: string, reason: string): 
     return { ok: false, error: "Failed to cancel appointment" };
   }
 
+  return { ok: true };
+}
+
+export async function submitOwnerReview(
+  appointmentId: string,
+  rating: number,
+  body: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, error: "Not authenticated" };
+
+  const profileId = await getProfileId(userId);
+  if (!profileId) return { ok: false, error: "Profile not found" };
+
+  // Verify ownership and get groomer_profile_id in one query
+  const { data: apt } = await supabaseAdmin
+    .from("appointments")
+    .select("groomer_profile_id")
+    .eq("id", appointmentId)
+    .eq("owner_id", profileId)
+    .maybeSingle();
+
+  if (!apt) return { ok: false, error: "Appointment not found" };
+
+  const { error } = await supabaseAdmin
+    .from("reviews")
+    .insert({
+      appointment_id: appointmentId,
+      owner_id: profileId,
+      groomer_profile_id: apt.groomer_profile_id,
+      rating,
+      body: body.trim() || null,
+    });
+
+  if (error) return { ok: false, error: error.message };
   return { ok: true };
 }

@@ -399,6 +399,7 @@ export function GroomerDashboardClient({
           initialAvailability={editorData.availability}
           initialTeam={editorData.team}
           viewerRole={editorData.viewerRole}
+          initialVerificationDocs={editorData.verificationDocs}
         />
       )}
 

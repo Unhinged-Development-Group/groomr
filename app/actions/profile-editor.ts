@@ -17,6 +17,8 @@ import type {
   ServiceRow,
   AvailabilityRow,
   TeamMemberRow,
+  VerificationDocs,
+  VerificationDocType,
 } from "@/types/groomer-dashboard";
 
 export async function loadProfileEditorData(): Promise<ProfileEditorInitialData> {
@@ -86,6 +88,14 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       teamMemberId,
       averageRating: null,
       totalReviews: null,
+      verificationDocs: {
+        insuranceDocUrl: null,
+        qualificationDocUrl: null,
+        firstAidDocUrl: null,
+        photoIdDocUrl: null,
+        employersLiabilityDocUrl: null,
+        hasEmployees: null,
+      },
     };
   }
 
@@ -175,7 +185,16 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const averageRating   = (groomerProfile.average_rating    as number | null) ?? null;
   const totalReviews    = (groomerProfile.total_reviews     as number | null) ?? null;
 
-  return { groomerProfileId, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews };
+  const verificationDocs: VerificationDocs = {
+    insuranceDocUrl:          (groomerProfile.insurance_doc_url           as string | null) ?? null,
+    qualificationDocUrl:      (groomerProfile.qualification_doc_url       as string | null) ?? null,
+    firstAidDocUrl:           (groomerProfile.first_aid_doc_url           as string | null) ?? null,
+    photoIdDocUrl:            (groomerProfile.photo_id_doc_url            as string | null) ?? null,
+    employersLiabilityDocUrl: (groomerProfile.employers_liability_doc_url as string | null) ?? null,
+    hasEmployees:             (groomerProfile.has_employees               as boolean | null) ?? null,
+  };
+
+  return { groomerProfileId, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
@@ -466,6 +485,92 @@ export async function getProfileImageSignature(groomerProfileId: string): Promis
     apiKey: process.env.CLOUDINARY_API_KEY!,
     folder,
   };
+}
+
+export async function getVerificationDocSignature(groomerProfileId: string): Promise<{
+  signature: string;
+  timestamp: number;
+  cloudName: string;
+  apiKey: string;
+  folder: string;
+}> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) throw new Error("Not authenticated");
+
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = `groomr/verification/${groomerProfileId}`;
+  const signature = cloudinary.utils.api_sign_request(
+    { folder, timestamp },
+    process.env.CLOUDINARY_API_SECRET!
+  );
+
+  return {
+    signature,
+    timestamp,
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+    apiKey: process.env.CLOUDINARY_API_KEY!,
+    folder,
+  };
+}
+
+const DOC_COLUMN: Record<VerificationDocType, string> = {
+  insurance:          "insurance_doc_url",
+  qualification:      "qualification_doc_url",
+  firstAid:           "first_aid_doc_url",
+  photoId:            "photo_id_doc_url",
+  employersLiability: "employers_liability_doc_url",
+};
+
+export async function saveVerificationDoc(
+  groomerProfileId: string,
+  docType: VerificationDocType,
+  url: string
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  const column = DOC_COLUMN[docType];
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ [column]: url, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id);
+
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function saveHasEmployees(
+  groomerProfileId: string,
+  hasEmployees: boolean
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ has_employees: hasEmployees, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id);
+
+  if (error) return { error: error.message };
+  return {};
 }
 
 export async function saveProfileImage(

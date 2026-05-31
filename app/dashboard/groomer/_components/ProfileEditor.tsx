@@ -6,10 +6,10 @@ import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, getProfileImageSignature, saveProfileImage, toggleAcceptingBookings } from "@/app/actions/profile-editor";
+import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, getProfileImageSignature, saveProfileImage, toggleAcceptingBookings, getVerificationDocSignature, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
-import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow } from "@/types/groomer-dashboard";
+import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow, VerificationDocs, VerificationDocType } from "@/types/groomer-dashboard";
 
 const SERVICE_TEMPLATES: Array<{ name: string; duration: number; price: number }> = [
   { name: "Bath & Brush",          duration: 45,  price: 3800 },
@@ -134,6 +134,20 @@ function BookingsToggle({
   );
 }
 
+const VERIFICATION_DOC_META: Array<{
+  type: VerificationDocType;
+  label: string;
+  hint: string;
+  stateKey: keyof VerificationDocs;
+  required: boolean | "if_employees";
+}> = [
+  { type: "insurance",          label: "Public liability insurance",     hint: "Certificate showing current cover",          stateKey: "insuranceDocUrl",          required: true           },
+  { type: "qualification",      label: "Grooming qualifications",        hint: "City & Guilds, iPET, LANTRA, or equivalent", stateKey: "qualificationDocUrl",      required: false          },
+  { type: "firstAid",           label: "Pet first aid certificate",      hint: "Must not be expired",                        stateKey: "firstAidDocUrl",           required: false          },
+  { type: "photoId",            label: "Photo ID",                       hint: "Passport or driving licence",                stateKey: "photoIdDocUrl",            required: true           },
+  { type: "employersLiability", label: "Employers' liability insurance", hint: "Required if you employ staff",               stateKey: "employersLiabilityDocUrl", required: "if_employees" },
+];
+
 // Mon-first display order (UK standard): 1,2,3,4,5,6,0
 const AVAIL_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -147,6 +161,7 @@ interface Props {
   initialAvailability: AvailabilityRow[];
   initialTeam: TeamMemberRow[];
   viewerRole: "owner" | "team_member";
+  initialVerificationDocs: VerificationDocs;
 }
 
 export function ProfileEditor({
@@ -158,6 +173,7 @@ export function ProfileEditor({
   initialAvailability,
   initialTeam,
   viewerRole,
+  initialVerificationDocs,
 }: Props) {
   const [formData, setFormData] = useState<ProfileFormData>(initialProfile);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialCoverPhotoUrl);
@@ -183,6 +199,10 @@ export function ProfileEditor({
   const prePauseRef = useRef<AvailabilityRow[] | null>(null);
   const [savedAvailability, setSavedAvailability] = useState(initialAvailability);
   const router = useRouter();
+  const [verificationDocs, setVerificationDocs] = useState<VerificationDocs>(initialVerificationDocs);
+  const [docUploading, setDocUploading] = useState<Partial<Record<VerificationDocType, boolean>>>({});
+  const docInputRefs = useRef<Partial<Record<VerificationDocType, HTMLInputElement | null>>>({});
+  const [hasEmployeesSaving, setHasEmployeesSaving] = useState(false);
 
   const isDirty = useMemo(
     () =>
@@ -302,6 +322,42 @@ export function ProfileEditor({
     setFormData(initialProfile);
     setServices(savedServices);
     setAvailability(savedAvailability);
+  }
+
+  async function handleDocUpload(docType: VerificationDocType, file: File) {
+    setDocUploading((d) => ({ ...d, [docType]: true }));
+    try {
+      const sig = await getVerificationDocSignature(groomerProfileId);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("api_key", sig.apiKey);
+      form.append("timestamp", String(sig.timestamp));
+      form.append("signature", sig.signature);
+      form.append("folder", sig.folder);
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
+        { method: "POST", body: form }
+      );
+      const json = await res.json();
+      if (!json.secure_url) throw new Error("Upload failed");
+
+      await saveVerificationDoc(groomerProfileId, docType, json.secure_url);
+      const meta = VERIFICATION_DOC_META.find((m) => m.type === docType)!;
+      setVerificationDocs((d) => ({ ...d, [meta.stateKey]: json.secure_url }));
+    } catch {
+      // user can retry
+    } finally {
+      setDocUploading((d) => ({ ...d, [docType]: false }));
+    }
+  }
+
+  async function handleHasEmployeesToggle(next: boolean) {
+    setHasEmployeesSaving(true);
+    setVerificationDocs((d) => ({ ...d, hasEmployees: next }));
+    const result = await saveHasEmployees(groomerProfileId, next);
+    if (result.error) setVerificationDocs((d) => ({ ...d, hasEmployees: !next }));
+    setHasEmployeesSaving(false);
   }
 
   async function handleAddMember() {
@@ -874,6 +930,98 @@ export function ProfileEditor({
           </div>
         </SectionCard>
 
+        {/* Verification documents — owner only */}
+        {viewerRole === "owner" && (
+          <SectionCard
+            id="section-verification"
+            eyebrow="Verification documents"
+            description="Reviewed by the Groomr team before your profile is listed publicly. Accepted formats: PDF, JPG, PNG."
+          >
+            {/* Employees toggle */}
+            <div className="mb-4 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-pebble-grey">I employ staff</p>
+                  <p className="text-[10px] font-bold text-pebble-grey/70 mt-0.5">
+                    Enables the employers&apos; liability insurance requirement
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={hasEmployeesSaving}
+                  onClick={() => handleHasEmployeesToggle(!verificationDocs.hasEmployees)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus-ring ${verificationDocs.hasEmployees ? "bg-sage-leaf" : "bg-pebble-grey/40"} ${hasEmployeesSaving ? "opacity-60 cursor-not-allowed" : ""}`}
+                  role="switch"
+                  aria-checked={!!verificationDocs.hasEmployees}
+                >
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${verificationDocs.hasEmployees ? "translate-x-5" : "translate-x-0"}`} />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {VERIFICATION_DOC_META.map((meta) => {
+                const url = verificationDocs[meta.stateKey] as string | null;
+                const uploading = !!docUploading[meta.type];
+                const isRequired =
+                  meta.required === true ||
+                  (meta.required === "if_employees" && !!verificationDocs.hasEmployees);
+                const hidden = meta.required === "if_employees" && !verificationDocs.hasEmployees;
+                if (hidden) return null;
+                return (
+                  <div key={meta.type} className="flex items-center gap-3 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-bold text-deep-slate">{meta.label}</p>
+                        {isRequired && (
+                          <span className="text-[10px] font-bold text-muted-terracotta uppercase tracking-wider">Required</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] font-bold text-pebble-grey mt-0.5">{meta.hint}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {url ? (
+                        <>
+                          <span className="hidden sm:inline text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Uploaded</span>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-deep-slate hover:underline focus-ring rounded px-2 py-1"
+                          >
+                            View
+                          </a>
+                        </>
+                      ) : (
+                        <span className="hidden sm:inline text-[10px] font-bold text-pebble-grey bg-pebble-grey/10 border border-pebble-grey/20 px-2 py-0.5 rounded-full">Not uploaded</span>
+                      )}
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        onClick={() => docInputRefs.current[meta.type]?.click()}
+                        className="btn-secondary font-nunito font-bold px-3 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {uploading ? "Uploading…" : url ? "Replace" : "Upload"}
+                      </button>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        ref={(el) => { docInputRefs.current[meta.type] = el; }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleDocUpload(meta.type, file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        )}
+
         {/* Sticky save bar */}
         {isDirty && (
           <div className="sticky bottom-4 z-10">
@@ -1020,6 +1168,8 @@ export function ProfileEditor({
               { label: "Availability set",   done: availability.some((r) => r.isActive),                                                                          sectionId: "section-availability" },
               { label: "Location set",       done: formData.businessMode === "studio" ? !!formData.addressLine1 : formData.radius > 0,                           sectionId: "section-operation"    },
               { label: "Portfolio photos",   done: false,                                                                                                         sectionId: "section-cover"        },
+              { label: "Insurance document", done: !!verificationDocs.insuranceDocUrl,                                                                               sectionId: "section-verification" },
+              { label: "Photo ID uploaded",  done: !!verificationDocs.photoIdDocUrl,                                                                                 sectionId: "section-verification" },
             ];
             const done = checks.filter((c) => c.done).length;
             const pct = Math.round((done / checks.length) * 100);

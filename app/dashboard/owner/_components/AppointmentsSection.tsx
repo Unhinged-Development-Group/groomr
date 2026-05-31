@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ClockIcon, PinIcon } from "@/components/ui/GroomrIcons";
+import { ClockIcon, PinIcon, StarIcon } from "@/components/ui/GroomrIcons";
 import type { Appointment } from "@/app/actions/appointments";
 import {
   cancelAppointment,
   rescheduleAppointment,
   getGroomerAvailabilityDays,
+  submitOwnerReview,
 } from "@/app/actions/appointments";
 import { getAvailableSlots } from "@/app/actions/booking";
 import type { AvailableSlot } from "@/app/actions/booking";
@@ -28,6 +29,22 @@ export function AppointmentsSection({
   const [showManage, setShowManage] = useState(false);
   const [activeAppointment, setActiveAppointment] = useState<Appointment | null>(null);
   const [manageView, setManageView] = useState<ManageView>("choice");
+  const [showReview, setShowReview] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState<Appointment | null>(null);
+
+  function openReview(apt: Appointment) {
+    setReviewTarget(apt);
+    setShowReview(true);
+  }
+
+  function handleReviewSubmitted(appointmentId: string) {
+    setAppointments((prev) =>
+      prev.map((a) =>
+        a.id === appointmentId ? { ...a, reviews: [{ id: "submitted" }] } : a
+      )
+    );
+    setShowReview(false);
+  }
 
   const now = new Date();
   const upcoming = appointments
@@ -248,6 +265,21 @@ export function AppointmentsSection({
                       {groomerName && <span> · <Link href={`/groomers/${apt.groomer_profile_id}`} className="hover:text-sage-leaf transition-colors">{groomerName}</Link></span>}
                       {priceDisplay && <span> · {priceDisplay}</span>}
                     </p>
+                    {pastStatus === "Completed" && !apt.reviews?.length && (
+                      <button
+                        onClick={() => openReview(apt)}
+                        className="mt-1.5 flex items-center gap-1 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded"
+                      >
+                        <StarIcon size={11} className="text-groomr-gold" />
+                        Leave a review
+                      </button>
+                    )}
+                    {pastStatus === "Completed" && !!apt.reviews?.length && (
+                      <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-sage-leaf font-nunito">
+                        <StarIcon size={11} className="text-groomr-gold" />
+                        Reviewed
+                      </p>
+                    )}
                   </div>
                 </div>
               );
@@ -329,6 +361,17 @@ export function AppointmentsSection({
             onCancel={handleCancel}
             onRescheduled={handleRescheduled}
             onClose={closeManage}
+          />
+        )}
+      </Modal>
+
+      {/* Leave Review Modal */}
+      <Modal open={showReview} onClose={() => setShowReview(false)} size="md">
+        {reviewTarget && (
+          <LeaveReviewModal
+            appointment={reviewTarget}
+            onSubmitted={handleReviewSubmitted}
+            onClose={() => setShowReview(false)}
           />
         )}
       </Modal>
@@ -662,6 +705,138 @@ function ReschedulePanel({
             : `Confirm — ${formatDateLong(selectedDate)} at ${selectedTimeLabel}`}
         </button>
       )}
+    </div>
+  );
+}
+
+// ─── LeaveReviewModal ─────────────────────────────────────────────────────────
+
+function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  const labels = ["Terrible", "Poor", "OK", "Good", "Excellent"];
+  const active = hovered || value;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex gap-2">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChange(n)}
+            onMouseEnter={() => setHovered(n)}
+            onMouseLeave={() => setHovered(0)}
+            aria-label={`${n} star${n !== 1 ? "s" : ""}`}
+            className="focus-ring rounded transition-transform hover:scale-110 active:scale-95"
+          >
+            <StarIcon
+              size={36}
+              className={n <= active ? "text-groomr-gold" : "text-pebble-grey/20"}
+            />
+          </button>
+        ))}
+      </div>
+      {active > 0 && (
+        <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+          {labels[active - 1]}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function LeaveReviewModal({
+  appointment,
+  onSubmitted,
+  onClose,
+}: {
+  appointment: Appointment;
+  onSubmitted: (appointmentId: string) => void;
+  onClose: () => void;
+}) {
+  const [rating, setRating] = useState(0);
+  const [body, setBody] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  const groomerName = appointment.groomer_profiles?.business_name || "your groomer";
+  const dateString = new Date(appointment.scheduled_at).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  async function handleSubmit() {
+    if (rating === 0) return;
+    setSubmitting(true);
+    setError(null);
+    const result = await submitOwnerReview(appointment.id, rating, body);
+    setSubmitting(false);
+    if (!result.ok) {
+      setError(result.error ?? "Something went wrong");
+      return;
+    }
+    setDone(true);
+    setTimeout(() => onSubmitted(appointment.id), 1200);
+  }
+
+  if (done) {
+    return (
+      <div className="text-center py-6 space-y-4">
+        <div className="w-14 h-14 bg-groomr-gold rounded-full flex items-center justify-center mx-auto">
+          <StarIcon size={28} className="text-deep-slate" />
+        </div>
+        <p className="font-fredoka text-2xl text-deep-slate">Thanks for your review!</p>
+        <p className="text-sm text-pebble-grey font-nunito">
+          Your feedback helps other owners find great groomers.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-fredoka text-2xl text-deep-slate">Leave a review</h2>
+        <p className="text-sm text-pebble-grey font-nunito mt-0.5">
+          {appointment.service_snapshot_name || "Grooming"} with {groomerName} · {dateString}
+        </p>
+      </div>
+
+      <StarPicker value={rating} onChange={setRating} />
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+          Comments <span className="normal-case font-normal">(optional)</span>
+        </label>
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          rows={4}
+          className="field w-full resize-none text-sm"
+          placeholder="What did you love? Any feedback for the groomer?"
+        />
+      </div>
+
+      {error && (
+        <p className="text-sm font-bold text-muted-terracotta">{error}</p>
+      )}
+
+      <div className="flex gap-3">
+        <button
+          onClick={onClose}
+          className="flex-1 btn-secondary font-nunito font-bold py-3 rounded-full focus-ring"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={rating === 0 || submitting}
+          className="flex-1 btn-primary font-nunito font-bold py-3 rounded-full focus-ring disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {submitting ? "Submitting…" : "Submit review"}
+        </button>
+      </div>
     </div>
   );
 }

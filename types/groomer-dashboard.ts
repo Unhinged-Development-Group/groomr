@@ -46,6 +46,22 @@ export interface TeamMemberRow {
   publicSlug: string | null;
 }
 
+export type VerificationDocType =
+  | "insurance"
+  | "qualification"
+  | "firstAid"
+  | "photoId"
+  | "employersLiability";
+
+export interface VerificationDocs {
+  insuranceDocUrl: string | null;
+  qualificationDocUrl: string | null;
+  firstAidDocUrl: string | null;
+  photoIdDocUrl: string | null;
+  employersLiabilityDocUrl: string | null;
+  hasEmployees: boolean | null;
+}
+
 export interface ProfileEditorInitialData {
   groomerProfileId: string;
   profile: ProfileFormData;
@@ -59,4 +75,5 @@ export interface ProfileEditorInitialData {
   teamMemberId: string | null;
   averageRating: number | null;
   totalReviews: number | null;
+  verificationDocs: VerificationDocs;
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ClockIcon, PinIcon, StarIcon } from "@/components/ui/GroomrIcons";
 import type { Appointment } from "@/app/actions/appointments";
 import { RecurringRequestModal } from "./RecurringRequestModal";
+import { ownerCancelRecurringSeries } from "@/app/actions/recurring";
 import {
   cancelAppointment,
   rescheduleAppointment,
@@ -33,6 +34,8 @@ export function AppointmentsSection({
   const [showReview, setShowReview] = useState(false);
   const [reviewTarget, setReviewTarget] = useState<Appointment | null>(null);
   const [recurringTarget, setRecurringTarget] = useState<Appointment | null>(null);
+  const [showAllPast, setShowAllPast] = useState(false);
+  const [cancellingSeriesId, setCancellingSeriesId] = useState<string | null>(null);
 
   function openReview(apt: Appointment) {
     setReviewTarget(apt);
@@ -174,7 +177,7 @@ export function AppointmentsSection({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-3 mt-2.5">
+                    <div className="flex items-center gap-3 mt-2.5 flex-wrap">
                       <button
                         onClick={() => {
                           setActiveAppointment(apt);
@@ -190,6 +193,37 @@ export function AppointmentsSection({
                       >
                         Reschedule / Cancel
                       </button>
+                      {!apt.recurring_series_id && (
+                        <button
+                          onClick={() => setRecurringTarget(apt)}
+                          className="text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded"
+                        >
+                          ↻ Make recurring
+                        </button>
+                      )}
+                      {apt.recurring_series_id && (
+                        <button
+                          disabled={cancellingSeriesId === apt.recurring_series_id}
+                          onClick={async () => {
+                            if (!confirm("Cancel the recurring series? All future appointments will be cancelled.")) return;
+                            setCancellingSeriesId(apt.recurring_series_id!);
+                            const result = await ownerCancelRecurringSeries(apt.recurring_series_id!);
+                            setCancellingSeriesId(null);
+                            if ("cancelledAppointments" in result) {
+                              setAppointments((prev) =>
+                                prev.map((a) =>
+                                  a.recurring_series_id === apt.recurring_series_id && new Date(a.scheduled_at) > new Date()
+                                    ? { ...a, status: "cancelled" }
+                                    : a
+                                )
+                              );
+                            }
+                          }}
+                          className="text-xs font-bold text-pebble-grey hover:text-muted-terracotta transition-colors font-nunito focus-ring rounded disabled:opacity-50"
+                        >
+                          {cancellingSeriesId === apt.recurring_series_id ? "Cancelling…" : "↻ Cancel recurring"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -204,6 +238,14 @@ export function AppointmentsSection({
           <h2 className="font-fredoka text-2xl md:text-3xl text-deep-slate">
             Previous Grooms
           </h2>
+          {past.length > 5 && (
+            <button
+              onClick={() => setShowAllPast((s) => !s)}
+              className="text-sm font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded"
+            >
+              {showAllPast ? "Show less" : `View all ${past.length}`}
+            </button>
+          )}
         </div>
 
         {past.length === 0 ? (
@@ -212,7 +254,7 @@ export function AppointmentsSection({
           </div>
         ) : (
           <div className="space-y-2.5">
-            {past.slice(0, 5).map((apt) => {
+            {(showAllPast ? past : past.slice(0, 5)).map((apt) => {
               const date = new Date(apt.scheduled_at);
               const dateString = date.toLocaleDateString("en-GB", {
                 day: "2-digit",
@@ -291,7 +333,27 @@ export function AppointmentsSection({
                       </button>
                     )}
                     {pastStatus === "Completed" && !!apt.recurring_series_id && (
-                      <p className="mt-1.5 text-xs font-bold text-sage-leaf font-nunito">↻ Recurring</p>
+                      <button
+                        disabled={cancellingSeriesId === apt.recurring_series_id}
+                        onClick={async () => {
+                          if (!confirm("Cancel the recurring series? All future appointments will be cancelled.")) return;
+                          setCancellingSeriesId(apt.recurring_series_id!);
+                          const result = await ownerCancelRecurringSeries(apt.recurring_series_id!);
+                          setCancellingSeriesId(null);
+                          if ("cancelledAppointments" in result) {
+                            setAppointments((prev) =>
+                              prev.map((a) =>
+                                a.recurring_series_id === apt.recurring_series_id && new Date(a.scheduled_at) > new Date()
+                                  ? { ...a, status: "cancelled" }
+                                  : a
+                              )
+                            );
+                          }
+                        }}
+                        className="mt-1.5 flex items-center gap-1 text-xs font-bold text-pebble-grey hover:text-muted-terracotta transition-colors font-nunito focus-ring rounded disabled:opacity-50"
+                      >
+                        {cancellingSeriesId === apt.recurring_series_id ? "Cancelling…" : "↻ Cancel recurring"}
+                      </button>
                     )}
                   </div>
                 </div>

@@ -366,6 +366,45 @@ export async function declineRecurringSeries(
 }
 
 // ---------------------------------------------------------------------------
+// ownerCancelRecurringSeries
+//
+// Owner cancels a series they belong to. Cancels the series and all their
+// own future confirmed appointments in it.
+// ---------------------------------------------------------------------------
+
+export async function ownerCancelRecurringSeries(
+  seriesId: string,
+): Promise<{ cancelledAppointments: number } | { error: string }> {
+  const ctx = await getOwnerContext();
+  if (!ctx) return { error: "Not authenticated." };
+
+  const { error: seriesErr } = await supabaseAdmin
+    .from("recurring_series")
+    .update({ status: "cancelled" })
+    .eq("id", seriesId)
+    .eq("owner_id", ctx.profileId);
+
+  if (seriesErr) return { error: "Failed to cancel recurring series." };
+
+  const now = new Date().toISOString();
+
+  const { data: cancelled, error: apptErr } = await supabaseAdmin
+    .from("appointments")
+    .update({ status: "cancelled", cancelled_by: "owner", cancellation_reason: "Recurring series cancelled by owner" })
+    .eq("recurring_series_id", seriesId)
+    .eq("owner_id", ctx.profileId)
+    .eq("status", "confirmed")
+    .gt("scheduled_at", now)
+    .select("id");
+
+  if (apptErr) {
+    console.error("[ownerCancelRecurringSeries] appointment cancel error:", apptErr);
+  }
+
+  return { cancelledAppointments: (cancelled ?? []).length };
+}
+
+// ---------------------------------------------------------------------------
 // rollActiveRecurringSeries
 //
 // Called when the groomer loads their dashboard. Extends any ongoing active

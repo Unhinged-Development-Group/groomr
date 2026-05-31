@@ -96,8 +96,7 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
     <Modal open={open} onClose={onClose} size="md">
       <div className="space-y-6">
         <div>
-          <Eyebrow>Diary management</Eyebrow>
-          <h2 className="font-fredoka text-2xl text-deep-slate mt-1">Block time</h2>
+          <h2 className="font-fredoka text-2xl text-deep-slate">Block time</h2>
           <p className="text-sm text-pebble-grey font-bold mt-1">
             Blocked periods won't accept new bookings.
           </p>
@@ -144,19 +143,17 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
             </button>
           </div>
 
-          {/* Time pickers — hidden when all-day */}
-          {!allDay && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">Start time</label>
-                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="field w-full" />
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">End time</label>
-                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="field w-full" />
-              </div>
+          {/* Time pickers — dimmed when all-day, always in DOM to avoid layout shift */}
+          <div className={`grid grid-cols-2 gap-3 transition-opacity duration-150 ${allDay ? "opacity-30 pointer-events-none select-none" : "opacity-100"}`}>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">Start time</label>
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="field w-full" disabled={allDay} />
             </div>
-          )}
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">End time</label>
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="field w-full" disabled={allDay} />
+            </div>
+          </div>
 
           {/* Reason presets */}
           <div>
@@ -187,7 +184,7 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
           <button
             onClick={handleSave}
             disabled={!startDate || saving}
-            className="btn-primary w-full font-nunito font-bold py-2.5 rounded-full text-sm focus-ring disabled:opacity-50"
+            className="w-full bg-deep-slate text-alabaster-cream font-nunito font-bold py-2.5 rounded-full text-sm focus-ring hover:bg-deep-slate/85 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? "Saving…" : "Block this time"}
           </button>

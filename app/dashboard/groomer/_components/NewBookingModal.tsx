@@ -229,9 +229,6 @@ export function NewBookingModal({ services, existingClients, onClose }: Props) {
               </button>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-bold text-sage-leaf uppercase tracking-wider font-nunito">
-                Groomer dashboard
-              </p>
               <h2 className="font-fredoka text-2xl text-deep-slate leading-tight">
                 {done ? "Booking added!" : heading}
               </h2>

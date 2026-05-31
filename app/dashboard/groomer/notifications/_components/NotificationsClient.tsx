@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { GroomerNotification } from "@/app/actions/notifications";
 import { markAllNotificationsRead, markNotificationRead } from "@/app/actions/notifications";
-import { approveRecurringSeries, declineRecurringSeries } from "@/app/actions/recurring";
+import { approveRecurringSeries, declineRecurringSeries, getSeriesStatus } from "@/app/actions/recurring";
 import {
   CalendarIcon,
   NotificationsIcon,
@@ -87,8 +87,18 @@ function RecurringRequestActions({ notification, onAction }: {
   notification: GroomerNotification;
   onAction: (id: string) => void;
 }) {
-  const [status, setStatus] = useState<"idle" | "pending" | "approved" | "declined">("idle");
+  const [status, setStatus] = useState<"idle" | "pending" | "approved" | "declined" | "loading">("loading");
   const [expanded, setExpanded] = useState(false);
+
+  // On mount, check the real series state so we don't show buttons for already-handled requests
+  useEffect(() => {
+    if (!seriesId) { setStatus("idle"); return; }
+    getSeriesStatus(seriesId).then((s) => {
+      if (s === "active")    setStatus("approved");
+      else if (s === "cancelled") setStatus("declined");
+      else setStatus("idle"); // pending_approval or unknown
+    });
+  }, [seriesId]);
 
   const meta = notification.metadata ?? {};
   const seriesId = meta.series_id as string | undefined;
@@ -118,6 +128,7 @@ function RecurringRequestActions({ notification, onAction }: {
     onAction(notification.id);
   }
 
+  if (status === "loading")  return null;
   if (status === "approved") return <p className="text-xs font-bold text-sage-leaf mt-2">Approved — appointments added to your calendar.</p>;
   if (status === "declined") return <p className="text-xs font-bold text-pebble-grey mt-2">Declined.</p>;
 

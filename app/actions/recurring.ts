@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // ---------------------------------------------------------------------------
@@ -391,6 +392,8 @@ export async function approveRecurringSeries(
   if (updateErr) return { error: "Failed to approve series." };
 
   const genResult = await generateRecurringAppointments(seriesId);
+  revalidatePath("/dashboard/groomer/notifications");
+  revalidatePath("/dashboard/groomer");
   return "count" in genResult
     ? { appointmentsCreated: genResult.count }
     : genResult;
@@ -413,6 +416,7 @@ export async function declineRecurringSeries(
     .eq("groomer_profile_id", ctx.groomerProfileId);
 
   if (error) return { error: "Failed to decline series." };
+  revalidatePath("/dashboard/groomer/notifications");
   return { ok: true };
 }
 
@@ -453,6 +457,21 @@ export async function ownerCancelRecurringSeries(
   }
 
   return { cancelledAppointments: (cancelled ?? []).length };
+}
+
+// ---------------------------------------------------------------------------
+// getSeriesStatus — lightweight check used by the notifications UI
+// ---------------------------------------------------------------------------
+
+export async function getSeriesStatus(
+  seriesId: string,
+): Promise<"pending_approval" | "active" | "cancelled" | null> {
+  const { data } = await supabaseAdmin
+    .from("recurring_series")
+    .select("status")
+    .eq("id", seriesId)
+    .maybeSingle();
+  return (data?.status as "pending_approval" | "active" | "cancelled") ?? null;
 }
 
 // ---------------------------------------------------------------------------

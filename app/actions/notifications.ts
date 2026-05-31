@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export interface GroomerNotification {
@@ -110,6 +111,7 @@ export async function markAllNotificationsRead(): Promise<{ error?: string }> {
     .is("read_at", null);
 
   if (error) return { error: error.message };
+  revalidatePath("/dashboard/groomer/notifications");
   return {};
 }
 
@@ -129,5 +131,6 @@ export async function markNotificationRead(
     .is("read_at", null);
 
   if (error) return { error: error.message };
+  revalidatePath("/dashboard/groomer/notifications");
   return {};
 }

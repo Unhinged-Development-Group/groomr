@@ -393,3 +393,42 @@ export async function rollActiveRecurringSeries(
     expiringSeries.map((s) => generateRecurringAppointments(s.id)),
   );
 }
+
+// ---------------------------------------------------------------------------
+// cancelRecurringSeries
+//
+// Groomer cancels an active series. Sets status = 'cancelled' and cancels all
+// future confirmed appointments that were generated from the series.
+// ---------------------------------------------------------------------------
+
+export async function cancelRecurringSeries(
+  seriesId: string,
+): Promise<{ cancelledAppointments: number } | { error: string }> {
+  const ctx = await getGroomerContext();
+  if (!ctx) return { error: "Not authenticated as a groomer." };
+
+  const { error: seriesErr } = await supabaseAdmin
+    .from("recurring_series")
+    .update({ status: "cancelled" })
+    .eq("id", seriesId)
+    .eq("groomer_profile_id", ctx.groomerProfileId);
+
+  if (seriesErr) return { error: "Failed to cancel recurring series." };
+
+  const now = new Date().toISOString();
+
+  // Cancel all future confirmed appointments in this series
+  const { data: cancelled, error: apptErr } = await supabaseAdmin
+    .from("appointments")
+    .update({ status: "cancelled", cancelled_by: "groomer", cancellation_reason: "Recurring series cancelled" })
+    .eq("recurring_series_id", seriesId)
+    .eq("status", "confirmed")
+    .gt("scheduled_at", now)
+    .select("id");
+
+  if (apptErr) {
+    console.error("[cancelRecurringSeries] appointment cancel error:", apptErr);
+  }
+
+  return { cancelledAppointments: (cancelled ?? []).length };
+}

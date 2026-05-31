@@ -13,6 +13,7 @@ import {
   groomerUpdateNotes,
 } from "@/app/actions/groomer";
 import { GroomerRecurringModal } from "./GroomerRecurringModal";
+import { cancelRecurringSeries } from "@/app/actions/recurring";
 
 interface BookingDetailAppointment {
   id: string;
@@ -58,6 +59,8 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
   const router = useRouter();
   const [panel, setPanel] = useState<Panel>("detail");
   const [showRecurring, setShowRecurring] = useState(false);
+  const [cancellingRecurring, setCancellingRecurring] = useState(false);
+  const [recurringCancelled, setRecurringCancelled] = useState(false);
 
   // Notes
   const [editingNotes, setEditingNotes] = useState(false);
@@ -274,10 +277,26 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
                   ↻ Make recurring
                 </button>
               )}
-              {appt.recurring_series_id && (
-                <span className="font-nunito font-bold px-4 py-2.5 rounded-full text-sm text-sage-leaf bg-sage-leaf/10 flex items-center gap-1.5">
-                  ↻ Recurring
-                </span>
+              {appt.recurring_series_id && !recurringCancelled && (
+                <button
+                  disabled={cancellingRecurring}
+                  onClick={async () => {
+                    if (!confirm("Cancel the recurring series? All future appointments will be cancelled.")) return;
+                    setCancellingRecurring(true);
+                    const result = await cancelRecurringSeries(appt.recurring_series_id!);
+                    setCancellingRecurring(false);
+                    if ("cancelledAppointments" in result) {
+                      setRecurringCancelled(true);
+                      router.refresh();
+                    }
+                  }}
+                  className="font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring text-pebble-grey hover:bg-pebble-grey/10 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {cancellingRecurring ? "Cancelling…" : "↻ Cancel recurring"}
+                </button>
+              )}
+              {appt.recurring_series_id && recurringCancelled && (
+                <span className="font-nunito text-sm text-pebble-grey px-4 py-2.5">↻ Series cancelled</span>
               )}
               <button onClick={() => setPanel("cancel")}
                 className="font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors flex items-center gap-2 ml-auto">

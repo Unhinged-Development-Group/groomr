@@ -83,8 +83,8 @@ export default function LandingPage() {
           <div className="relative h-[480px] md:h-[560px] hidden lg:block">
             <div className="absolute top-0 right-0 w-72 h-80 rounded-[24px] overflow-hidden shadow-lift rotate-[3deg]">
               <Image
-                src="https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=600&q=70"
-                alt="Dog being groomed"
+                src="/assets/landing-hero-chihuahua-park.jpg"
+                alt="Long-haired cream Chihuahua wearing a plaid bow tie on the grass in a sunny park"
                 fill
                 className="object-cover"
                 sizes="288px"
@@ -92,8 +92,8 @@ export default function LandingPage() {
             </div>
             <div className="absolute bottom-12 left-0 w-64 h-72 rounded-[24px] overflow-hidden shadow-lift -rotate-[4deg]">
               <Image
-                src="https://images.unsplash.com/photo-1611173622933-91942d394b04?auto=format&fit=crop&w=600&q=70"
-                alt="Happy groomed dog"
+                src="/assets/landing-hero-chihuahua-puppy.jpg"
+                alt="Fluffy cream Chihuahua puppy sitting on a carpet and looking up at the camera"
                 fill
                 className="object-cover"
                 sizes="256px"

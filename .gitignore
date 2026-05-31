@@ -51,3 +51,5 @@ ngrok
 ngrok.zip
 ngrok.exe
 .claude/
+
+.vercel

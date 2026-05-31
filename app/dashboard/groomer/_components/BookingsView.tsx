@@ -73,7 +73,7 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
 
   const todayAppts = appointments.filter(a => {
     const d = new Date(a.scheduled_at);
-    return d.getDate() === refDate.getDate() && d.getMonth() === refDate.getMonth() && d.getFullYear() === refDate.getFullYear();
+    return d.getDate() === refDate.getDate() && d.getMonth() === refDate.getMonth() && d.getFullYear() === refDate.getFullYear() && a.status !== 'cancelled';
   });
 
   const todayBookings = todayAppts.map(a => {

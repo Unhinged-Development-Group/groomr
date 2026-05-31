@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { StarRow } from "@/components/ui/StarRow";
 
 interface Review {
@@ -9,7 +10,7 @@ interface Review {
   body: string | null;
   created_at: string;
   groomer_reply: string | null;
-  profiles: { full_name: string | null }[] | null;
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
 }
 
 interface ReviewsSectionProps {
@@ -59,19 +60,47 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
   );
 }
 
+function ReviewerAvatar({ src, name }: { src: string | null; name: string }) {
+  const [failed, setFailed] = useState(false);
+  if (src && !failed) {
+    return (
+      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
+        <Image
+          src={src}
+          alt={name}
+          width={32}
+          height={32}
+          className="w-full h-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-sage-leaf/20 flex items-center justify-center shrink-0">
+      <span className="font-fredoka text-sm text-sage-leaf font-bold select-none">
+        {name.charAt(0).toUpperCase()}
+      </span>
+    </div>
+  );
+}
+
 function ReviewCard({ review }: { review: Review }) {
   const date = new Date(review.created_at).toLocaleDateString("en-GB", {
     month: "short",
     year: "numeric",
   });
+  const name = review.profiles?.full_name ?? "Owner";
+  const avatarUrl = review.profiles?.avatar_url ?? null;
   return (
     <div className="bg-white rounded-xl border border-pebble-grey/10 p-5 space-y-3">
       <div className="flex items-start justify-between gap-2 flex-wrap">
-        <div>
-          <p className="font-bold text-sm text-deep-slate">
-            {review.profiles?.[0]?.full_name ?? "Dog owner"}
-          </p>
-          <p className="text-xs text-pebble-grey">{date}</p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <ReviewerAvatar src={avatarUrl} name={name} />
+          <div className="min-w-0">
+            <p className="font-bold text-sm text-deep-slate">{name}</p>
+            <p className="text-xs text-pebble-grey">{date}</p>
+          </div>
         </div>
         <StarRow rating={review.rating} size={13} />
       </div>

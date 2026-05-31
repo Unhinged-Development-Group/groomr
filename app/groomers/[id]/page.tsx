@@ -56,7 +56,7 @@ interface Review {
   body: string | null;
   created_at: string;
   groomer_reply: string | null;
-  profiles: { full_name: string | null }[] | null;
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
 }
 
 interface TeamMember {
@@ -109,7 +109,7 @@ export default async function GroomerProfilePage({
 
       supabaseAdmin
         .from("reviews")
-        .select("id, rating, body, created_at, groomer_reply, profiles(full_name)")
+        .select("id, rating, body, created_at, groomer_reply, profiles!reviews_owner_id_fkey(full_name, avatar_url)")
         .eq("groomer_profile_id", id)
         .eq("is_visible", true)
         .order("created_at", { ascending: false }),

@@ -85,7 +85,7 @@ export default async function GroomerProfilePage({
         .select(
           `id, business_name, tagline, bio, years_experience, qualifications,
            insurance_provider, city, postcode, is_mobile, travel_radius_miles,
-           is_verified, profile_image_url, banner_image_url, gallery_images,
+           is_verified, profile_image_url, banner_image_url, cover_photo_url, gallery_images,
            average_rating, total_reviews, deposit_type, deposit_percentage`
         )
         .eq("id", id)
@@ -157,9 +157,9 @@ export default async function GroomerProfilePage({
     percentage: groomer.deposit_percentage ?? null,
   };
 
-  const bannerUrl = groomer.banner_image_url || groomer.gallery_images?.[0] || null;
-  // Use profile photo; fall back to banner/gallery so the avatar slot always has an image
-  const avatarUrl = groomer.profile_image_url || groomer.banner_image_url || groomer.gallery_images?.[0] || null;
+  const bannerUrl = groomer.cover_photo_url || groomer.banner_image_url || groomer.gallery_images?.[0] || null;
+  // Use profile photo; fall back to cover/banner/gallery so the avatar slot always has an image
+  const avatarUrl = groomer.profile_image_url || groomer.cover_photo_url || groomer.banner_image_url || groomer.gallery_images?.[0] || null;
 
   const hoursByDay = UK_DAY_ORDER.reduce<Record<number, AvailabilityRow>>(
     (acc, day) => {

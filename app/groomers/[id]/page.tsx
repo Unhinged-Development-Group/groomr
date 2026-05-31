@@ -164,8 +164,8 @@ export default async function GroomerProfilePage({
     percentage: groomer.deposit_percentage ?? null,
   };
 
-  const bannerUrl = groomer.cover_photo_url || groomer.banner_image_url || portfolioUrls[0] || null;
-  const avatarUrl = groomer.profile_image_url || groomer.cover_photo_url || groomer.banner_image_url || portfolioUrls[0] || null;
+  const bannerUrl = groomer.cover_photo_url || groomer.banner_image_url || null;
+  const avatarUrl = groomer.profile_image_url || null;
 
   const hoursByDay = UK_DAY_ORDER.reduce<Record<number, AvailabilityRow>>(
     (acc, day) => {
@@ -187,13 +187,22 @@ export default async function GroomerProfilePage({
     <div className="min-h-screen bg-alabaster-cream">
 
       {/* ── Hero banner — heart overlaid top-right ──────────────────────────── */}
-      <div className="h-52 sm:h-64 md:h-80 bg-sage-leaf/30 relative">
-        {bannerUrl && (
+      <div className="h-52 sm:h-64 md:h-80 bg-alabaster-cream relative">
+        {bannerUrl ? (
           <Image
             src={bannerUrl}
             alt={`${groomer.business_name} banner`}
             fill
             className="object-cover"
+            sizes="100vw"
+            priority
+          />
+        ) : (
+          <Image
+            src="/assets/default-cover-photo.svg"
+            alt=""
+            fill
+            className="object-contain p-10 sm:p-16"
             sizes="100vw"
             priority
           />
@@ -218,7 +227,7 @@ export default async function GroomerProfilePage({
 
           {/* Avatar — straddles banner */}
           <div className="absolute -top-14 md:-top-16 left-0 shrink-0">
-            <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-sage-leaf/20 flex items-center justify-center">
+            <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-alabaster-cream flex items-center justify-center">
               {avatarUrl ? (
                 <Image
                   src={avatarUrl}
@@ -228,9 +237,13 @@ export default async function GroomerProfilePage({
                   className="object-cover w-full h-full"
                 />
               ) : (
-                <span className="font-fredoka text-4xl text-sage-leaf select-none">
-                  {groomer.business_name.charAt(0)}
-                </span>
+                <Image
+                  src="/assets/default-profile-photo.svg"
+                  alt=""
+                  width={144}
+                  height={144}
+                  className="object-contain p-3 w-full h-full"
+                />
               )}
             </div>
           </div>

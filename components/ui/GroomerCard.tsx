@@ -7,7 +7,7 @@ interface Groomer {
   id: string;
   name: string;
   tagline?: string;
-  image: string;
+  image: string | null;
   avatarUrl?: string;
   rating: number;
   reviewCount?: number;
@@ -41,14 +41,24 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
       )}
     >
       {/* Image with overlaid distance + rating pills */}
-      <div className="aspect-[16/10] bg-sage-leaf/20 overflow-hidden relative w-full shrink-0">
-        <Image
-          src={groomer.avatarUrl || groomer.image}
-          alt={groomer.name}
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, 230px"
-        />
+      <div className="aspect-[16/10] bg-alabaster-cream overflow-hidden relative w-full shrink-0">
+        {(groomer.avatarUrl || groomer.image) ? (
+          <Image
+            src={groomer.avatarUrl || groomer.image!}
+            alt={groomer.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 230px"
+          />
+        ) : (
+          <Image
+            src="/assets/default-cover-photo.svg"
+            alt=""
+            fill
+            className="object-contain p-6"
+            sizes="(max-width: 640px) 100vw, 230px"
+          />
+        )}
 
         {/* Distance — top left */}
         {groomer.distance != null && (

@@ -3,7 +3,7 @@ export interface GroomerResult {
   name: string;
   tagline?: string;
   bio?: string;
-  image: string;
+  image: string | null;
   avatarUrl?: string;
   rating: number;
   reviewCount: number;

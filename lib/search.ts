@@ -71,11 +71,7 @@ function buildGroomerMap(
         ? Math.round((p.distance_metres / 1609.34) * 10) / 10
         : undefined;
 
-    const image =
-      p.cover_photo_url ||
-      p.gallery_images?.[0] ||
-      p.profile_image_url ||
-      PLACEHOLDER_IMAGE;
+    const image = p.cover_photo_url || p.profile_image_url || null;
 
     const avatarUrl = p.profile_image_url ?? undefined;
 

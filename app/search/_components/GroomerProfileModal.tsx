@@ -160,29 +160,43 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
           {/* Scrollable content */}
           <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: "none" }}>
             {/* Banner */}
-            <div className="h-48 md:h-64 bg-sage-leaf/30 relative">
-              <Image
-                src={groomer.image}
-                alt={groomer.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 896px) 100vw, 896px"
-              />
+            <div className="h-48 md:h-64 bg-alabaster-cream relative">
+              {groomer.image ? (
+                <Image
+                  src={groomer.image}
+                  alt={groomer.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 896px) 100vw, 896px"
+                />
+              ) : (
+                <Image
+                  src="/assets/default-cover-photo.svg"
+                  alt=""
+                  fill
+                  className="object-contain p-8"
+                  sizes="(max-width: 896px) 100vw, 896px"
+                />
+              )}
               {/* Avatar */}
               <div className="absolute -bottom-16 left-8 md:left-12">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-sage-leaf/20 flex items-center justify-center">
-                  {(groomer.avatarUrl || groomer.image) ? (
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-[20px] border-4 border-alabaster-cream overflow-hidden shadow-subtle bg-alabaster-cream flex items-center justify-center">
+                  {groomer.avatarUrl ? (
                     <Image
-                      src={groomer.avatarUrl || groomer.image}
+                      src={groomer.avatarUrl}
                       alt={groomer.name}
                       width={144}
                       height={144}
                       className="object-cover w-full h-full"
                     />
                   ) : (
-                    <span className="font-fredoka text-4xl text-sage-leaf select-none">
-                      {groomer.name.charAt(0)}
-                    </span>
+                    <Image
+                      src="/assets/default-profile-photo.svg"
+                      alt=""
+                      width={144}
+                      height={144}
+                      className="object-contain p-3 w-full h-full"
+                    />
                   )}
                 </div>
               </div>

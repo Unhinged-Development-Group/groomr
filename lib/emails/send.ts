@@ -29,57 +29,38 @@ interface AppointmentEmailData {
 async function fetchAppointmentEmailData(
   appointmentId: string,
 ): Promise<AppointmentEmailData | null> {
-  const { data, error } = await supabaseAdmin
+  // Step 1: fetch the appointment row
+  const { data: apt, error: aptErr } = await supabaseAdmin
     .from("appointments")
-    .select(`
-      scheduled_at,
-      service_snapshot_name,
-      cancellation_reason,
-      cancelled_by,
-      owner_id,
-      dogs ( name ),
-      groomer_profiles (
-        business_name,
-        address_line_1,
-        city,
-        postcode,
-        profiles ( full_name, email )
-      ),
-      profiles!appointments_owner_id_fkey ( full_name, email )
-    `)
+    .select("scheduled_at, service_snapshot_name, cancellation_reason, cancelled_by, owner_id, dog_id, groomer_profile_id")
     .eq("id", appointmentId)
     .single();
 
-  if (error || !data) {
-    console.error("[email] fetchAppointmentEmailData error:", error?.message);
+  if (aptErr || !apt) {
+    console.error("[email] apt fetch error:", aptErr?.message);
     return null;
   }
 
-  const ownerProfileArr = data.profiles as { full_name: string | null; email: string | null }[] | null;
-  const ownerProfile = Array.isArray(ownerProfileArr) ? ownerProfileArr[0] ?? null : ownerProfileArr;
-  const gpArr = data.groomer_profiles as {
-    business_name: string | null;
-    address_line_1: string | null;
-    city: string | null;
-    postcode: string | null;
-    profiles: { full_name: string | null; email: string | null }[] | null;
-  }[] | null;
-  const gp = Array.isArray(gpArr) ? gpArr[0] ?? null : gpArr;
+  // Step 2: parallel-fetch owner profile, dog, and groomer profile
+  const [ownerRes, dogRes, gpRes] = await Promise.all([
+    supabaseAdmin.from("profiles").select("full_name, email").eq("id", apt.owner_id).single(),
+    supabaseAdmin.from("dogs").select("name").eq("id", apt.dog_id).single(),
+    supabaseAdmin.from("groomer_profiles").select("business_name, address_line_1, city, postcode, user_id").eq("id", apt.groomer_profile_id).single(),
+  ]);
 
-  const ownerEmail = ownerProfile?.email ?? "";
-  const ownerName  = ownerProfile?.full_name ?? "there";
-  const dogName    = (data.dogs as { name: string }[] | null)?.[0]?.name ?? "your dog";
-  const salonName  = gp?.business_name ?? "the salon";
+  // Step 3: fetch the groomer's own profile (for their email)
+  const groomerProfileRes = gpRes.data?.user_id
+    ? await supabaseAdmin.from("profiles").select("full_name, email").eq("id", gpRes.data.user_id).single()
+    : null;
 
-  const groomerOwnerProfileArr = gp?.profiles;
-  const groomerOwnerProfile = Array.isArray(groomerOwnerProfileArr)
-    ? groomerOwnerProfileArr[0] ?? null
-    : groomerOwnerProfileArr ?? null;
-  const groomerEmail = groomerOwnerProfile?.email ?? "";
-  const groomerName  = groomerOwnerProfile?.full_name ?? "there";
+  const ownerEmail = ownerRes.data?.email ?? "";
+  const ownerName  = ownerRes.data?.full_name ?? "there";
+  const dogName    = dogRes.data?.name ?? "your dog";
+  const salonName  = gpRes.data?.business_name ?? "the salon";
+  const groomerEmail = groomerProfileRes?.data?.email ?? "";
+  const groomerName  = groomerProfileRes?.data?.full_name ?? "there";
 
-  const addressParts = [gp?.address_line_1, gp?.city, gp?.postcode].filter(Boolean);
-  const address = addressParts.length > 0 ? addressParts.join(", ") : null;
+  const addressParts = [gpRes.data?.address_line_1, gpRes.data?.city, gpRes.data?.postcode].filter(Boolean);
 
   return {
     ownerName,
@@ -88,11 +69,11 @@ async function fetchAppointmentEmailData(
     salonName,
     groomerEmail,
     groomerName,
-    serviceName: data.service_snapshot_name ?? "Grooming",
-    scheduledAt: new Date(data.scheduled_at),
-    address,
-    cancellationReason: data.cancellation_reason,
-    cancelledByOwner: data.cancelled_by === data.owner_id,
+    serviceName: apt.service_snapshot_name ?? "Grooming",
+    scheduledAt: new Date(apt.scheduled_at),
+    address: addressParts.length > 0 ? addressParts.join(", ") : null,
+    cancellationReason: apt.cancellation_reason,
+    cancelledByOwner: apt.cancelled_by === apt.owner_id,
   };
 }
 

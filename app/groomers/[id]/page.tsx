@@ -78,14 +78,14 @@ export default async function GroomerProfilePage({
 }) {
   const { id } = await params;
 
-  const [groomerRes, servicesRes, availabilityRes, reviewsRes, teamRes, favourites] =
+  const [groomerRes, servicesRes, availabilityRes, reviewsRes, teamRes, favourites, portfolioRes] =
     await Promise.all([
       supabaseAdmin
         .from("groomer_profiles")
         .select(
           `id, business_name, tagline, bio, years_experience, qualifications,
            insurance_provider, city, postcode, is_mobile, travel_radius_miles,
-           is_verified, profile_image_url, banner_image_url, cover_photo_url, gallery_images,
+           is_verified, profile_image_url, banner_image_url, cover_photo_url,
            average_rating, total_reviews, deposit_type, deposit_percentage`
         )
         .eq("id", id)
@@ -122,11 +122,18 @@ export default async function GroomerProfilePage({
         .eq("invite_status", "accepted"),
 
       getFavouriteGroomers(),
+
+      supabaseAdmin
+        .from("portfolio_photos")
+        .select("url")
+        .eq("groomer_profile_id", id)
+        .order("sort_order", { ascending: true }),
     ]);
 
   if (groomerRes.error || !groomerRes.data) notFound();
 
   const groomer = groomerRes.data;
+  const portfolioUrls = (portfolioRes.data ?? []).map((p) => p.url as string);
   const services = (servicesRes.data ?? []) as Service[];
   const availability = (availabilityRes.data ?? []) as AvailabilityRow[];
   const rawReviews = (reviewsRes.data ?? []) as any[];
@@ -157,9 +164,8 @@ export default async function GroomerProfilePage({
     percentage: groomer.deposit_percentage ?? null,
   };
 
-  const bannerUrl = groomer.cover_photo_url || groomer.banner_image_url || groomer.gallery_images?.[0] || null;
-  // Use profile photo; fall back to cover/banner/gallery so the avatar slot always has an image
-  const avatarUrl = groomer.profile_image_url || groomer.cover_photo_url || groomer.banner_image_url || groomer.gallery_images?.[0] || null;
+  const bannerUrl = groomer.cover_photo_url || groomer.banner_image_url || portfolioUrls[0] || null;
+  const avatarUrl = groomer.profile_image_url || groomer.cover_photo_url || groomer.banner_image_url || portfolioUrls[0] || null;
 
   const hoursByDay = UK_DAY_ORDER.reduce<Record<number, AvailabilityRow>>(
     (acc, day) => {
@@ -298,13 +304,13 @@ export default async function GroomerProfilePage({
           <div className="lg:col-span-2 space-y-12">
 
             {/* Gallery */}
-            {(groomer.gallery_images?.length ?? 0) > 0 && (
+            {portfolioUrls.length > 0 && (
               <section>
                 <h2 className="font-fredoka text-2xl text-deep-slate border-b border-pebble-grey/20 pb-4 mb-6">
                   Gallery
                 </h2>
                 <GalleryGrid
-                  images={groomer.gallery_images ?? []}
+                  images={portfolioUrls}
                   groomerName={groomer.business_name}
                 />
               </section>

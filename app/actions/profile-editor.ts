@@ -479,6 +479,30 @@ export async function saveCoverPhoto(
   return {};
 }
 
+export async function deleteCoverPhoto(
+  groomerProfileId: string
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ cover_photo_url: null, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id);
+
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function getProfileImageSignature(groomerProfileId: string): Promise<{
   signature: string;
   timestamp: number;
@@ -614,7 +638,7 @@ export async function saveProfileImage(
 
   if (error) return { error: error.message };
 
-  // Sync to Clerk profile picture
+  // Sync to Clerk profile picture (upload)
   try {
     const imgRes = await fetch(url);
     const contentType = imgRes.headers.get("content-type") ?? "image/jpeg";
@@ -625,6 +649,39 @@ export async function saveProfileImage(
     await clerk.users.updateUserProfileImage(clerkUserId, { file });
   } catch {
     // non-fatal — Supabase already saved, Clerk sync can be retried on next upload
+  }
+
+  return {};
+}
+
+export async function deleteProfileImage(
+  groomerProfileId: string
+): Promise<{ error?: string }> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return { error: "Not authenticated" };
+
+  const { data: myProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("clerk_id", clerkUserId)
+    .single();
+
+  if (!myProfile) return { error: "Profile not found" };
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ profile_image_url: null, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id);
+
+  if (error) return { error: error.message };
+
+  // Remove from Clerk too so the default avatar shows there as well
+  try {
+    const clerk = await clerkClient();
+    await clerk.users.deleteUserProfileImage(clerkUserId);
+  } catch {
+    // non-fatal
   }
 
   return {};

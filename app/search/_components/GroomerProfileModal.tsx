@@ -72,7 +72,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
     async function load() {
       setLoading(true);
       try {
-        const [svcRes, availRes, revRes, galleryRes] = await Promise.all([
+        const [svcRes, availRes, revRes, portfolioRes] = await Promise.all([
           supabase
             .from("services")
             .select("id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, sort_order")
@@ -93,30 +93,24 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
             .order("created_at", { ascending: false })
             .limit(10),
           supabase
-            .from("groomer_profiles")
-            .select("gallery_images, deposit_type, deposit_percentage")
-            .eq("id", groomer.id)
-            .maybeSingle(),
+            .from("portfolio_photos")
+            .select("url")
+            .eq("groomer_profile_id", groomer.id)
+            .order("sort_order", { ascending: true }),
         ]);
 
-        if (svcRes.error)   console.error("[modal] services error:",      svcRes.error);
-        if (availRes.error) console.error("[modal] availability error:",  availRes.error);
-        if (revRes.error)   console.error("[modal] reviews error:",       revRes.error);
-        if (galleryRes.error) console.error("[modal] gallery error:",     galleryRes.error);
+        if (svcRes.error)       console.error("[modal] services error:",   svcRes.error);
+        if (availRes.error)     console.error("[modal] availability error:", availRes.error);
+        if (revRes.error)       console.error("[modal] reviews error:",     revRes.error);
+        if (portfolioRes.error) console.error("[modal] portfolio error:",   portfolioRes.error);
 
         setServices((svcRes.data ?? []) as Service[]);
         setAvailability((availRes.data ?? []) as AvailabilityRow[]);
         setReviews((revRes.data ?? []) as Review[]);
-
-        const profileData = galleryRes.data as {
-          gallery_images: string[] | null;
-          deposit_type: string | null;
-          deposit_percentage: number | null;
-        } | null;
-        setGalleryImages(profileData?.gallery_images ?? []);
+        setGalleryImages((portfolioRes.data ?? []).map((p) => p.url as string));
         setDepositPolicy({
-          type: (profileData?.deposit_type as 'none' | 'percentage' | 'full') ?? 'none',
-          percentage: profileData?.deposit_percentage ?? null,
+          type: groomer.depositType,
+          percentage: groomer.depositPercentage,
         });
       } finally {
         setLoading(false);

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, getProfileImageSignature, saveProfileImage, toggleAcceptingBookings, getVerificationDocSignature, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
+import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, deleteCoverPhoto, getProfileImageSignature, saveProfileImage, deleteProfileImage, toggleAcceptingBookings, getVerificationDocSignature, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
 import type { ProfileFormData, ServiceRow, AvailabilityRow, TeamMemberRow, VerificationDocs, VerificationDocType } from "@/types/groomer-dashboard";
@@ -179,9 +179,11 @@ export function ProfileEditor({
   const [formData, setFormData] = useState<ProfileFormData>(initialProfile);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialCoverPhotoUrl);
   const [coverUploading, setCoverUploading] = useState(false);
+  const [coverDeleting, setCoverDeleting] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(initialProfileImageUrl);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const [profileImageDeleting, setProfileImageDeleting] = useState(false);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [services, setServices] = useState<ServiceRow[]>(initialServices);
   const [savedServices, setSavedServices] = useState<ServiceRow[]>(initialServices);
@@ -294,6 +296,28 @@ export function ProfileEditor({
       // silently ignore — user can retry
     } finally {
       setProfileImageUploading(false);
+    }
+  }
+
+  async function handleDeleteProfileImage() {
+    if (profileImageDeleting) return;
+    setProfileImageDeleting(true);
+    try {
+      await deleteProfileImage(groomerProfileId);
+      setProfileImageUrl(null);
+    } finally {
+      setProfileImageDeleting(false);
+    }
+  }
+
+  async function handleDeleteCoverPhoto() {
+    if (coverDeleting) return;
+    setCoverDeleting(true);
+    try {
+      await deleteCoverPhoto(groomerProfileId);
+      setCoverPhotoUrl(null);
+    } finally {
+      setCoverDeleting(false);
     }
   }
 
@@ -1101,16 +1125,32 @@ export function ProfileEditor({
                 </div>
               )}
             </button>
-            <div className="min-w-0">
-              <button
-                type="button"
-                onClick={() => profileImageInputRef.current?.click()}
-                disabled={profileImageUploading}
-                className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-xs focus-ring disabled:opacity-50 block"
-              >
-                {profileImageUploading ? "Uploading…" : profileImageUrl ? "Replace photo" : "Upload photo"}
-              </button>
-              <p className="text-[10px] font-bold text-pebble-grey mt-1.5">JPG or PNG · max 5 MB</p>
+            <div className="min-w-0 space-y-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => profileImageInputRef.current?.click()}
+                  disabled={profileImageUploading || profileImageDeleting}
+                  className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-xs focus-ring disabled:opacity-50"
+                >
+                  {profileImageUploading ? "Uploading…" : profileImageUrl ? "Replace photo" : "Upload photo"}
+                </button>
+                {profileImageUrl && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteProfileImage}
+                    disabled={profileImageDeleting || profileImageUploading}
+                    className="p-2 rounded-full text-pebble-grey hover:text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors focus-ring disabled:opacity-50"
+                    aria-label="Remove profile photo"
+                  >
+                    {profileImageDeleting
+                      ? <div className="w-4 h-4 border-2 border-pebble-grey/30 border-t-pebble-grey rounded-full animate-spin" />
+                      : <TrashIcon size={16} />
+                    }
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] font-bold text-pebble-grey">JPG or PNG · max 5 MB</p>
             </div>
           </div>
           <input
@@ -1165,11 +1205,24 @@ export function ProfileEditor({
           />
           <button
             onClick={() => coverInputRef.current?.click()}
-            disabled={coverUploading}
+            disabled={coverUploading || coverDeleting}
             className="btn-secondary w-full font-nunito font-bold py-2 rounded-full text-xs mt-3 focus-ring disabled:opacity-50"
           >
-            {coverUploading ? "Uploading…" : "Replace cover photo"}
+            {coverUploading ? "Uploading…" : coverPhotoUrl ? "Replace cover photo" : "Upload cover photo"}
           </button>
+          {coverPhotoUrl && (
+            <button
+              onClick={handleDeleteCoverPhoto}
+              disabled={coverDeleting || coverUploading}
+              className="w-full font-nunito font-bold py-2 rounded-full text-xs mt-2 focus-ring disabled:opacity-50 flex items-center justify-center gap-1.5 text-pebble-grey hover:text-muted-terracotta transition-colors"
+            >
+              {coverDeleting
+                ? <div className="w-3.5 h-3.5 border-2 border-pebble-grey/30 border-t-pebble-grey rounded-full animate-spin" />
+                : <TrashIcon size={14} />
+              }
+              {coverDeleting ? "Removing…" : "Remove cover photo"}
+            </button>
+          )}
           <button
             onClick={() => window.location.href = "/dashboard/groomer/portfolio"}
             className="btn-secondary w-full font-nunito font-bold py-2 rounded-full text-xs mt-2 focus-ring"

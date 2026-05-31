@@ -69,7 +69,6 @@ export default function SupportPage() {
       {/* Hero */}
       <section className="bg-deep-slate text-center px-6 py-16 md:py-24">
         <div className="max-w-2xl mx-auto space-y-4">
-          <Eyebrow className="text-groomr-gold/80">Support</Eyebrow>
           <h1 className="font-fredoka text-4xl md:text-5xl text-white leading-tight">
             We&apos;re here to help
           </h1>
@@ -145,7 +144,7 @@ export default function SupportPage() {
                 </h3>
                 <p className="font-nunito text-sm text-pebble-grey leading-relaxed">
                   If your appointment is within 24 hours and something has gone
-                  wrong, email us with &ldquo;URGENT&rdquo; in the subject line
+                  wrong, select &ldquo;Booking issue — URGENT&rdquo; as the subject
                   and we&apos;ll prioritise your case.
                 </p>
               </div>

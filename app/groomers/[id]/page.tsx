@@ -128,7 +128,7 @@ export default async function GroomerProfilePage({
   const groomer = groomerRes.data;
   const services = (servicesRes.data ?? []) as Service[];
   const availability = (availabilityRes.data ?? []) as AvailabilityRow[];
-  const reviews = (reviewsRes.data ?? []) as Review[];
+  const reviews = (reviewsRes.data ?? []) as unknown as Review[];
   const team = (teamRes.data ?? []) as TeamMember[];
   const initialSaved = favourites.some((f) => f.groomer_profile_id === id);
 

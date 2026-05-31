@@ -139,13 +139,14 @@ const VERIFICATION_DOC_META: Array<{
   label: string;
   hint: string;
   stateKey: keyof VerificationDocs;
+  verifiedKey: keyof VerificationDocs;
   required: boolean | "if_employees";
 }> = [
-  { type: "insurance",          label: "Public liability insurance",     hint: "Certificate showing current cover",          stateKey: "insuranceDocUrl",          required: true           },
-  { type: "qualification",      label: "Grooming qualifications",        hint: "City & Guilds, iPET, LANTRA, or equivalent", stateKey: "qualificationDocUrl",      required: false          },
-  { type: "firstAid",           label: "Pet first aid certificate",      hint: "Must not be expired",                        stateKey: "firstAidDocUrl",           required: false          },
-  { type: "photoId",            label: "Photo ID",                       hint: "Passport or driving licence",                stateKey: "photoIdDocUrl",            required: true           },
-  { type: "employersLiability", label: "Employers' liability insurance", hint: "Required if you employ staff",               stateKey: "employersLiabilityDocUrl", required: "if_employees" },
+  { type: "insurance",          label: "Public liability insurance",     hint: "Certificate showing current cover",          stateKey: "insuranceDocUrl",          verifiedKey: "insuranceVerified",          required: true           },
+  { type: "qualification",      label: "Grooming qualifications",        hint: "City & Guilds, iPET, LANTRA, or equivalent", stateKey: "qualificationDocUrl",      verifiedKey: "qualificationVerified",      required: false          },
+  { type: "firstAid",           label: "Pet first aid certificate",      hint: "Must not be expired",                        stateKey: "firstAidDocUrl",           verifiedKey: "firstAidVerified",           required: false          },
+  { type: "photoId",            label: "Photo ID",                       hint: "Passport or driving licence — deleted after verification", stateKey: "photoIdDocUrl", verifiedKey: "photoIdVerified",       required: true           },
+  { type: "employersLiability", label: "Employers' liability insurance", hint: "Required if you employ staff",               stateKey: "employersLiabilityDocUrl", verifiedKey: "employersLiabilityVerified", required: "if_employees" },
 ];
 
 // Mon-first display order (UK standard): 1,2,3,4,5,6,0
@@ -968,19 +969,28 @@ export function ProfileEditor({
                   (meta.required === "if_employees" && !!verificationDocs.hasEmployees);
                 const hidden = meta.required === "if_employees" && !verificationDocs.hasEmployees;
                 if (hidden) return null;
+
+                // Once a doc is verified by admin it is considered final — show Verified and hide upload controls.
+                // For Photo ID the file is also deleted server-side after verification.
+                const docVerified = verificationDocs[meta.verifiedKey] as boolean;
+
                 return (
                   <div key={meta.type} className="flex items-center gap-3 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl px-4 py-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-bold text-deep-slate">{meta.label}</p>
-                        {isRequired && (
+                        {isRequired && !docVerified && (
                           <span className="text-[10px] font-bold text-muted-terracotta uppercase tracking-wider">Required</span>
                         )}
                       </div>
                       <p className="text-[10px] font-bold text-pebble-grey mt-0.5">{meta.hint}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {url ? (
+                      {docVerified ? (
+                        <span className="text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Verified</span>
+                      ) : uploading ? (
+                        <span className="text-[10px] font-bold text-pebble-grey bg-pebble-grey/10 border border-pebble-grey/20 px-2 py-0.5 rounded-full">Uploading…</span>
+                      ) : url ? (
                         <>
                           <span className="hidden sm:inline text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Uploaded</span>
                           <a
@@ -995,25 +1005,29 @@ export function ProfileEditor({
                       ) : (
                         <span className="hidden sm:inline text-[10px] font-bold text-pebble-grey bg-pebble-grey/10 border border-pebble-grey/20 px-2 py-0.5 rounded-full">Not uploaded</span>
                       )}
-                      <button
-                        type="button"
-                        disabled={uploading}
-                        onClick={() => docInputRefs.current[meta.type]?.click()}
-                        className="btn-secondary font-nunito font-bold px-3 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50 whitespace-nowrap"
-                      >
-                        {uploading ? "Uploading…" : url ? "Replace" : "Upload"}
-                      </button>
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden"
-                        ref={(el) => { docInputRefs.current[meta.type] = el; }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleDocUpload(meta.type, file);
-                          e.target.value = "";
-                        }}
-                      />
+                      {!docVerified && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={uploading}
+                            onClick={() => docInputRefs.current[meta.type]?.click()}
+                            className="btn-secondary font-nunito font-bold px-3 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50 whitespace-nowrap"
+                          >
+                            {uploading ? "Uploading…" : url ? "Replace" : "Upload"}
+                          </button>
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            className="hidden"
+                            ref={(el) => { docInputRefs.current[meta.type] = el; }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleDocUpload(meta.type, file);
+                              e.target.value = "";
+                            }}
+                          />
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -1168,8 +1182,8 @@ export function ProfileEditor({
               { label: "Availability set",   done: availability.some((r) => r.isActive),                                                                          sectionId: "section-availability" },
               { label: "Location set",       done: formData.businessMode === "studio" ? !!formData.addressLine1 : formData.radius > 0,                           sectionId: "section-operation"    },
               { label: "Portfolio photos",   done: false,                                                                                                         sectionId: "section-cover"        },
-              { label: "Insurance document", done: !!verificationDocs.insuranceDocUrl,                                                                               sectionId: "section-verification" },
-              { label: "Photo ID uploaded",  done: !!verificationDocs.photoIdDocUrl,                                                                                 sectionId: "section-verification" },
+              { label: "Insurance document", done: !!verificationDocs.insuranceDocUrl,                                  sectionId: "section-verification" },
+              { label: "Photo ID",          done: verificationDocs.photoIdVerified || !!verificationDocs.photoIdDocUrl, sectionId: "section-verification" },
             ];
             const done = checks.filter((c) => c.done).length;
             const pct = Math.round((done / checks.length) * 100);

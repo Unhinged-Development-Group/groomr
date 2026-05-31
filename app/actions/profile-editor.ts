@@ -95,6 +95,11 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
         photoIdDocUrl: null,
         employersLiabilityDocUrl: null,
         hasEmployees: null,
+        insuranceVerified: false,
+        qualificationVerified: false,
+        firstAidVerified: false,
+        photoIdVerified: false,
+        employersLiabilityVerified: false,
       },
     };
   }
@@ -186,12 +191,17 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const totalReviews    = (groomerProfile.total_reviews     as number | null) ?? null;
 
   const verificationDocs: VerificationDocs = {
-    insuranceDocUrl:          (groomerProfile.insurance_doc_url           as string | null) ?? null,
-    qualificationDocUrl:      (groomerProfile.qualification_doc_url       as string | null) ?? null,
-    firstAidDocUrl:           (groomerProfile.first_aid_doc_url           as string | null) ?? null,
-    photoIdDocUrl:            (groomerProfile.photo_id_doc_url            as string | null) ?? null,
-    employersLiabilityDocUrl: (groomerProfile.employers_liability_doc_url as string | null) ?? null,
-    hasEmployees:             (groomerProfile.has_employees               as boolean | null) ?? null,
+    insuranceDocUrl:               (groomerProfile.insurance_doc_url                    as string | null) ?? null,
+    qualificationDocUrl:           (groomerProfile.qualification_doc_url                as string | null) ?? null,
+    firstAidDocUrl:                (groomerProfile.first_aid_doc_url                    as string | null) ?? null,
+    photoIdDocUrl:                 (groomerProfile.photo_id_doc_url                     as string | null) ?? null,
+    employersLiabilityDocUrl:      (groomerProfile.employers_liability_doc_url          as string | null) ?? null,
+    hasEmployees:                  (groomerProfile.has_employees                        as boolean | null) ?? null,
+    insuranceVerified:             (groomerProfile.insurance_doc_verified               as boolean) ?? false,
+    qualificationVerified:         (groomerProfile.qualification_doc_verified           as boolean) ?? false,
+    firstAidVerified:              (groomerProfile.first_aid_doc_verified               as boolean) ?? false,
+    photoIdVerified:               (groomerProfile.photo_id_doc_verified                as boolean) ?? false,
+    employersLiabilityVerified:    (groomerProfile.employers_liability_doc_verified     as boolean) ?? false,
   };
 
   return { groomerProfileId, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs };

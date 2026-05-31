@@ -60,6 +60,11 @@ export interface VerificationDocs {
   photoIdDocUrl: string | null;
   employersLiabilityDocUrl: string | null;
   hasEmployees: boolean | null;
+  insuranceVerified: boolean;
+  qualificationVerified: boolean;
+  firstAidVerified: boolean;
+  photoIdVerified: boolean;
+  employersLiabilityVerified: boolean;
 }
 
 export interface ProfileEditorInitialData {

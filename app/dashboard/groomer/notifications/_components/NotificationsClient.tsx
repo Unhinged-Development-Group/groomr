@@ -88,18 +88,27 @@ function RecurringRequestActions({ notification, onAction }: {
   onAction: (id: string) => void;
 }) {
   const [status, setStatus] = useState<"idle" | "pending" | "approved" | "declined">("idle");
+  const [expanded, setExpanded] = useState(false);
 
-  const seriesId = notification.metadata?.series_id as string | undefined;
+  const meta = notification.metadata ?? {};
+  const seriesId = meta.series_id as string | undefined;
   if (!seriesId) return null;
+
+  const dogName     = meta.dog_name      as string | null;
+  const dogBreed    = meta.dog_breed     as string | null;
+  const dogPhotoUrl = meta.dog_photo_url as string | null;
+  const serviceName = meta.service_name  as string | null;
+  const ownerEmail  = meta.owner_email   as string | null;
+  const ownerPhone  = meta.owner_phone   as string | null;
+  const ownerName   = meta.owner_name    as string | null;
 
   async function handleApprove() {
     setStatus("pending");
     const result = await approveRecurringSeries(seriesId!);
+    const count = "appointmentsCreated" in result ? result.appointmentsCreated : 0;
     setStatus("approved");
     onAction(notification.id);
-    if ("appointmentsCreated" in result) {
-      // Optionally show count — keep it simple for now
-    }
+    void count; // used in success message below
   }
 
   async function handleDecline() {
@@ -113,21 +122,72 @@ function RecurringRequestActions({ notification, onAction }: {
   if (status === "declined") return <p className="text-xs font-bold text-pebble-grey mt-2">Declined.</p>;
 
   return (
-    <div className="flex gap-2 mt-3">
+    <div className="mt-3 space-y-3">
+      {/* Client detail card — click to expand */}
       <button
-        onClick={handleApprove}
-        disabled={status === "pending"}
-        className="btn-primary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50"
+        onClick={() => setExpanded((e) => !e)}
+        className="w-full text-left bg-alabaster-cream border border-pebble-grey/20 rounded-xl px-3 py-2.5 hover:border-pebble-grey/40 transition-colors focus-ring"
       >
-        Approve
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {dogPhotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={dogPhotoUrl} alt={dogName ?? "Dog"} className="w-8 h-8 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate text-sm shrink-0">
+                {dogName ? dogName.charAt(0) : ownerName?.charAt(0) ?? "?"}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-deep-slate leading-tight">
+                {dogName ?? ownerName ?? "Client"}
+                {dogBreed && <span className="font-normal text-pebble-grey"> · {dogBreed}</span>}
+              </p>
+              {serviceName && <p className="text-xs text-pebble-grey">{serviceName}</p>}
+            </div>
+          </div>
+          <span className="text-xs text-pebble-grey shrink-0">{expanded ? "▲" : "▼"}</span>
+        </div>
+        {expanded && (ownerEmail || ownerPhone) && (
+          <div className="mt-2.5 pt-2.5 border-t border-pebble-grey/15 grid grid-cols-2 gap-2">
+            {ownerName && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Owner</p>
+                <p className="text-xs font-bold text-deep-slate mt-0.5">{ownerName}</p>
+              </div>
+            )}
+            {ownerPhone && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Phone</p>
+                <p className="text-xs font-bold text-deep-slate mt-0.5">{ownerPhone}</p>
+              </div>
+            )}
+            {ownerEmail && (
+              <div className="col-span-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Email</p>
+                <p className="text-xs font-bold text-deep-slate mt-0.5 break-words">{ownerEmail}</p>
+              </div>
+            )}
+          </div>
+        )}
       </button>
-      <button
-        onClick={handleDecline}
-        disabled={status === "pending"}
-        className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50"
-      >
-        Decline
-      </button>
+
+      <div className="flex gap-2">
+        <button
+          onClick={handleApprove}
+          disabled={status === "pending"}
+          className="btn-primary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50"
+        >
+          Approve
+        </button>
+        <button
+          onClick={handleDecline}
+          disabled={status === "pending"}
+          className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50"
+        >
+          Decline
+        </button>
+      </div>
     </div>
   );
 }

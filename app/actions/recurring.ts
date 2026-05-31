@@ -230,32 +230,57 @@ export async function requestRecurringSeries(input: {
     return { error: "Failed to create recurring series." };
   }
 
-  // Load owner name for notification
-  const { data: ownerProfile } = await supabaseAdmin
-    .from("profiles")
-    .select("full_name")
-    .eq("id", ctx.profileId)
-    .maybeSingle();
+  // Load owner profile + dog name for notification
+  const [{ data: ownerProfile }, { data: dog }] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("full_name, email, phone")
+      .eq("id", ctx.profileId)
+      .maybeSingle(),
+    appt.dog_id
+      ? supabaseAdmin.from("dogs").select("name, breed, profile_image_url").eq("id", appt.dog_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
 
   const ownerName = ownerProfile?.full_name ?? "A client";
+  const dogName = dog?.name ?? null;
+  const dogBreed = dog?.breed ?? null;
+  const dogPhotoUrl = dog?.profile_image_url ?? null;
+  const serviceName = appt.service_snapshot_name ?? null;
+
+  const DAY_NAMES = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"];
   const freqLabel: Record<string, string> = {
-    "weekly": "weekly", "bi-weekly": "every 2 weeks",
-    "4-weekly": "every 4 weeks", "monthly": "monthly",
+    "weekly": "every week", "bi-weekly": "every 2 weeks",
+    "4-weekly": "every 4 weeks", "monthly": "every month",
   };
+
+  const dayLabel = DAY_NAMES[input.preferredDayOfWeek] ?? `day ${input.preferredDayOfWeek}`;
+  const parts = [
+    dogName ? `for ${dogName}` : null,
+    serviceName ? `(${serviceName})` : null,
+  ].filter(Boolean).join(" ");
+
+  const body = `${ownerName} has requested ${freqLabel[input.frequency] ?? input.frequency} on ${dayLabel} at ${input.preferredTime}${parts ? ` — ${parts}` : ""}.`;
 
   await supabaseAdmin.from("notifications").insert({
     groomer_profile_id: appt.groomer_profile_id,
-    type:  "recurring_request",
-    title: "Recurring booking request",
-    body:  `${ownerName} has requested ${freqLabel[input.frequency] ?? input.frequency} appointments on ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][input.preferredDayOfWeek]}s at ${input.preferredTime}.`,
+    type:     "recurring_request",
+    title:    "Recurring booking request",
+    body,
     metadata: {
-      series_id:   series.id,
-      owner_id:    ctx.profileId,
-      owner_name:  ownerName,
-      frequency:   input.frequency,
-      day_of_week: input.preferredDayOfWeek,
-      time:        input.preferredTime,
-      end_date:    input.endDate ?? null,
+      series_id:    series.id,
+      owner_id:     ctx.profileId,
+      owner_name:   ownerName,
+      owner_email:  ownerProfile?.email ?? null,
+      owner_phone:  ownerProfile?.phone ?? null,
+      dog_name:      dogName,
+      dog_breed:     dogBreed,
+      dog_photo_url: dogPhotoUrl,
+      service_name: serviceName,
+      frequency:    input.frequency,
+      day_of_week:  input.preferredDayOfWeek,
+      time:         input.preferredTime,
+      end_date:     input.endDate ?? null,
     },
   });
 

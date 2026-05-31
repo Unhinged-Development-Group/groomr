@@ -251,3 +251,158 @@ export async function createAppointment(
 
   return { appointmentId: data.id };
 }
+
+// ---------------------------------------------------------------------------
+// createGroupAppointment
+//
+// Books multiple dogs in one session. Each dog gets its own appointments row;
+// all rows share a booking_group_id. Appointments are scheduled back-to-back
+// starting from scheduledAt. Per-client pricing is applied to each pet.
+// ---------------------------------------------------------------------------
+
+export interface GroupPet {
+  dogId: string;
+  serviceId: string;
+}
+
+export async function createGroupAppointment(input: {
+  groomerProfileId: string;
+  scheduledAt: string; // ISO 8601 — start time for the first pet
+  pets: GroupPet[];    // ordered list; first pet starts at scheduledAt
+}): Promise<{ appointmentIds: string[]; bookingGroupId: string } | { error: string }> {
+  if (input.pets.length < 2) return { error: "Use createAppointment for single-pet bookings." };
+
+  const { userId } = await auth();
+  if (!userId) return { error: "Please sign in to book." };
+
+  const profileId = await getProfileId(userId);
+  if (!profileId) return { error: "Profile not found." };
+
+  // Validate all dogs belong to this owner
+  const dogIds = input.pets.map((p) => p.dogId);
+  const { data: ownedDogs } = await supabaseAdmin
+    .from("dogs")
+    .select("id")
+    .eq("owner_id", profileId)
+    .in("id", dogIds);
+
+  const ownedIds = new Set((ownedDogs ?? []).map((d) => d.id));
+  if (dogIds.some((id) => !ownedIds.has(id))) {
+    return { error: "One or more dogs don't belong to your account." };
+  }
+
+  // Fetch all services and apply per-client pricing
+  type ResolvedPet = {
+    dogId: string;
+    serviceId: string;
+    name: string;
+    durationMinutes: number;
+    effectivePricePence: number;
+  };
+
+  const resolved: ResolvedPet[] = [];
+  for (const pet of input.pets) {
+    const { data: service } = await supabaseAdmin
+      .from("services")
+      .select("name, duration_minutes, price_pence, groomer_profile_id, is_active")
+      .eq("id", pet.serviceId)
+      .maybeSingle();
+
+    if (!service || service.groomer_profile_id !== input.groomerProfileId || !service.is_active) {
+      return { error: `Service not found for one of the pets.` };
+    }
+
+    let effectivePricePence = service.price_pence;
+
+    const { data: fixedOverride } = await supabaseAdmin
+      .from("client_service_prices")
+      .select("override_price_pence")
+      .eq("groomer_profile_id", input.groomerProfileId)
+      .eq("owner_id", profileId)
+      .eq("service_id", pet.serviceId)
+      .maybeSingle();
+
+    if (fixedOverride) {
+      effectivePricePence = fixedOverride.override_price_pence;
+    } else {
+      const { data: clientSettings } = await supabaseAdmin
+        .from("client_settings")
+        .select("discount_percentage")
+        .eq("groomer_profile_id", input.groomerProfileId)
+        .eq("owner_id", profileId)
+        .maybeSingle();
+
+      if (clientSettings?.discount_percentage != null) {
+        effectivePricePence = Math.round(
+          service.price_pence * (1 - clientSettings.discount_percentage / 100),
+        );
+      }
+    }
+
+    resolved.push({
+      dogId: pet.dogId,
+      serviceId: pet.serviceId,
+      name: service.name,
+      durationMinutes: service.duration_minutes,
+      effectivePricePence,
+    });
+  }
+
+  // Compute back-to-back start times and check for a single overlap window
+  const startDt = new Date(input.scheduledAt);
+  const dateStr = input.scheduledAt.slice(0, 10);
+  const groupStart = startDt.getUTCHours() * 60 + startDt.getUTCMinutes();
+  const groupEnd = groupStart + resolved.reduce((sum, p) => sum + p.durationMinutes, 0);
+
+  const { data: sameDay } = await supabaseAdmin
+    .from("appointments")
+    .select("scheduled_at, service_snapshot_duration")
+    .eq("groomer_profile_id", input.groomerProfileId)
+    .neq("status", "cancelled")
+    .neq("status", "no_show")
+    .gte("scheduled_at", `${dateStr}T00:00:00Z`)
+    .lte("scheduled_at", `${dateStr}T23:59:59Z`);
+
+  const hasConflict = (sameDay ?? []).some((a) => {
+    const dt = new Date(a.scheduled_at);
+    const aStart = dt.getUTCHours() * 60 + dt.getUTCMinutes();
+    const aEnd = aStart + (a.service_snapshot_duration ?? 60);
+    return groupStart < aEnd && groupEnd > aStart;
+  });
+
+  if (hasConflict) return { error: "That slot conflicts with an existing booking — please pick another time." };
+
+  // Build appointment rows with sequential start times
+  const bookingGroupId = crypto.randomUUID();
+  let cursor = startDt;
+
+  const rows = resolved.map((pet) => {
+    const scheduledAt = cursor.toISOString();
+    cursor = new Date(cursor.getTime() + pet.durationMinutes * 60 * 1000);
+    return {
+      owner_id:                  profileId,
+      groomer_profile_id:        input.groomerProfileId,
+      dog_id:                    pet.dogId,
+      service_id:                pet.serviceId,
+      service_snapshot_name:     pet.name,
+      service_snapshot_duration: pet.durationMinutes,
+      service_snapshot_price:    pet.effectivePricePence,
+      scheduled_at:              scheduledAt,
+      status:                    "confirmed",
+      booking_group_id:          bookingGroupId,
+    };
+  });
+
+  const { data: inserted, error } = await supabaseAdmin
+    .from("appointments")
+    .insert(rows)
+    .select("id");
+
+  if (error || !inserted) {
+    console.error("[createGroupAppointment]", error);
+    return { error: "Failed to create appointments. Please try again." };
+  }
+
+  const appointmentIds = inserted.map((r) => r.id);
+  return { appointmentIds, bookingGroupId };
+}

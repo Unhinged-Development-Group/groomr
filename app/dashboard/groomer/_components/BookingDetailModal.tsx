@@ -33,6 +33,7 @@ interface Props {
   appointment: BookingDetailAppointment | null;
   onClose: () => void;
   onUpdated: (id: string, patch: Partial<BookingDetailAppointment>) => void;
+  siblingAppointments?: BookingDetailAppointment[];
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -53,7 +54,7 @@ const STATUS_TONE: Record<string, "sage" | "gold" | "terra" | "grey"> = {
 
 type Panel = "detail" | "reschedule" | "cancel";
 
-export function BookingDetailModal({ appointment, onClose, onUpdated }: Props) {
+export function BookingDetailModal({ appointment, onClose, onUpdated, siblingAppointments }: Props) {
   const router = useRouter();
   const [panel, setPanel] = useState<Panel>("detail");
   const [showRecurring, setShowRecurring] = useState(false);
@@ -185,6 +186,34 @@ export function BookingDetailModal({ appointment, onClose, onUpdated }: Props) {
             <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-2xl p-4">
               <p className="text-[10px] font-bold uppercase tracking-wider text-sage-leaf">Owner note</p>
               <p className="text-sm text-deep-slate mt-1 italic">&quot;{appt.owner_notes}&quot;</p>
+            </div>
+          )}
+
+          {siblingAppointments && siblingAppointments.length > 0 && (
+            <div className="bg-white border border-pebble-grey/15 rounded-2xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-pebble-grey/10 flex items-center gap-2">
+                <Eyebrow>Group booking</Eyebrow>
+                <span className="text-[9px] font-bold bg-deep-slate/10 text-deep-slate px-2 py-0.5 rounded-full">Multi-pet</span>
+              </div>
+              <div className="divide-y divide-pebble-grey/10">
+                {[appt, ...siblingAppointments].map((s, i) => (
+                  <div key={s.id} className="grid grid-cols-[1fr_auto] gap-3 px-4 py-3 items-center">
+                    <div>
+                      <p className="text-sm font-bold text-deep-slate">{s.dogs?.name ?? `Pet ${i + 1}`}</p>
+                      <p className="text-xs text-pebble-grey">{s.service_snapshot_name ?? "Service"} · {s.service_snapshot_duration ?? 0} min</p>
+                    </div>
+                    <span className="font-fredoka text-deep-slate">
+                      £{((s.service_snapshot_price ?? 0) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+                <div className="grid grid-cols-[1fr_auto] gap-3 px-4 py-3 items-center bg-alabaster-cream">
+                  <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Total</span>
+                  <span className="font-fredoka text-deep-slate">
+                    £{(([appt, ...siblingAppointments].reduce((sum, s) => sum + (s.service_snapshot_price ?? 0), 0)) / 100).toFixed(2)}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 

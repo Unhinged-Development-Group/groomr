@@ -76,7 +76,7 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
     return d.getDate() === refDate.getDate() && d.getMonth() === refDate.getMonth() && d.getFullYear() === refDate.getFullYear() && a.status !== 'cancelled';
   });
 
-  const todayBookings = todayAppts.map(a => {
+  const todayBookingsRaw = todayAppts.map(a => {
     const d = new Date(a.scheduled_at);
     const isManual = !a.dog_id;
     const manual   = isManual ? parseManualNotes(a.groomer_notes) : null;
@@ -92,8 +92,35 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
       price: a.service_snapshot_price ? (a.service_snapshot_price / 100).toFixed(0) : "0",
       status: a.status,
       note: a.owner_notes || (isManual ? manual?.extraNote : a.groomer_notes) || null,
+      bookingGroupId: a.booking_group_id ?? null,
     };
   });
+
+  // Merge grouped appointments into single display blocks
+  const groupMap = new Map<string, typeof todayBookingsRaw>();
+  const todayBookings: Array<typeof todayBookingsRaw[0] & { isGroup?: boolean; groupDogs?: string[]; groupTotal?: number }> = [];
+  const seenGroups = new Set<string>();
+
+  for (const b of todayBookingsRaw) {
+    if (!b.bookingGroupId) {
+      todayBookings.push(b);
+      continue;
+    }
+    if (seenGroups.has(b.bookingGroupId)) continue;
+    seenGroups.add(b.bookingGroupId);
+    const siblings = todayBookingsRaw.filter(x => x.bookingGroupId === b.bookingGroupId);
+    siblings.sort((a, x) => a.startMinutes - x.startMinutes);
+    const totalDuration = siblings.reduce((sum, x) => sum + x.duration, 0);
+    const totalPrice = siblings.reduce((sum, x) => sum + Number(x.price), 0);
+    todayBookings.push({
+      ...siblings[0],
+      duration: totalDuration,
+      isGroup: true,
+      groupDogs: siblings.map(x => x.dog),
+      groupTotal: totalPrice,
+    });
+    if (!groupMap.has(b.bookingGroupId)) groupMap.set(b.bookingGroupId, siblings);
+  }
 
   const totalHours = todayBookings.reduce((sum, b) => sum + b.duration, 0) / 60;
   const dateStr = refDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
@@ -164,7 +191,16 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
                   return (
                     <div
                       key={b.id}
-                      onClick={() => setSelectedAppt(todayAppts.find(a => a.id === b.id) ?? null)}
+                      onClick={() => {
+                        if (b.isGroup && b.bookingGroupId) {
+                          const siblings = groupMap.get(b.bookingGroupId) ?? [];
+                          // Open first appointment; BookingDetailModal will display siblings
+                          const firstAppt = todayAppts.find(a => a.id === siblings[0]?.id) ?? null;
+                          setSelectedAppt(firstAppt ? { ...firstAppt, _groupSiblings: siblings.slice(1).map(s => todayAppts.find(a => a.id === s.id)).filter(Boolean) } : null);
+                        } else {
+                          setSelectedAppt(todayAppts.find(a => a.id === b.id) ?? null);
+                        }
+                      }}
                       className="absolute left-0 right-0 rounded-xl px-3 py-2 overflow-hidden cursor-pointer hover:-translate-y-px transition-transform"
                       style={{ top, height, background: c.bg, borderLeft: `3px solid ${c.bd}` }}
                     >
@@ -172,16 +208,26 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-bold text-deep-slate/50">{b.time}</span>
-                            <span className="font-fredoka text-base text-deep-slate leading-tight truncate">{b.dog}</span>
+                            {b.isGroup ? (
+                              <>
+                                <span className="font-fredoka text-base text-deep-slate leading-tight truncate">{b.groupDogs?.join(" · ")}</span>
+                                <span className="text-[9px] font-bold bg-deep-slate/15 text-deep-slate px-1.5 py-0.5 rounded-full shrink-0">Multi-pet</span>
+                              </>
+                            ) : (
+                              <span className="font-fredoka text-base text-deep-slate leading-tight truncate">{b.dog}</span>
+                            )}
                             <StatusDot status={b.status} />
                           </div>
-                          {tall && (
+                          {tall && !b.isGroup && (
                             <>
                               <p className="text-xs text-deep-slate/70 font-bold truncate">{b.svc}</p>
                               <p className="text-xs text-pebble-grey font-bold truncate">{b.owner} · {b.duration} min</p>
                             </>
                           )}
-                          {b.note && tall && <p className="text-[10px] text-sage-leaf font-bold italic truncate mt-0.5">&quot;{b.note}&quot;</p>}
+                          {tall && b.isGroup && (
+                            <p className="text-xs text-pebble-grey font-bold truncate">{b.owner} · {b.duration} min total</p>
+                          )}
+                          {b.note && tall && !b.isGroup && <p className="text-[10px] text-sage-leaf font-bold italic truncate mt-0.5">&quot;{b.note}&quot;</p>}
                         </div>
                         <div className="shrink-0 flex flex-col items-end gap-1">
                           <span className="font-fredoka text-sm text-deep-slate">£{b.price}</span>
@@ -282,6 +328,7 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
 
       <BookingDetailModal
         appointment={selectedAppt}
+        siblingAppointments={selectedAppt?._groupSiblings ?? undefined}
         onClose={() => setSelectedAppt(null)}
         onUpdated={(id, patch) => setSelectedAppt((prev: any) => prev?.id === id ? { ...prev, ...patch } : prev)}
       />
@@ -390,6 +437,7 @@ function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Dat
 
       <BookingDetailModal
         appointment={selectedAppt}
+        siblingAppointments={selectedAppt?._groupSiblings ?? undefined}
         onClose={() => setSelectedAppt(null)}
         onUpdated={(id, patch) => setSelectedAppt((prev: any) => prev?.id === id ? { ...prev, ...patch } : prev)}
       />

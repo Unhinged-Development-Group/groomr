@@ -4,14 +4,14 @@ import { getGroomerMessageThreads, getGroomerBookingsForMessaging } from "@/app/
 import { MessagesClient } from "./_components/MessagesClient";
 
 interface Props {
-  searchParams: Promise<{ groomer?: string }>;
+  searchParams: Promise<{ groomer?: string; owner?: string }>;
 }
 
 export default async function MessagesPage({ searchParams }: Props) {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
-  const { groomer: initialGroomerId } = await searchParams;
+  const { groomer: initialGroomerId, owner: initialOwnerId } = await searchParams;
 
   const [{ threads, profileId }, bookings] = await Promise.all([
     getGroomerMessageThreads(),
@@ -31,6 +31,7 @@ export default async function MessagesPage({ searchParams }: Props) {
         initialBookings={bookings}
         profileId={profileId}
         initialGroomerId={initialGroomerId ?? null}
+        initialOwnerId={initialOwnerId ?? null}
       />
     </div>
   );

@@ -87,9 +87,11 @@ interface Props {
   profileId: string;
   /** groomer profile ID passed via ?groomer= URL param — auto-opens that chat if a thread exists */
   initialGroomerId?: string | null;
+  /** owner profile ID passed via ?owner= URL param — auto-opens that client's most recent thread */
+  initialOwnerId?: string | null;
 }
 
-export function MessagesClient({ initialThreads, initialBookings, profileId, initialGroomerId }: Props) {
+export function MessagesClient({ initialThreads, initialBookings, profileId, initialGroomerId, initialOwnerId }: Props) {
   const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
   const [activeId, setActiveId] = useState<string | null>(
     initialThreads[0]?.appointmentId ?? null
@@ -114,6 +116,13 @@ export function MessagesClient({ initialThreads, initialBookings, profileId, ini
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
+
+  // Auto-open the most recent thread for a given owner when ?owner= param supplied
+  useEffect(() => {
+    if (!initialOwnerId) return;
+    const match = threads.find((t) => t.ownerProfileId === initialOwnerId);
+    if (match) setActiveId(match.appointmentId);
+  }, [initialOwnerId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-open (or create) a direct conversation when ?groomer= param supplied
   useEffect(() => {

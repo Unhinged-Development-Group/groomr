@@ -831,19 +831,21 @@ export function BookingFlow({
                                 <p className="font-fredoka text-base text-deep-slate">{dog.name}</p>
                                 <p className="text-xs text-pebble-grey">{[dog.breed, dog.size].filter(Boolean).join(" · ") || "Dog"}</p>
                               </div>
-                              {isPrimarySelected && (
-                                <span className="text-xs font-bold text-pebble-grey shrink-0">
-                                  {selectedService?.name} — £{((selectedService?.price_pence ?? 0) / 100).toFixed(0)}
-                                </span>
-                              )}
                             </button>
-                            {isAdditional && (
+                            {(isPrimarySelected || isAdditional) && (
                               <div className="px-4 pb-3 pt-0">
                                 <select
-                                  value={additionalPets[additionalIdx].serviceId}
-                                  onChange={(e) => setAdditionalPets((prev) =>
-                                    prev.map((p, i) => i === additionalIdx ? { ...p, serviceId: e.target.value } : p)
-                                  )}
+                                  value={isPrimarySelected ? (selectedService?.id ?? "") : additionalPets[additionalIdx].serviceId}
+                                  onChange={(e) => {
+                                    if (isPrimarySelected) {
+                                      const svc = services.find((s) => s.id === e.target.value);
+                                      if (svc) setSelectedService(svc);
+                                    } else {
+                                      setAdditionalPets((prev) =>
+                                        prev.map((p, i) => i === additionalIdx ? { ...p, serviceId: e.target.value } : p)
+                                      );
+                                    }
+                                  }}
                                   className="field w-full text-sm"
                                 >
                                   {services.filter(s => s.id).map((s) => (

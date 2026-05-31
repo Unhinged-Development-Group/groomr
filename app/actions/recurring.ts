@@ -148,11 +148,13 @@ export async function generateRecurringAppointments(
     return { count: 0 };
   }
 
-  // Fetch existing appointments for this series to avoid duplicates
+  // Fetch active appointments for this series to avoid duplicates
+  // Exclude cancelled — they don't count as "already generated"
   const { data: existing } = await supabaseAdmin
     .from("appointments")
     .select("scheduled_at")
-    .eq("recurring_series_id", seriesId);
+    .eq("recurring_series_id", seriesId)
+    .neq("status", "cancelled");
 
   const existingDates = new Set(
     (existing ?? []).map((a) => a.scheduled_at.slice(0, 10)),

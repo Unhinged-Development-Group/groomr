@@ -130,25 +130,59 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
       {panel === "detail" && (
         <div className="space-y-5">
           {/* Dog / owner header */}
-          <div className="flex items-start gap-4">
-            {appt.dogs?.profile_image_url ? (
-              <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0">
-                <Image src={appt.dogs.profile_image_url} alt={dogName} width={64} height={64} className="object-cover w-full h-full" />
-              </div>
-            ) : (
-              <div className="w-16 h-16 rounded-2xl bg-sage-leaf/20 flex items-center justify-center font-fredoka text-2xl text-deep-slate shrink-0">
-                {dogName.charAt(0)}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
+          {siblingAppointments && siblingAppointments.length > 0 ? (
+            // Multi-pet header — show all dogs
+            <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="font-fredoka text-3xl text-deep-slate">{dogName}</h2>
                 <Badge tone={STATUS_TONE[appt.status] ?? "slate"}>{STATUS_LABEL[appt.status] ?? appt.status}</Badge>
+                <span className="text-[9px] font-bold bg-deep-slate/10 text-deep-slate px-2 py-0.5 rounded-full">Multi-pet</span>
               </div>
-              {appt.dogs?.breed && <p className="text-sm text-pebble-grey font-bold mt-0.5">{appt.dogs.breed}{appt.dogs.coat_type ? ` · ${appt.dogs.coat_type}` : ""}</p>}
-              <p className="text-sm text-deep-slate font-bold mt-0.5">Owner: {ownerName}</p>
+              <div className="flex gap-3 flex-wrap">
+                {[appt, ...siblingAppointments].map((s) => {
+                  const name = s.dogs?.name ?? "Dog";
+                  return (
+                    <div key={s.id} className="flex items-center gap-2.5 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl px-3 py-2.5">
+                      {s.dogs?.profile_image_url ? (
+                        <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+                          <Image src={s.dogs.profile_image_url} alt={name} width={40} height={40} className="object-cover w-full h-full" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate shrink-0">
+                          {name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-fredoka text-base text-deep-slate leading-tight">{name}</p>
+                        {s.dogs?.breed && <p className="text-xs text-pebble-grey">{s.dogs.breed}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-sm text-deep-slate font-bold">Owner: {ownerName}</p>
             </div>
-          </div>
+          ) : (
+            // Single-pet header
+            <div className="flex items-start gap-4">
+              {appt.dogs?.profile_image_url ? (
+                <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0">
+                  <Image src={appt.dogs.profile_image_url} alt={dogName} width={64} height={64} className="object-cover w-full h-full" />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-sage-leaf/20 flex items-center justify-center font-fredoka text-2xl text-deep-slate shrink-0">
+                  {dogName.charAt(0)}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-fredoka text-3xl text-deep-slate">{dogName}</h2>
+                  <Badge tone={STATUS_TONE[appt.status] ?? "slate"}>{STATUS_LABEL[appt.status] ?? appt.status}</Badge>
+                </div>
+                {appt.dogs?.breed && <p className="text-sm text-pebble-grey font-bold mt-0.5">{appt.dogs.breed}{appt.dogs.coat_type ? ` · ${appt.dogs.coat_type}` : ""}</p>}
+                <p className="text-sm text-deep-slate font-bold mt-0.5">Owner: {ownerName}</p>
+              </div>
+            </div>
+          )}
 
           {/* Appointment details */}
           <div className="grid grid-cols-2 gap-3">
@@ -261,18 +295,21 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
 
           {/* Actions */}
           {!isCancelled && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              <button className="btn-secondary font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2 opacity-50 cursor-not-allowed" disabled>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={() => router.push(`/dashboard/groomer/messages?owner=${appt.owner_id}`)}
+                className="btn-secondary font-nunito font-bold py-2.5 rounded-full text-sm focus-ring flex items-center justify-center gap-2"
+              >
                 <MessageIcon size={15} /> Message
               </button>
               <button onClick={() => setPanel("reschedule")}
-                className="btn-secondary font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2">
+                className="btn-secondary font-nunito font-bold py-2.5 rounded-full text-sm focus-ring flex items-center justify-center gap-2">
                 <CalendarIcon size={15} /> Reschedule
               </button>
               {!appt.recurring_series_id && (
                 <button
                   onClick={() => setShowRecurring(true)}
-                  className="btn-secondary font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2"
+                  className="btn-secondary font-nunito font-bold py-2.5 rounded-full text-sm focus-ring flex items-center justify-center gap-2"
                 >
                   ↻ Make recurring
                 </button>
@@ -290,16 +327,16 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
                       router.refresh();
                     }
                   }}
-                  className="font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring text-pebble-grey hover:bg-pebble-grey/10 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                  className="btn-secondary font-nunito font-bold py-2.5 rounded-full text-sm focus-ring flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {cancellingRecurring ? "Cancelling…" : "↻ Cancel recurring"}
                 </button>
               )}
               {appt.recurring_series_id && recurringCancelled && (
-                <span className="font-nunito text-sm text-pebble-grey px-4 py-2.5">↻ Series cancelled</span>
+                <span className="font-nunito text-sm text-pebble-grey py-2.5 flex items-center justify-center">↻ Series cancelled</span>
               )}
               <button onClick={() => setPanel("cancel")}
-                className="font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors flex items-center gap-2 ml-auto">
+                className="font-nunito font-bold py-2.5 rounded-full text-sm focus-ring text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors flex items-center justify-center gap-2">
                 <TrashIcon size={15} /> Cancel booking
               </button>
             </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon, UploadIcon } from "@/components/ui/GroomrIcons";
+import { CalendarIcon, PetsIcon, FinancialsIcon, ReviewsIcon, StarIcon, ShieldIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon, UploadIcon, ClockIcon } from "@/components/ui/GroomrIcons";
 import { toggleAcceptingBookings } from "@/app/actions/profile-editor";
 import { BookingsView } from "./BookingsView";
 import { ClientsView } from "./ClientsView";
@@ -402,7 +402,7 @@ export function GroomerDashboardClient({
               onClick={() => setBlockTimeOpen(true)}
               className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2"
             >
-              <CalendarIcon size={16} />
+              <ClockIcon size={16} />
               <span className="hidden sm:inline">Block time</span>
               <span className="sm:hidden">Block</span>
             </button>

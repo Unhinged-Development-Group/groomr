@@ -135,11 +135,11 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
             <button
               type="button"
               onClick={() => setAllDay((v) => !v)}
-              className={`relative w-11 h-6 rounded-full transition-colors focus-ring ${allDay ? "bg-deep-slate" : "bg-pebble-grey/30"}`}
+              className={`relative w-11 h-6 rounded-full transition-colors focus-ring shrink-0 overflow-hidden ${allDay ? "bg-deep-slate" : "bg-pebble-grey/30"}`}
               aria-checked={allDay}
               role="switch"
             >
-              <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${allDay ? "translate-x-6" : "translate-x-1"}`} />
+              <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-150 ${allDay ? "translate-x-5" : "translate-x-0"}`} />
             </button>
           </div>
 

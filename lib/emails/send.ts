@@ -37,9 +37,11 @@ async function fetchAppointmentEmailData(
     .single();
 
   if (aptErr || !apt) {
-    console.error("[email] apt fetch error:", aptErr?.message);
+    console.error("[email] apt fetch error:", aptErr?.message, "id:", appointmentId);
     return null;
   }
+
+  console.log("[email] apt fetched — owner_id:", apt.owner_id, "dog_id:", apt.dog_id, "groomer_profile_id:", apt.groomer_profile_id);
 
   // Step 2: parallel-fetch owner profile, dog, and groomer profile
   const [ownerRes, dogRes, gpRes] = await Promise.all([
@@ -48,10 +50,16 @@ async function fetchAppointmentEmailData(
     supabaseAdmin.from("groomer_profiles").select("business_name, address_line_1, city, postcode, user_id").eq("id", apt.groomer_profile_id).single(),
   ]);
 
+  console.log("[email] owner:", ownerRes.data?.email, ownerRes.error?.message);
+  console.log("[email] dog:", dogRes.data?.name, dogRes.error?.message);
+  console.log("[email] groomer_profile user_id:", gpRes.data?.user_id, gpRes.error?.message);
+
   // Step 3: fetch the groomer's own profile (for their email)
   const groomerProfileRes = gpRes.data?.user_id
     ? await supabaseAdmin.from("profiles").select("full_name, email").eq("id", gpRes.data.user_id).single()
     : null;
+
+  console.log("[email] groomer email:", groomerProfileRes?.data?.email, groomerProfileRes?.error?.message);
 
   const ownerEmail = ownerRes.data?.email ?? "";
   const ownerName  = ownerRes.data?.full_name ?? "there";
@@ -61,6 +69,8 @@ async function fetchAppointmentEmailData(
   const groomerName  = groomerProfileRes?.data?.full_name ?? "there";
 
   const addressParts = [gpRes.data?.address_line_1, gpRes.data?.city, gpRes.data?.postcode].filter(Boolean);
+
+  console.log("[email] final — ownerEmail:", ownerEmail || "(empty)", "groomerEmail:", groomerEmail || "(empty)");
 
   return {
     ownerName,

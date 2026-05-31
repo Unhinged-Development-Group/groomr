@@ -217,8 +217,7 @@ export async function createAppointment(
 
   console.log("[createAppointment] created id:", data.id, "groomer:", input.groomerProfileId);
 
-  // Fire-and-forget — don't let email failure block the booking response
-  sendBookingConfirmationEmails(data.id).catch((e) =>
+  await sendBookingConfirmationEmails(data.id).catch((e) =>
     console.error("[createAppointment] email error:", e),
   );
 

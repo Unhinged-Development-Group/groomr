@@ -138,7 +138,7 @@ export async function cancelAppointment(appointmentId: string, reason: string): 
     return { ok: false, error: "Failed to cancel appointment" };
   }
 
-  sendCancellationEmails(appointmentId).catch((e) =>
+  await sendCancellationEmails(appointmentId).catch((e) =>
     console.error("[cancelAppointment] email error:", e),
   );
 

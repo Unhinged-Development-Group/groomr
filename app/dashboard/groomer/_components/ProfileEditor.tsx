@@ -798,81 +798,71 @@ export function ProfileEditor({
                     "rounded-xl border transition-colors",
                     row.isActive ? "border-deep-slate/20 bg-alabaster-cream" : "border-pebble-grey/15 bg-white"
                   )}>
-                    {/* Main hours row — always visible, aligned on all days */}
-                    <div className="px-4 py-3">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {/* Toggle + day label — fixed width */}
-                        <button
-                          type="button"
-                          onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
-                          className={cn(
-                            "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors shrink-0",
-                            row.isActive ? "text-deep-slate" : "text-pebble-grey"
-                          )}
-                          aria-label={`Toggle ${DAY_LABELS[dow]}`}
-                        >
+                    {/* Single inline row: toggle + hours + breaks + actions */}
+                    <div className="px-4 py-3 flex flex-wrap items-center gap-2 sm:gap-3">
+                      {/* Toggle + day label */}
+                      <button
+                        type="button"
+                        onClick={() => updateAvailability(dow, { isActive: !row.isActive })}
+                        className={cn(
+                          "flex items-center gap-2 focus-ring rounded-full px-1 py-0.5 transition-colors shrink-0",
+                          row.isActive ? "text-deep-slate" : "text-pebble-grey"
+                        )}
+                        aria-label={`Toggle ${DAY_LABELS[dow]}`}
+                      >
+                        <span className={cn(
+                          "w-8 h-4 rounded-full transition-colors relative shrink-0",
+                          row.isActive ? "bg-deep-slate" : "bg-pebble-grey/30"
+                        )}>
                           <span className={cn(
-                            "w-8 h-4 rounded-full transition-colors relative shrink-0",
-                            row.isActive ? "bg-deep-slate" : "bg-pebble-grey/30"
-                          )}>
-                            <span className={cn(
-                              "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
-                              row.isActive ? "left-4" : "left-0.5"
-                            )} />
-                          </span>
-                          <span className={cn("font-bold text-sm w-8 shrink-0", !row.isActive && "opacity-40")}>
-                            {DAY_LABELS[dow]}
-                          </span>
-                        </button>
+                            "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
+                            row.isActive ? "left-4" : "left-0.5"
+                          )} />
+                        </span>
+                        <span className={cn("font-bold text-sm w-8 shrink-0", !row.isActive && "opacity-40")}>
+                          {DAY_LABELS[dow]}
+                        </span>
+                      </button>
 
-                        {/* Time inputs — always visible, disabled when inactive */}
-                        <input type="time" value={row.startTime} disabled={!row.isActive}
-                          onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
-                          className={cn("field py-1.5 text-sm w-28 sm:w-32 min-w-0 disabled:cursor-not-allowed", !row.isActive && "opacity-40")} />
-                        <span className={cn("text-xs font-bold text-pebble-grey shrink-0", !row.isActive && "opacity-40")}>to</span>
-                        <input type="time" value={row.endTime} disabled={!row.isActive}
-                          onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
-                          className={cn("field py-1.5 text-sm w-28 sm:w-32 min-w-0 disabled:cursor-not-allowed", !row.isActive && "opacity-40")} />
+                      {/* Main time inputs */}
+                      <input type="time" value={row.startTime} disabled={!row.isActive}
+                        onChange={(e) => updateAvailability(dow, { startTime: e.target.value })}
+                        className={cn("field py-1.5 text-sm w-28 sm:w-32 min-w-0 disabled:cursor-not-allowed", !row.isActive && "opacity-40")} />
+                      <span className={cn("text-xs font-bold text-pebble-grey shrink-0", !row.isActive && "opacity-40")}>to</span>
+                      <input type="time" value={row.endTime} disabled={!row.isActive}
+                        onChange={(e) => updateAvailability(dow, { endTime: e.target.value })}
+                        className={cn("field py-1.5 text-sm w-28 sm:w-32 min-w-0 disabled:cursor-not-allowed", !row.isActive && "opacity-40")} />
 
-                        {/* + Break button — only when active */}
-                        <div className="ml-auto shrink-0">
-                          {row.isActive && (
-                            <button type="button"
-                              onClick={() => addBreak(dow)}
-                              className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate transition-colors focus-ring whitespace-nowrap">
-                              + Break
-                            </button>
-                          )}
+                      {/* Inline break inputs */}
+                      {row.isActive && row.breaks.map((brk, bi) => (
+                        <div key={bi} className="flex items-center gap-2 sm:gap-3">
+                          <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0">
+                            {row.breaks.length > 1 ? `Break ${bi + 1}` : "Break"}
+                          </span>
+                          <input type="time" value={brk.startTime}
+                            onChange={(e) => updateBreak(dow, bi, { startTime: e.target.value })}
+                            className="field py-1 text-xs w-28 sm:w-32 min-w-0" />
+                          <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
+                          <input type="time" value={brk.endTime}
+                            onChange={(e) => updateBreak(dow, bi, { endTime: e.target.value })}
+                            className="field py-1 text-xs w-28 sm:w-32 min-w-0" />
+                          <button type="button"
+                            onClick={() => removeBreak(dow, bi)}
+                            className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-deep-slate/20 text-deep-slate bg-white hover:bg-pebble-grey/10 transition-colors focus-ring whitespace-nowrap shrink-0">
+                            − Remove
+                          </button>
                         </div>
-                      </div>
-                    </div>
+                      ))}
 
-                    {/* Break rows — one per break */}
-                    {row.isActive && row.breaks.length > 0 && (
-                      <div className="px-4 pb-3 space-y-2">
-                        {row.breaks.map((brk, bi) => (
-                          <div key={bi} className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider shrink-0 w-[4.5rem] text-right">
-                              Break {row.breaks.length > 1 ? bi + 1 : ""}
-                            </span>
-                            <input type="time" value={brk.startTime}
-                              onChange={(e) => updateBreak(dow, bi, { startTime: e.target.value })}
-                              className="field py-1 text-xs w-28 sm:w-32 min-w-0" />
-                            <span className="text-xs font-bold text-pebble-grey shrink-0">to</span>
-                            <input type="time" value={brk.endTime}
-                              onChange={(e) => updateBreak(dow, bi, { endTime: e.target.value })}
-                              className="field py-1 text-xs w-28 sm:w-32 min-w-0" />
-                            <div className="ml-auto flex items-center gap-2 shrink-0">
-                              <button type="button"
-                                onClick={() => removeBreak(dow, bi)}
-                                className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-deep-slate/20 text-deep-slate bg-white hover:bg-pebble-grey/10 transition-colors focus-ring whitespace-nowrap">
-                                − Remove
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                      {/* + Break button */}
+                      {row.isActive && (
+                        <button type="button"
+                          onClick={() => addBreak(dow)}
+                          className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-pebble-grey/30 text-pebble-grey hover:border-deep-slate hover:text-deep-slate transition-colors focus-ring whitespace-nowrap shrink-0 ml-auto">
+                          + Break
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

@@ -11,7 +11,7 @@ import { EarningsView } from "./EarningsView";
 import { ReviewsView } from "./ReviewsView";
 import { ProfileEditor } from "./ProfileEditor";
 import { StripeConnectBanner } from "./StripeConnectBanner";
-import { NewBookingModal } from "./NewBookingModal";
+import { NewBookingModal, type ExistingClient } from "./NewBookingModal";
 import { BlockTimeModal } from "./BlockTimeModal";
 import { LiveGroomTracker } from "./LiveGroomTracker";
 import type { ActiveGroom } from "./LiveGroomTracker";
@@ -336,6 +336,26 @@ export function GroomerDashboardClient({
   );
   const repeatRate = uniqueClients.size > 0 ? Math.round((repeatClients.length / uniqueClients.size) * 100) : 0;
 
+  // Derive existing clients for the new booking modal
+  const existingClients: ExistingClient[] = (() => {
+    const clientMap = new Map<string, ExistingClient>();
+    // Use all appointments (not scoped) so the groomer sees all their clients
+    initialAppointments.forEach((a) => {
+      const ownerId = a.owner_id as string | null;
+      const profile = a.profiles as { full_name?: string } | null;
+      const dog = a.dogs as { name?: string; breed?: string } | null;
+      if (!ownerId || !profile?.full_name) return;
+      if (!clientMap.has(ownerId)) {
+        clientMap.set(ownerId, { ownerId, name: profile.full_name, dogs: [] });
+      }
+      const client = clientMap.get(ownerId)!;
+      if (dog?.name && !client.dogs.find((d) => d.name === dog.name)) {
+        client.dogs.push({ dogId: (a.dog_id as string | null) ?? null, name: dog.name, breed: dog.breed ?? null });
+      }
+    });
+    return Array.from(clientMap.values());
+  })();
+
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
       {/* Welcome banner for new team members */}
@@ -444,7 +464,7 @@ export function GroomerDashboardClient({
                 <t.Icon size={18} />
                 {t.label}
                 {showDot && (
-                  <span className={cn("absolute top-2 right-2 min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
+                  <span className={cn("min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
                     active ? "bg-deep-slate text-alabaster-cream" : "bg-muted-terracotta text-alabaster-cream")}>
                     {unrespondedReviews}
                   </span>
@@ -496,6 +516,7 @@ export function GroomerDashboardClient({
       {newBookingOpen && (
         <NewBookingModal
           services={editorData.services}
+          existingClients={existingClients}
           onClose={() => setNewBookingOpen(false)}
         />
       )}

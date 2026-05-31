@@ -291,10 +291,13 @@ export interface ManualAppointmentInput {
   serviceId: string;
   clientName: string;
   dogName: string;
+  dogBreed?: string;
   scheduledDate: string; // "YYYY-MM-DD"
   scheduledTime: string; // "HH:MM"
   notes?: string;
-  status: "confirmed" | "pending";
+  // When linking to an existing owner/dog profile
+  existingOwnerId?: string;
+  existingDogId?: string;
 }
 
 export async function createManualAppointment(
@@ -315,26 +318,26 @@ export async function createManualAppointment(
 
   const scheduledAt = `${input.scheduledDate}T${input.scheduledTime}:00.000Z`;
 
-  const groomerNote = [
-    `Client: ${input.clientName}`,
-    `Dog: ${input.dogName}`,
+  const noteParts = [
+    !input.existingOwnerId ? `Client: ${input.clientName}` : null,
+    !input.existingDogId ? `Dog: ${input.dogName}` : null,
+    input.dogBreed ? `Breed: ${input.dogBreed}` : null,
     input.notes?.trim() ? input.notes.trim() : null,
-  ]
-    .filter(Boolean)
-    .join(" — ");
+  ];
+  const groomerNote = noteParts.filter(Boolean).join(" — ") || null;
 
   const { data, error } = await supabaseAdmin
     .from("appointments")
     .insert({
-      owner_id: ctx.profileId,
+      owner_id: input.existingOwnerId ?? ctx.profileId,
       groomer_profile_id: ctx.groomerProfileId,
-      dog_id: null,
+      dog_id: input.existingDogId ?? null,
       service_id: input.serviceId,
       service_snapshot_name: service.name,
       service_snapshot_duration: service.duration_minutes,
       service_snapshot_price: service.price_pence,
       scheduled_at: scheduledAt,
-      status: input.status,
+      status: "confirmed",
       groomer_notes: groomerNote,
     })
     .select("id")

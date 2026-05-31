@@ -352,8 +352,8 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                       <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">Earnings</p>
                       <p className="font-fredoka text-xl text-deep-slate leading-none">£{gross.toFixed(2)}</p>
                       <p className="text-pebble-grey text-xs">£{net.toFixed(2)} after commission</p>
-                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full capitalize mt-1 ${statusColour[a.status as string] ?? "text-pebble-grey bg-pebble-grey/10"}`}>
-                        {isFuture ? "Upcoming" : (a.status || "unknown")}
+                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full capitalize mt-1 ${isFuture ? "text-sage-leaf bg-sage-leaf/10" : a.status === "no_show" ? "text-muted-terracotta bg-muted-terracotta/10" : "text-deep-slate bg-pebble-grey/10"}`}>
+                        {isFuture ? "Upcoming" : a.status === "no_show" ? "No show" : "Completed"}
                       </span>
                     </div>
                   </div>

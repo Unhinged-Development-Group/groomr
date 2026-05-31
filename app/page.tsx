@@ -98,8 +98,8 @@ export default function LandingPage() {
             </div>
             <div className="absolute bottom-12 left-0 w-64 h-72 rounded-[24px] overflow-hidden shadow-lift -rotate-[4deg]">
               <Image
-                src="/assets/landing-hero-chihuahua-puppy.jpg"
-                alt="Fluffy cream Chihuahua puppy sitting on a carpet and looking up at the camera"
+                src="/assets/Ashoka-Puppy.jpg"
+                alt="Ashoka puppy"
                 fill
                 className="object-cover"
                 sizes="256px"

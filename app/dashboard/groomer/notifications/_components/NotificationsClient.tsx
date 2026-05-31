@@ -90,18 +90,20 @@ function RecurringRequestActions({ notification, onAction }: {
   const [status, setStatus] = useState<"idle" | "pending" | "approved" | "declined" | "loading">("loading");
   const [expanded, setExpanded] = useState(false);
 
+  // Declare metadata vars before useEffect so seriesId is in scope for the dep array
+  const meta = notification.metadata ?? {};
+  const seriesId = meta.series_id as string | undefined;
+
   // On mount, check the real series state so we don't show buttons for already-handled requests
   useEffect(() => {
     if (!seriesId) { setStatus("idle"); return; }
     getSeriesStatus(seriesId).then((s) => {
-      if (s === "active")    setStatus("approved");
+      if (s === "active")         setStatus("approved");
       else if (s === "cancelled") setStatus("declined");
-      else setStatus("idle"); // pending_approval or unknown
+      else                        setStatus("idle");
     });
   }, [seriesId]);
 
-  const meta = notification.metadata ?? {};
-  const seriesId = meta.series_id as string | undefined;
   if (!seriesId) return null;
 
   const dogName     = meta.dog_name      as string | null;

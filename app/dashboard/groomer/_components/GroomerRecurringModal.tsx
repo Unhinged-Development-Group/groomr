@@ -30,8 +30,9 @@ export function GroomerRecurringModal({
   onCreated,
 }: Props) {
   const sourceDt = new Date(scheduledAt);
-  const sourceDow = sourceDt.getUTCDay();
-  const sourceTime = `${String(sourceDt.getUTCHours()).padStart(2, "0")}:${String(sourceDt.getUTCMinutes()).padStart(2, "0")}`;
+  // Use local time so the pre-filled value matches what the groomer sees on the calendar
+  const sourceDow = sourceDt.getDay();
+  const sourceTime = `${String(sourceDt.getHours()).padStart(2, "0")}:${String(sourceDt.getMinutes()).padStart(2, "0")}`;
 
   const [frequency, setFrequency] = useState<"weekly" | "bi-weekly" | "4-weekly" | "monthly">("weekly");
   const [dayOfWeek, setDayOfWeek] = useState(sourceDow);

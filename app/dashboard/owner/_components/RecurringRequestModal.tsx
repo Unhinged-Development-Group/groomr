@@ -21,8 +21,9 @@ interface Props {
 
 export function RecurringRequestModal({ appointment, onClose, onSubmitted }: Props) {
   const sourceDt = new Date(appointment.scheduled_at);
-  const sourceDow = sourceDt.getUTCDay();
-  const sourceTime = `${String(sourceDt.getUTCHours()).padStart(2, "0")}:${String(sourceDt.getUTCMinutes()).padStart(2, "0")}`;
+  // Use local time so the pre-filled value matches what the owner sees on their appointment card
+  const sourceDow = sourceDt.getDay();
+  const sourceTime = `${String(sourceDt.getHours()).padStart(2, "0")}:${String(sourceDt.getMinutes()).padStart(2, "0")}`;
 
   const [frequency, setFrequency] = useState<"weekly" | "bi-weekly" | "4-weekly" | "monthly">("weekly");
   const [dayOfWeek, setDayOfWeek] = useState(sourceDow);

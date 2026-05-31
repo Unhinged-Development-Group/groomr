@@ -4,6 +4,32 @@ import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // ---------------------------------------------------------------------------
+// Timezone helpers (UK-only app: Europe/London)
+// ---------------------------------------------------------------------------
+
+/** Returns 1 if the given date (UTC) falls within UK BST, 0 for GMT. */
+function ukOffset(year: number, month0: number, day: number): 0 | 1 {
+  // month0 is 0-indexed (0=Jan, 2=Mar, 9=Oct)
+  if (month0 < 2 || month0 > 9) return 0;  // Nov–Feb always GMT
+  if (month0 > 2 && month0 < 9) return 1;  // Apr–Sep always BST
+
+  // March or October — compare against the last Sunday of that month
+  const lastDay = new Date(Date.UTC(year, month0 + 1, 0));
+  const lastSunday = lastDay.getUTCDate() - lastDay.getUTCDay();
+
+  if (month0 === 2) return day >= lastSunday ? 1 : 0; // BST from last Sun March
+  return day < lastSunday ? 1 : 0;                    // BST until last Sun October
+}
+
+/** Convert a "YYYY-MM-DD" + "HH:MM" local UK time to a UTC ISO string. */
+function localToUTC(dateStr: string, localHHMM: string): string {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const [h, mi] = localHHMM.split(":").map(Number);
+  const offset = ukOffset(y, mo - 1, d);
+  return new Date(Date.UTC(y, mo - 1, d, h - offset, mi, 0)).toISOString();
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -141,7 +167,7 @@ export async function generateRecurringAppointments(
       service_snapshot_name:     series.service_snapshot_name ?? null,
       service_snapshot_duration: series.service_snapshot_duration ?? null,
       service_snapshot_price:    series.service_snapshot_price ?? null,
-      scheduled_at:              `${d}T${String(series.preferred_time).slice(0, 5)}:00Z`,
+      scheduled_at:              localToUTC(d, String(series.preferred_time).slice(0, 5)),
       status:                    "confirmed",
       recurring_series_id:       seriesId,
     }));

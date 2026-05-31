@@ -1084,15 +1084,13 @@ export function ProfileEditor({
               type="button"
               onClick={() => profileImageInputRef.current?.click()}
               disabled={profileImageUploading}
-              className="relative w-20 h-20 rounded-full overflow-hidden bg-sage-leaf/20 flex items-center justify-center group shrink-0 focus-ring"
+              className="relative w-20 h-20 rounded-full overflow-hidden bg-alabaster-cream flex items-center justify-center group shrink-0 focus-ring"
               aria-label="Upload profile photo"
             >
               {profileImageUrl ? (
                 <Image src={profileImageUrl} alt="Profile photo" fill className="object-cover" sizes="80px" />
               ) : (
-                <span className="font-fredoka text-2xl text-sage-leaf/60">
-                  {(formData.businessName?.[0] ?? formData.ownerName?.[0] ?? "G").toUpperCase()}
-                </span>
+                <Image src="/assets/default-profile-photo.svg" alt="" fill className="object-contain p-3" sizes="80px" />
               )}
               <div className="absolute inset-0 bg-deep-slate/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <UploadIcon size={20} className="text-white" />
@@ -1130,7 +1128,7 @@ export function ProfileEditor({
 
         <div id="section-cover" className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
           <Eyebrow>Public profile</Eyebrow>
-          <div className="mt-3 aspect-[5/3] rounded-xl bg-sage-leaf/20 overflow-hidden relative">
+          <div className="mt-3 aspect-[5/3] rounded-xl bg-alabaster-cream overflow-hidden relative">
             {coverPhotoUrl ? (
               <Image
                 src={coverPhotoUrl}
@@ -1140,10 +1138,13 @@ export function ProfileEditor({
                 sizes="360px"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-sage-leaf/60">
-                <UploadIcon size={28} />
-                <p className="text-xs font-bold">No cover photo yet</p>
-              </div>
+              <Image
+                src="/assets/default-cover-photo.svg"
+                alt=""
+                fill
+                className="object-contain p-8"
+                sizes="360px"
+              />
             )}
             {coverUploading && (
               <div className="absolute inset-0 bg-deep-slate/50 flex items-center justify-center">

@@ -350,7 +350,7 @@ export function GroomerDashboardClient({
       }
       const client = clientMap.get(ownerId)!;
       if (dog?.name && !client.dogs.find((d) => d.name === dog.name)) {
-        client.dogs.push({ dogId: (a.dog_id as string | null) ?? null, name: dog.name, breed: dog.breed ?? null });
+        client.dogs.push({ dogId: (a.dog_id as string | null) ?? null, name: dog.name, breed: dog.breed ?? null, photoUrl: (dog as any).profile_image_url ?? null });
       }
     });
     return Array.from(clientMap.values());

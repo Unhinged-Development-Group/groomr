@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { CloseIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/GroomrIcons";
+import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { createManualAppointment } from "@/app/actions/groomer";
 import type { ServiceRow } from "@/types/groomer-dashboard";
 
@@ -21,10 +21,74 @@ const DOG_BREEDS = [
   "Mixed breed / Crossbreed", "Other",
 ];
 
+function BreedPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const filtered = query
+    ? DOG_BREEDS.filter((b) => b.toLowerCase().includes(query.toLowerCase()))
+    : DOG_BREEDS;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => { setOpen((o) => !o); setQuery(""); }}
+        className="field w-full flex items-center justify-between gap-2 text-left"
+      >
+        <span className={value ? "text-deep-slate" : "text-pebble-grey/60"}>
+          {value || "Select breed…"}
+        </span>
+        <ChevronDownIcon size={16} className={`text-pebble-grey shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-pebble-grey/25 rounded-xl shadow-modal overflow-hidden">
+          <div className="p-2 border-b border-pebble-grey/10">
+            <input
+              autoFocus
+              type="text"
+              placeholder="Search breeds…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full text-sm px-3 py-1.5 rounded-lg border border-pebble-grey/20 outline-none focus:border-deep-slate bg-alabaster-cream font-nunito placeholder:text-pebble-grey/50"
+            />
+          </div>
+          <ul className="max-h-48 overflow-y-auto py-1">
+            {filtered.length === 0 && (
+              <li className="px-4 py-2 text-sm text-pebble-grey font-bold">No matches</li>
+            )}
+            {filtered.map((b) => (
+              <li key={b}>
+                <button
+                  type="button"
+                  onClick={() => { onChange(b); setOpen(false); setQuery(""); }}
+                  className={`w-full text-left px-4 py-2 text-sm font-nunito hover:bg-alabaster-cream transition-colors ${value === b ? "font-bold text-deep-slate" : "text-deep-slate/80"}`}
+                >
+                  {b}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export interface ExistingClient {
   ownerId: string;
   name: string;
-  dogs: { dogId: string | null; name: string; breed: string | null }[];
+  dogs: { dogId: string | null; name: string; breed: string | null; photoUrl: string | null }[];
 }
 
 interface Props {
@@ -35,8 +99,15 @@ interface Props {
 
 type Step = "pick" | "existing" | "new";
 
-function ClientAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
+function ClientAvatar({ name, photoUrl, size = "md" }: { name: string; photoUrl?: string | null; size?: "sm" | "md" }) {
   const dims = size === "sm" ? "w-8 h-8 text-sm" : "w-10 h-10 text-base";
+  if (photoUrl) {
+    return (
+      <div className={`${dims} rounded-full overflow-hidden shrink-0`}>
+        <Image src={photoUrl} alt={name} width={40} height={40} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
   return (
     <div className={`${dims} rounded-full bg-sage-leaf/20 flex items-center justify-center font-fredoka text-deep-slate shrink-0`}>
       {name.charAt(0).toUpperCase()}
@@ -202,7 +273,7 @@ export function NewBookingModal({ services, existingClients, onClose }: Props) {
                 className="w-full flex items-center justify-between gap-3 bg-white border border-pebble-grey/15 rounded-2xl px-4 py-3 hover:border-deep-slate/30 hover:bg-white transition-colors focus-ring group"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <ClientAvatar name={client.name} />
+                  <ClientAvatar name={client.name} photoUrl={client.dogs[0]?.photoUrl} />
                   <div className="min-w-0 text-left">
                     <p className="font-bold text-deep-slate text-sm">{client.name}</p>
                     <p className="text-xs text-pebble-grey truncate">
@@ -299,26 +370,25 @@ export function NewBookingModal({ services, existingClients, onClose }: Props) {
         ) : (
           /* ── Step 2b: new client ── */
           <form onSubmit={submitNew} className="overflow-y-auto px-6 py-5 space-y-4">
-            {/* Client + dog name */}
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Client name</span>
-                <input className="field mt-1.5" placeholder="e.g. Sarah M." value={clientName} onChange={(e) => setClientName(e.target.value)} required />
-              </label>
-              <label className="block">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Dog name</span>
-                <input className="field mt-1.5" placeholder="e.g. Biscuit" value={dogName} onChange={(e) => setDogName(e.target.value)} required />
-              </label>
-            </div>
+            {/* Client name */}
+            <label className="block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Client name</span>
+              <input className="field mt-1.5" placeholder="e.g. Sarah M." value={clientName} onChange={(e) => setClientName(e.target.value)} required />
+            </label>
+
+            {/* Dog name */}
+            <label className="block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Dog name</span>
+              <input className="field mt-1.5" placeholder="e.g. Biscuit" value={dogName} onChange={(e) => setDogName(e.target.value)} required />
+            </label>
 
             {/* Breed */}
-            <label className="block">
+            <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Breed</span>
-              <select value={dogBreed} onChange={(e) => setDogBreed(e.target.value)} className="field mt-1.5 cursor-pointer">
-                <option value="">Select breed…</option>
-                {DOG_BREEDS.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </label>
+              <div className="mt-1.5">
+                <BreedPicker value={dogBreed} onChange={setDogBreed} />
+              </div>
+            </div>
 
             {/* Service */}
             <label className="block">

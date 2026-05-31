@@ -145,28 +145,18 @@ export function BlockTimeModal({ open, onClose, existingBlocks, onBlockAdded, on
           </div>
 
           {/* Time pickers — hidden when all-day */}
-          <div className={`grid grid-cols-2 gap-3 transition-all duration-200 overflow-hidden ${allDay ? "opacity-0 max-h-0 pointer-events-none -mt-4" : "opacity-100 max-h-40"}`}>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">Start time</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="field w-full"
-                tabIndex={allDay ? -1 : 0}
-              />
+          {!allDay && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">Start time</label>
+                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="field w-full" />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">End time</label>
+                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="field w-full" />
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-pebble-grey block mb-1.5">End time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="field w-full"
-                tabIndex={allDay ? -1 : 0}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Reason presets */}
           <div>

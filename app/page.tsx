@@ -6,6 +6,12 @@ import { Badge } from "@/components/ui/Badge";
 import { SearchPillWrapper } from "./_components/SearchPillWrapper";
 import { HowItWorksCarousel } from "./_components/HowItWorksCarousel";
 
+function getUpcomingGroomDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) + ", 10:30am";
+}
+
 const TESTIMONIALS = [
   {
     name: "Anya",
@@ -107,9 +113,9 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="font-fredoka text-sm text-deep-slate leading-tight">
-                    Marlow&apos;s next groom
+                    Murphy&apos;s next groom
                   </p>
-                  <p className="text-xs text-pebble-grey font-bold">Sat 23 May, 10:30am</p>
+                  <p className="text-xs text-pebble-grey font-bold">{getUpcomingGroomDate()}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between bg-sage-leaf/10 rounded-xl px-3 py-2">

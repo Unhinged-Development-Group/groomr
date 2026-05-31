@@ -41,12 +41,6 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
       return null;
     })();
 
-    const futureCutoff = (() => {
-      if (range === "7d" || range === "30d") return now; // backward-looking only
-      if (range === "ytd") { return new Date(new Date().getFullYear(), 11, 31, 23, 59, 59); }
-      return null;
-    })();
-
     const active = appointments.filter(a => a.status !== "cancelled" && a.status !== "no_show");
 
     const earnedAppts = active.filter(a => {
@@ -55,10 +49,10 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
       return pastCutoff ? d >= pastCutoff : true;
     });
 
+    // Upcoming always means "before the next payout" — consistent across all range views
     const upcomingAppts = active.filter(a => {
       const d = new Date(a.scheduled_at);
-      if (d <= now) return false;
-      return futureCutoff ? d <= futureCutoff : true;
+      return d > now && d < nextMonday;
     });
 
     // Chart: group earned by day (7d/30d) or month (ytd/all)

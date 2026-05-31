@@ -2,6 +2,7 @@
 
 import { clerkClient, auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { generateUniqueGroomerSlug } from "@/lib/slug";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -170,9 +171,12 @@ export async function registerGroomer(input: RegisterGroomerInput): Promise<Regi
   }
 
   /* ── 3. Upsert groomer profile ─────────────────────────────────────── */
+  const publicSlug = await generateUniqueGroomerSlug(input.businessName);
+
   const profilePayload = {
     user_id:                    profileId,
     business_name:              input.businessName,
+    public_slug:                publicSlug,
     address_line_1:             input.addressLine1,
     address_line_2:             input.addressLine2 || null,
     city:                       input.city,

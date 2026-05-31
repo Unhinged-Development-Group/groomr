@@ -126,7 +126,6 @@ export function GalleryIcon({ size = 24, className }: IconProps) {
 export function NotificationsIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <circle cx="17" cy="9" r="4.5" fill={TERRA} opacity="0.55" />
       <path stroke={STROKE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path stroke={STROKE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"

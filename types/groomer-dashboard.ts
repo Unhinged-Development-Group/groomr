@@ -74,6 +74,7 @@ export interface VerificationDocs {
 
 export interface ProfileEditorInitialData {
   groomerProfileId: string;
+  publicSlug: string | null;
   profile: ProfileFormData;
   coverPhotoUrl: string | null;
   profileImageUrl: string | null;

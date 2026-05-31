@@ -4,6 +4,7 @@ import { auth, currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { generateUniqueGroomerSlug } from "@/lib/slug";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -78,6 +79,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   if (!groomerProfile) {
     return {
       groomerProfileId: "",
+      publicSlug: null,
       profile: emptyProfile(myProfile.full_name || clerkName, myProfile.email || clerkEmail, myProfile.phone || clerkPhone),
       coverPhotoUrl: null,
       profileImageUrl: null,
@@ -230,7 +232,9 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     employersLiabilityVerified:    (groomerProfile.employers_liability_doc_verified     as boolean) ?? false,
   };
 
-  return { groomerProfileId, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0 };
+  const publicSlug = (groomerProfile.public_slug as string | null) ?? null;
+
+  return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0 };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
@@ -272,18 +276,23 @@ export async function saveProfile(
   // Verify ownership
   const { data: gp } = await supabaseAdmin
     .from("groomer_profiles")
-    .select("id")
+    .select("id, public_slug")
     .eq("id", groomerProfileId)
     .eq("user_id", myProfile.id)
     .maybeSingle();
 
   if (!gp) return { error: "Not authorised" };
 
+  const slugUpdate = gp.public_slug
+    ? {}
+    : { public_slug: await generateUniqueGroomerSlug(data.businessName, groomerProfileId) };
+
   const [gpResult, profileResult] = await Promise.all([
     supabaseAdmin
       .from("groomer_profiles")
       .update({
         business_name: data.businessName,
+        ...slugUpdate,
         tagline: data.tagline || null,
         bio: data.bio,
         is_mobile: data.businessMode === "mobile",

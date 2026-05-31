@@ -88,13 +88,14 @@ function BookingStatusChip({
   );
 }
 
-function ShareBar({ groomerProfileId }: { groomerProfileId: string }) {
+function ShareBar({ groomerProfileId, publicSlug }: { groomerProfileId: string; publicSlug: string | null }) {
   const [linkCopied, setLinkCopied] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
   const [calCopied, setCalCopied] = useState(false);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
-  const bookingUrl = `${appUrl}/groomers/${groomerProfileId}`;
+  const profilePath = publicSlug ? `/groomers/${publicSlug}` : `/groomers/${groomerProfileId}`;
+  const bookingUrl = `${appUrl}${profilePath}`;
   const calendarHttpUrl = `${appUrl}/api/calendar/${groomerProfileId}`;
   const calendarWebcalUrl = calendarHttpUrl.replace(/^https?/, "webcal");
 
@@ -115,7 +116,7 @@ function ShareBar({ groomerProfileId }: { groomerProfileId: string }) {
       {/* Booking link */}
       <div className="flex items-center gap-1.5 bg-white border border-pebble-grey/20 rounded-full px-3 py-1.5 max-w-xs">
         <span className="text-xs text-pebble-grey font-bold truncate min-w-0">
-          groomr.com/groomers/{groomerProfileId.slice(0, 8)}…
+          groomr.com{profilePath}
         </span>
         <button
           onClick={copyBookingLink}
@@ -404,7 +405,7 @@ export function GroomerDashboardClient({
 
       {/* Share & sync bar — owner only */}
       {viewerRole === "owner" && (
-        <ShareBar groomerProfileId={editorData.groomerProfileId} />
+        <ShareBar groomerProfileId={editorData.groomerProfileId} publicSlug={editorData.publicSlug} />
       )}
 
       {/* Stat strip */}

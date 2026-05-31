@@ -78,47 +78,56 @@ export default async function GroomerProfilePage({
 }) {
   const { id } = await params;
 
-  const [groomerRes, servicesRes, availabilityRes, reviewsRes, teamRes, favourites, portfolioRes] =
+  // Accept both UUID (legacy links) and slug (new clean URLs)
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const profileQuery = supabaseAdmin
+    .from("groomer_profiles")
+    .select(
+      `id, business_name, tagline, bio, years_experience, qualifications,
+       insurance_provider, city, postcode, is_mobile, travel_radius_miles,
+       is_verified, profile_image_url, banner_image_url, cover_photo_url,
+       average_rating, total_reviews, deposit_type, deposit_percentage`
+    )
+    .eq("is_listed", true);
+
+  const groomerRes = await (UUID_RE.test(id)
+    ? profileQuery.eq("id", id)
+    : profileQuery.eq("public_slug", id)
+  ).single();
+
+  // Resolve the actual UUID so all child queries use the right ID
+  const resolvedId: string = groomerRes.data?.id ?? id;
+
+  const [servicesRes, availabilityRes, reviewsRes, teamRes, favourites, portfolioRes] =
     await Promise.all([
-      supabaseAdmin
-        .from("groomer_profiles")
-        .select(
-          `id, business_name, tagline, bio, years_experience, qualifications,
-           insurance_provider, city, postcode, is_mobile, travel_radius_miles,
-           is_verified, profile_image_url, banner_image_url, cover_photo_url,
-           average_rating, total_reviews, deposit_type, deposit_percentage`
-        )
-        .eq("id", id)
-        .eq("is_listed", true)
-        .single(),
 
       supabaseAdmin
         .from("services")
         .select(
           "id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, sort_order"
         )
-        .eq("groomer_profile_id", id)
+        .eq("groomer_profile_id", resolvedId)
         .eq("is_active", true)
         .order("sort_order", { ascending: true, nullsFirst: false }),
 
       supabaseAdmin
         .from("availability")
         .select("day_of_week, start_time, end_time")
-        .eq("groomer_profile_id", id)
+        .eq("groomer_profile_id", resolvedId)
         .eq("is_active", true)
         .order("day_of_week", { ascending: true }),
 
       supabaseAdmin
         .from("reviews")
         .select("id, rating, body, created_at, groomer_reply, profiles!reviews_owner_id_fkey(full_name, avatar_url, clerk_id)")
-        .eq("groomer_profile_id", id)
+        .eq("groomer_profile_id", resolvedId)
         .eq("is_visible", true)
         .order("created_at", { ascending: false }),
 
       supabaseAdmin
         .from("team_members")
         .select("id, name, role, since_year, average_rating, total_reviews")
-        .eq("groomer_profile_id", id)
+        .eq("groomer_profile_id", resolvedId)
         .eq("invite_status", "accepted"),
 
       getFavouriteGroomers(),
@@ -126,7 +135,7 @@ export default async function GroomerProfilePage({
       supabaseAdmin
         .from("portfolio_photos")
         .select("url")
-        .eq("groomer_profile_id", id)
+        .eq("groomer_profile_id", resolvedId)
         .order("sort_order", { ascending: true }),
     ]);
 

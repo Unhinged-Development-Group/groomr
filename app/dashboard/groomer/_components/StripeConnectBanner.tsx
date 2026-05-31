@@ -26,7 +26,7 @@ export function StripeConnectBanner({ chargesEnabled, detailsSubmitted, stripeAc
             Stripe payouts active
           </p>
           <span className="text-xs text-pebble-grey font-nunito">
-            Earnings are transferred daily to your bank account.
+            Earnings are transferred weekly to your bank account.
           </span>
         </div>
         <button

@@ -863,13 +863,6 @@ export function ProfileEditor({
                               onChange={(e) => updateBreak(dow, bi, { endTime: e.target.value })}
                               className="field py-1 text-xs w-28 sm:w-32 min-w-0" />
                             <div className="ml-auto flex items-center gap-2 shrink-0">
-                              {bi === 0 && (
-                                <button type="button"
-                                  onClick={() => applyBreaksToAllDays(row.breaks)}
-                                  className="hidden sm:inline text-[10px] font-bold text-sage-leaf hover:underline focus-ring rounded whitespace-nowrap">
-                                  Copy to all days
-                                </button>
-                              )}
                               <button type="button"
                                 onClick={() => removeBreak(dow, bi)}
                                 className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-deep-slate/20 text-deep-slate bg-white hover:bg-pebble-grey/10 transition-colors focus-ring whitespace-nowrap">

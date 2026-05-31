@@ -104,6 +104,7 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
   const upcomingCommission = upcomingGross * GROOMR_COMMISSION_RATE;
   const groomrFees         = 0;   // £0 in year 1; subscription fee applies from year 2
   const refunds            = 0;   // £0 unless a customer refund is being processed
+  const totalNet           = totalGross - (totalGross * GROOMR_COMMISSION_RATE) - groomrFees - refunds;
   const maxVal             = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
 
   // Processed payouts: past appointments in the selected range that predate the current
@@ -139,11 +140,19 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
         <section className="lg:col-span-2 space-y-6">
           {/* Headline */}
           <div className="space-y-3">
-            <div>
-              <p className="font-fredoka text-4xl sm:text-5xl text-deep-slate leading-none">
-                £{totalGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-              <p className="text-pebble-grey font-bold mt-1.5">Total services booked</p>
+            <div className="flex items-end gap-6 flex-wrap">
+              <div>
+                <p className="font-fredoka text-4xl sm:text-5xl text-deep-slate leading-none">
+                  £{totalGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                <p className="text-pebble-grey font-bold mt-1.5">Total services booked</p>
+              </div>
+              <div className="pb-0.5">
+                <p className="font-fredoka text-2xl sm:text-3xl text-sage-leaf leading-none">
+                  £{totalNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                <p className="text-pebble-grey font-bold mt-1.5 text-xs">After commission</p>
+              </div>
             </div>
             {/* Key metrics strip — spans to match the breakdown card below */}
             <div className="bg-white border border-pebble-grey/20 rounded-2xl grid grid-cols-3 divide-x divide-pebble-grey/10">
@@ -211,6 +220,14 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
               </span>
               <span className="font-fredoka text-muted-terracotta">
                 {refunds > 0 ? `−£${refunds.toFixed(2)}` : "−£0.00"}
+              </span>
+            </div>
+
+            {/* Net earnings subtotal */}
+            <div className="flex justify-between items-center px-5 py-3 bg-sage-leaf/8">
+              <span className="font-bold text-deep-slate">Net earnings</span>
+              <span className="font-fredoka text-xl text-sage-leaf">
+                £{totalNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
 

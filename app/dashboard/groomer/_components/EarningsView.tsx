@@ -98,15 +98,19 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
   const totalGross      = earnedGross + upcomingGross;
   const totalBookings   = earned.length + upcoming.length;
   const avgValue        = totalBookings > 0 ? totalGross / totalBookings : 0;
-  const completedAppts     = earned; // all past non-cancelled appointments count as completed
+  const completedAppts     = earned;
   const completedGross     = earnedGross;
   const earnedCommission   = earnedGross * GROOMR_COMMISSION_RATE;
   const upcomingCommission = upcomingGross * GROOMR_COMMISSION_RATE;
-  const earnedNet          = earnedGross - earnedCommission;
-  const upcomingNet        = upcomingGross - upcomingCommission;
   const groomrFees         = 0;   // £0 in year 1; subscription fee applies from year 2
   const refunds            = 0;   // £0 unless a customer refund is being processed
   const maxVal             = chartData.length > 0 ? Math.max(...chartData.map(d => d[1])) : 100;
+
+  // Processed payouts: past appointments in the selected range that predate the current
+  // payout cycle — these have already been paid out to the groomer
+  const processedAppts = earned.filter(a => new Date(a.scheduled_at) < lastMonday);
+  const processedGross = processedAppts.reduce((s, a) => s + (a.service_snapshot_price || 0), 0) / 100;
+  const processedNet   = processedGross * (1 - GROOMR_COMMISSION_RATE);
 
   // Activity list: upcoming first (soonest), then past (most recent)
   const activityList = [
@@ -210,6 +214,19 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
               </span>
             </div>
 
+            {/* Payouts already processed */}
+            <div className="flex justify-between items-center px-5 py-3">
+              <span className="text-pebble-grey font-bold flex items-center gap-2">
+                Payouts processed
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${processedAppts.length > 0 ? "bg-sage-leaf/15 text-sage-leaf" : "bg-pebble-grey/15 text-pebble-grey"}`}>
+                  {processedAppts.length > 0 ? `${processedAppts.length} paid` : "None"}
+                </span>
+              </span>
+              <span className={`font-fredoka ${processedAppts.length > 0 ? "text-sage-leaf" : "text-pebble-grey"}`}>
+                £{processedNet.toFixed(2)}
+              </span>
+            </div>
+
             {/* Next payout total */}
             <div className="flex justify-between items-center px-5 py-4 bg-groomr-gold/20 rounded-b-2xl">
               <div>
@@ -225,27 +242,40 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
             <p className="text-xs font-bold text-pebble-grey uppercase tracking-[0.12em]">
               Earnings — {range === "7d" ? "last 7 days" : range === "30d" ? "last 30 days" : range === "ytd" ? "year to date" : "all time"}
             </p>
-          <div className="h-56 flex items-end gap-2">
             {chartData.length === 0 ? (
-              <div className="w-full h-full flex items-center justify-center text-pebble-grey font-bold text-sm">
+              <div className="h-48 flex items-center justify-center text-pebble-grey font-bold text-sm">
                 No completed bookings for this period
               </div>
-            ) : chartData.map((d, i) => {
-              const pct = d[1] / maxVal;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="w-full bg-pebble-grey/10 rounded-t-lg relative transition-colors group-hover:bg-pebble-grey/20"
-                    style={{ height: `${Math.max(5, pct * 100)}%` }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-groomr-gold/80 to-groomr-gold rounded-t-lg opacity-80 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-deep-slate text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                      £{d[1].toFixed(0)}
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-pebble-grey">{d[0]}</span>
+            ) : (
+              <>
+                {/* Bars — fixed height so percentage resolves correctly */}
+                <div className="h-44 flex items-end gap-1.5">
+                  {chartData.map((d, i) => {
+                    const pct = d[1] / maxVal;
+                    return (
+                      <div
+                        key={i}
+                        className="relative flex-1 group rounded-t-lg overflow-visible"
+                        style={{ height: `${Math.max(4, pct * 100)}%` }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-t from-groomr-gold/80 to-groomr-gold rounded-t-lg opacity-80 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-deep-slate text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap z-10">
+                          £{d[1].toFixed(0)}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+                {/* Labels — separate row so they don't affect bar heights */}
+                <div className="flex gap-1.5">
+                  {chartData.map((d, i) => (
+                    <div key={i} className="flex-1 text-center">
+                      <span className="text-[10px] font-bold text-pebble-grey">{d[0]}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </section>
 

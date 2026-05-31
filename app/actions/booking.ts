@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendBookingConfirmationEmails } from "@/lib/emails/send";
 
 async function getProfileId(clerkId: string): Promise<string | null> {
   const { data } = await supabaseAdmin
@@ -215,5 +216,11 @@ export async function createAppointment(
   }
 
   console.log("[createAppointment] created id:", data.id, "groomer:", input.groomerProfileId);
+
+  // Fire-and-forget — don't let email failure block the booking response
+  sendBookingConfirmationEmails(data.id).catch((e) =>
+    console.error("[createAppointment] email error:", e),
+  );
+
   return { appointmentId: data.id };
 }

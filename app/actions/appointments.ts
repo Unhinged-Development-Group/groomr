@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendCancellationEmails } from "@/lib/emails/send";
 
 export interface Appointment {
   id: string;
@@ -136,6 +137,10 @@ export async function cancelAppointment(appointmentId: string, reason: string): 
     console.error("Error cancelling appointment:", error);
     return { ok: false, error: "Failed to cancel appointment" };
   }
+
+  sendCancellationEmails(appointmentId).catch((e) =>
+    console.error("[cancelAppointment] email error:", e),
+  );
 
   return { ok: true };
 }

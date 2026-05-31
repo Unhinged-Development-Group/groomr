@@ -190,12 +190,17 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const averageRating   = (groomerProfile.average_rating    as number | null) ?? null;
   const totalReviews    = (groomerProfile.total_reviews     as number | null) ?? null;
 
+  const docUrl = (v: unknown) => {
+    const s = v as string | null;
+    return s && s !== "skipped" ? s : null;
+  };
+
   const verificationDocs: VerificationDocs = {
-    insuranceDocUrl:               (groomerProfile.insurance_doc_url                    as string | null) ?? null,
-    qualificationDocUrl:           (groomerProfile.qualification_doc_url                as string | null) ?? null,
-    firstAidDocUrl:                (groomerProfile.first_aid_doc_url                    as string | null) ?? null,
-    photoIdDocUrl:                 (groomerProfile.photo_id_doc_url                     as string | null) ?? null,
-    employersLiabilityDocUrl:      (groomerProfile.employers_liability_doc_url          as string | null) ?? null,
+    insuranceDocUrl:               docUrl(groomerProfile.insurance_doc_url),
+    qualificationDocUrl:           docUrl(groomerProfile.qualification_doc_url),
+    firstAidDocUrl:                docUrl(groomerProfile.first_aid_doc_url),
+    photoIdDocUrl:                 docUrl(groomerProfile.photo_id_doc_url),
+    employersLiabilityDocUrl:      docUrl(groomerProfile.employers_liability_doc_url),
     hasEmployees:                  (groomerProfile.has_employees                        as boolean | null) ?? null,
     insuranceVerified:             (groomerProfile.insurance_doc_verified               as boolean) ?? false,
     qualificationVerified:         (groomerProfile.qualification_doc_verified           as boolean) ?? false,

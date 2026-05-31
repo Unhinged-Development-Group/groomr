@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Appointment } from "@/app/actions/appointments";
 import { resend, FROM_EMAIL } from "@/lib/resend";
@@ -165,12 +165,35 @@ export async function getGroomerReviews() {
         service_snapshot_name,
         dogs (name)
       ),
-      profiles!reviews_owner_id_fkey (full_name, avatar_url)
+      profiles!reviews_owner_id_fkey (full_name, avatar_url, clerk_id)
     `)
     .in("appointment_id", appointmentIds)
     .order("created_at", { ascending: false });
 
-  return (data || []) as Review[];
+  const reviews = (data || []) as any[];
+
+  // avatar_url in DB may be stale/null — fetch live from Clerk
+  const clerkIds = reviews
+    .map((r) => r.profiles?.clerk_id)
+    .filter(Boolean) as string[];
+
+  const clerkImageMap = new Map<string, string>();
+  if (clerkIds.length) {
+    try {
+      const clerk = await clerkClient();
+      const { data: clerkUsers } = await clerk.users.getUserList({ userId: clerkIds, limit: 100 });
+      for (const u of clerkUsers) clerkImageMap.set(u.id, u.imageUrl);
+    } catch {
+      // non-fatal — fall back to DB value
+    }
+  }
+
+  return reviews.map((r) => ({
+    ...r,
+    profiles: r.profiles
+      ? { ...r.profiles, avatar_url: clerkImageMap.get(r.profiles.clerk_id) ?? r.profiles.avatar_url ?? null }
+      : r.profiles,
+  })) as Review[];
 }
 
 export async function getGroomerPayments() {

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getFavouriteGroomers } from "@/app/actions/favourites";
 import { StarRow } from "@/components/ui/StarRow";
@@ -56,7 +57,7 @@ interface Review {
   body: string | null;
   created_at: string;
   groomer_reply: string | null;
-  profiles: { full_name: string | null; avatar_url: string | null } | null;
+  profiles: { full_name: string | null; avatar_url: string | null; clerk_id?: string | null } | null;
 }
 
 interface TeamMember {
@@ -109,7 +110,7 @@ export default async function GroomerProfilePage({
 
       supabaseAdmin
         .from("reviews")
-        .select("id, rating, body, created_at, groomer_reply, profiles!reviews_owner_id_fkey(full_name, avatar_url)")
+        .select("id, rating, body, created_at, groomer_reply, profiles!reviews_owner_id_fkey(full_name, avatar_url, clerk_id)")
         .eq("groomer_profile_id", id)
         .eq("is_visible", true)
         .order("created_at", { ascending: false }),
@@ -128,7 +129,26 @@ export default async function GroomerProfilePage({
   const groomer = groomerRes.data;
   const services = (servicesRes.data ?? []) as Service[];
   const availability = (availabilityRes.data ?? []) as AvailabilityRow[];
-  const reviews = (reviewsRes.data ?? []) as unknown as Review[];
+  const rawReviews = (reviewsRes.data ?? []) as any[];
+
+  // avatar_url in DB may be null — fetch live from Clerk
+  const reviewClerkIds = rawReviews.map((r) => r.profiles?.clerk_id).filter(Boolean) as string[];
+  const reviewImageMap = new Map<string, string>();
+  if (reviewClerkIds.length) {
+    try {
+      const clerk = await clerkClient();
+      const { data: clerkUsers } = await clerk.users.getUserList({ userId: reviewClerkIds, limit: 100 });
+      for (const u of clerkUsers) reviewImageMap.set(u.id, u.imageUrl);
+    } catch { /* non-fatal */ }
+  }
+
+  const reviews: Review[] = rawReviews.map((r) => ({
+    ...r,
+    profiles: r.profiles
+      ? { ...r.profiles, avatar_url: reviewImageMap.get(r.profiles.clerk_id) ?? r.profiles.avatar_url ?? null }
+      : null,
+  }));
+
   const team = (teamRes.data ?? []) as TeamMember[];
   const initialSaved = favourites.some((f) => f.groomer_profile_id === id);
 

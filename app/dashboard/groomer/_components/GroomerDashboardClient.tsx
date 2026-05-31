@@ -282,41 +282,40 @@ export function GroomerDashboardClient({
       )}
 
       {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-5">
-        <div className="min-w-0">
-          <Eyebrow>Studio dashboard</Eyebrow>
-          <div className="flex items-center gap-3 mt-2 flex-wrap">
+      <header className="space-y-2">
+        <Eyebrow>Studio dashboard</Eyebrow>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap min-w-0">
             <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">{businessName}</h1>
             <BookingStatusChip isAcceptingBookings={editorData.profile.isAcceptingBookings} groomerProfileId={editorData.groomerProfileId} />
           </div>
-          <p className="text-sm text-pebble-grey font-bold mt-3">
-            {ownerName}
-            {editorData.totalReviews && editorData.totalReviews > 0 ? (
-              <> · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">{editorData.averageRating?.toFixed(1)} ({editorData.totalReviews} reviews)</span></>
-            ) : (
-              <> · <span className="text-pebble-grey/60">No reviews yet</span></>
+          <div className="flex flex-wrap items-center gap-2">
+            {viewerRole === "owner" && (
+              <ScopeSelector team={team} scope={scope} onScopeChange={setScope} />
             )}
-          </p>
+            <button
+              onClick={() => setBlockTimeOpen(true)}
+              className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2"
+            >
+              <CalendarIcon size={16} />
+              <span className="hidden sm:inline">Block time</span>
+              <span className="sm:hidden">Block</span>
+            </button>
+            <button onClick={() => setNewBookingOpen(true)} className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
+              <PlusIcon size={16} />
+              <span className="hidden sm:inline">New booking</span>
+              <span className="sm:hidden">Book</span>
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          {viewerRole === "owner" && (
-            <ScopeSelector team={team} scope={scope} onScopeChange={setScope} />
+        <p className="text-sm text-pebble-grey font-bold">
+          {ownerName}
+          {editorData.totalReviews && editorData.totalReviews > 0 ? (
+            <> · <StarIcon size={12} className="inline-block align-middle" /> <span className="inline-block align-middle">{editorData.averageRating?.toFixed(1)} ({editorData.totalReviews} reviews)</span></>
+          ) : (
+            <> · <span className="text-pebble-grey/60">No reviews yet</span></>
           )}
-          <button
-            onClick={() => setBlockTimeOpen(true)}
-            className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring flex items-center gap-2"
-          >
-            <CalendarIcon size={16} />
-            <span className="hidden sm:inline">Block time</span>
-            <span className="sm:hidden">Block</span>
-          </button>
-
-          <button onClick={() => setNewBookingOpen(true)} className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring shadow-subtle flex items-center gap-2">
-            <PlusIcon size={16} />
-            <span className="hidden sm:inline">New booking</span>
-            <span className="sm:hidden">Book</span>
-          </button>
-        </div>
+        </p>
       </header>
 
       {/* Stat strip */}

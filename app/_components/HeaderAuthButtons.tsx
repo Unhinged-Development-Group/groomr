@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { PaymentMethodsPage } from "./PaymentMethodsPage";
 import { MessagesNavButton } from "./MessagesNavButton";
+import { NotificationsNavButton } from "./NotificationsNavButton";
 
 function HomeIcon() {
   return (
@@ -40,6 +41,7 @@ export function HeaderAuthButtons() {
           <HomeIcon />
         </Link>
         <MessagesNavButton />
+        <NotificationsNavButton />
         <UserButton>
           <UserButton.UserProfilePage
             label="Payment Methods"

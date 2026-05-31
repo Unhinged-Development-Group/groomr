@@ -141,18 +141,19 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
               </p>
               <p className="text-pebble-grey font-bold mt-1.5">Total services booked</p>
             </div>
-            <div className="flex gap-3 items-end flex-wrap">
-              <div>
-                <p className="font-fredoka text-2xl text-deep-slate">{totalBookings}</p>
-                <p className="text-xs font-bold text-pebble-grey mt-1">Bookings</p>
+            {/* Key metrics strip — spans to match the breakdown card below */}
+            <div className="bg-white border border-pebble-grey/20 rounded-2xl grid grid-cols-3 divide-x divide-pebble-grey/10">
+              <div className="px-4 sm:px-6 py-4">
+                <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">Bookings</p>
+                <p className="font-fredoka text-2xl sm:text-3xl text-deep-slate mt-1 leading-none">{totalBookings}</p>
               </div>
-              <div>
-                <p className="font-fredoka text-2xl text-deep-slate">£{avgValue.toFixed(2)}</p>
-                <p className="text-xs font-bold text-pebble-grey mt-1">Avg value</p>
+              <div className="px-4 sm:px-6 py-4">
+                <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">Avg value</p>
+                <p className="font-fredoka text-2xl sm:text-3xl text-deep-slate mt-1 leading-none">£{avgValue.toFixed(2)}</p>
               </div>
-              <div className="bg-groomr-gold rounded-2xl px-3 sm:px-4 py-2 text-center">
-                <p className="font-fredoka text-xl sm:text-2xl text-deep-slate leading-none">£{payoutCycleNet.toFixed(2)}</p>
-                <p className="text-[10px] font-bold text-deep-slate/70 mt-1 uppercase tracking-wide whitespace-nowrap">Payout {nextPayoutDate}</p>
+              <div className="px-4 sm:px-6 py-4 bg-groomr-gold/15 rounded-r-2xl">
+                <p className="text-[10px] font-bold text-deep-slate/60 uppercase tracking-[0.12em] whitespace-nowrap">Payout {nextPayoutDate}</p>
+                <p className="font-fredoka text-2xl sm:text-3xl text-deep-slate mt-1 leading-none">£{payoutCycleNet.toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -220,7 +221,11 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
           </div>
 
           {/* Chart */}
-          <div className="h-64 flex items-end gap-2">
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-pebble-grey uppercase tracking-[0.12em]">
+              Earnings — {range === "7d" ? "last 7 days" : range === "30d" ? "last 30 days" : range === "ytd" ? "year to date" : "all time"}
+            </p>
+          <div className="h-56 flex items-end gap-2">
             {chartData.length === 0 ? (
               <div className="w-full h-full flex items-center justify-center text-pebble-grey font-bold text-sm">
                 No completed bookings for this period
@@ -240,6 +245,7 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                 </div>
               );
             })}
+          </div>
           </div>
         </section>
 
@@ -266,7 +272,7 @@ export function EarningsView({ payments: _payments, appointments = [] }: { payme
                       +£{price.toFixed(0)}
                     </p>
                     <p className={`text-[10px] uppercase tracking-wide font-bold mt-0.5 ${isFuture ? "text-sage-leaf/70" : "text-pebble-grey"}`}>
-                      {isFuture ? "Upcoming" : a.status}
+                      {isFuture ? "Upcoming" : "Completed"}
                     </p>
                   </div>
                 </div>

@@ -11,7 +11,10 @@ export interface GroomerNotification {
     | "rescheduled_appointment"
     | "new_review"
     | "payout_processed"
-    | "new_client";
+    | "new_client"
+    | "recurring_request"
+    | "recurring_approved"
+    | "recurring_declined";
   title: string;
   body: string;
   metadata: Record<string, unknown>;

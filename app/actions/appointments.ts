@@ -37,6 +37,7 @@ export interface Appointment {
   } | null;
 
   reviews?: { id: string }[] | null;
+  recurring_series_id?: string | null;
 }
 
 async function getProfileId(clerkId: string): Promise<string | null> {

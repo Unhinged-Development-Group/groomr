@@ -488,7 +488,7 @@ export function GroomerDashboardClient({
 
       {/* Tab content */}
       {tab === "bookings" && <BookingsView appointments={scopedAppointments} availability={editorData.availability} onBeginGroom={handleBeginGroom} activeGroomId={activeGroom?.appointmentId ?? null} />}
-      {tab === "clients"  && <ClientsView appointments={scopedAppointments} />}
+      {tab === "clients"  && <ClientsView appointments={scopedAppointments} services={editorData.services} />}
       {tab === "earnings" && <EarningsView payments={initialPayments} appointments={scopedAppointments} />}
       {tab === "reviews"  && (
         <ReviewsView
@@ -510,6 +510,7 @@ export function GroomerDashboardClient({
           viewerRole={editorData.viewerRole}
           initialVerificationDocs={editorData.verificationDocs}
           portfolioCount={editorData.portfolioCount}
+          initialContractTerms={editorData.contractTerms ?? null}
         />
       )}
 
@@ -517,6 +518,7 @@ export function GroomerDashboardClient({
         <NewBookingModal
           services={editorData.services}
           existingClients={existingClients}
+          groomerProfileId={editorData.groomerProfileId}
           onClose={() => setNewBookingOpen(false)}
         />
       )}

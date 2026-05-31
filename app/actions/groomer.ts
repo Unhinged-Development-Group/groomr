@@ -129,6 +129,12 @@ export async function getGroomerAppointments() {
   console.log("[getGroomerAppointments] ctx:", ctx);
   if (!ctx) return [];
 
+  // Roll any ongoing recurring series whose window is expiring
+  const { rollActiveRecurringSeries } = await import("./recurring");
+  rollActiveRecurringSeries(ctx.groomerProfileId).catch((e) =>
+    console.error("[getGroomerAppointments] roll error:", e),
+  );
+
   const { data, error } = await supabaseAdmin
     .from("appointments")
     .select(`
@@ -502,4 +508,44 @@ export async function deleteGroomerReply(reviewId: string) {
 
   if (error) return { error: error.message };
   return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// checkIsOutsideHours
+//
+// Returns whether a proposed start time + duration falls outside the groomer's
+// configured availability for that day. Used for the out-of-hours indicator in
+// NewBookingModal — does NOT block the booking, just informs the UI.
+// ---------------------------------------------------------------------------
+
+export async function checkIsOutsideHours(
+  groomerProfileId: string,
+  date: string,         // "YYYY-MM-DD"
+  time: string,         // "HH:MM"
+  durationMinutes: number,
+): Promise<{ outside: boolean }> {
+  const [y, mo, d] = date.split("-").map(Number);
+  const dayOfWeek = new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
+
+  const { data: avail } = await supabaseAdmin
+    .from("availability")
+    .select("start_time, end_time")
+    .eq("groomer_profile_id", groomerProfileId)
+    .eq("day_of_week", dayOfWeek)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!avail) return { outside: true }; // day not configured = outside hours
+
+  const [sh, sm] = avail.start_time.split(":").map(Number);
+  const [eh, em] = avail.end_time.split(":").map(Number);
+  const [th, tm] = time.split(":").map(Number);
+
+  const availStart = sh * 60 + sm;
+  const availEnd   = eh * 60 + em;
+  const slotStart  = th * 60 + tm;
+  const slotEnd    = slotStart + durationMinutes;
+
+  const outside = slotStart < availStart || slotEnd > availEnd;
+  return { outside };
 }

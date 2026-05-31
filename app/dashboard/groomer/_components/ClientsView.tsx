@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { SearchIcon, CloseIcon, ChevronRightIcon, CalendarIcon, MessageIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
+import { getClientSettings, upsertDepositOverride } from "@/app/actions/client-settings";
+import { ClientPricingPanel } from "./ClientPricingPanel";
+import type { ServiceRow } from "@/types/groomer-dashboard";
 
 interface Client {
-  id: string; // owner_id
+  id: string;      // composite owner_id-dog_id (used as map key)
+  ownerId: string; // raw profiles.id UUID
   dog: string;
   breed: string;
   owner: string;
@@ -69,8 +73,39 @@ function ContactRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ClientModal({ client, visits, onClose }: { client: Client | null; visits: Array<{ date: string; service: string; price: number }>; onClose: () => void }) {
+function ClientModal({ client, visits, services, onClose }: {
+  client: Client | null;
+  visits: Array<{ date: string; service: string; price: number }>;
+  services: ServiceRow[];
+  onClose: () => void;
+}) {
+  const [depositOverride, setDepositOverride] = useState<"inherit" | "none">("inherit");
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [depositPending, startDepositTransition] = useTransition();
+
+  // Load deposit override when modal opens
+  useEffect(() => {
+    if (!client) return;
+    setSettingsLoading(true);
+    getClientSettings(client.ownerId).then((s) => {
+      setDepositOverride(s?.depositOverride ?? "inherit");
+      setSettingsLoading(false);
+    });
+  }, [client?.ownerId]);
+
+  function toggleDeposit() {
+    const next = depositOverride === "none" ? "inherit" : "none";
+    startDepositTransition(async () => {
+      const result = await upsertDepositOverride({
+        ownerProfileId: client!.ownerId,
+        depositOverride: next,
+      });
+      if ("ok" in result) setDepositOverride(next);
+    });
+  }
+
   if (!client) return null;
+
   return (
     <Modal open={!!client} onClose={onClose} size="lg">
       <div className="space-y-5">
@@ -115,6 +150,32 @@ function ClientModal({ client, visits, onClose }: { client: Client | null; visit
           <ContactRow label="Status" value={client.regular ? "Regular client" : "New / occasional"} />
         </div>
 
+        {/* Deposit override */}
+        <div className="bg-white border border-pebble-grey/15 rounded-2xl p-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <Eyebrow>Deposit rule</Eyebrow>
+              <p className="text-sm font-bold text-deep-slate mt-1">
+                {settingsLoading
+                  ? "Loading…"
+                  : depositOverride === "none"
+                  ? "No deposit required"
+                  : "Standard deposit policy"}
+              </p>
+            </div>
+            <button
+              onClick={toggleDeposit}
+              disabled={depositPending || settingsLoading}
+              className="btn-secondary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring disabled:opacity-50"
+            >
+              {depositOverride === "none" ? "Restore standard" : "Mark as trusted — no deposit"}
+            </button>
+          </div>
+        </div>
+
+        {/* Custom pricing */}
+        <ClientPricingPanel ownerId={client.ownerId} services={services} />
+
         <div className="bg-white border border-pebble-grey/15 rounded-2xl overflow-hidden">
           <div className="px-4 py-3 border-b border-pebble-grey/10"><Eyebrow>Visit history</Eyebrow></div>
           {visits.length === 0 ? (
@@ -143,7 +204,7 @@ function ClientModal({ client, visits, onClose }: { client: Client | null; visit
   );
 }
 
-export function ClientsView({ appointments }: { appointments: any[] }) {
+export function ClientsView({ appointments, services }: { appointments: any[]; services: ServiceRow[] }) {
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "last", dir: "desc" });
@@ -169,6 +230,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
             : "Owner");
       clientsMap.set(clientId, {
         id: clientId,
+        ownerId: a.owner_id,
         dog: a.dogs?.name || "Dog",
         breed: a.dogs?.breed || "Mixed",
         owner: ownerName,
@@ -339,7 +401,7 @@ export function ClientsView({ appointments }: { appointments: any[] }) {
         ))}
       </div>
 
-      <ClientModal client={openClient} visits={openClientVisits} onClose={() => { setOpenClient(null); setOpenClientVisits([]); }} />
+      <ClientModal client={openClient} visits={openClientVisits} services={services} onClose={() => { setOpenClient(null); setOpenClientVisits([]); }} />
     </section>
   );
 }

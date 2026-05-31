@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, deleteCoverPhoto, getProfileImageSignature, saveProfileImage, deleteProfileImage, toggleAcceptingBookings, getVerificationDocSignature, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
+import { saveContractTerms, getClientTermsStatus } from "@/app/actions/contract-terms";
 import type { ProfileFormData, ServiceRow, AvailabilityRow, BreakSlot, TeamMemberRow, VerificationDocs, VerificationDocType } from "@/types/groomer-dashboard";
 
 const SERVICE_TEMPLATES: Array<{ name: string; duration: number; price: number }> = [
@@ -166,6 +167,7 @@ interface Props {
   viewerRole: "owner" | "team_member";
   initialVerificationDocs: VerificationDocs;
   portfolioCount: number;
+  initialContractTerms: { id: string; version: number; content: string } | null;
 }
 
 export function ProfileEditor({
@@ -179,6 +181,7 @@ export function ProfileEditor({
   viewerRole,
   initialVerificationDocs,
   portfolioCount,
+  initialContractTerms,
 }: Props) {
   const [formData, setFormData] = useState<ProfileFormData>(initialProfile);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialCoverPhotoUrl);
@@ -203,6 +206,12 @@ export function ProfileEditor({
   const [pausing, startPause] = useTransition();
   const [isPaused, setIsPaused] = useState(() => availability.length > 0 && availability.every((r) => !r.isActive));
   const [closeAccountOpen, setCloseAccountOpen] = useState(false);
+  const [contractContent, setContractContent] = useState(initialContractTerms?.content ?? "");
+  const [contractVersion, setContractVersion] = useState(initialContractTerms?.version ?? 0);
+  const [contractSaving, startContractSave] = useTransition();
+  const [contractSaved, setContractSaved] = useState(false);
+  const [clientTermsStatus, setClientTermsStatus] = useState<Awaited<ReturnType<typeof getClientTermsStatus>>>([]);
+  const [termsStatusLoaded, setTermsStatusLoaded] = useState(false);
   const prePauseRef = useRef<AvailabilityRow[] | null>(null);
   const [savedAvailability, setSavedAvailability] = useState(initialAvailability);
   const router = useRouter();
@@ -1344,6 +1353,80 @@ export function ProfileEditor({
             );
           })()}
         </div>
+
+        {/* Contract Terms */}
+        {viewerRole === "owner" && (
+          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
+            <div>
+              <Eyebrow>Contract terms</Eyebrow>
+              <p className="text-xs text-pebble-grey font-nunito mt-1">
+                New clients must agree to these terms before their first booking. If you update them, all clients will be asked to re-accept.
+                {contractVersion > 0 && <span className="ml-1 font-bold">Currently on version {contractVersion}.</span>}
+              </p>
+            </div>
+            <textarea
+              value={contractContent}
+              onChange={(e) => setContractContent(e.target.value)}
+              placeholder="e.g. All dogs must be up to date on flea and tick treatment. Aggressive dogs require a muzzle. 24 hours notice required for cancellations…"
+              rows={8}
+              className="field w-full resize-y text-sm"
+            />
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <span className="text-xs text-pebble-grey">{contractContent.length} characters</span>
+              <button
+                disabled={contractSaving || !contractContent.trim()}
+                onClick={() => startContractSave(async () => {
+                  const result = await saveContractTerms(contractContent);
+                  if ("version" in result) {
+                    setContractVersion(result.version);
+                    setContractSaved(true);
+                    setTimeout(() => setContractSaved(false), 2500);
+                  }
+                })}
+                className="btn-primary font-nunito font-bold px-5 py-2.5 rounded-full text-sm focus-ring shadow-subtle disabled:opacity-50"
+              >
+                {contractSaved ? "Published!" : contractSaving ? "Publishing…" : "Publish new version"}
+              </button>
+            </div>
+            {contractVersion > 0 && (
+              <div>
+                <button
+                  onClick={async () => {
+                    if (!termsStatusLoaded) {
+                      const status = await getClientTermsStatus();
+                      setClientTermsStatus(status);
+                      setTermsStatusLoaded(true);
+                    } else {
+                      setTermsStatusLoaded(false);
+                      setClientTermsStatus([]);
+                    }
+                  }}
+                  className="text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors focus-ring rounded"
+                >
+                  {termsStatusLoaded ? "▲ Hide" : "▼ View acceptance status"}
+                </button>
+                {termsStatusLoaded && (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-pebble-grey/15">
+                    {clientTermsStatus.length === 0 ? (
+                      <p className="px-4 py-3 text-sm text-pebble-grey font-bold">No clients yet.</p>
+                    ) : (
+                      clientTermsStatus.map((c, i) => (
+                        <div key={c.ownerId} className={`grid grid-cols-[1fr_auto] gap-3 px-4 py-3 items-center ${i ? "border-t border-pebble-grey/10" : ""}`}>
+                          <span className="text-sm font-bold text-deep-slate">{c.ownerName}</span>
+                          {c.needsReAcceptance ? (
+                            <span className="text-xs font-bold text-muted-terracotta bg-muted-terracotta/10 px-2.5 py-1 rounded-full">Needs re-acceptance</span>
+                          ) : (
+                            <span className="text-xs font-bold text-sage-leaf bg-sage-leaf/10 px-2.5 py-1 rounded-full">Up to date</span>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {viewerRole === "owner" && (
           <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">

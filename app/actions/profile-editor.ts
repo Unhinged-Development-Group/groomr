@@ -104,12 +104,13 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
         employersLiabilityVerified: false,
       },
       portfolioCount: 0,
+      contractTerms: null,
     };
   }
 
   const groomerProfileId = groomerProfile.id as string;
 
-  const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }, { count: portfolioCount }] = await Promise.all([
+  const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }, { count: portfolioCount }, { data: contractTermsRow }] = await Promise.all([
     supabaseAdmin
       .from("services")
       .select("id, name, duration_minutes, price_pence, sort_order")
@@ -130,6 +131,12 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       .from("portfolio_photos")
       .select("id", { count: "exact", head: true })
       .eq("groomer_profile_id", groomerProfileId),
+    supabaseAdmin
+      .from("contract_terms")
+      .select("id, version, content")
+      .eq("groomer_profile_id", groomerProfileId)
+      .eq("is_current", true)
+      .maybeSingle(),
   ]);
 
   const profile: ProfileFormData = {
@@ -234,7 +241,11 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
 
   const publicSlug = (groomerProfile.public_slug as string | null) ?? null;
 
-  return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0 };
+  const contractTerms = contractTermsRow
+    ? { id: contractTermsRow.id as string, version: contractTermsRow.version as number, content: contractTermsRow.content as string }
+    : null;
+
+  return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0, contractTerms };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {

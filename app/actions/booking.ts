@@ -194,6 +194,34 @@ export async function createAppointment(
 
   if (hasConflict) return { error: "That slot was just taken — please pick another time." };
 
+  // Resolve effective price — per-service fixed override takes priority over discount %
+  let effectivePricePence = service.price_pence;
+
+  const { data: fixedOverride } = await supabaseAdmin
+    .from("client_service_prices")
+    .select("override_price_pence")
+    .eq("groomer_profile_id", input.groomerProfileId)
+    .eq("owner_id", profileId)
+    .eq("service_id", input.serviceId)
+    .maybeSingle();
+
+  if (fixedOverride) {
+    effectivePricePence = fixedOverride.override_price_pence;
+  } else {
+    const { data: clientSettings } = await supabaseAdmin
+      .from("client_settings")
+      .select("discount_percentage")
+      .eq("groomer_profile_id", input.groomerProfileId)
+      .eq("owner_id", profileId)
+      .maybeSingle();
+
+    if (clientSettings?.discount_percentage != null) {
+      effectivePricePence = Math.round(
+        service.price_pence * (1 - clientSettings.discount_percentage / 100),
+      );
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from("appointments")
     .insert({
@@ -203,7 +231,7 @@ export async function createAppointment(
       service_id:                input.serviceId,
       service_snapshot_name:     service.name,
       service_snapshot_duration: service.duration_minutes,
-      service_snapshot_price:    service.price_pence,
+      service_snapshot_price:    effectivePricePence,
       scheduled_at:              input.scheduledAt,
       status:                    "confirmed",
     })

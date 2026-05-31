@@ -88,4 +88,5 @@ export interface ProfileEditorInitialData {
   totalReviews: number | null;
   verificationDocs: VerificationDocs;
   portfolioCount: number;
+  contractTerms: { id: string; version: number; content: string } | null;
 }

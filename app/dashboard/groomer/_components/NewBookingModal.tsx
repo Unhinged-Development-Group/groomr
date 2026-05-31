@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
+import { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
-import { createManualAppointment } from "@/app/actions/groomer";
+import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ClockIcon } from "@/components/ui/GroomrIcons";
+import { createManualAppointment, checkIsOutsideHours } from "@/app/actions/groomer";
 import type { ServiceRow } from "@/types/groomer-dashboard";
 
 const DOG_BREEDS = [
@@ -94,6 +94,7 @@ export interface ExistingClient {
 interface Props {
   services: ServiceRow[];
   existingClients: ExistingClient[];
+  groomerProfileId: string;
   onClose: () => void;
 }
 
@@ -115,7 +116,7 @@ function ClientAvatar({ name, photoUrl, size = "md" }: { name: string; photoUrl?
   );
 }
 
-export function NewBookingModal({ services, existingClients, onClose }: Props) {
+export function NewBookingModal({ services, existingClients, groomerProfileId, onClose }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -139,8 +140,23 @@ export function NewBookingModal({ services, existingClients, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [doneClientName, setDoneClientName] = useState("");
+  const [outsideHours, setOutsideHours] = useState(false);
 
   const selectedService = bookableServices.find((s) => s.id === serviceId);
+
+  // Debounced outside-hours check whenever date/time/service changes
+  const outsideCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkHours = useCallback(() => {
+    if (!date || !time || !selectedService) { setOutsideHours(false); return; }
+    if (outsideCheckTimer.current) clearTimeout(outsideCheckTimer.current);
+    outsideCheckTimer.current = setTimeout(() => {
+      checkIsOutsideHours(groomerProfileId, date, time, selectedService.duration).then(({ outside }) => {
+        setOutsideHours(outside);
+      });
+    }, 400);
+  }, [date, time, selectedService, groomerProfileId]);
+
+  useEffect(() => { checkHours(); }, [checkHours]);
 
   function pickClient(client: ExistingClient) {
     setSelectedClient(client);
@@ -347,6 +363,12 @@ export function NewBookingModal({ services, existingClients, onClose }: Props) {
               </label>
             </div>
 
+            {outsideHours && (
+              <div className="flex items-center gap-2 text-xs font-semibold text-groomr-gold bg-groomr-gold/10 border border-groomr-gold/30 rounded-xl px-4 py-2.5">
+                <ClockIcon size={14} /> Outside your usual hours — booking will still be saved
+              </div>
+            )}
+
             {selectedService && (
               <div className="flex justify-between items-center bg-white border border-pebble-grey/10 rounded-xl px-4 py-3">
                 <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Total</span>
@@ -412,6 +434,12 @@ export function NewBookingModal({ services, existingClients, onClose }: Props) {
                 <input type="time" className="field mt-1.5" value={time} onChange={(e) => setTime(e.target.value)} required />
               </label>
             </div>
+
+            {outsideHours && (
+              <div className="flex items-center gap-2 text-xs font-semibold text-groomr-gold bg-groomr-gold/10 border border-groomr-gold/30 rounded-xl px-4 py-2.5">
+                <ClockIcon size={14} /> Outside your usual hours — booking will still be saved
+              </div>
+            )}
 
             {/* Notes */}
             <label className="block">

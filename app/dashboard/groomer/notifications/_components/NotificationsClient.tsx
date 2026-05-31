@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { GroomerNotification } from "@/app/actions/notifications";
 import { markAllNotificationsRead, markNotificationRead } from "@/app/actions/notifications";
+import { approveRecurringSeries, declineRecurringSeries } from "@/app/actions/recurring";
 import {
   CalendarIcon,
   NotificationsIcon,
@@ -66,7 +67,69 @@ function NotifIcon({ type }: { type: GroomerNotification["type"] }) {
           <PetsIcon size={18} className="text-sage-leaf" />
         </div>
       );
+    case "recurring_request":
+      return (
+        <div className={`${base} bg-groomr-gold/20`}>
+          <CalendarIcon size={18} className="text-deep-slate" />
+        </div>
+      );
+    case "recurring_approved":
+    case "recurring_declined":
+      return (
+        <div className={`${base} bg-pebble-grey/15`}>
+          <CalendarIcon size={18} className="text-pebble-grey" />
+        </div>
+      );
   }
+}
+
+function RecurringRequestActions({ notification, onAction }: {
+  notification: GroomerNotification;
+  onAction: (id: string) => void;
+}) {
+  const [status, setStatus] = useState<"idle" | "pending" | "approved" | "declined">("idle");
+
+  const seriesId = notification.metadata?.series_id as string | undefined;
+  if (!seriesId) return null;
+
+  async function handleApprove() {
+    setStatus("pending");
+    const result = await approveRecurringSeries(seriesId!);
+    setStatus("approved");
+    onAction(notification.id);
+    if ("appointmentsCreated" in result) {
+      // Optionally show count — keep it simple for now
+    }
+  }
+
+  async function handleDecline() {
+    setStatus("pending");
+    await declineRecurringSeries(seriesId!);
+    setStatus("declined");
+    onAction(notification.id);
+  }
+
+  if (status === "approved") return <p className="text-xs font-bold text-sage-leaf mt-2">Approved — appointments added to your calendar.</p>;
+  if (status === "declined") return <p className="text-xs font-bold text-pebble-grey mt-2">Declined.</p>;
+
+  return (
+    <div className="flex gap-2 mt-3">
+      <button
+        onClick={handleApprove}
+        disabled={status === "pending"}
+        className="btn-primary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50"
+      >
+        Approve
+      </button>
+      <button
+        onClick={handleDecline}
+        disabled={status === "pending"}
+        className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50"
+      >
+        Decline
+      </button>
+    </div>
+  );
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -196,6 +259,9 @@ export function NotificationsClient({
                   <p className="text-xs text-pebble-grey mt-1 leading-relaxed font-nunito">
                     {n.body}
                   </p>
+                  {n.type === "recurring_request" && (
+                    <RecurringRequestActions notification={n} onAction={markRead} />
+                  )}
                 </div>
                 {!n.readAt && (
                   <span

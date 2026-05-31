@@ -13,6 +13,7 @@ import {
 import { getDogs } from "@/app/actions/dogs";
 import { getAvailableSlots, createAppointment } from "@/app/actions/booking";
 import { createBookingPaymentIntent } from "@/app/actions/payments";
+import { checkTermsAcceptance, acceptContractTerms } from "@/app/actions/contract-terms";
 import type { Dog } from "@/app/actions/dogs";
 import type { AvailableSlot } from "@/app/actions/booking";
 
@@ -262,6 +263,12 @@ export function BookingFlow({
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [paymentAmountPence, setPaymentAmountPence] = useState<number>(0);
 
+  // Contract terms state
+  const [termsNeedAcceptance, setTermsNeedAcceptance] = useState(false);
+  const [termsContent, setTermsContent] = useState<string | null>(null);
+  const [termsChecked, setTermsChecked] = useState(false);
+  const termsCheckedForGroomer = useRef<string | null>(null);
+
   // Restore state saved before sign-in redirect
   const restored = useRef(false);
   useEffect(() => {
@@ -390,6 +397,11 @@ export function BookingFlow({
     setSubmitting(true);
     setBookingError(null);
 
+    // 0. Accept contract terms if required
+    if (termsNeedAcceptance && termsChecked) {
+      await acceptContractTerms(groomerProfileId);
+    }
+
     // 1. Create the appointment
     const apptResult = await createAppointment({
       groomerProfileId,
@@ -420,6 +432,13 @@ export function BookingFlow({
       // Groomer hasn't connected Stripe yet — booking is still confirmed,
       // payment will be collected at the appointment.
       console.warn("[BookingFlow] PaymentIntent failed:", piResult.error);
+      setSubmitting(false);
+      setSuccess(true);
+      return;
+    }
+
+    // No payment needed (trusted client with deposit override = none)
+    if (!piResult.clientSecret || piResult.amountPence === 0) {
       setSubmitting(false);
       setSuccess(true);
       return;
@@ -678,7 +697,18 @@ export function BookingFlow({
                   {dogs.map((dog) => (
                     <button
                       key={dog.id}
-                      onClick={() => { setSelectedDog(dog); setStep(4); }}
+                      onClick={async () => {
+                        setSelectedDog(dog);
+                        setStep(4);
+                        // Check if owner needs to accept groomer's contract terms
+                        if (termsCheckedForGroomer.current !== groomerProfileId) {
+                          const check = await checkTermsAcceptance(groomerProfileId);
+                          termsCheckedForGroomer.current = groomerProfileId;
+                          setTermsNeedAcceptance(check.needsAcceptance);
+                          setTermsContent(check.content);
+                          setTermsChecked(false);
+                        }
+                      }}
                       className="w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-4 hover:border-deep-slate hover:shadow-sm transition-all focus-ring flex items-center gap-4"
                     >
                       {dog.profile_image_url ? (
@@ -735,9 +765,31 @@ export function BookingFlow({
                 </div>
               )}
 
+              {termsNeedAcceptance && termsContent && (
+                <div className="bg-white border border-pebble-grey/20 rounded-xl p-4 space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-pebble-grey">
+                    {groomerName}&apos;s terms of service
+                  </p>
+                  <div className="max-h-40 overflow-y-auto text-xs text-deep-slate/80 font-nunito whitespace-pre-wrap border border-pebble-grey/10 rounded-lg p-3 bg-alabaster-cream">
+                    {termsContent}
+                  </div>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={termsChecked}
+                      onChange={(e) => setTermsChecked(e.target.checked)}
+                      className="mt-0.5 rounded shrink-0"
+                    />
+                    <span className="text-sm font-bold text-deep-slate">
+                      I agree to {groomerName}&apos;s terms of service
+                    </span>
+                  </label>
+                </div>
+              )}
+
               <button
                 onClick={handleConfirm}
-                disabled={submitting}
+                disabled={submitting || (termsNeedAcceptance && !termsChecked)}
                 className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-base shadow-subtle focus-ring disabled:opacity-60"
               >
                 {submitting

@@ -33,7 +33,7 @@ export interface BookingPaymentIntentInput {
 
 export async function createBookingPaymentIntent(
   input: BookingPaymentIntentInput,
-): Promise<{ clientSecret: string; amountPence: number } | { error: string }> {
+): Promise<{ clientSecret: string | null; amountPence: number } | { error: string }> {
   const { userId } = await auth();
   if (!userId) return { error: "Not authenticated." };
 
@@ -74,13 +74,24 @@ export async function createBookingPaymentIntent(
 
   const fullPricePence: number = appt.service_snapshot_price ?? 0;
 
-  // Determine charge amount based on groomer's deposit policy
+  // Check for per-client deposit override (trusted client = no deposit)
+  const { data: clientSettings } = await supabaseAdmin
+    .from("client_settings")
+    .select("deposit_override")
+    .eq("groomer_profile_id", appt.groomer_profile_id)
+    .eq("owner_id", profileId)
+    .maybeSingle();
+
+  // Determine charge amount — client override takes priority over groomer default
   let chargePence = fullPricePence;
-  if (gp.deposit_type === "percentage" && gp.deposit_percentage) {
+  if (clientSettings?.deposit_override === "none") {
+    // Trusted client — no upfront payment; they pay at the appointment
+    return { clientSecret: null, amountPence: 0 };
+  } else if (gp.deposit_type === "percentage" && gp.deposit_percentage) {
     chargePence = Math.round(fullPricePence * (gp.deposit_percentage / 100));
   }
-  // 'full' → charge everything; 'none' → still charge full at time of booking for now
-  // (Phase 2: 'none' = pay at salon, skip PaymentIntent)
+  // 'full' → charge everything; 'none' (global) → still charge full for now
+  // (Phase 2: 'none' global = pay at salon, skip PaymentIntent)
 
   const isDeposit = gp.deposit_type === "percentage";
   const platformFeePence = calcPlatformFee(chargePence);

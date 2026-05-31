@@ -12,6 +12,7 @@ import {
   groomerRescheduleAppointment,
   groomerUpdateNotes,
 } from "@/app/actions/groomer";
+import { GroomerRecurringModal } from "./GroomerRecurringModal";
 
 interface BookingDetailAppointment {
   id: string;
@@ -23,6 +24,7 @@ interface BookingDetailAppointment {
   groomer_notes: string | null;
   owner_notes: string | null;
   dog_id: string | null;
+  recurring_series_id?: string | null;
   dogs?: { name: string; breed?: string; coat_type?: string; profile_image_url?: string } | null;
   profiles?: { full_name?: string; first_name?: string; last_name?: string; email?: string; phone?: string } | null;
 }
@@ -54,6 +56,7 @@ type Panel = "detail" | "reschedule" | "cancel";
 export function BookingDetailModal({ appointment, onClose, onUpdated }: Props) {
   const router = useRouter();
   const [panel, setPanel] = useState<Panel>("detail");
+  const [showRecurring, setShowRecurring] = useState(false);
 
   // Notes
   const [editingNotes, setEditingNotes] = useState(false);
@@ -118,6 +121,7 @@ export function BookingDetailModal({ appointment, onClose, onUpdated }: Props) {
   }
 
   return (
+    <>
     <Modal open={!!appointment} onClose={onClose} size="md">
       {panel === "detail" && (
         <div className="space-y-5">
@@ -233,6 +237,19 @@ export function BookingDetailModal({ appointment, onClose, onUpdated }: Props) {
                 className="btn-secondary font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2">
                 <CalendarIcon size={15} /> Reschedule
               </button>
+              {!appt.recurring_series_id && (
+                <button
+                  onClick={() => setShowRecurring(true)}
+                  className="btn-secondary font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring flex items-center gap-2"
+                >
+                  ↻ Make recurring
+                </button>
+              )}
+              {appt.recurring_series_id && (
+                <span className="font-nunito font-bold px-4 py-2.5 rounded-full text-sm text-sage-leaf bg-sage-leaf/10 flex items-center gap-1.5">
+                  ↻ Recurring
+                </span>
+              )}
               <button onClick={() => setPanel("cancel")}
                 className="font-nunito font-bold px-4 py-2.5 rounded-full text-sm focus-ring text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors flex items-center gap-2 ml-auto">
                 <TrashIcon size={15} /> Cancel booking
@@ -313,5 +330,17 @@ export function BookingDetailModal({ appointment, onClose, onUpdated }: Props) {
         </div>
       )}
     </Modal>
+
+    {showRecurring && appt && (
+      <GroomerRecurringModal
+        appointmentId={appt.id}
+        dogName={dogName}
+        serviceName={appt.service_snapshot_name}
+        scheduledAt={appt.scheduled_at}
+        onClose={() => setShowRecurring(false)}
+        onCreated={() => { setShowRecurring(false); router.refresh(); }}
+      />
+    )}
+    </>
   );
 }

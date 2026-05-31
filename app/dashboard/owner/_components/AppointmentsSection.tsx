@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ClockIcon, PinIcon, StarIcon } from "@/components/ui/GroomrIcons";
 import type { Appointment } from "@/app/actions/appointments";
+import { RecurringRequestModal } from "./RecurringRequestModal";
 import {
   cancelAppointment,
   rescheduleAppointment,
@@ -31,6 +32,7 @@ export function AppointmentsSection({
   const [manageView, setManageView] = useState<ManageView>("choice");
   const [showReview, setShowReview] = useState(false);
   const [reviewTarget, setReviewTarget] = useState<Appointment | null>(null);
+  const [recurringTarget, setRecurringTarget] = useState<Appointment | null>(null);
 
   function openReview(apt: Appointment) {
     setReviewTarget(apt);
@@ -280,6 +282,17 @@ export function AppointmentsSection({
                         Reviewed
                       </p>
                     )}
+                    {pastStatus === "Completed" && !apt.recurring_series_id && (
+                      <button
+                        onClick={() => setRecurringTarget(apt)}
+                        className="mt-1.5 flex items-center gap-1 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded"
+                      >
+                        ↻ Make recurring
+                      </button>
+                    )}
+                    {pastStatus === "Completed" && !!apt.recurring_series_id && (
+                      <p className="mt-1.5 text-xs font-bold text-sage-leaf font-nunito">↻ Recurring</p>
+                    )}
                   </div>
                 </div>
               );
@@ -375,6 +388,15 @@ export function AppointmentsSection({
           />
         )}
       </Modal>
+
+      {/* Recurring request modal */}
+      {recurringTarget && (
+        <RecurringRequestModal
+          appointment={recurringTarget}
+          onClose={() => setRecurringTarget(null)}
+          onSubmitted={() => setRecurringTarget(null)}
+        />
+      )}
     </>
   );
 }

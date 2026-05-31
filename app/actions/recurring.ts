@@ -141,7 +141,7 @@ export async function generateRecurringAppointments(
       service_snapshot_name:     series.service_snapshot_name ?? null,
       service_snapshot_duration: series.service_snapshot_duration ?? null,
       service_snapshot_price:    series.service_snapshot_price ?? null,
-      scheduled_at:              `${d}T${series.preferred_time}:00Z`,
+      scheduled_at:              `${d}T${String(series.preferred_time).slice(0, 5)}:00Z`,
       status:                    "confirmed",
       recurring_series_id:       seriesId,
     }));
@@ -313,6 +313,9 @@ export async function createGroomerRecurringSeries(input: {
   }
 
   const genResult = await generateRecurringAppointments(series.id);
+  if ("error" in genResult) {
+    console.error("[createGroomerRecurringSeries] generate error:", genResult.error);
+  }
   const count = "count" in genResult ? genResult.count : 0;
 
   return { seriesId: series.id, appointmentsCreated: count };

@@ -38,7 +38,7 @@ export function SiteFooter() {
               { label: "Cookies", href: "/cookie-policy" },
               { label: "Terms", href: "/terms" },
               { label: "Acceptable Use", href: "/acceptable-use" },
-              { label: "Support", href: "#" },
+              { label: "Support", href: "/support" },
             ].map(({ label, href }) => (
               <Link
                 key={label}

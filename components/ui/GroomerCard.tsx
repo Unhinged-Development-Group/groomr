@@ -69,10 +69,12 @@ export function GroomerCard({ groomer, onView, onSave, saved, className }: Groom
         )}
 
         {/* Rating — top right */}
-        <div className="absolute top-3 right-3 flex items-center gap-1 bg-groomr-gold px-2.5 py-1 rounded-full shadow-sm">
-          <StarIcon size={12} className="text-deep-slate" />
-          <span className="text-xs font-bold text-deep-slate">{groomer.rating}</span>
-        </div>
+        {groomer.rating > 0 && (
+          <div className="absolute top-3 right-3 flex items-center gap-1 bg-groomr-gold px-2.5 py-1 rounded-full shadow-sm">
+            <StarIcon size={12} className="text-deep-slate" />
+            <span className="text-xs font-bold text-deep-slate">{groomer.rating}</span>
+          </div>
+        )}
 
         {/* Favourite heart — bottom right */}
         <button

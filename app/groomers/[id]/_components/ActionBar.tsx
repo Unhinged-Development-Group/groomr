@@ -131,14 +131,13 @@ export function ActionBar({
           onClick={toggleFavourite}
           disabled={busy}
           aria-label={saved ? "Remove from favourites" : "Save to favourites"}
-          className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all focus-ring shadow-md backdrop-blur-sm",
-            saved
-              ? "bg-muted-terracotta/90 border-muted-terracotta text-white"
-              : "bg-white/85 border-white/60 text-pebble-grey hover:border-muted-terracotta hover:text-muted-terracotta"
-          )}
+          className="p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-colors focus-ring"
         >
-          <HeartIcon size={18} filled={saved} />
+          <HeartIcon
+            size={20}
+            filled={saved}
+            className={cn("transition-colors", saved ? "text-muted-terracotta" : "text-pebble-grey")}
+          />
         </button>
         <Toast message={toast} onDismiss={() => setToast(null)} />
       </>

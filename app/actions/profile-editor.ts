@@ -127,6 +127,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
 
   const profile: ProfileFormData = {
     businessName: (groomerProfile.business_name as string) ?? "",
+    tagline: (groomerProfile.tagline as string) ?? "",
     ownerName: myProfile.full_name || clerkName,
     email: myProfile.email || clerkEmail,
     phone: myProfile.phone || clerkPhone,
@@ -215,6 +216,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {
   return {
     businessName: "",
+    tagline: "",
     ownerName,
     email,
     phone,
@@ -262,6 +264,7 @@ export async function saveProfile(
       .from("groomer_profiles")
       .update({
         business_name: data.businessName,
+        tagline: data.tagline || null,
         bio: data.bio,
         is_mobile: data.businessMode === "mobile",
         travel_radius_miles: data.businessMode === "mobile" ? data.radius : null,

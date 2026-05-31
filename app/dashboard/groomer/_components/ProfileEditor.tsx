@@ -453,7 +453,16 @@ export function ProfileEditor({
             </FieldGroup>
           </div>
           {viewerRole === "owner" && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-4">
+              <FieldGroup label="Tagline (max 80 chars)">
+                <input
+                  className="field"
+                  value={formData.tagline}
+                  onChange={(e) => setField("tagline", e.target.value.slice(0, 80))}
+                  placeholder="e.g. Award-winning mobile groomer for all breeds"
+                />
+                <p className="text-[10px] font-bold text-pebble-grey mt-1">{formData.tagline.length}/80 · Shown on search results and your public profile</p>
+              </FieldGroup>
               <FieldGroup label="Bio (max 280 chars)">
                 <textarea
                   value={formData.bio}

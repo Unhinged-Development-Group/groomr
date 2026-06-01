@@ -16,6 +16,7 @@ import {
 import { getAvailableSlots } from "@/app/actions/booking";
 import type { AvailableSlot } from "@/app/actions/booking";
 import { Modal } from "@/components/ui/Modal";
+import { TipModal } from "./TipModal";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -23,10 +24,14 @@ type ManageView = "choice" | "reschedule" | "cancel" | "done";
 
 export function AppointmentsSection({
   initialAppointments,
+  tippedAppointmentIds,
 }: {
   initialAppointments: Appointment[];
+  tippedAppointmentIds: Set<string>;
 }) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+  const [tipped, setTipped] = useState<Set<string>>(tippedAppointmentIds);
+  const [tipTarget, setTipTarget] = useState<Appointment | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showManage, setShowManage] = useState(false);
   const [activeAppointment, setActiveAppointment] = useState<Appointment | null>(null);
@@ -324,6 +329,20 @@ export function AppointmentsSection({
                         Reviewed
                       </p>
                     )}
+                    {pastStatus === "Completed" && apt.groomer_profiles?.stripe_charges_enabled && (
+                      tipped.has(apt.id) ? (
+                        <p className="mt-1.5 text-xs font-bold text-sage-leaf font-nunito">
+                          Tip sent ✓
+                        </p>
+                      ) : (
+                        <button
+                          onClick={() => setTipTarget(apt)}
+                          className="mt-1.5 text-xs font-bold text-pebble-grey hover:text-groomr-gold transition-colors font-nunito focus-ring rounded"
+                        >
+                          Leave a tip
+                        </button>
+                      )
+                    )}
                     {pastStatus === "Completed" && !apt.recurring_series_id && (
                       <button
                         onClick={() => setRecurringTarget(apt)}
@@ -457,6 +476,18 @@ export function AppointmentsSection({
           appointment={recurringTarget}
           onClose={() => setRecurringTarget(null)}
           onSubmitted={() => setRecurringTarget(null)}
+        />
+      )}
+
+      {/* Tip modal */}
+      {tipTarget && (
+        <TipModal
+          appointment={tipTarget}
+          onClose={() => setTipTarget(null)}
+          onTipSent={(appointmentId) => {
+            setTipped((prev) => new Set([...prev, appointmentId]));
+            setTipTarget(null);
+          }}
         />
       )}
     </>

@@ -64,6 +64,17 @@ export function groomCompleteEmail({
 
           <hr style="border:none;border-top:1px solid #f0eeea;margin:24px 0;">
 
+          <!-- Tip CTA -->
+          <div style="text-align:center;margin-bottom:24px;">
+            <p style="margin:0 0 12px;font-size:14px;color:#2c3e50;">Happy with the groom? Leave a tip for your groomer — 100% goes directly to them.</p>
+            <a href="https://groomr.uk/dashboard/owner"
+               style="display:inline-block;background:#eae45c;color:#2c3e50;font-weight:700;font-size:14px;padding:12px 28px;border-radius:100px;text-decoration:none;">
+              Leave a tip
+            </a>
+          </div>
+
+          <hr style="border:none;border-top:1px solid #f0eeea;margin:0 0 24px;">
+
           <p style="margin:0;font-size:13px;color:#95a5a6;text-align:center;">
             You're receiving this because you have an appointment at ${salonName}.<br>
             Powered by <a href="https://groomr.uk" style="color:#88a096;text-decoration:none;">Groomr</a>
@@ -76,7 +87,7 @@ export function groomCompleteEmail({
 </body>
 </html>`;
 
-  const text = `Hi ${ownerName},\n\n${dogName} is ready for pickup at ${salonName}!\n\n${salonPhone ? `Call us on ${salonPhone} if you have any questions.\n\n` : ""}Powered by Groomr — https://groomr.uk`;
+  const text = `Hi ${ownerName},\n\n${dogName} is ready for pickup at ${salonName}!\n\n${salonPhone ? `Call us on ${salonPhone} if you have any questions.\n\n` : ""}Happy with the groom? Leave a tip for your groomer — 100% goes directly to them:\nhttps://groomr.uk/dashboard/owner\n\nPowered by Groomr — https://groomr.uk`;
 
   return { subject, html, text };
 }

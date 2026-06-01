@@ -30,6 +30,7 @@ export interface Appointment {
     postcode: string | null;
     average_rating: number | null;
     total_reviews: number | null;
+    stripe_charges_enabled: boolean | null;
   } | null;
 
   dogs?: {
@@ -68,7 +69,8 @@ export async function getOwnerAppointments(): Promise<Appointment[]> {
         city,
         postcode,
         average_rating,
-        total_reviews
+        total_reviews,
+        stripe_charges_enabled
       ),
       dogs (name),
       reviews (id)

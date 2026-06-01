@@ -73,6 +73,16 @@ async function handleEvent(event: Stripe.Event) {
 // ---------------------------------------------------------------------------
 
 async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
+  // Tips have their own metadata type — handle separately
+  if (pi.metadata?.type === "tip") {
+    await supabaseAdmin
+      .from("tips")
+      .update({ status: "succeeded" })
+      .eq("stripe_payment_intent_id", pi.id);
+    console.log(`[stripe-webhook] tip payment_intent.succeeded → ${pi.id}`);
+    return;
+  }
+
   const appointmentId = pi.metadata?.appointment_id;
   if (!appointmentId) return;
 
@@ -111,6 +121,15 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
 }
 
 async function onPaymentIntentFailed(pi: Stripe.PaymentIntent) {
+  if (pi.metadata?.type === "tip") {
+    await supabaseAdmin
+      .from("tips")
+      .update({ status: "failed" })
+      .eq("stripe_payment_intent_id", pi.id);
+    console.warn(`[stripe-webhook] tip payment_intent.payment_failed → ${pi.id}`);
+    return;
+  }
+
   const appointmentId = pi.metadata?.appointment_id;
   if (!appointmentId) return;
 

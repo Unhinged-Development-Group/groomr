@@ -7,6 +7,7 @@ import { AccountSection } from "./_components/AccountSection";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getOwnerAppointments } from "@/app/actions/appointments";
 import { getFavouriteGroomers } from "@/app/actions/favourites";
+import { getOwnerTips } from "@/app/actions/tips";
 import type { Dog } from "@/app/actions/dogs";
 import type { Metadata } from "next";
 
@@ -59,9 +60,12 @@ export default async function OwnerDashboardPage() {
 
   const firstName = user.firstName ?? "there";
   const email = user.emailAddresses?.[0]?.emailAddress ?? null;
-  const dogs = await fetchDogs(user.id, user.firstName ?? null, email);
-  const appointments = await getOwnerAppointments();
-  const favourites = await getFavouriteGroomers();
+  const [dogs, appointments, favourites, tips] = await Promise.all([
+    fetchDogs(user.id, user.firstName ?? null, email),
+    getOwnerAppointments(),
+    getFavouriteGroomers(),
+    getOwnerTips(),
+  ]);
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-12 max-w-5xl mx-auto">
@@ -75,7 +79,7 @@ export default async function OwnerDashboardPage() {
       {/* Dogs */}
       <DogsSection initialDogs={dogs} />
 
-      <AppointmentsSection initialAppointments={appointments} />
+      <AppointmentsSection initialAppointments={appointments} tippedAppointmentIds={new Set(tips.map((t) => t.appointment_id))} />
 
       <FavouriteGroomersSection initialFavourites={favourites} />
       <AccountSection />

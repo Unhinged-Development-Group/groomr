@@ -78,9 +78,45 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
         .eq("id", membership.groomer_profile_id)
         .maybeSingle();
       groomerProfile = data;
-    } else if (!isDirectGroomer) {
-      // Non-groomer user with no team membership shouldn't reach this page
-      redirect("/dashboard");
+    } else {
+      // Existing Clerk users accept invites by signing in — user.created never fires,
+      // so team_members.user_id is still null. Match by email and self-accept here.
+      const userEmail = myProfile.email || clerkEmail;
+      if (userEmail) {
+        const { data: pendingInvite } = await supabaseAdmin
+          .from("team_members")
+          .select("id, groomer_profile_id")
+          .eq("email", userEmail)
+          .eq("invite_status", "pending")
+          .maybeSingle();
+
+        if (pendingInvite) {
+          await Promise.all([
+            supabaseAdmin
+              .from("team_members")
+              .update({ user_id: myProfile.id, invite_status: "accepted", accepted_at: new Date().toISOString() })
+              .eq("id", pendingInvite.id),
+            supabaseAdmin
+              .from("profiles")
+              .update({ roles: "{owner,groomer}" })
+              .eq("id", myProfile.id),
+          ]);
+          viewerRole = "team_member";
+          teamMemberId = pendingInvite.id;
+
+          const { data } = await supabaseAdmin
+            .from("groomer_profiles")
+            .select("*")
+            .eq("id", pendingInvite.groomer_profile_id)
+            .maybeSingle();
+          groomerProfile = data;
+        }
+      }
+
+      if (!groomerProfile && !isDirectGroomer) {
+        // Non-groomer user with no team membership shouldn't reach this page
+        redirect("/dashboard");
+      }
     }
   }
 

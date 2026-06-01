@@ -52,6 +52,8 @@ export default async function GroomerDashboardPage({
       initialPayments={payments}
       initialTimeBlocks={timeBlocks}
       editorData={editorData}
+      isFoundingGroomer={editorData.isFoundingGroomer}
+      foundingCommissionExpiresAt={editorData.foundingCommissionExpiresAt}
     />
   );
 }

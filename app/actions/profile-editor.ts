@@ -105,6 +105,8 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       },
       portfolioCount: 0,
       contractTerms: null,
+      isFoundingGroomer: false,
+      foundingCommissionExpiresAt: null,
     };
   }
 
@@ -245,7 +247,16 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     ? { id: contractTermsRow.id as string, version: contractTermsRow.version as number, content: contractTermsRow.content as string }
     : null;
 
-  return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0, contractTerms };
+  const isFoundingGroomer = (groomerProfile.is_founding_groomer as boolean) ?? false;
+  const createdAt = groomerProfile.created_at as string | null;
+  let foundingCommissionExpiresAt: string | null = null;
+  if (isFoundingGroomer && createdAt) {
+    const expires = new Date(createdAt);
+    expires.setMonth(expires.getMonth() + 6);
+    foundingCommissionExpiresAt = expires.toISOString();
+  }
+
+  return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0, contractTerms, isFoundingGroomer, foundingCommissionExpiresAt };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {

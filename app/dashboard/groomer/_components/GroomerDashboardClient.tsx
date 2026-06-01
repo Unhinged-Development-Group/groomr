@@ -220,6 +220,8 @@ interface Props {
   initialPayments: any[];
   initialTimeBlocks: TimeBlock[];
   editorData: ProfileEditorInitialData;
+  isFoundingGroomer?: boolean;
+  foundingCommissionExpiresAt?: string | null;
 }
 
 export function GroomerDashboardClient({
@@ -233,6 +235,8 @@ export function GroomerDashboardClient({
   initialPayments,
   initialTimeBlocks,
   editorData,
+  isFoundingGroomer = false,
+  foundingCommissionExpiresAt = null,
 }: Props) {
   const [tab, setTab] = useState<Tab>("bookings");
   const [scope, setScope] = useState<string>("all");
@@ -284,6 +288,9 @@ export function GroomerDashboardClient({
     setActiveGroom(updated);
   }
 
+  const foundingActive = isFoundingGroomer && !!foundingCommissionExpiresAt && new Date(foundingCommissionExpiresAt) > new Date();
+  const commissionRate = foundingActive ? 0 : 0.08;
+
   const { viewerRole, teamMemberId, team } = editorData;
   const effectiveScope = viewerRole === "team_member" ? (teamMemberId ?? "own") : scope;
 
@@ -327,7 +334,7 @@ export function GroomerDashboardClient({
     const d = new Date(a.scheduled_at);
     return d >= lastMonday && d < nextMonday && d <= now;
   });
-  const nextPayoutAmount = payoutCycleAppts.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100 * (1 - 0.08);
+  const nextPayoutAmount = payoutCycleAppts.reduce((sum, a) => sum + (a.service_snapshot_price || 0), 0) / 100 * (1 - commissionRate);
   const nextPayoutDate = nextMonday.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   const uniqueClients = new Set(scopedAppointments.map((a) => a.owner_id));
@@ -384,6 +391,25 @@ export function GroomerDashboardClient({
           detailsSubmitted={stripeStatus.detailsSubmitted}
           stripeAccountId={stripeStatus.stripeAccountId}
         />
+      )}
+
+      {/* Founding groomer banner */}
+      {foundingActive && foundingCommissionExpiresAt && (
+        <div className="bg-groomr-gold border border-groomr-gold rounded-[16px] px-5 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl leading-none mt-0.5">🏅</span>
+            <div>
+              <p className="font-fredoka text-lg text-deep-slate leading-tight">Founding Groomer — 0% Commission</p>
+              <p className="text-sm text-deep-slate/80 mt-0.5">
+                As a founding member of Groomr, you keep 100% of your earnings until{" "}
+                <span className="font-bold">
+                  {new Date(foundingCommissionExpiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                </span>
+                . After that, the standard 8% commission applies.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Header */}

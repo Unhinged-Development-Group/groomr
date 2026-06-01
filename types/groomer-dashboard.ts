@@ -89,4 +89,8 @@ export interface ProfileEditorInitialData {
   verificationDocs: VerificationDocs;
   portfolioCount: number;
   contractTerms: { id: string; version: number; content: string } | null;
+  /** True if admin has granted founding-groomer status (0% commission for 6 months from signup) */
+  isFoundingGroomer: boolean;
+  /** ISO string: created_at + 6 months — null if not a founding groomer or profile missing */
+  foundingCommissionExpiresAt: string | null;
 }

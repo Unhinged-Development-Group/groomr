@@ -17,6 +17,7 @@ import { cancelRecurringSeries } from "@/app/actions/recurring";
 
 interface BookingDetailAppointment {
   id: string;
+  owner_id: string;
   scheduled_at: string;
   status: string;
   service_snapshot_name: string | null;

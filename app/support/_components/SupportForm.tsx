@@ -6,7 +6,6 @@ import { UploadIcon, CloseIcon, CheckIcon } from "@/components/ui/GroomrIcons";
 
 const SUBJECTS = [
   "Booking issue",
-  "Booking issue — URGENT",
   "Account or login problem",
   "Payment or deposit query",
   "Report a groomer",
@@ -45,6 +44,7 @@ export function SupportForm() {
     setError(null);
 
     const raw = new FormData(formRef.current!);
+    // Attach files manually since the hidden input won't carry them
     raw.delete("images");
     for (const f of files) raw.append("images", f);
 
@@ -214,7 +214,7 @@ export function SupportForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="btn-primary w-full py-4 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+        className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isPending ? "Sending…" : "Send message"}
       </button>

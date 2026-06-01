@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendBookingConfirmationEmails } from "@/lib/emails/send";
+import { sendBookingConfirmationSMS } from "@/lib/sms/send";
 
 async function getProfileId(clerkId: string): Promise<string | null> {
   const { data } = await supabaseAdmin
@@ -247,6 +248,9 @@ export async function createAppointment(
 
   await sendBookingConfirmationEmails(data.id).catch((e) =>
     console.error("[createAppointment] email error:", e),
+  );
+  sendBookingConfirmationSMS(data.id).catch((e) =>
+    console.error("[createAppointment] sms error:", e),
   );
 
   return { appointmentId: data.id };

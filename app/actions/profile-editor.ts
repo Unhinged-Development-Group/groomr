@@ -55,7 +55,12 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       .eq("user_id", myProfile.id)
       .maybeSingle();
     groomerProfile = data;
-  } else {
+  }
+
+  // Team members are granted the 'groomer' role by the invite webhook, so isDirectGroomer
+  // can be true even though they have no groomer_profiles row of their own.
+  // Always fall through to team_members check if no direct profile was found.
+  if (!groomerProfile) {
     const { data: membership } = await supabaseAdmin
       .from("team_members")
       .select("id, groomer_profile_id")
@@ -63,17 +68,20 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       .eq("invite_status", "accepted")
       .maybeSingle();
 
-    if (!membership) redirect("/dashboard");
+    if (membership) {
+      viewerRole = "team_member";
+      teamMemberId = membership.id;
 
-    viewerRole = "team_member";
-    teamMemberId = membership.id;
-
-    const { data } = await supabaseAdmin
-      .from("groomer_profiles")
-      .select("*")
-      .eq("id", membership.groomer_profile_id)
-      .maybeSingle();
-    groomerProfile = data;
+      const { data } = await supabaseAdmin
+        .from("groomer_profiles")
+        .select("*")
+        .eq("id", membership.groomer_profile_id)
+        .maybeSingle();
+      groomerProfile = data;
+    } else if (!isDirectGroomer) {
+      // Non-groomer user with no team membership shouldn't reach this page
+      redirect("/dashboard");
+    }
   }
 
   if (!groomerProfile) {

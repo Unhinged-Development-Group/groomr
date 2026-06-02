@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groomr — UK Payment Processor Comparison</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold:   #eae45c; --slate:  #2c3e50; --slate-l:#3d5166;
+      --sage:   #88a096; --cream:  #f9f8f4; --grey:   #95a5a6;
+      --terra:  #c87964; --green:  #4caf78; --amber:  #f0a500;
+      --red:    #e05252; --border: #e2e1dc; --shadow: rgba(44,62,80,.08);
+      --purple: #6b4ee8;
+    }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--cream); color:var(--slate); line-height:1.6; padding:40px 24px 80px; font-size:14px; }
+    .page { max-width:960px; margin:0 auto; }
+
+    .header { background:var(--slate); color:white; border-radius:16px; padding:40px 48px; margin-bottom:24px; position:relative; overflow:hidden; }
+    .header::after { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; background:var(--gold); border-radius:50%; opacity:.12; }
+    .header-label { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+    .header h1 { font-size:26px; font-weight:700; margin-bottom:6px; }
+    .header p { color:#aab8c4; font-size:14px; }
+
+    .card { background:white; border:1px solid var(--border); border-radius:12px; padding:28px 32px; margin-bottom:24px; box-shadow:0 2px 12px var(--shadow); }
+    .card h2 { font-size:16px; font-weight:700; margin-bottom:4px; }
+    .card-subtitle { font-size:12px; color:var(--grey); margin-bottom:20px; }
+
+    /* Processor cards */
+    .processor-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+    .processor-card { border:1px solid var(--border); border-radius:12px; padding:20px 22px; position:relative; }
+    .processor-card.recommended { border-color:var(--gold); border-width:2px; }
+    .processor-card.caution { border-color:var(--amber); }
+    .rec-badge { position:absolute; top:-10px; right:16px; background:var(--gold); color:var(--slate); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:99px; }
+    .processor-name { font-size:16px; font-weight:700; margin-bottom:2px; }
+    .processor-type { font-size:11px; color:var(--grey); margin-bottom:14px; }
+    .processor-rate { font-size:22px; font-weight:700; color:var(--slate); margin-bottom:4px; }
+    .processor-rate span { font-size:13px; font-weight:400; color:var(--grey); }
+    .per-txn { font-size:13px; font-weight:600; color:var(--purple); margin-bottom:14px; }
+    .per-txn .label { font-size:11px; color:var(--grey); font-weight:400; }
+    .pros-cons { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+    .pros, .cons { font-size:12px; }
+    .pros strong, .cons strong { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+    .pros strong { color:var(--green); }
+    .cons strong { color:var(--red); }
+    .pros li, .cons li { padding-left:12px; position:relative; margin-bottom:2px; color:var(--slate-l); line-height:1.5; }
+    .pros li::before { content:'✓'; position:absolute; left:0; color:var(--green); font-size:10px; top:1px; }
+    .cons li::before { content:'✗'; position:absolute; left:0; color:var(--red); font-size:10px; top:1px; }
+    ul { list-style:none; }
+
+    /* Comparison table */
+    table { width:100%; border-collapse:collapse; }
+    thead tr { border-bottom:2px solid var(--border); }
+    thead th { text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--grey); padding:0 10px 10px; }
+    thead th.r, td.r { text-align:right; }
+    thead th.c, td.c { text-align:center; }
+    tbody tr { border-bottom:1px solid var(--border); }
+    tbody tr:last-child { border-bottom:none; }
+    tbody td { padding:11px 10px; font-size:13px; }
+    .row-stripe { background:#f9f6ff; }
+    .row-gc { background:#f0fff6; }
+    .row-best { background:#f0fff6; }
+
+    .tag { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; }
+    .tag-green  { background:#e8f5ee; color:var(--green); }
+    .tag-amber  { background:#fff4e0; color:var(--amber); }
+    .tag-red    { background:#fff0f0; color:var(--red); }
+    .tag-purple { background:#f3f0ff; color:var(--purple); }
+    .tag-grey   { background:#f0f0f0; color:var(--grey); }
+
+    .amt { font-weight:600; font-variant-numeric:tabular-nums; }
+    .a-green { color:var(--green); font-weight:700; }
+    .a-red   { color:var(--red); }
+    .a-amber { color:var(--amber); }
+
+    /* 8-month savings */
+    .savings-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .savings-box { border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center; }
+    .savings-box label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--grey); margin-bottom:6px; }
+    .savings-box .big { font-size:22px; font-weight:700; }
+    .savings-box small { font-size:11px; color:var(--grey); display:block; margin-top:3px; }
+
+    /* Recommendation */
+    .rec-box { background:var(--slate); color:white; border-radius:12px; padding:24px 28px; }
+    .rec-box h3 { font-size:16px; font-weight:700; color:var(--gold); margin-bottom:8px; }
+    .rec-box p { font-size:13px; color:#aab8c4; line-height:1.7; margin-bottom:10px; }
+    .rec-box p:last-child { margin-bottom:0; }
+    .rec-box strong { color:white; }
+
+    .divider { border:none; border-top:1px solid var(--border); margin:20px 0; }
+
+    .footer { text-align:center; font-size:11px; color:var(--grey); margin-top:40px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-label">Payment Infrastructure · United Kingdom</div>
+    <h1>Stripe Alternatives for Groomr</h1>
+    <p>Marketplace platform · £45 avg booking · ~4,680 transactions/month by Month 8 · needs groomer payout splitting</p>
+  </div>
+
+  <!-- The contenders -->
+  <div class="processor-grid">
+
+    <!-- Stripe -->
+    <div class="processor-card">
+      <div class="processor-name">Stripe</div>
+      <div class="processor-type">Current plan · Card payments · Connect for payouts</div>
+      <div class="processor-rate">1.5% + 20p <span>per UK card txn</span></div>
+      <div class="per-txn">£0.875 per £45 booking <span class="label">(1.94% effective)</span></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <strong>Pros</strong>
+          <ul>
+            <li>Best developer experience</li>
+            <li>Connect built for marketplaces</li>
+            <li>Instant payouts to groomers</li>
+            <li>Already integrated / planned</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Cons</strong>
+          <ul>
+            <li>Most expensive option</li>
+            <li>+£1.57/mo per connected groomer</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- GoCardless -->
+    <div class="processor-card recommended">
+      <div class="rec-badge">Cheapest UK option</div>
+      <div class="processor-name">GoCardless</div>
+      <div class="processor-type">Direct Debit · ACH-style · not card payments</div>
+      <div class="processor-rate">0.5% + 20p <span>per transaction, capped at £4</span></div>
+      <div class="per-txn" style="color:var(--green)">£0.425 per £45 booking <span class="label">(0.94% effective)</span></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <strong>Pros</strong>
+          <ul>
+            <li>Dramatically cheaper (~50% of Stripe)</li>
+            <li>UK-built, great for recurring</li>
+            <li>Instant bank pay available</li>
+            <li>Platform API for split payouts</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Cons</strong>
+          <ul>
+            <li>Customer sets up Direct Debit mandate — more friction on first booking</li>
+            <li>Not instant (2–3 day settlement by default)</li>
+            <li>No card option for one-off guests</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adyen -->
+    <div class="processor-card">
+      <div class="processor-name">Adyen</div>
+      <div class="processor-type">Interchange++ · Enterprise-grade · Marketplace support</div>
+      <div class="processor-rate">~0.6% + 10p <span>UK Visa Debit (interchange++)</span></div>
+      <div class="per-txn" style="color:var(--amber)">~£0.37 per £45 booking <span class="label">(blended estimate)</span></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <strong>Pros</strong>
+          <ul>
+            <li>Cheapest card processing at volume</li>
+            <li>Adyen for Platforms (like Connect)</li>
+            <li>Enterprise reliability</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Cons</strong>
+          <ul>
+            <li>Minimum ~€10k/mo volume required</li>
+            <li>Much harder to integrate than Stripe</li>
+            <li>Not appropriate yet (Month 5–6 earliest)</li>
+            <li>Monthly minimum processing fee</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkout.com -->
+    <div class="processor-card">
+      <div class="processor-name">Checkout.com</div>
+      <div class="processor-type">Card payments · Interchange+ · UK company</div>
+      <div class="processor-rate">~1.3% + 15p <span>UK cards (varies by plan)</span></div>
+      <div class="per-txn" style="color:var(--amber)">~£0.74 per £45 booking <span class="label">(est.)</span></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <strong>Pros</strong>
+          <ul>
+            <li>Slightly cheaper than Stripe on cards</li>
+            <li>UK HQ, good support</li>
+            <li>Split payment / marketplace support</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Cons</strong>
+          <ul>
+            <li>Pricing negotiated, not self-serve</li>
+            <li>Less plug-and-play than Stripe</li>
+            <li>More integration effort</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mangopay -->
+    <div class="processor-card">
+      <div class="processor-name">Mangopay</div>
+      <div class="processor-type">Marketplace-first · Escrow + split payments built in</div>
+      <div class="processor-rate">1.8% + 18p <span>UK cards</span></div>
+      <div class="per-txn" style="color:var(--amber)">~£0.99 per £45 booking <span class="label">(slightly more than Stripe)</span></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <strong>Pros</strong>
+          <ul>
+            <li>Built specifically for marketplaces</li>
+            <li>Escrow + split payments native</li>
+            <li>Simpler compliance than Stripe Connect</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Cons</strong>
+          <ul>
+            <li>More expensive than Stripe per txn</li>
+            <li>Smaller developer ecosystem</li>
+            <li>Less documentation / community</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Open Banking -->
+    <div class="processor-card">
+      <div class="processor-name">Open Banking (TrueLayer / Yapily)</div>
+      <div class="processor-type">Account-to-account · No card network fees</div>
+      <div class="processor-rate">~0.1–0.2% + 10p <span>per payment</span></div>
+      <div class="per-txn" style="color:var(--green)">~£0.15 per £45 booking <span class="label">(cheapest possible)</span></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <strong>Pros</strong>
+          <ul>
+            <li>Extremely cheap</li>
+            <li>Instant settlement</li>
+            <li>No chargebacks</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <strong>Cons</strong>
+          <ul>
+            <li>Customer must authenticate in their bank app — high drop-off</li>
+            <li>No payout splitting built in</li>
+            <li>No card fallback</li>
+            <li>Not mainstream enough yet for consumer trust</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Side-by-side cost comparison -->
+  <div class="card">
+    <h2>8-Month Cost Comparison</h2>
+    <div class="card-subtitle">Based on Groomr's cohort ramp model: 18,000 total transactions over 8 months at £45 avg. UK cards only.</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Processor</th>
+          <th class="c">Rate</th>
+          <th class="r">Per £45 txn</th>
+          <th class="r">8-mo fees</th>
+          <th class="r">vs Stripe</th>
+          <th class="c">Marketplace ready?</th>
+          <th class="c">Start today?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-stripe">
+          <td><strong>Stripe</strong></td>
+          <td class="c">1.5% + 20p</td>
+          <td class="r amt">£0.875</td>
+          <td class="r amt a-red">£15,750</td>
+          <td class="r a-amber">baseline</td>
+          <td class="c"><span class="tag tag-green">Yes (Connect)</span></td>
+          <td class="c"><span class="tag tag-green">Yes</span></td>
+        </tr>
+        <tr>
+          <td><strong>GoCardless</strong> <span style="font-size:11px;color:var(--green)">★ Best value</span></td>
+          <td class="c">0.5% + 20p</td>
+          <td class="r amt a-green">£0.425</td>
+          <td class="r amt a-green">£7,650</td>
+          <td class="r a-green"><strong>−£8,100</strong></td>
+          <td class="c"><span class="tag tag-green">Yes (Platform API)</span></td>
+          <td class="c"><span class="tag tag-green">Yes</span></td>
+        </tr>
+        <tr>
+          <td><strong>Checkout.com</strong></td>
+          <td class="c">~1.3% + 15p</td>
+          <td class="r amt">~£0.735</td>
+          <td class="r amt">~£13,230</td>
+          <td class="r a-green">−£2,520</td>
+          <td class="c"><span class="tag tag-green">Yes</span></td>
+          <td class="c"><span class="tag tag-amber">Needs setup</span></td>
+        </tr>
+        <tr>
+          <td><strong>Adyen</strong></td>
+          <td class="c">~0.6% + 10p</td>
+          <td class="r amt">~£0.37</td>
+          <td class="r amt">~£6,660</td>
+          <td class="r a-green">−£9,090</td>
+          <td class="c"><span class="tag tag-green">Yes (Platforms)</span></td>
+          <td class="c"><span class="tag tag-red">No (volume req.)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Mangopay</strong></td>
+          <td class="c">1.8% + 18p</td>
+          <td class="r amt">~£0.99</td>
+          <td class="r amt a-red">~£17,820</td>
+          <td class="r a-red">+£2,070</td>
+          <td class="c"><span class="tag tag-green">Yes (native)</span></td>
+          <td class="c"><span class="tag tag-amber">Needs setup</span></td>
+        </tr>
+        <tr>
+          <td><strong>Open Banking</strong></td>
+          <td class="c">~0.15% + 10p</td>
+          <td class="r amt a-green">~£0.15</td>
+          <td class="r amt a-green">~£2,700</td>
+          <td class="r a-green">−£13,050</td>
+          <td class="c"><span class="tag tag-red">No (DIY splits)</span></td>
+          <td class="c"><span class="tag tag-red">No (trust gap)</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--grey);margin-top:12px;">* 18,000 total transactions estimated from cohort ramp model. Adyen requires volume minimums not met until ~Month 5–6.</p>
+  </div>
+
+  <!-- Savings breakdown -->
+  <div class="card">
+    <h2>If You Switch to GoCardless (Realistic Best Option)</h2>
+    <div class="card-subtitle">GoCardless is the most viable swap — UK-native, has a Platform API for marketplace payouts, and saves ~£8k over 8 months.</div>
+    <div class="savings-grid">
+      <div class="savings-box">
+        <label>Stripe (8 mo)</label>
+        <div class="big a-red">£15,750</div>
+        <small>1.5% + 20p per txn</small>
+      </div>
+      <div class="savings-box" style="border-color:var(--green)">
+        <label>GoCardless (8 mo)</label>
+        <div class="big a-green">£7,650</div>
+        <small>0.5% + 20p per txn</small>
+      </div>
+      <div class="savings-box" style="border-color:var(--gold)">
+        <label>Saving</label>
+        <div class="big" style="color:var(--gold)">£8,100</div>
+        <small>51% reduction</small>
+      </div>
+      <div class="savings-box">
+        <label>Monthly by M8</label>
+        <div class="big" style="color:var(--sage)">£1,890</div>
+        <small>saved vs Stripe at 4,680 txns</small>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <p style="font-size:13px;color:var(--slate-l);line-height:1.7;margin-bottom:10px;">
+      <strong>The catch:</strong> GoCardless is Direct Debit, not card payments. The owner sets up a mandate on their first booking — like a gym membership or utility bill — and all future bookings pull automatically. This is actually <em>ideal</em> for Groomr: dog owners book recurring appointments, and Direct Debit removes the friction of re-entering card details each time.
+    </p>
+    <p style="font-size:13px;color:var(--slate-l);line-height:1.7;">
+      <strong>What you lose:</strong> Customers without a UK bank account can't use it (rare for dog owners). Walk-in or first-time one-off bookings have more friction on the first booking. You'd likely want a <strong>Stripe fallback for the first transaction</strong>, then prompt the owner to set up a GoCardless mandate for future bookings.
+    </p>
+  </div>
+
+  <!-- Hybrid strategy -->
+  <div class="card" style="background:var(--slate);color:white;border-color:var(--slate)">
+    <h2 style="color:var(--gold)">Recommended Strategy</h2>
+
+    <p style="font-size:13px;color:#aab8c4;line-height:1.7;margin-bottom:16px;">
+      <strong style="color:white;">Short term (launch → Month 4):</strong> Start with Stripe. It's the fastest path to shipping payments, has the best developer tooling, and Connect handles marketplace payouts out of the box. The extra cost is worth not slowing down the build.
+    </p>
+    <p style="font-size:13px;color:#aab8c4;line-height:1.7;margin-bottom:16px;">
+      <strong style="color:white;">Medium term (Month 4–6):</strong> Add GoCardless as the primary payment method for returning dog owners. On the second booking, prompt owners to set up a Direct Debit mandate. This converts your recurring base (which will be most of your volume) to the much cheaper rail.
+    </p>
+    <p style="font-size:13px;color:#aab8c4;line-height:1.7;margin-bottom:16px;">
+      <strong style="color:white;">Long term (Month 6+):</strong> Once you're processing £150k+/month on cards, contact Adyen. Interchange++ pricing at that volume would make Adyen by far the cheapest card option — but only then does it make commercial sense to integrate.
+    </p>
+    <p style="font-size:13px;color:#aab8c4;line-height:1.7;">
+      <strong style="color:white;">Avoid:</strong> Mangopay (more expensive than Stripe for no clear benefit). Open Banking as primary (too much consumer trust friction in the UK right now).
+    </p>
+  </div>
+
+  <div class="footer">
+    Generated for Groomr · June 2026 · UK · Rates are estimates — verify directly with each provider before switching.
+  </div>
+
+</div>
+</body>
+</html>

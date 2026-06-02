@@ -33,6 +33,8 @@ export interface AdminOverviewStats {
   totalAppointments: number;
   appointmentsLast30Days: number;
   grossRevenuePence: number;
+  platformFeePence: number;
+  groomerPayoutPence: number;
   openDisputes: number;
   openSupportRequests: number;
 }
@@ -122,15 +124,16 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     supabaseAdmin.from("dogs").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gte("scheduled_at", thirtyDaysAgo.toISOString()),
-    supabaseAdmin.from("payments").select("deposit_amount_pence"),
+    supabaseAdmin.from("payments").select("full_amount_pence, platform_fee_pence, groomer_payout_amount_pence"),
     supabaseAdmin.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabaseAdmin.from("support_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
 
-  const grossRevenuePence = (revenueResult.data ?? []).reduce(
-    (sum: number, p: { deposit_amount_pence: number | null }) => sum + (p.deposit_amount_pence ?? 0),
-    0
-  );
+  type PaymentRow = { full_amount_pence: number | null; platform_fee_pence: number | null; groomer_payout_amount_pence: number | null };
+  const payments: PaymentRow[] = revenueResult.data ?? [];
+  const grossRevenuePence = payments.reduce((sum, p) => sum + (p.full_amount_pence ?? 0), 0);
+  const platformFeePence = payments.reduce((sum, p) => sum + (p.platform_fee_pence ?? 0), 0);
+  const groomerPayoutPence = payments.reduce((sum, p) => sum + (p.groomer_payout_amount_pence ?? 0), 0);
 
   return {
     totalOwners: ownersResult.count ?? 0,
@@ -141,6 +144,8 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     totalAppointments: apptAllResult.count ?? 0,
     appointmentsLast30Days: appt30Result.count ?? 0,
     grossRevenuePence,
+    platformFeePence,
+    groomerPayoutPence,
     openDisputes: disputesResult.count ?? 0,
     openSupportRequests: supportResult.count ?? 0,
   };

@@ -213,6 +213,7 @@ const BOOKING_OPTIONS = [
   {label:'Booksy', match:['booksy']},
   {label:'Fresha', match:['fresha']},
   {label:'MoeGo', match:['moego']},
+  {label:'Tuft', match:['tuft']},
   {label:'Savvy Pet Spa', match:['savvy','itsallsavvy']},
   {label:'Setmore', match:['setmore']},
   {label:'Square Appointments', match:['square']},
@@ -248,7 +249,7 @@ function blank(v){ return !v || /^(not found|unknown|n\\/a|—|-)$/i.test(String
 function bookingCategory(b){
   const t=(b||'').toLowerCase();
   if(blank(b)) return 'unknown';
-  const named=['booksy','fresha','moego','savvy','setmore','square','sumup','heygoldie','goldie','treatwell','vagaro','acuity','ovatu','timely'];
+  const named=['booksy','fresha','moego','tuft','savvy','setmore','square','sumup','heygoldie','goldie','treatwell','vagaro','acuity','ovatu','timely'];
   if(named.some(n=>t.includes(n))) return 'platform';
   if(t.includes('pets at home')||t.includes('propet')||t.includes('chain')) return 'chain';
   if(t.includes('own-site')||t.includes('website')||t.includes('book online')||t.includes('book an appointment')||t.includes('book now')) return 'own-site';

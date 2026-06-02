@@ -15,9 +15,13 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("roles")
+    .select("roles, is_admin")
     .eq("clerk_id", user.id)
     .maybeSingle();
+
+  if (profile?.is_admin) {
+    redirect("/dashboard/admin");
+  }
 
   const roles: string[] = profile?.roles ?? ["owner"];
 

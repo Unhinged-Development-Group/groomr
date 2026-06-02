@@ -1,6 +1,8 @@
 "use server";
 
+import { auth } from "@clerk/nextjs/server";
 import { resend, FROM_EMAIL } from "@/lib/resend";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function sendSupportRequest(
   formData: FormData
@@ -50,6 +52,25 @@ export async function sendSupportRequest(
         .join("\n"),
       ...(attachments.length > 0 && { attachments }),
     });
+    // Persist to DB so admin dashboard can view and reply
+    const { userId } = await auth();
+    let profileId: string | null = null;
+    if (userId) {
+      const { data: p } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("clerk_id", userId)
+        .maybeSingle();
+      profileId = p?.id ?? null;
+    }
+    await supabaseAdmin.from("support_requests").insert({
+      profile_id: profileId,
+      name,
+      email,
+      subject,
+      message,
+    }).then(() => {/* non-fatal if this fails */});
+
     return { ok: true };
   } catch (e) {
     console.error("Support request error:", e);

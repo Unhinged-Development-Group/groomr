@@ -59,9 +59,9 @@ central belt are still **phone/social-only**. That is the core addressable marke
 - Entries flagged *"verify before outreach"* / *"name not confirmed"* surfaced as
   addresses or directory mentions without a confirmed trading name — qualify these
   first.
-- **Scope note:** this covers the central belt proper. Fife (Dunfermline,
-  Kirkcaldy) and Ayrshire (Kilmarnock) were left out as just outside the belt —
-  easy to add as a follow-up if wanted.
+- **Scope note:** the core is the central belt proper (regions 1–6). **Fife
+  (region 7)** and **Ayrshire — North, East & South (region 8)** have been added
+  as adjacent expansion clusters.
 
 ---
 
@@ -702,6 +702,311 @@ central belt are still **phone/social-only**. That is the core addressable marke
 
 ---
 
+# 7. Fife
+
+## Dunfermline
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Never Ending Pawfection | Dunfermline (not found) | 07850 295508 | not found | FB NeverEndingPawfection | unknown | Pet groomer & dog walker |
+| Fresh Paws Dog Grooming | Dunfermline (not found) | not found | not found | FB freshpawsdoggrooming1 | phone/social only | C&G qualified, insured |
+| Well Groomed (by Tracey) | 124 Main Street, Newmills, Dunfermline | 07979 432551 | not found | FB WellGroomedByTracey | unknown | C&G qualified, insured |
+| Luvadug | Dunfermline (not found) | not found | luvadug.co.uk | not found | unknown | C&G Diploma qualified |
+| Dial a Dog Wash Fife | Mobile — Dunfermline base | not found | dialadogwashfife.co.uk | not found | unknown | Mobile parlour since 2006 |
+| Bubbles & Paws Mobile Dog Grooming | Mobile — Dunfermline/Edinburgh/Fife | not found | bubblesandpawsmobilegrooming.co.uk | not found | unknown | Door-to-door mobile van |
+
+## Rosyth
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Soapy Pawz | 43 Harley St, Rosyth KY11 2NE | 07511 105559 | not found | not found | unknown | Dog & cat grooming; groomer Hayley |
+| Hair Off The Dog | Rosyth (not found) | not found | not found | not found | unknown | Sole trader, 1:1 grooming |
+
+## Inverkeithing / Dalgety Bay
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Perfect Pets at Hilltop | Hilltop Farm, Upper Steelend, Inverkeithing area | not found | not found | FB Perfect Pets at Hilltop | unknown | Groomer Sara Brown, international award winner |
+| The Dog House | Dalgety Bay (not found) | not found | not found | not found | unknown | Top Yelp listing, Dalgety Bay |
+| Waggly Tails | Dalgety Bay (not found) | not found | not found | not found | unknown | Top Yelp listing, Dalgety Bay |
+| Salon 10 | 10 Ridge Way, Dalgety Bay | not found | (Fresha listing) | not found | Fresha | General salon — verify dog grooming |
+
+## Kirkcaldy
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| The Paw Pad Grooming & Spa | 19A Baldwin Crescent, Kirkcaldy KY2 5SW | 07711 8xxxxx (verify) | thepawpadgrooming.co.uk | FB pawpadgroom | phone (own "book" form, not third-party) | C&G trained |
+| Happy Dog Grooming Studio | Kirkcaldy (not found) | not found | happydoggrooming.co.uk | not found | unknown | Full grooms, hand stripping |
+| Barber and Pooch | Kirkcaldy (not found) | not found | not found | FB BarberandPoochFife | unknown | Fife grooming service |
+| Top Coat & Tails Dog Grooming | Kirkcaldy (not found) | not found | not found | FB Top-Coat-Tails-Dog-Grooming | phone/social only | Qualified & insured |
+| Zola's Dog Grooming | 91 Dothan Road, Kirkcaldy | not found | (Fresha listing) | not found | Fresha | Online booking via Fresha |
+| Pet Pawradise Ltd | 95a St. Clair Street, Kirkcaldy KY1 2BS | not found | petpawradiseltd.com | not found | unknown | Fixed-location salon |
+| Brush n Fur | Mobile — Fife & Kinross | not found | brushnfur.com | not found | unknown | Family-owned mobile van; also cats |
+
+## Glenrothes
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Top Dog Grooming Salon | 189a High Street, Glenrothes | not found | not found | not found | unknown | Yelp listing |
+| Waggamuffins Dog Grooming | Glenrothes (not found) | not found | not found | FB Waggamuffins-Dog-Grooming | unknown | 20+ yrs experience |
+| Paws and Relax Professional Dog Grooming | Glenrothes (not found) | not found | not found | FB Paws-and-Relax | unknown | Top-rated in Fife |
+| Posh Dugz | Glenrothes (not found) | not found | not found | not found | unknown | Via mobile-doggrooming.co.uk |
+| Wags to Riches | Glenrothes (not found) | not found | not found | not found | unknown | Pata.pet listing |
+
+## Lochgelly / Cowdenbeath
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| (Unnamed groomer) | 87 Main Street, Lochgelly | 01592 783888 | not found | not found | unknown | Directory; name not confirmed |
+| (Unnamed groomer) | 96 Main Street, Kinglassie, Lochgelly | 01592 882111 | not found | not found | unknown | Directory; name not confirmed |
+
+*Cowdenbeath: only directory listings surfaced, no distinct named business confirmed — Google Maps follow-up recommended.*
+
+## Kelty
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Hair o' the Dug | 59 Main St, Kelty KY4 0AE | not found | not found | not found | unknown | Directory listing |
+| Dee's Doggies ~ Fife | 116 Main St, Kelty | not found | not found | not found | unknown | Directory listing |
+| Grooming Marvellous | 35 Station Road, Kelty | not found | not found | not found | unknown | Directory listing |
+| Mucky Pup Dog Groomer's | 320 Main St, Kelty | not found | not found | not found | unknown | Directory listing |
+| Oh My Dog | 10 Oakfield Ct, Kelty | not found | not found | not found | unknown | Directory listing |
+| Perfect Paws | Kelty (not found) | not found | not found | FB perfectpawsfife | phone/social only | Grooming service |
+
+## Leven / Methil / Buckhaven
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| The Mutt Hutt | Methilhaven Road, Muiredge, Buckhaven, Leven | 07960 662228 | not found | not found | unknown | Straddles Buckhaven/Leven |
+| Sarah's Grooming Hut | Methil / Leven (home salon) | not found | not found | FB Sarahs-Grooming-Hut | phone/social only | Qualified, insured, first-aid trained; 1:1 |
+| The Barking Lounge | 219 Wellesley Road, Methil | 07595 312810 | not found | FB thebarkingloungefife | phone/social only | Email thebarkingloungefife@yahoo.com; Level 3 Diploma |
+
+## Cupar / Dunshalt
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Dog Face Grooming Studio | Cupar (not found) | not found | dogfacegroomingstudio.wordpress.com | FB DogFaceStudioFife | unknown | Reported closure Aug 2025 — verify |
+| (Unnamed groomer) | 84 Bonnygate, Cupar KY15 4LB | 01334 845893 | not found | not found | unknown | Directory; name not confirmed |
+| (Mobile groomer) | 1 McInnes Gardens, Cupar KY15 4HU | not found | not found | not found | unknown | Mobile, covers Fife & Dundee |
+| Dog Paradise Salon | Dunshalt (near Cupar/Auchtermuchty) | not found | dogparadise.salon | FB Dog-Paradise-Salon-Dunshalt | unknown | Fixed salon |
+
+## St Andrews
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Makeover Rover | 64B Argyle St, St Andrews KY16 9BU | 07855 832961 | not found | FB makeoverroverfife | unknown | Based Strathkinness/St Andrews |
+| Dandy Dogs | Mobile — St Andrews area KY16 | not found | not found | not found | unknown | Mobile van; groomer Samantha Brown |
+
+## Anstruther
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Ruff Cuts Dog Grooming | Anstruther (not found) | not found | not found | FB Ruff-Cuts-Dog-Grooming | phone/social only | Limited public detail |
+
+## Markinch / Leslie
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| The Barker Shop | Markinch (near Glenrothes) | not found | not found | not found | unknown | Pupsnet listing |
+| (Unnamed groomer) | 84 High Street, Markinch | 01592 760259 | not found | not found | unknown | Directory; name not confirmed |
+| (Unnamed groomer) | 268 High Street, Leslie | 01592 560413 | not found | not found | unknown | Directory; name not confirmed |
+
+## Auchtermuchty
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| The Dug Wash | 8 Low Road, Auchtermuchty | 07810 778277 | not found | FB thedugwash | unknown | Award-winning salon; ~70 Yelp reviews |
+
+## Tayport / Newport-on-Tay
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Short Bark and Sides Tayport | Tayport (not found) | not found | not found | FB ShortBarkAndSidesTayport | unknown | Grooming + training, adventure treks |
+| New Paws on Tay | 40 High Street, Newport-on-Tay DD6 8AD | 07460 009535 | newpawsontay.co.uk | not found | unknown | Est. 2016; C&G qualified |
+
+*Cardenden, Kinghorn and Kennoway surfaced only mobile/aggregator entries with no confirmable fixed local salon — Google Maps follow-up recommended.*
+
+---
+
+# 8. Ayrshire (North, East & South)
+
+## Irvine
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| MacPaws Professional Dog Grooming Service | Unit 20, MacKintosh Place, South Newmoor Ind. Estate, Irvine KA11 4JT | 07985 197389 | not found | FB macpawsprofessionaldoggrooming | unknown | Also doggy daycare |
+| PAWsitive Grooming by Samantha | 1 Golf Pl, Irvine KA12 9DA | 07845 521372 | not found | unknown | unknown | Cylex listing |
+| Be Braw Waggity Dog Grooming | 20 Gray Crescent, Irvine KA12 8HS | 07974 825698 | websites.itsallsavvy.com | FB bebrawwaggitydoggrooming | Savvy Pet Spa (site on itsallsavvy.com) | Appointment-based; Girdle Toll; full groom from £30 |
+| Pawlished Paws Dog Grooming | South Bourtreehill, Irvine | 07770 630782 | not found | FB PawlishedPawsGrooming | phone/social only | Email PawlishedPaws@outlook.com; insured |
+| Paws Dog Grooming | 32 Main Rd, Springside, Irvine KA11 3AN | not found | not found | FB pawsdoggroomingshop | unknown | Springside |
+| Bow Wows Dog Grooming | 62 Craig View, Springside, Irvine KA11 3AB | not found | not found | unknown | unknown | Springside |
+| T.L.C Dog Grooming | Irvine (address not found) | not found | not found | FB TLC-dog-grooming | phone/social only | Established 1995 |
+| The Groom Room (Pets at Home) | Riverway Retail Park, Irvine | not found | petsathome.com | unknown | Pets at Home own system | National chain |
+
+## Dreghorn
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Irvine K9 Grooming | 29 Townfoot, Dreghorn, Irvine KA11 4EH | not found | not found | FB IrvineK9Grooming | phone/social only | Within Irvine Raw K9 Supplies; C&G Level 3 |
+| Townfoot Dog Grooming | 22 Townfoot, Dreghorn, Irvine KA11 4EG | not found | not found | unknown | unknown | Dogs & cats; Good Dog Guide/Tailster |
+
+## Kilwinning
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Tall Bark & Handsome | 40 Main Street, Kilwinning | not found | groomingbyaimee.com | FB Grooming by Aimee | unknown | Opened 2025; pickup/drop-off Kilwinning/Stevenston/Saltcoats/Irvine; £37–£72 |
+| Strip & Style Dog Grooming by Claire | Kilwinning (address not found) | not found | not found | FB GroomingByClaire | phone/social only | Qualified, first-aid trained, insured |
+| Vanity Pets Mobile Grooming Parlour | Kilwinning (mobile) | not found | not found | unknown | unknown | Mobile; Good Dog Guide |
+
+## Saltcoats
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Muddy Paws Express Dog Wash & Grooming | Unit 6, Rennie Business Units, Factory Place, Saltcoats KA21 5LZ | not found | muddypawsexpressdogwash.com | x.com/muddypawwash6 | unknown | Grooming + service wash + self-service |
+| Allanah's Dog Grooming Room | Saltcoats (address not found) | not found | not found | FB Allanahs-Dog-Grooming-Room; IG copperdoggrooming | phone/social only | All breeds to preference |
+
+## Ardrossan
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Ayrshire Grooming Salon | Ardrossan (near 41a Princes Street) | not found | ayrshiregroomingsalon.com | FB ayrshiregroomingsalon | unknown | Dog & cat grooming salon |
+
+## Stevenston
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Danielle's Professional Dog Grooming | 19 New St, Stevenston | 01294 467303 | not found | FB daniellesprofessionalgrooming | phone/social only | Yell listing (also "K9 Scissor Sitters") |
+
+## Largs
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| (Unnamed groomer) | 46 Holehouse Road, Largs | 01475 689838 / 07974 275259 | not found | unknown | unknown | Thomson Local/192.com; name not confirmed |
+| Dog Grooming by Penny Stracey | Largs (address not found) | not found | not found | FB DogGroomingByPennyStracey | phone/social only | — |
+| Posh Paws (Largs) | Largs (address not found) | not found | not found | unknown | unknown | Listing; details unconfirmed |
+| Kutz Dog Grooming (Largs) | Largs (address not found) | not found | not found | unknown | unknown | Yelp listing; details unconfirmed |
+| Head To Tail (Largs) | Largs (address not found) | not found | not found | unknown | unknown | Listing; details unconfirmed |
+
+## Fairlie
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Tiny Paws Dog Grooming | 50 Keppenburn Avenue, Fairlie, Largs | 07483 870528 | not found | FB Keppenburn.Fairlie | phone/social only | Email Tinypawsfairlie@outlook.com |
+
+## Skelmorlie
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Angel Pawz Spa & Boutique | 18b Skelmorlie Castle Road, Skelmorlie | 07792 386447 | angelpawz.co.uk | FB Angelpawzspa | unknown | Cage-free; individual slots; spa & boutique |
+
+## West Kilbride
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| The Pooch Pamperer | Faulds Wynd, Seamill, West Kilbride KA23 9FA | 07598 251538 | not found | unknown | phone/social only | Collection/drop-off within 10 miles |
+
+## Kilbirnie
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Valley Barking Dogs | Kilbirnie (garden salon) | not found | not found | FB Valley-Barking-Dogs | phone/social only | Quiet garden salon; groomer Steph |
+
+## Beith
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Top Coat Dog Grooming | Beith (home salon) | not found | not found | FB topcoatgrooming | phone/social only | 1:1 home salon |
+| Braw Cuts Dog Grooming | Gateside, near Beith | not found | not found | FB brawcuts | phone/social only | Megan; C&G Level 3, insured |
+| Dragon's Nest Dog Grooming Studio | Beith (address not found) | 07802 745855 | not found | FB Dragons-Nest-Dog-Grooming-Studio | phone/social only | — |
+
+## Dalry
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Impossipaws Dog Grooming | Dalry (address not found) | 01294 835905 | not found | unknown | unknown | StarOfService/Thomson Local |
+| Head To Tail | Lawside Cottage, Dalry | 01505 683809 | not found | unknown | unknown | Cylex listing |
+
+*Millport (Isle of Cumbrae): no dedicated groomer found; residents use mainland (Largs/Fairlie) salons.*
+
+## Kilmarnock
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| A Dugs Life Pet Spa | Kilmarnock (street not found) | not found | adugslifepetspa.co.uk | not found | unknown | Best New Business Ayrshire, Scottish Business Awards 2022 |
+| Doggy by Design | Whatriggs Road, Kilmarnock | not found | doggybydesign.com | FB Doggy-by-Design | phone/social only | Book by phone/FB DM/WhatsApp; self-service wash |
+| Canine Design | Kilmarnock (street not found) | not found | caninedesign-doggrooming.net | FB Canine Design Dog Grooming | unknown | Est. 2001, Sallyann Gillies |
+| Fido Sassoon | Kilmarnock (behind Dunelm Mill) | not found | not found | not found | unknown | Collection & delivery; shares premises with Scruffy 2 Fluffy |
+| Scruffy 2 Fluffy | Kilmarnock (behind Dunelm Mill) | not found | not found | not found | unknown | Dog bathing service |
+| Heads and Tails | 83 Whatriggs Road, Kilmarnock KA1 3RB | not found | not found | not found | unknown | Stress-free wet room; large/disabled dogs welcome |
+| Doggy Styles Grooming Salon | Kilmarnock (street not found) | not found | not found | FB Doggy Styles Dog Grooming Salon | unknown | Good Dog Guide listing |
+| Pets at Home Groom Room (Kilmarnock) | Pets at Home store, Kilmarnock | not found | petsathome.com | not found | Pets at Home own system | National chain |
+
+## Stewarton / Kilmaurs
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| The Groom Room (Stewarton) | 19 Lainshaw Street, Stewarton KA3 5BY | 01560 486878 | not found | not found | unknown | Independent (not Pets at Home); groomer Kirsten |
+| Cameron Canines | 19 Townhead, Kilmaurs KA3 2ST | 01563 536801 | sumupbookings.com/cameron-canines | not found | SumUp Bookings | Est. 2016 (Kate Cameron); pick-up/drop-off Kilmarnock/Stewarton/Kilmaurs/Dunlop/Fenwick |
+
+## Newmilns / Darvel
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| (Groomer at The Stables) | 98 Brown Street, The Stables, Newmilns KA16 9BP | not found | not found | not found | unknown | Grooming + walking, Irvine Valley; name not confirmed |
+| HotDogs | 55 West Main Street, Darvel KA17 0BE | not found | not found | not found | unknown | Family-run; owner Lainy Wilson, 30 yrs |
+
+## Mauchline / Catrine
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| The Groomery Ltd | Barskimming Road, Ballochmyle, Mauchline KA5 5AJ | 07360 100048 | not found | FB thegroomeryltd | unknown | Family-run luxury groomers |
+| Mucky Muttz | 24 St Cuthbert Street, Catrine, Mauchline KA5 6SW | 01290 551166 | not found | FB MuckyMuttz.DogGroomer | phone/social only | 10 yrs grooming |
+
+## Cumnock / Auchinleck
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Smiths Dog Grooming | 20 Glaisnock Street, Cumnock | 01290 422742 | not found | FB Ksmithdoggroomer | phone/social only | 1:1; small–medium dogs only |
+| The Groom Room (Auchinleck) | 32 Well Road, Auchinleck KA18 2JZ | 01290 421286 | not found | not found | unknown | Independent (not Pets at Home) |
+
+## Ayr
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Eliza's Dog Grooming | Ayr (street not found) | 07394 739958 | elizagrooming.co.uk | not found | unknown | 1:1 grooming; no other dogs present |
+| Unleashed Dog Grooming | 36 Churchill Tower, Ayr KA7 1JT | 07877 277339 | not found | FB doggroomingayrshire | phone/social only | Trades as "Dog Grooming Ayrshire" |
+| Rovers Mobile Dog Grooming Salon | Mobile — Ayr base KA7 2UF | not found | not found | not found | unknown | Covers Ayr/Prestwick/Troon; no crating |
+| Pets at Home Groom Room (Ayr) | 21 Allison Street, Ayr KA8 8HD | not found | petsathome.com | not found | Pets at Home own system | National chain |
+| Ayrshire Dog Care | Muirburn, Annbank Rd, Annbank, Ayr KA6 5AG | 01292 521430 | not found | not found | unknown | Wash areas + grooming; daycare; serves Mossblown |
+
+## Prestwick
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Town & Country Pets | 100 Main Street, Prestwick KA9 1PA | 01292 478xxx (verify) | not found | IG @townandcountrypetsprestwick | phone/social only | Est. 1997; hydro-massage bath; free collection/return |
+| Pooches N Poodles | 78 Main Street, Prestwick | not found | not found | not found | unknown | Good Dog Guide listing |
+
+## Troon
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Elite Dog Spa Troon | 18 Ayr Street, Troon KA10 6EB | not found | (Fresha page) | not found | Fresha | Also has Glasgow locations |
+| All Fluffed Up Troon | 18 Ayr Street, Troon KA10 6EB | not found | not found | FB All Fluffed Up Troon | phone/social only | Same address as Elite Dog Spa — verify current premises |
+| Waggers Den | Mobile — Troon/Ayrshire | 07818 550626 | not found | not found | unknown | Mobile grooming |
+
+## Girvan / Maybole
+
+| Business | Address | Phone | Website | Social | Booking software | Notes |
+|---|---|---|---|---|---|---|
+| Scruffy's Dog Grooming | 2 Wesley Road, Girvan KA26 9DB | 07879 673236 | not found | FB scruffysdoggroominggirvan | phone/social only | 20 yrs experience |
+| CLS Grooming | Girvan (street not found) | not found | not found | FB clsgrooming | unknown | Studio; all sizes |
+| Just For Dogs | 13 Whitehall, Maybole KA19 7DR (also 35 High Street KA19 7AB) | 07749 009716 / 01655 718121 | justfordogs6.wixsite.com/just-for-dogs- | not found | unknown | Grooming, DIY wash, pet photography; two addresses across sources |
+| Just Dandy | Maybole (street not found) | not found | not found | not found | unknown | Poodle Hut listing |
+
+*East Ayrshire: Galston, Hurlford and New Cumnock returned no confirmed fixed-premises salon — served largely by mobile groomers and neighbouring-town salons.*
+
+---
+
 ## Suggested next steps
 
 1. **Verify the warm leads first.** Filter to `phone/social only` rows with a
@@ -710,7 +1015,7 @@ central belt are still **phone/social-only**. That is the core addressable marke
    confirm a sample by phone or via the live Facebook page.
 3. **Pull emails manually.** Almost no email addresses surface in search; most need
    to be lifted from each business's website contact page or requested via DM.
-4. **Decide on Fife / Ayrshire.** If the launch radius widens, Dunfermline,
-   Kirkcaldy and Kilmarnock are the obvious next clusters.
+4. **Fife & Ayrshire are now included** (regions 7–8) as expansion clusters. If the
+   radius widens further, Perth/Kinross and the Borders are the next obvious step.
 5. **Track outcomes back here** — turn this into a CRM/spreadsheet with status
    columns (contacted / interested / onboarded) as outreach begins.

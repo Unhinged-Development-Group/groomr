@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Groomr — Investment Proposition</title>
+<link rel="icon" type="image/png" href="assets/logomark-gold.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -167,14 +168,17 @@
 
   @media print {
     /* ── SETUP ── */
-    @page { size: A4 portrait; margin: 0; }
+    @page { size: A4 portrait; }
+    @page :first { margin: 0; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     /* ── COVER: fills page 1 exactly, footer pinned to bottom ── */
     .cover { height: 100vh; min-height: unset; page-break-after: always; break-after: page; }
 
-    /* ── MAIN CONTENT: starts on page 2, top padding replaces page margin ── */
-    .page { page-break-before: always; break-before: page; padding-top: 15mm; }
+    /* ── MAIN CONTENT: starts on page 2 ── */
+    /* padding-top on .page gives breathing room on the first content page */
+    /* margin-top on .section gives breathing room when sections break to a new page */
+    .page { page-break-before: always; break-before: page; }
     .doc-header { break-inside: avoid; break-after: avoid; }
 
     /* ── SECTION BREAKS: keep headers with content ── */
@@ -265,6 +269,7 @@
         <span class="cover-meta-value">Eligible — 50% tax relief</span>
       </div>
     </div>
+  </div>
   <div class="cover-bottom">
     <div class="cover-bottom-left">
       <p class="strong">Groomr Ltd</p>

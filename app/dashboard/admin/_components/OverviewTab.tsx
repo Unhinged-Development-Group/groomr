@@ -46,11 +46,13 @@ export function OverviewTab({ stats }: { stats: AdminOverviewStats | null }) {
     );
   }
 
-  const grossRevenueGBP = (stats.grossRevenuePence / 100).toLocaleString("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    maximumFractionDigits: 0,
-  });
+  function gbp(pence: number) {
+    return (pence / 100).toLocaleString("en-GB", {
+      style: "currency",
+      currency: "GBP",
+      maximumFractionDigits: 0,
+    });
+  }
 
   return (
     <section className="space-y-6">
@@ -100,10 +102,22 @@ export function OverviewTab({ stats }: { stats: AdminOverviewStats | null }) {
             tone="sage"
           />
           <StatCard
-            label="Gross revenue"
-            value={grossRevenueGBP}
-            sub="deposit payments collected"
+            label="Total revenue"
+            value={gbp(stats.grossRevenuePence)}
+            sub="gross payments collected"
             tone="slate"
+          />
+          <StatCard
+            label="Groomr commission"
+            value={gbp(stats.platformFeePence)}
+            sub="platform fees earned"
+            tone="gold"
+          />
+          <StatCard
+            label="Groomer payouts"
+            value={gbp(stats.groomerPayoutPence)}
+            sub="paid out to groomers"
+            tone="sage"
           />
         </div>
       </div>

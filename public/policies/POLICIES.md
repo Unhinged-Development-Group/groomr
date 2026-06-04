@@ -15,6 +15,7 @@ Registry of all policy HTML documents. Update this file whenever a document is c
 | Cookie Policy | `/cookie-policy` | `cookie-policy.html` | — | — | — | inline (legacy) |
 | Acceptable Use Policy | `/acceptable-use` | `acceptable-use.html` | — | — | — | inline (legacy) |
 | Groomer Verification Policy | `/verification-policy` | `verification-policy.html` | — | — | — | inline (legacy) |
+| Groomer Sign-Up Incentive Policy | `/groomer-sign-up-incentive` | `groomer-sign-up-incentive.html` | 1 | June 2026 | Andrew Hughes | `policy.css` ✓ |
 
 > **Stylesheet column:** `policy.css` ✓ = uses the shared external stylesheet. `inline (legacy)` = has its own embedded `<style>` block and predates the component library. Migrate by removing the `<style>` block and adding `<link rel="stylesheet" href="/policies/policy.css">`.
 

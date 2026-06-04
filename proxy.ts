@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   '/cookie-policy(.*)',
   '/verification-policy(.*)',
   '/acceptable-use(.*)',
+  '/groomer-sign-up-incentive(.*)',
 ])
 
 export default clerkMiddleware(async (auth, request) => {

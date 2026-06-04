@@ -9,11 +9,11 @@ Registry of all policy HTML documents. Update this file whenever a document is c
 | Document | URL | File | Version | Last Updated | Editor | Stylesheet |
 |---|---|---|---|---|---|---|
 | Platform Terms of Use | `/terms/platform` | `terms-platform.html` | 1 | June 2026 | Andrew Hughes | `policy.css` ✓ |
-| Owner Terms | `/terms/owner` | `terms-owner.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
-| Groomer Terms | `/terms/groomer` | `terms-groomer.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
-| Privacy Policy | `/privacy-policy` | `privacy-policy.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
-| Cookie Policy | `/cookie-policy` | `cookie-policy.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
-| Acceptable Use Policy | `/acceptable-use` | `acceptable-use.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Owner Terms | `/terms/owner` | `terms-owner.html` | 0.1 | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Groomer Terms | `/terms/groomer` | `terms-groomer.html` | 0.1 | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Privacy Policy | `/privacy-policy` | `privacy-policy.html` | 0.1 | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Cookie Policy | `/cookie-policy` | `cookie-policy.html` | 0.1 | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Acceptable Use Policy | `/acceptable-use` | `acceptable-use.html` | 0.1 | May 2026 | Andrew Hughes | `policy.css` ✓ |
 | Groomer Verification Policy | `/verification-policy` | `verification-policy.html` | 1.0 | May 2026 | Andrew Hughes | `policy.css` ✓ |
 | Groomer Sign-Up Incentive Policy | `/groomer-sign-up-incentive` | `groomer-sign-up-incentive.html` | 1 | June 2026 | Andrew Hughes | `policy.css` ✓ |
 

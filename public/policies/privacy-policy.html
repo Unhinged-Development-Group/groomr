@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy | Groomr</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
-    
+
     <!-- Google Fonts: Fredoka & Nunito -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -38,112 +38,48 @@
             }
         }
     </script>
-    <style>
-        body {
-            background-color: #f9f8f4; /* Alabaster Cream */
-            color: #2c3e50; /* Deep Slate */
-            scroll-behavior: smooth;
-        }
-        h1, h2, .font-fredoka { font-family: 'Fredoka', sans-serif; }
-        h3, h4, p, span, div, li, .font-nunito { font-family: 'Nunito', sans-serif; }
 
-        .focus-ring:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px #eae45c;
-            border-color: #eae45c;
-        }
-
-        /* Print Styles for PDF Generation (Identical to Verification Policy) */
-        @media print {
-            @page {
-                margin: 20mm 15mm !important; 
-                size: A4 portrait;
-            }
-            
-            body { 
-                background-color: #ffffff !important; 
-                padding: 0 !important; 
-                font-size: 10pt !important;
-                line-height: 1.4 !important;
-                color: #1e293b !important;
-            }
-
-            header, footer, #print-button { 
-                display: none !important; 
-            }
-
-            main { 
-                padding: 0 !important; 
-                margin: 0 !important; 
-                max-width: 100% !important; 
-                width: 100% !important;
-            }
-
-            /* Condense Whitespace */
-            .space-y-12 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
-            .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.8rem !important; }
-            .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.4rem !important; }
-            .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem !important; }
-            .py-16 { padding: 0 !important; }
-            .py-6 { padding-top: 0 !important; padding-bottom: 0 !important; }
-            .mb-6, .mb-8 { margin-bottom: 0.75rem !important; }
-
-            /* Refined Typography */
-            h1 { font-size: 18pt !important; margin-bottom: 0 !important; line-height: 1.1 !important; color: #0f172a !important; }
-            h2 { font-size: 12.5pt !important; padding-bottom: 0.2rem !important; margin-bottom: 0.5rem !important; margin-top: 1.5rem !important; border-bottom: 1px solid #cbd5e1 !important; color: #0f172a !important; }
-            h3 { font-size: 10.5pt !important; margin-bottom: 0.25rem !important; margin-top: 1rem !important; color: #0f172a !important; }
-            p, span, li, div { font-size: 10pt !important; }
-            .text-sm { font-size: 9pt !important; }
-            .text-lg { font-size: 10pt !important; }
-
-            /* Formal Formatting for specific blocks */
-            .bg-muted-terracotta\/10 {
-                background-color: transparent !important;
-                border: 1px solid #cbd5e1 !important;
-                padding: 0.5rem !important;
-                margin-bottom: 1rem !important;
-            }
-
-            /* Sections & Icons */
-            .w-6.h-6 { width: 1.1rem !important; height: 1.1rem !important; margin-top: 0 !important; }
-            section { 
-                background-color: transparent !important;
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                margin-bottom: 1rem !important;
-                page-break-inside: auto !important; 
-                break-inside: auto !important;
-            }
-
-            /* Strict Page Break Rules */
-            h2, h3, h4 {
-                page-break-after: avoid !important;
-                break-after: avoid !important;
-            }
-            li, .bg-muted-terracotta\/10 { 
-                page-break-inside: avoid !important; 
-                break-inside: avoid !important;
-            }
-            p, ul, ol, li {
-                orphans: 3 !important; 
-                widows: 3 !important;  
-            }
-
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
-        }
-    </style>
+    <!-- Groomr Policy Stylesheet -->
+    <link rel="stylesheet" href="/policies/policy.css">
 </head>
 <body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
 
-    <!-- Header (Logged Out / Public Variant) -->
+    <!-- Print Cover (hidden on screen, shown on print) -->
+    <div class="print-cover" style="flex-direction:column;align-items:center;justify-content:space-between;background:#f9f8f4;padding:3rem 4rem;box-sizing:border-box;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.5rem;">
+            <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" style="height:48px;width:auto;object-fit:contain;">
+            <div style="width:3rem;height:3px;background:#eae45c;border-radius:9999px;"></div>
+            <h1 style="font-family:'Fredoka',sans-serif;font-size:2.0625rem;font-weight:700;color:#2c3e50;line-height:1.2;margin:0;">Privacy Policy</h1>
+            <p style="font-family:'Nunito',sans-serif;font-size:0.875rem;color:#95a5a6;font-weight:700;margin:0;">Unhinged Development Group Ltd &nbsp;·&nbsp; Groomr</p>
+            <p style="font-family:'Nunito',sans-serif;font-size:0.75rem;color:#88a096;font-weight:700;margin:0;">Version 0.1 DRAFT &nbsp;·&nbsp; May 2026</p>
+        </div>
+        <div style="border-top:1px solid rgba(149,165,166,0.3);padding-top:1.5rem;width:100%;">
+            <p style="font-family:'Nunito',sans-serif;font-size:0.625rem;color:#95a5a6;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;text-align:center;">Contact</p>
+            <div style="display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:center;">
+                <div style="text-align:left;">
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.625rem;color:#88a096;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 0.125rem;">Data protection</p>
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.75rem;color:#2c3e50;font-weight:700;margin:0;">privacy@groomr.uk</p>
+                </div>
+                <div style="text-align:left;">
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.625rem;color:#88a096;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 0.125rem;">General</p>
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.75rem;color:#2c3e50;font-weight:700;margin:0;">hello@groomr.uk</p>
+                </div>
+                <div style="text-align:left;">
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.625rem;color:#88a096;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 0.125rem;">Legal</p>
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.75rem;color:#2c3e50;font-weight:700;margin:0;">legal@groomr.uk</p>
+                </div>
+                <div style="text-align:left;">
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.625rem;color:#88a096;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 0.125rem;">ICO regulator</p>
+                    <p style="font-family:'Nunito',sans-serif;font-size:0.75rem;color:#2c3e50;font-weight:700;margin:0;">ico.org.uk &nbsp;·&nbsp; 0303 123 1113</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
     <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50">
         <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="https://groomr.co" class="focus-ring rounded-lg inline-block transition-opacity hover:opacity-80">
+            <a href="https://groomr.uk" class="rounded-lg inline-block transition-opacity hover:opacity-80">
                 <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" class="h-8 md:h-10 w-auto object-contain"/>
             </a>
             <div class="hidden md:flex items-center space-x-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
@@ -152,27 +88,15 @@
         </div>
     </header>
 
-    <!-- Main Content Flow -->
+    <!-- Main Content -->
     <main class="flex-1 max-w-4xl mx-auto px-6 md:px-12 py-16 space-y-12 w-full">
 
         <!-- Document Title -->
-        <div class="text-center space-y-6 py-6">
-            <!-- Document Logo (Visible only in PDF/Print) -->
-            <div class="hidden print:flex justify-center mb-2">
-                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-10 md:h-12 w-auto object-contain">
-            </div>
-
+        <div class="text-center space-y-4 py-6 no-print">
             <h1 class="font-fredoka text-4xl md:text-6xl font-bold text-deep-slate">Privacy Policy</h1>
-            
-            <div class="space-y-1">
-                <p class="text-pebble-grey font-bold text-sm tracking-wider uppercase">Version 0.1 DRAFT</p>
-                <p class="text-sage-leaf font-bold text-xs tracking-wider uppercase pt-2">Last Updated: May 2026</p>
-                <p class="text-sage-leaf font-bold text-xs tracking-wider uppercase">Edited by: Andrew Hughes</p>
-            </div>
-            
-            <!-- Download PDF Button -->
+            <p class="text-pebble-grey font-bold text-sm tracking-wider uppercase">Version 0.1 DRAFT &nbsp;·&nbsp; Last Updated: May 2026 &nbsp;·&nbsp; Edited by: Andrew Hughes</p>
             <div class="flex justify-center pt-2" id="print-button">
-                <button onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 focus-ring cursor-pointer shadow-sm">
+                <button onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 cursor-pointer shadow-sm">
                     <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -183,520 +107,318 @@
             </div>
         </div>
 
-        <!-- Drafting Note Callout -->
-        <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-5 rounded-xl flex items-start gap-4 shadow-sm">
-            <svg class="w-6 h-6 shrink-0 mt-0.5 text-muted-terracotta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
+        <!-- Drafting Note -->
+        <div class="policy-callout policy-callout-warn">
+            <svg class="w-5 h-5 shrink-0 mt-0.5 policy-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            <div class="text-deep-slate leading-relaxed">
-                <p class="font-bold text-muted-terracotta uppercase tracking-wider text-xs mb-1">DRAFTING NOTE — NOT FOR PUBLICATION.</p>
-                <p class="text-sm font-semibold">This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor or data protection professional. Before publishing, you must complete ICO registration, confirm your final list of processors (analytics, email, etc.), and have the policy reviewed for compliance with UK GDPR, the Data Protection Act 2018, and PECR. Sections marked "[REVIEW]" or with bracketed placeholders need explicit input.</p>
+            <div>
+                <p style="font-family:'Nunito',sans-serif;font-weight:700;color:#c87964;text-transform:uppercase;letter-spacing:0.05em;font-size:0.75rem;margin:0 0 0.25rem;">DRAFTING NOTE — NOT FOR PUBLICATION.</p>
+                <p style="font-family:'Nunito',sans-serif;font-size:0.875rem;font-weight:600;color:#2c3e50;line-height:1.625;margin:0;">This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor or data protection professional. Before publishing, you must complete ICO registration, confirm your final list of processors (analytics, email, etc.), and have the policy reviewed for compliance with UK GDPR, the Data Protection Act 2018, and PECR. Sections marked "[REVIEW]" or with bracketed placeholders need explicit input.</p>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc-card p-8 md:p-10 no-print">
+            <p class="toc-title">Contents</p>
+            <div class="toc-grid">
+                <div>
+                    <a href="#s1" class="toc-link">1. About This Policy</a>
+                    <a href="#s3" class="toc-link">3. The Personal Data We Collect</a>
+                    <a href="#s5" class="toc-link">5. When We Rely on Legitimate Interests</a>
+                    <a href="#s7" class="toc-link">7. International Transfers</a>
+                    <a href="#s9" class="toc-link">9. Your Rights</a>
+                    <a href="#s11" class="toc-link">11. How We Protect Your Personal Data</a>
+                    <a href="#s13" class="toc-link">13. Changes to This Policy</a>
+                </div>
+                <div>
+                    <a href="#s2" class="toc-link">2. Who We Are</a>
+                    <a href="#s4" class="toc-link">4. How and Why We Use Your Personal Data</a>
+                    <a href="#s6" class="toc-link">6. Who We Share Your Personal Data With</a>
+                    <a href="#s8" class="toc-link">8. How Long We Keep Your Personal Data</a>
+                    <a href="#s10" class="toc-link">10. Cookies and Similar Technologies</a>
+                    <a href="#s12" class="toc-link">12. Children</a>
+                    <a href="#s14" class="toc-link">14. Contact Us</a>
+                </div>
             </div>
         </div>
 
         <!-- Section 1 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">1. About This Policy</h2>
-            <div class="space-y-4 text-deep-slate leading-relaxed text-lg">
-                <p>This Privacy Policy explains how Groomr collects, uses, shares and protects personal data when you use the Groomr website at groomr.uk, the Groomr mobile applications, and any related online services (together, the “Platform”). It applies to dog owners (“Owners”), professional groomers (“Groomers”), and anyone who simply visits the Platform.</p>
-                <p>Groomr is operated by Unhinged Development Group Ltd, trading as Groomr. We are the controller of the personal data described in this Policy unless we say otherwise. Our role as controller, the lawful bases we rely on, and your rights are set out in the sections below.</p>
-                <p>Please read this Policy alongside our Platform Terms of Use, Owner Terms, Groomer Terms, and Cookie Policy.</p>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s1">
+            <h2 class="policy-section-h2">1. About This Policy</h2>
+            <p class="policy-body">This Privacy Policy explains how Groomr collects, uses, shares and protects personal data when you use the Groomr website at groomr.uk, the Groomr mobile applications, and any related online services (together, the "Platform"). It applies to dog owners ("Owners"), professional groomers ("Groomers"), and anyone who simply visits the Platform.</p>
+            <p class="policy-body">Groomr is operated by Unhinged Development Group Ltd, trading as Groomr. We are the controller of the personal data described in this Policy unless we say otherwise. Our role as controller, the lawful bases we rely on, and your rights are set out in the sections below.</p>
+            <p class="policy-body">Please read this Policy alongside our Platform Terms of Use, Owner Terms, Groomer Terms, and Cookie Policy.</p>
         </section>
 
         <!-- Section 2 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">2. Who We Are</h2>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg">
-                <li><strong>Controller:</strong> Unhinged Development Group Ltd, trading as Groomr.</li>
-                <li><strong>Registered in:</strong> [England and Wales / Scotland — confirm at filing] under company number [COMPANY NUMBER].</li>
-                <li><strong>Registered office:</strong> [REGISTERED OFFICE ADDRESS].</li>
-                <li><strong>ICO registration number:</strong> [TO BE COMPLETED — register at ico.org.uk before launch].</li>
-                <li><strong>Data protection contact:</strong> <a href="mailto:privacy@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors">privacy@groomr.uk</a>.</li>
+        <section class="policy-section p-8 md:p-12" id="s2">
+            <h2 class="policy-section-h2">2. Who We Are</h2>
+            <ul class="policy-list mb-4">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Controller:</strong> Unhinged Development Group Ltd, trading as Groomr.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Registered in:</strong> [England and Wales / Scotland — confirm at filing] under company number [COMPANY NUMBER].</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Registered office:</strong> [REGISTERED OFFICE ADDRESS].</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>ICO registration number:</strong> [TO BE COMPLETED — register at ico.org.uk before launch].</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Data protection contact:</strong> <a href="mailto:privacy@groomr.uk" class="policy-link">privacy@groomr.uk</a>.</span></li>
             </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mt-6">If you have any questions about this Policy, want to exercise a right under it, or want to make a complaint about how we handle your personal data, please contact us using the details above. We are not required to appoint a formal Data Protection Officer because we do not undertake large-scale processing of special-category data.</p>
+            <p class="policy-body">If you have any questions about this Policy, want to exercise a right under it, or want to make a complaint about how we handle your personal data, please contact us using the details above. We are not required to appoint a formal Data Protection Officer because we do not undertake large-scale processing of special-category data.</p>
         </section>
 
         <!-- Section 3 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">3. The Personal Data We Collect</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We collect different categories of personal data depending on how you interact with the Platform. Most of it comes directly from you; some is generated automatically as you use the Platform; and a small amount is received from third parties (for example, payment confirmation from Stripe).</p>
-            
-            <div class="space-y-8 text-deep-slate">
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.1 Data we collect from Owners</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Identity and contact data:</strong> name, email address, phone number, postal address (used for finding nearby Groomers and for invoicing where applicable).</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Account credentials:</strong> managed by our authentication provider, Clerk. We do not store your password.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Dog data:</strong> dog’s name, breed, age, size, temperament notes, and any health or behavioural information you choose to share with a Groomer.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Booking data:</strong> appointments made, services selected, prices paid, deposit amounts, cancellations, and reviews you leave.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Payment data:</strong> limited payment metadata (last four digits of card, card type, transaction ID, payment status). Full card details are processed and stored by Stripe, not by us.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Communications:</strong> messages exchanged with Groomers through the Platform, and any emails you send us.</span>
-                        </li>
-                    </ul>
-                </div>
+        <section class="policy-section p-8 md:p-12" id="s3">
+            <h2 class="policy-section-h2">3. The Personal Data We Collect</h2>
+            <p class="policy-body">We collect different categories of personal data depending on how you interact with the Platform. Most of it comes directly from you; some is generated automatically as you use the Platform; and a small amount is received from third parties (for example, payment confirmation from Stripe).</p>
 
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.2 Data we collect from Groomers</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Identity and contact data:</strong> name, business name, email, phone number, business address.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Business data:</strong> trading status (sole trader / company), company number (where applicable), VAT number (where applicable).</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Verification documents:</strong> insurance certificates, qualification certificates, canine first aid certification, photo ID (reviewed and not retained beyond verification — see the Groomer Verification Policy).</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Service data:</strong> listings, prices, opening hours, availability, services offered.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Payout data:</strong> bank details (held by Stripe, not Groomr), tax information, payout history.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Performance data:</strong> bookings, completion rates, cancellations, reviews, response times.</span>
-                        </li>
-                    </ul>
-                </div>
+            <h3 class="policy-section-h3">3.1 Data we collect from Owners</h3>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Identity and contact data:</strong> name, email address, phone number, postal address (used for finding nearby Groomers and for invoicing where applicable).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Account credentials:</strong> managed by our authentication provider, Clerk. We do not store your password.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Dog data:</strong> dog's name, breed, age, size, temperament notes, and any health or behavioural information you choose to share with a Groomer.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Booking data:</strong> appointments made, services selected, prices paid, deposit amounts, cancellations, and reviews you leave.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Payment data:</strong> limited payment metadata (last four digits of card, card type, transaction ID, payment status). Full card details are processed and stored by Stripe, not by us.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Communications:</strong> messages exchanged with Groomers through the Platform, and any emails you send us.</span></li>
+            </ul>
 
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.3 Data collected automatically from everyone using the Platform</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Device and technical data:</strong> IP address, browser type and version, operating system, device identifiers, time zone.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Usage data:</strong> pages visited, features used, search queries, click paths, time spent on pages, referring URL.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Cookies and similar technologies:</strong> see our Cookie Policy for the full list and your choices.</span>
-                        </li>
-                    </ul>
-                </div>
+            <h3 class="policy-section-h3">3.2 Data we collect from Groomers</h3>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Identity and contact data:</strong> name, business name, email, phone number, business address.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Business data:</strong> trading status (sole trader / company), company number (where applicable), VAT number (where applicable).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Verification documents:</strong> insurance certificates, qualification certificates, canine first aid certification, photo ID (reviewed and not retained beyond verification — see the Groomer Verification Policy).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Service data:</strong> listings, prices, opening hours, availability, services offered.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Payout data:</strong> bank details (held by Stripe, not Groomr), tax information, payout history.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Performance data:</strong> bookings, completion rates, cancellations, reviews, response times.</span></li>
+            </ul>
 
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.4 Data we receive from third parties</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Stripe:</strong> payment confirmations, payout statuses, KYC verification status (for Groomers), and dispute or chargeback notifications.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Clerk:</strong> authentication events (sign-in, sign-out, multi-factor authentication outcomes).</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Google Maps:</strong> address-to-coordinate conversions when you enter a postcode or address.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                            <span><strong>Cloudinary:</strong> metadata about images you upload, such as file size and format.</span>
-                        </li>
-                    </ul>
-                </div>
+            <h3 class="policy-section-h3">3.3 Data collected automatically from everyone using the Platform</h3>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Device and technical data:</strong> IP address, browser type and version, operating system, device identifiers, time zone.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Usage data:</strong> pages visited, features used, search queries, click paths, time spent on pages, referring URL.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Cookies and similar technologies:</strong> see our Cookie Policy for the full list and your choices.</span></li>
+            </ul>
 
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.5 Special-category and criminal-offence data</h3>
-                    <p class="leading-relaxed">We do not seek special-category data (such as health, religion, sexual orientation) about Owners or Groomers as part of normal use of the Platform. We do not seek criminal-offence data. If you provide any such data voluntarily (for example, by mentioning a disability in a message), we will treat it with appropriate care and only use it for the purpose you supplied it for, or with your explicit consent.</p>
-                </div>
-            </div>
+            <h3 class="policy-section-h3">3.4 Data we receive from third parties</h3>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Stripe:</strong> payment confirmations, payout statuses, KYC verification status (for Groomers), and dispute or chargeback notifications.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Clerk:</strong> authentication events (sign-in, sign-out, multi-factor authentication outcomes).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Google Maps:</strong> address-to-coordinate conversions when you enter a postcode or address.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Cloudinary:</strong> metadata about images you upload, such as file size and format.</span></li>
+            </ul>
+
+            <h3 class="policy-section-h3">3.5 Special-category and criminal-offence data</h3>
+            <p class="policy-body">We do not seek special-category data (such as health, religion, sexual orientation) about Owners or Groomers as part of normal use of the Platform. We do not seek criminal-offence data. If you provide any such data voluntarily (for example, by mentioning a disability in a message), we will treat it with appropriate care and only use it for the purpose you supplied it for, or with your explicit consent.</p>
         </section>
 
         <!-- Section 4 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">4. How and Why We Use Your Personal Data</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Under UK GDPR, we must have a lawful basis for each use of your personal data. The table below summarises what we do, why we do it, and which lawful basis applies.</p>
-            
-            <div class="space-y-8 text-deep-slate">
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.1 To provide the Platform and process bookings</h3>
-                    <p><strong>What:</strong> creating and managing your account; matching Owners with Groomers; processing bookings, payments and refunds; handling cancellations.</p>
-                    <p><strong>Lawful basis:</strong> performance of a contract with you (UK GDPR Article 6(1)(b)).</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.2 To verify Groomers</h3>
-                    <p><strong>What:</strong> reviewing insurance, qualification, and identity documents under the Groomer Verification Policy.</p>
-                    <p><strong>Lawful basis:</strong> performance of the Groomer contract with you; our legitimate interests in maintaining a safe marketplace; and, for photo ID, our legitimate interests in fraud prevention. ID documents are inspected and discarded immediately upon completion of the verification.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.3 To handle disputes and complaints</h3>
-                    <p><strong>What:</strong> reviewing booking history, messages, and reviews to mediate disputes between Owners and Groomers; addressing welfare or safety concerns.</p>
-                    <p><strong>Lawful basis:</strong> performance of contract; our legitimate interests in operating a fair and safe marketplace; compliance with legal obligations.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.4 To communicate with you</h3>
-                    <p><strong>What:</strong> transactional emails (booking confirmations, reminders, receipts, account notifications); responses to your queries; service announcements.</p>
-                    <p><strong>Lawful basis:</strong> performance of contract; our legitimate interests in keeping you informed about your bookings and the Platform.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.5 To send marketing communications</h3>
-                    <p><strong>What:</strong> newsletters, product updates, special offers, and partner promotions.</p>
-                    <p><strong>Lawful basis:</strong> your consent (UK GDPR Article 6(1)(a) and PECR Regulation 22), which you can withdraw at any time by clicking unsubscribe in any marketing email, by changing your preferences in your account, or by emailing privacy@groomr.uk. We will not send you marketing communications without your prior opt-in.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.6 To improve the Platform</h3>
-                    <p><strong>What:</strong> analysing how the Platform is used; identifying bugs and pain points; building new features; conducting product research.</p>
-                    <p><strong>Lawful basis:</strong> our legitimate interests in improving and developing the Platform. Where we use cookies or similar technologies for this purpose, we will rely on your consent under PECR — see our Cookie Policy.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.7 To prevent fraud and abuse, and to protect users</h3>
-                    <p><strong>What:</strong> monitoring for fraudulent payments; investigating suspected misuse of the Platform; suspending accounts where necessary.</p>
-                    <p><strong>Lawful basis:</strong> our legitimate interests in protecting users and operating a safe marketplace; compliance with legal obligations.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.8 To comply with legal obligations</h3>
-                    <p><strong>What:</strong> accounting, tax, anti-money-laundering, responding to lawful requests from authorities, dealing with regulators.</p>
-                    <p><strong>Lawful basis:</strong> compliance with a legal obligation (UK GDPR Article 6(1)(c)).</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">4.9 If we ever change why we use your data</h3>
-                    <p>If we want to use your personal data for a new purpose that is not compatible with the purposes set out above, we will tell you and, where required, ask for your consent.</p>
-                </div>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s4">
+            <h2 class="policy-section-h2">4. How and Why We Use Your Personal Data</h2>
+            <p class="policy-body">Under UK GDPR, we must have a lawful basis for each use of your personal data. The table below summarises what we do, why we do it, and which lawful basis applies.</p>
+
+            <h3 class="policy-section-h3">4.1 To provide the Platform and process bookings</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> creating and managing your account; matching Owners with Groomers; processing bookings, payments and refunds; handling cancellations.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> performance of a contract with you (UK GDPR Article 6(1)(b)).</p>
+
+            <h3 class="policy-section-h3">4.2 To verify Groomers</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> reviewing insurance, qualification, and identity documents under the Groomer Verification Policy.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> performance of the Groomer contract with you; our legitimate interests in maintaining a safe marketplace; and, for photo ID, our legitimate interests in fraud prevention. ID documents are inspected and discarded immediately upon completion of the verification.</p>
+
+            <h3 class="policy-section-h3">4.3 To handle disputes and complaints</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> reviewing booking history, messages, and reviews to mediate disputes between Owners and Groomers; addressing welfare or safety concerns.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> performance of contract; our legitimate interests in operating a fair and safe marketplace; compliance with legal obligations.</p>
+
+            <h3 class="policy-section-h3">4.4 To communicate with you</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> transactional emails (booking confirmations, reminders, receipts, account notifications); responses to your queries; service announcements.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> performance of contract; our legitimate interests in keeping you informed about your bookings and the Platform.</p>
+
+            <h3 class="policy-section-h3">4.5 To send marketing communications</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> newsletters, product updates, special offers, and partner promotions.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> your consent (UK GDPR Article 6(1)(a) and PECR Regulation 22), which you can withdraw at any time by clicking unsubscribe in any marketing email, by changing your preferences in your account, or by emailing privacy@groomr.uk. We will not send you marketing communications without your prior opt-in.</p>
+
+            <h3 class="policy-section-h3">4.6 To improve the Platform</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> analysing how the Platform is used; identifying bugs and pain points; building new features; conducting product research.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> our legitimate interests in improving and developing the Platform. Where we use cookies or similar technologies for this purpose, we will rely on your consent under PECR — see our Cookie Policy.</p>
+
+            <h3 class="policy-section-h3">4.7 To prevent fraud and abuse, and to protect users</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> monitoring for fraudulent payments; investigating suspected misuse of the Platform; suspending accounts where necessary.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> our legitimate interests in protecting users and operating a safe marketplace; compliance with legal obligations.</p>
+
+            <h3 class="policy-section-h3">4.8 To comply with legal obligations</h3>
+            <p class="policy-body mb-4"><strong>What:</strong> accounting, tax, anti-money-laundering, responding to lawful requests from authorities, dealing with regulators.</p>
+            <p class="policy-body"><strong>Lawful basis:</strong> compliance with a legal obligation (UK GDPR Article 6(1)(c)).</p>
+
+            <h3 class="policy-section-h3">4.9 If we ever change why we use your data</h3>
+            <p class="policy-body">If we want to use your personal data for a new purpose that is not compatible with the purposes set out above, we will tell you and, where required, ask for your consent.</p>
         </section>
 
         <!-- Section 5 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">5. When We Rely on Legitimate Interests</h2>
-            <div class="space-y-4 text-deep-slate leading-relaxed text-lg">
-                <p>Where we rely on “legitimate interests” as our lawful basis, we have considered whether our interests are outweighed by your interests, rights and freedoms. The main legitimate interests we rely on are: operating a safe and trustworthy marketplace; preventing fraud; protecting animal welfare; improving the Platform; communicating with you about your bookings; and pursuing the ordinary commercial interests of our business.</p>
-                <p>You have the right to object to processing based on legitimate interests — see section 9. If you do, we will stop the processing unless we can demonstrate compelling legitimate grounds, or unless the processing is necessary to establish, exercise or defend legal claims.</p>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s5">
+            <h2 class="policy-section-h2">5. When We Rely on Legitimate Interests</h2>
+            <p class="policy-body">Where we rely on "legitimate interests" as our lawful basis, we have considered whether our interests are outweighed by your interests, rights and freedoms. The main legitimate interests we rely on are: operating a safe and trustworthy marketplace; preventing fraud; protecting animal welfare; improving the Platform; communicating with you about your bookings; and pursuing the ordinary commercial interests of our business.</p>
+            <p class="policy-body">You have the right to object to processing based on legitimate interests — see section 9. If you do, we will stop the processing unless we can demonstrate compelling legitimate grounds, or unless the processing is necessary to establish, exercise or defend legal claims.</p>
         </section>
 
         <!-- Section 6 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">6. Who We Share Your Personal Data With</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We share personal data only where necessary and with parties bound by appropriate confidentiality and data protection obligations. Specifically:</p>
-            
-            <div class="space-y-8 text-deep-slate">
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">6.1 Other users of the Platform</h3>
-                    <p>When you book an appointment, we share the relevant information between Owner and Groomer so the appointment can go ahead. Groomers see the Owner’s name, contact details, dog details, booking notes and any messages. Owners see the Groomer’s name, business name, contact details, address (for in-salon services), reviews and services. Reviews are visible to all Platform users.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">6.2 Our service providers (data processors)</h3>
-                    <p class="mb-4">We use a number of carefully chosen service providers to operate the Platform. They process personal data on our behalf, only on our instructions, and under contracts that meet UK GDPR Article 28 requirements:</p>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-4">
-                            <!-- Custom Bullet -->
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Supabase</strong> — hosted database and storage (EU region). Hosts our application data.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Clerk</strong> — authentication and user identity management.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Stripe (Stripe Payments Europe Ltd)</strong> — payment processing and payouts via Stripe Connect. Stripe also acts as an independent controller for certain purposes (fraud prevention, regulatory reporting), as described in Stripe’s own privacy notice.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Vercel</strong> — application hosting and edge delivery.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Cloudinary</strong> — image storage, processing and delivery.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Resend</strong> — transactional email delivery (booking confirmations, account emails).</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Google Maps Platform</strong> — mapping, geocoding and place data.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>PostHog</strong> — product analytics. Where we use PostHog with cookies or tracking that requires consent under PECR, we will obtain your consent before activating it.</span>
-                        </li>
-                        <li class="flex items-start gap-4">
-                            <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                                <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                            </svg>
-                            <span><strong>Our future marketing email provider</strong> — (planned: a service such as Mailchimp or similar). We will update this Policy and our Cookie Policy when we appoint a provider. We do not currently send marketing emails.</span>
-                        </li>
-                    </ul>
-                    <p class="mt-4 font-bold text-muted-terracotta text-sm">[REVIEW: list to be confirmed and kept current. UK GDPR requires this list to be accurate — you must amend the Policy when you change providers.]</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">6.3 Professional advisers</h3>
-                    <p>Lawyers, accountants, auditors, insurers and other professional advisers, where we need their help and where they are subject to duties of confidentiality.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">6.4 Authorities and law enforcement</h3>
-                    <p>Where we are required by law, by a court order, or by a regulator (including the ICO, HMRC, the police, local authorities, and animal welfare bodies such as the RSPCA or SSPCA). We will only disclose what is reasonably necessary.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">6.5 Corporate transactions</h3>
-                    <p>If Groomr is involved in a merger, acquisition, restructuring or sale of assets, personal data may be disclosed to advisers, potential buyers and successor entities under appropriate confidentiality protections.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">6.6 No sale of personal data</h3>
-                    <p>We do not sell your personal data to third parties for their own marketing or other commercial purposes.</p>
-                </div>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s6">
+            <h2 class="policy-section-h2">6. Who We Share Your Personal Data With</h2>
+            <p class="policy-body">We share personal data only where necessary and with parties bound by appropriate confidentiality and data protection obligations. Specifically:</p>
+
+            <h3 class="policy-section-h3">6.1 Other users of the Platform</h3>
+            <p class="policy-body">When you book an appointment, we share the relevant information between Owner and Groomer so the appointment can go ahead. Groomers see the Owner's name, contact details, dog details, booking notes and any messages. Owners see the Groomer's name, business name, contact details, address (for in-salon services), reviews and services. Reviews are visible to all Platform users.</p>
+
+            <h3 class="policy-section-h3">6.2 Our service providers (data processors)</h3>
+            <p class="policy-body mb-4">We use a number of carefully chosen service providers to operate the Platform. They process personal data on our behalf, only on our instructions, and under contracts that meet UK GDPR Article 28 requirements:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Supabase</strong> — hosted database and storage (EU region). Hosts our application data.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Clerk</strong> — authentication and user identity management.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Stripe (Stripe Payments Europe Ltd)</strong> — payment processing and payouts via Stripe Connect. Stripe also acts as an independent controller for certain purposes (fraud prevention, regulatory reporting), as described in Stripe's own privacy notice.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Vercel</strong> — application hosting and edge delivery.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Cloudinary</strong> — image storage, processing and delivery.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Resend</strong> — transactional email delivery (booking confirmations, account emails).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Google Maps Platform</strong> — mapping, geocoding and place data.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>PostHog</strong> — product analytics. Where we use PostHog with cookies or tracking that requires consent under PECR, we will obtain your consent before activating it.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Our future marketing email provider</strong> — (planned: a service such as Mailchimp or similar). We will update this Policy and our Cookie Policy when we appoint a provider. We do not currently send marketing emails.</span></li>
+            </ul>
+            <p class="text-sm font-bold text-muted-terracotta mb-6">[REVIEW: list to be confirmed and kept current. UK GDPR requires this list to be accurate — you must amend the Policy when you change providers.]</p>
+
+            <h3 class="policy-section-h3">6.3 Professional advisers</h3>
+            <p class="policy-body">Lawyers, accountants, auditors, insurers and other professional advisers, where we need their help and where they are subject to duties of confidentiality.</p>
+
+            <h3 class="policy-section-h3">6.4 Authorities and law enforcement</h3>
+            <p class="policy-body">Where we are required by law, by a court order, or by a regulator (including the ICO, HMRC, the police, local authorities, and animal welfare bodies such as the RSPCA or SSPCA). We will only disclose what is reasonably necessary.</p>
+
+            <h3 class="policy-section-h3">6.5 Corporate transactions</h3>
+            <p class="policy-body">If Groomr is involved in a merger, acquisition, restructuring or sale of assets, personal data may be disclosed to advisers, potential buyers and successor entities under appropriate confidentiality protections.</p>
+
+            <h3 class="policy-section-h3">6.6 No sale of personal data</h3>
+            <p class="policy-body">We do not sell your personal data to third parties for their own marketing or other commercial purposes.</p>
         </section>
 
         <!-- Section 7 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">7. International Transfers</h2>
-            <div class="space-y-4 text-deep-slate leading-relaxed text-lg">
-                <p>Most of the personal data we hold is stored within the United Kingdom or the European Economic Area. However, some of our service providers (notably Clerk, Stripe, Vercel, Cloudinary, Resend, Google and PostHog) may process personal data outside the UK and EEA, including in the United States.</p>
-                <p>Where personal data is transferred outside the UK, we rely on one of the following safeguards:</p>
-                <ul class="list-disc list-outside ml-6 space-y-2">
-                    <li>a UK Government “adequacy regulation” that recognises the destination country as offering an adequate level of data protection (for example, the UK–US Data Bridge for certified US recipients);</li>
-                    <li>the International Data Transfer Agreement (IDTA) issued by the ICO; or</li>
-                    <li>the UK Addendum to the EU Standard Contractual Clauses.</li>
-                </ul>
-                <p>You can request a copy of the relevant transfer safeguards by emailing privacy@groomr.uk.</p>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s7">
+            <h2 class="policy-section-h2">7. International Transfers</h2>
+            <p class="policy-body">Most of the personal data we hold is stored within the United Kingdom or the European Economic Area. However, some of our service providers (notably Clerk, Stripe, Vercel, Cloudinary, Resend, Google and PostHog) may process personal data outside the UK and EEA, including in the United States.</p>
+            <p class="policy-body mb-4">Where personal data is transferred outside the UK, we rely on one of the following safeguards:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>a UK Government "adequacy regulation" that recognises the destination country as offering an adequate level of data protection (for example, the UK–US Data Bridge for certified US recipients);</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>the International Data Transfer Agreement (IDTA) issued by the ICO; or</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>the UK Addendum to the EU Standard Contractual Clauses.</span></li>
+            </ul>
+            <p class="policy-body">You can request a copy of the relevant transfer safeguards by emailing privacy@groomr.uk.</p>
         </section>
 
         <!-- Section 8 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">8. How Long We Keep Your Personal Data</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We keep personal data for only as long as we need it for the purpose we collected it for, including to satisfy any legal, accounting, tax, or reporting requirements. Our default retention periods are:</p>
-            
-            <ul class="space-y-3 text-deep-slate leading-relaxed mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Account data:</strong> while your account is active, and for 12 months after closure (to handle disputes, refunds, and complaints), then deleted or anonymised.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Booking and transaction records:</strong> 7 years from the date of the booking, to comply with HMRC record-keeping requirements.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Payment data held by Stripe:</strong> retained by Stripe in accordance with their own policy and applicable financial regulation.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Identity documents (Groomer photo ID):</strong> inspected during verification and discarded immediately upon completion.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Verification certificates (insurance, qualifications):</strong> held while the Groomer is on the Platform, and for 3 years after their account is closed (to evidence verification at the time of past bookings).</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Messages exchanged on the Platform:</strong> retained for the lifetime of the account; archived for 12 months after account closure.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Reviews:</strong> retained for the lifetime of the Groomer’s account, even after the Owner closes their own account (the reviewer’s name may be anonymised to “Former user” after closure).</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Marketing preferences:</strong> kept while you have an account; we keep a suppression record indefinitely after opt-out so we do not contact you again.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Server logs and security logs:</strong> up to 12 months.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2"></span>
-                    <span><strong>Analytics data:</strong> up to 24 months, or as set out in our Cookie Policy.</span>
-                </li>
+        <section class="policy-section p-8 md:p-12" id="s8">
+            <h2 class="policy-section-h2">8. How Long We Keep Your Personal Data</h2>
+            <p class="policy-body mb-4">We keep personal data for only as long as we need it for the purpose we collected it for, including to satisfy any legal, accounting, tax, or reporting requirements. Our default retention periods are:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Account data:</strong> while your account is active, and for 12 months after closure (to handle disputes, refunds, and complaints), then deleted or anonymised.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Booking and transaction records:</strong> 7 years from the date of the booking, to comply with HMRC record-keeping requirements.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Payment data held by Stripe:</strong> retained by Stripe in accordance with their own policy and applicable financial regulation.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Identity documents (Groomer photo ID):</strong> inspected during verification and discarded immediately upon completion.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Verification certificates (insurance, qualifications):</strong> held while the Groomer is on the Platform, and for 3 years after their account is closed (to evidence verification at the time of past bookings).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Messages exchanged on the Platform:</strong> retained for the lifetime of the account; archived for 12 months after account closure.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Reviews:</strong> retained for the lifetime of the Groomer's account, even after the Owner closes their own account (the reviewer's name may be anonymised to "Former user" after closure).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Marketing preferences:</strong> kept while you have an account; we keep a suppression record indefinitely after opt-out so we do not contact you again.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Server logs and security logs:</strong> up to 12 months.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Analytics data:</strong> up to 24 months, or as set out in our Cookie Policy.</span></li>
             </ul>
-            <p class="font-bold text-muted-terracotta text-sm">[REVIEW: confirm retention periods with solicitor/accountant. 7 years is standard for tax records; other periods may need adjusting for sector practice.]</p>
+            <p class="text-sm font-bold text-muted-terracotta">[REVIEW: confirm retention periods with solicitor/accountant. 7 years is standard for tax records; other periods may need adjusting for sector practice.]</p>
         </section>
 
         <!-- Section 9 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">9. Your Rights</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Under UK GDPR, you have a number of rights in relation to your personal data. These are:</p>
-            
-            <ul class="space-y-4 text-deep-slate mb-8">
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right to be informed</strong> — about how we use your personal data (this Policy is part of how we meet that).</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right of access</strong> — you can ask for a copy of the personal data we hold about you.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right to rectification</strong> — you can ask us to correct inaccurate or incomplete data. Most personal data can be edited directly in your account settings.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right to erasure (“right to be forgotten”)</strong> — you can ask us to delete personal data in certain circumstances. We may need to keep some data to comply with legal obligations (for example, tax records).</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right to restrict processing</strong> — you can ask us to limit how we use your personal data in certain circumstances.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right to data portability</strong> — you can ask for a copy of personal data you have provided to us in a structured, commonly used, machine-readable format.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right to object</strong> — you can object to processing based on legitimate interests (including profiling), and you can object at any time to processing for direct marketing.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>Rights relating to automated decision-making</strong> — we do not make decisions about you that have significant legal or similar effects based solely on automated processing.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <svg class="w-6 h-6 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5.5" fill="#88a096" stroke="none" opacity="0.3" />
-                        <circle cx="12" cy="12" r="2" fill="#2c3e50" stroke="none" />
-                    </svg>
-                    <span class="leading-relaxed"><strong>The right to withdraw consent</strong> — where we rely on your consent (such as for marketing or non-essential cookies), you can withdraw it at any time without affecting the lawfulness of processing carried out before withdrawal.</span>
-                </li>
+        <section class="policy-section p-8 md:p-12" id="s9">
+            <h2 class="policy-section-h2">9. Your Rights</h2>
+            <p class="policy-body">Under UK GDPR, you have a number of rights in relation to your personal data. These are:</p>
+            <ul class="policy-list mb-8">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right to be informed</strong> — about how we use your personal data (this Policy is part of how we meet that).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right of access</strong> — you can ask for a copy of the personal data we hold about you.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right to rectification</strong> — you can ask us to correct inaccurate or incomplete data. Most personal data can be edited directly in your account settings.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right to erasure ("right to be forgotten")</strong> — you can ask us to delete personal data in certain circumstances. We may need to keep some data to comply with legal obligations (for example, tax records).</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right to restrict processing</strong> — you can ask us to limit how we use your personal data in certain circumstances.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right to data portability</strong> — you can ask for a copy of personal data you have provided to us in a structured, commonly used, machine-readable format.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right to object</strong> — you can object to processing based on legitimate interests (including profiling), and you can object at any time to processing for direct marketing.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>Rights relating to automated decision-making</strong> — we do not make decisions about you that have significant legal or similar effects based solely on automated processing.</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span><strong>The right to withdraw consent</strong> — where we rely on your consent (such as for marketing or non-essential cookies), you can withdraw it at any time without affecting the lawfulness of processing carried out before withdrawal.</span></li>
             </ul>
 
-            <div class="space-y-6 text-deep-slate">
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">9.1 How to exercise your rights</h3>
-                    <p>Email privacy@groomr.uk. We will respond within one month. If your request is complex or you have made several requests, we may extend the deadline by a further two months and tell you why. There is no fee for exercising your rights in most cases; we may charge a reasonable fee or refuse a request that is manifestly unfounded or excessive.</p>
-                    <p class="mt-2">We may need to ask you for information to confirm your identity before acting on a request. This is to protect your data from someone impersonating you.</p>
-                </div>
-                <div>
-                    <h3 class="font-fredoka text-xl font-bold mb-2 text-deep-slate">9.2 Right to complain to the ICO</h3>
-                    <p>If you are unhappy with how we have handled your personal data, please contact us first so we can try to put it right. You also have the right to lodge a complaint with the Information Commissioner’s Office:</p>
-                    <ul class="list-none space-y-1 mt-2">
-                        <li><strong>Website:</strong> ico.org.uk</li>
-                        <li><strong>Helpline:</strong> 0303 123 1113</li>
-                        <li><strong>Post:</strong> Information Commissioner’s Office, Wycliffe House, Water Lane, Wilmslow, Cheshire SK9 5AF</li>
-                    </ul>
-                </div>
-            </div>
+            <h3 class="policy-section-h3">9.1 How to exercise your rights</h3>
+            <p class="policy-body mb-4">Email privacy@groomr.uk. We will respond within one month. If your request is complex or you have made several requests, we may extend the deadline by a further two months and tell you why. There is no fee for exercising your rights in most cases; we may charge a reasonable fee or refuse a request that is manifestly unfounded or excessive.</p>
+            <p class="policy-body">We may need to ask you for information to confirm your identity before acting on a request. This is to protect your data from someone impersonating you.</p>
+
+            <h3 class="policy-section-h3">9.2 Right to complain to the ICO</h3>
+            <p class="policy-body mb-4">If you are unhappy with how we have handled your personal data, please contact us first so we can try to put it right. You also have the right to lodge a complaint with the Information Commissioner's Office:</p>
+            <ul class="policy-contact-list">
+                <li class="policy-contact-row">
+                    <span class="policy-contact-label">Website</span>
+                    <span>ico.org.uk</span>
+                </li>
+                <li class="policy-contact-row">
+                    <span class="policy-contact-label">Helpline</span>
+                    <span>0303 123 1113</span>
+                </li>
+                <li class="policy-contact-row">
+                    <span class="policy-contact-label">Post</span>
+                    <span>Information Commissioner's Office, Wycliffe House, Water Lane, Wilmslow, Cheshire SK9 5AF</span>
+                </li>
+            </ul>
         </section>
 
         <!-- Section 10 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">10. Cookies and Similar Technologies</h2>
-            <div class="space-y-4 text-deep-slate leading-relaxed text-lg">
-                <p>We use cookies and similar technologies on the Platform. Some are strictly necessary to make the Platform work; others (such as analytics and marketing cookies) require your consent under the Privacy and Electronic Communications Regulations 2003 (PECR).</p>
-                <p>Full details — including the list of cookies, their purpose, duration, and how to manage your preferences — are in our Cookie Policy.</p>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s10">
+            <h2 class="policy-section-h2">10. Cookies and Similar Technologies</h2>
+            <p class="policy-body">We use cookies and similar technologies on the Platform. Some are strictly necessary to make the Platform work; others (such as analytics and marketing cookies) require your consent under the Privacy and Electronic Communications Regulations 2003 (PECR).</p>
+            <p class="policy-body">Full details — including the list of cookies, their purpose, duration, and how to manage your preferences — are in our Cookie Policy.</p>
         </section>
 
         <!-- Section 11 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">11. How We Protect Your Personal Data</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We take the security of personal data seriously. Among other measures, we:</p>
-            <ul class="list-disc list-outside ml-6 space-y-2 text-deep-slate leading-relaxed text-lg mb-6">
-                <li>encrypt data in transit using TLS;</li>
-                <li>encrypt sensitive data at rest where supported by our providers;</li>
-                <li>apply row-level security in our database so that users can access only the data they are entitled to;</li>
-                <li>require multi-factor authentication for our own administrative access;</li>
-                <li>delegate payment card processing to Stripe so that we never see or store full card numbers;</li>
-                <li>review our security practices periodically as the business grows;</li>
-                <li>vet our service providers for their own security and data protection practices.</li>
+        <section class="policy-section p-8 md:p-12" id="s11">
+            <h2 class="policy-section-h2">11. How We Protect Your Personal Data</h2>
+            <p class="policy-body mb-4">We take the security of personal data seriously. Among other measures, we:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>encrypt data in transit using TLS;</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>encrypt sensitive data at rest where supported by our providers;</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>apply row-level security in our database so that users can access only the data they are entitled to;</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>require multi-factor authentication for our own administrative access;</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>delegate payment card processing to Stripe so that we never see or store full card numbers;</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>review our security practices periodically as the business grows;</span></li>
+                <li class="policy-list-item"><span class="policy-list-dot"></span><span>vet our service providers for their own security and data protection practices.</span></li>
             </ul>
-            <p class="text-deep-slate leading-relaxed text-lg">If we become aware of a personal data breach that is likely to result in a risk to your rights and freedoms, we will report it to the ICO within 72 hours where required, and we will tell you without undue delay where the breach is likely to result in a high risk to you.</p>
+            <p class="policy-body">If we become aware of a personal data breach that is likely to result in a risk to your rights and freedoms, we will report it to the ICO within 72 hours where required, and we will tell you without undue delay where the breach is likely to result in a high risk to you.</p>
         </section>
 
         <!-- Section 12 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">12. Children</h2>
-            <div class="space-y-4 text-deep-slate leading-relaxed text-lg">
-                <p>The Platform is not intended for use by anyone under the age of 18. We do not knowingly collect personal data from children. If you become aware that a child has provided personal data to us, please contact privacy@groomr.uk so we can delete it.</p>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s12">
+            <h2 class="policy-section-h2">12. Children</h2>
+            <p class="policy-body">The Platform is not intended for use by anyone under the age of 18. We do not knowingly collect personal data from children. If you become aware that a child has provided personal data to us, please contact privacy@groomr.uk so we can delete it.</p>
         </section>
 
         <!-- Section 13 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">13. Changes to This Policy</h2>
-            <div class="space-y-4 text-deep-slate leading-relaxed text-lg">
-                <p>We may update this Policy from time to time — for example, when we add a new service provider, change a retention period, or respond to changes in the law. We will post the updated Policy on the Platform and update the version date below. Where the change is material (one that affects your rights or significantly alters how we use your personal data), we will tell you directly by email and, where required by law, ask for your consent before the change takes effect.</p>
-            </div>
+        <section class="policy-section p-8 md:p-12" id="s13">
+            <h2 class="policy-section-h2">13. Changes to This Policy</h2>
+            <p class="policy-body">We may update this Policy from time to time — for example, when we add a new service provider, change a retention period, or respond to changes in the law. We will post the updated Policy on the Platform and update the version date below. Where the change is material (one that affects your rights or significantly alters how we use your personal data), we will tell you directly by email and, where required by law, ask for your consent before the change takes effect.</p>
         </section>
 
         <!-- Section 14 -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">14. Contact Us</h2>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg">
-                <li><strong>Data protection contact:</strong> <a href="mailto:privacy@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors">privacy@groomr.uk</a></li>
-                <li><strong>Postal:</strong> Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</li>
-                <li><strong>General queries:</strong> <a href="mailto:hello@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors">hello@groomr.uk</a></li>
-                <li><strong>ICO (regulator):</strong> ico.org.uk — helpline 0303 123 1113</li>
+        <section class="policy-section p-8 md:p-12" id="s14">
+            <h2 class="policy-section-h2">14. Contact Us</h2>
+            <ul class="policy-contact-list">
+                <li class="policy-contact-row">
+                    <span class="policy-contact-label">Data protection</span>
+                    <span><a href="mailto:privacy@groomr.uk" class="policy-link">privacy@groomr.uk</a></span>
+                </li>
+                <li class="policy-contact-row">
+                    <span class="policy-contact-label">General</span>
+                    <span><a href="mailto:hello@groomr.uk" class="policy-link">hello@groomr.uk</a></span>
+                </li>
+                <li class="policy-contact-row">
+                    <span class="policy-contact-label">Postal</span>
+                    <span>Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</span>
+                </li>
+                <li class="policy-contact-row">
+                    <span class="policy-contact-label">ICO (regulator)</span>
+                    <span>ico.org.uk — helpline 0303 123 1113</span>
+                </li>
             </ul>
         </section>
 
@@ -704,13 +426,10 @@
 
     <!-- Footer -->
     <footer class="w-full bg-deep-slate text-alabaster-cream py-12 px-8 md:px-12 text-center relative overflow-hidden mt-8 no-print">
-        <!-- Brand Signature Gold Border -->
         <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
-        
         <div class="flex justify-center mb-6 pt-4">
             <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
         </div>
-        
         <div class="font-nunito font-bold tracking-wider text-sage-leaf text-sm">
             <p>Unhinged Development Group Ltd</p>
             <p class="text-xs text-pebble-grey opacity-50 uppercase tracking-wider mt-1">&copy; 2026 Groomr. All rights reserved.</p>

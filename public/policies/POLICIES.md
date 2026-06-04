@@ -9,12 +9,12 @@ Registry of all policy HTML documents. Update this file whenever a document is c
 | Document | URL | File | Version | Last Updated | Editor | Stylesheet |
 |---|---|---|---|---|---|---|
 | Platform Terms of Use | `/terms/platform` | `terms-platform.html` | 1 | June 2026 | Andrew Hughes | `policy.css` ✓ |
-| Owner Terms | `/terms/owner` | `terms-owner.html` | — | — | — | inline (legacy) |
-| Groomer Terms | `/terms/groomer` | `terms-groomer.html` | — | — | — | inline (legacy) |
-| Privacy Policy | `/privacy-policy` | `privacy-policy.html` | — | — | — | inline (legacy) |
-| Cookie Policy | `/cookie-policy` | `cookie-policy.html` | — | — | — | inline (legacy) |
-| Acceptable Use Policy | `/acceptable-use` | `acceptable-use.html` | — | — | — | inline (legacy) |
-| Groomer Verification Policy | `/verification-policy` | `verification-policy.html` | — | — | — | inline (legacy) |
+| Owner Terms | `/terms/owner` | `terms-owner.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Groomer Terms | `/terms/groomer` | `terms-groomer.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Privacy Policy | `/privacy-policy` | `privacy-policy.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Cookie Policy | `/cookie-policy` | `cookie-policy.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Acceptable Use Policy | `/acceptable-use` | `acceptable-use.html` | 0.1 DRAFT | May 2026 | Andrew Hughes | `policy.css` ✓ |
+| Groomer Verification Policy | `/verification-policy` | `verification-policy.html` | 1.0 | May 2026 | Andrew Hughes | `policy.css` ✓ |
 | Groomer Sign-Up Incentive Policy | `/groomer-sign-up-incentive` | `groomer-sign-up-incentive.html` | 1 | June 2026 | Andrew Hughes | `policy.css` ✓ |
 
 > **Stylesheet column:** `policy.css` ✓ = uses the shared external stylesheet. `inline (legacy)` = has its own embedded `<style>` block and predates the component library. Migrate by removing the `<style>` block and adding `<link rel="stylesheet" href="/policies/policy.css">`.
@@ -60,7 +60,7 @@ When making a material change to an existing document:
 
 ## Legacy Migration
 
-The 6 documents marked `inline (legacy)` each carry a full copy of the component styles in their own `<style>` block, predating the shared `policy.css`. They render correctly but diverge from the current design system over time.
+All documents now use `policy.css` ✓. If you create a new document from scratch using the old inline approach, migrate it using the steps below.
 
 To migrate a legacy document:
 1. Open the file and delete the entire `<style>...</style>` block

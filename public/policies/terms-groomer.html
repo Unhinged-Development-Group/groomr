@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Groomer Terms | Groomr</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
 
@@ -41,63 +41,15 @@
         }
     </script>
 
-    <!-- Global & Print CSS -->
-    <style>
-        body {
-            background-color: #f9f8f4;
-            color: #2c3e50;
-        }
-
-        h1, h2, .font-fredoka {
-            font-family: 'Fredoka', sans-serif;
-        }
-
-        h3, h4, p, span, div, li, .font-nunito {
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .focus-ring:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px #eae45c;
-            border-color: #eae45c;
-        }
-
-        /* Print Styles */
-        @media print {
-            @page { 
-                margin: 20mm 15mm !important; 
-                size: A4 portrait; 
-            }
-            header, footer, #print-button, .no-print { 
-                display: none !important; 
-            }
-            body { 
-                background: #ffffff !important; 
-                color: #000000 !important;
-                font-size: 10pt !important; 
-            }
-            main {
-                padding: 0 !important;
-                margin: 0 !important;
-                max-width: 100% !important;
-            }
-            section {
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 0 20px 0 !important;
-            }
-            h2, h3, h4, li, .bg-muted-terracotta\/10 { 
-                page-break-inside: avoid !important; 
-            }
-        }
-    </style>
+    <!-- Shared Policy Component Stylesheet -->
+    <link rel="stylesheet" href="/policies/policy.css">
 </head>
 <body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
 
     <!-- Header -->
     <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50">
         <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" class="focus-ring rounded outline-none block">
+            <a href="https://groomr.uk" class="focus-ring rounded outline-none block">
                 <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
             </a>
             <div class="hidden md:flex items-center space-x-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
@@ -106,19 +58,42 @@
         </div>
     </header>
 
+    <!-- Print Cover Page -->
+    <div class="print-cover" aria-hidden="true">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 20px; width: 100%; max-width: 500px;">
+            <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" style="height: 54px; object-fit: contain;">
+            <div style="width: 64px; height: 3px; background-color: #2c3e50; border-radius: 2px;"></div>
+            <div>
+                <h1 style="font-family: 'Fredoka', sans-serif; font-size: 33pt; font-weight: 700; color: #2c3e50; margin: 0 0 10px 0; line-height: 1.2;">Groomer Terms</h1>
+                <p style="font-family: 'Nunito', sans-serif; font-size: 11pt; color: #88a096; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0;">Version 0.1 DRAFT &nbsp;·&nbsp; May 2026</p>
+            </div>
+            <div style="width: 180px; height: 1px; background-color: #95a5a6;"></div>
+            <div style="font-family: 'Nunito', sans-serif; color: #2c3e50; text-align: center; line-height: 1.95;">
+                <p style="font-size: 12pt; font-weight: 700; margin: 0 0 4px 0;">Unhinged Development Group Ltd</p>
+                <p style="font-size: 10pt; color: #88a096; margin: 0 0 2px 0;">Trading as Groomr</p>
+                <p style="font-size: 10pt; color: #88a096; margin: 0 0 18px 0;">groomr.uk</p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">General enquiries: <strong>hello@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">Groomer support: <strong>partners@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">Legal &amp; complaints: <strong>legal@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">Disputes: <strong>disputes@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">Animal welfare &amp; safety: <strong>safety@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0;">Data protection: <strong>privacy@groomr.uk</strong></p>
+            </div>
+            <div style="width: 180px; height: 1px; background-color: #95a5a6;"></div>
+            <p style="font-family: 'Nunito', sans-serif; font-size: 9pt; color: #95a5a6; margin: 0; text-transform: uppercase; letter-spacing: 0.08em;">Edited by Andrew Hughes</p>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="flex-1 max-w-4xl mx-auto px-6 md:px-12 py-16 space-y-12 w-full">
-        
+
         <!-- Document Title Block -->
-        <div class="text-center space-y-6 py-6">
+        <div class="text-center space-y-4 py-6 no-print">
             <h1 class="font-fredoka text-4xl md:text-6xl font-bold text-deep-slate">Groomer Terms</h1>
-            <div class="space-y-2 text-sage-leaf font-bold text-sm tracking-wider uppercase">
-                <p>Version 0.1 DRAFT</p>
-                <p>Last Updated: May 2026</p>
-                <p>Edited by: Andrew Hughes</p>
+            <div class="text-sage-leaf font-bold text-sm tracking-wider uppercase">
+                <p>Version 0.1 DRAFT &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; Edited by Andrew Hughes</p>
             </div>
-            
-            <div class="flex justify-center pt-4">
+            <div class="flex justify-center pt-2">
                 <button id="print-button" onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 focus-ring cursor-pointer shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -128,371 +103,410 @@
             </div>
         </div>
 
-        <!-- Drafting Note Callout -->
-        <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-5 rounded-xl flex items-start gap-4 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-muted-terracotta shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div class="text-deep-slate text-sm md:text-base leading-relaxed">
-                <p><strong class="font-bold text-muted-terracotta">DRAFTING NOTE — NOT FOR PUBLICATION.</strong><br>
-                This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor. Before publishing, you must obtain UK legal review — particularly of sections relating to commission rates, payout timing, the Stripe Connect onboarding flow, employment/self-employment status, and indemnity. Sections marked "<span class="font-bold">[REVIEW]</span>" or with bracketed placeholders need explicit legal input.</p>
+        <!-- Table of Contents -->
+        <div class="toc-card p-8 md:p-10">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-grid">
+                <a href="#s1"  class="toc-link">1.&nbsp; About these Groomer Terms</a>
+                <a href="#s8"  class="toc-link">8.&nbsp; Data Protection</a>
+                <a href="#s2"  class="toc-link">2.&nbsp; The Relationship Between You and Groomr</a>
+                <a href="#s9"  class="toc-link">9.&nbsp; Disputes Raised by Owners</a>
+                <a href="#s3"  class="toc-link">3.&nbsp; Eligibility and Verification</a>
+                <a href="#s10" class="toc-link">10. Suspension and Termination</a>
+                <a href="#s4"  class="toc-link">4.&nbsp; Insurance, Welfare and Legal Compliance</a>
+                <a href="#s11" class="toc-link">11. Liability</a>
+                <a href="#s5"  class="toc-link">5.&nbsp; Your Listing and Conduct on the Platform</a>
+                <a href="#s12" class="toc-link">12. Changes to these Groomer Terms</a>
+                <a href="#s6"  class="toc-link">6.&nbsp; Bookings</a>
+                <a href="#s13" class="toc-link">13. General</a>
+                <a href="#s7"  class="toc-link">7.&nbsp; Payments, Commission and Payouts</a>
+                <a href="#s14" class="toc-link">14. Contact</a>
             </div>
         </div>
 
-        <!-- Sections -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">1. About these Groomer Terms</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">These Groomer Terms apply to professional dog groomers who list services on Groomr. They sit alongside our Platform Terms of Use, our Privacy Policy, and our Groomer Verification Policy. By creating a Groomer account or listing services, you confirm that you have read and accepted these Groomer Terms.</p>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr is operated by Unhinged Development Group Ltd, trading as Groomr (“we”, “us”, “Groomr”). You can contact us at <a href="mailto:hello@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">hello@groomr.uk</a> for general queries, <a href="mailto:partners@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">partners@groomr.uk</a> for groomer onboarding, or <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a> for legal matters.</p>
+        <!-- Drafting Note -->
+        <div class="policy-callout policy-callout-warn">
+            <svg class="policy-callout-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="policy-callout-body">
+                <strong class="font-bold text-muted-terracotta">DRAFTING NOTE — NOT FOR PUBLICATION.</strong> This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor. Before publishing, you must obtain UK legal review — particularly of sections relating to commission rates, payout timing, the Stripe Connect onboarding flow, employment/self-employment status, and indemnity. Sections marked <strong class="text-muted-terracotta">[REVIEW]</strong> or with bracketed placeholders need explicit legal input.
+            </div>
+        </div>
+
+        <!-- Section 1 -->
+        <section id="s1" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">1. About these Groomer Terms</h2>
+            <p class="policy-body mb-4">These Groomer Terms apply to professional dog groomers who list services on Groomr. They sit alongside our Platform Terms of Use, our Privacy Policy, and our Groomer Verification Policy. By creating a Groomer account or listing services, you confirm that you have read and accepted these Groomer Terms.</p>
+            <p class="policy-body">Groomr is operated by Unhinged Development Group Ltd, trading as Groomr ("we", "us", "Groomr"). You can contact us at <a href="mailto:hello@groomr.uk" class="policy-link">hello@groomr.uk</a> for general queries, <a href="mailto:partners@groomr.uk" class="policy-link">partners@groomr.uk</a> for groomer onboarding, or <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a> for legal matters.</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">2. The Relationship Between You and Groomr</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">2.1 You are independent</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You are an independent business. You are not an employee, worker, agent, partner, or joint-venturer of Groomr. Nothing in these Terms creates an employment or worker relationship between us. You are responsible for your own tax, National Insurance, VAT (if applicable), insurance, pension, and all other obligations attaching to your business.</p>
+        <!-- Section 2 -->
+        <section id="s2" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">2. The Relationship Between You and Groomr</h2>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">2.2 The customer contract is yours</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">When an Owner books an appointment with you through the Platform, the contract for the grooming service is formed directly between you and the Owner. Groomr is not a party to that contract. We provide the technology that enables the booking, payment, and communication around it, but the legal responsibility for the service — including under the Consumer Rights Act 2015 — is yours.</p>
+            <h3 class="policy-section-h3">2.1 You are independent</h3>
+            <p class="policy-body">You are an independent business. You are not an employee, worker, agent, partner, or joint-venturer of Groomr. Nothing in these Terms creates an employment or worker relationship between us. You are responsible for your own tax, National Insurance, VAT (if applicable), insurance, pension, and all other obligations attaching to your business.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">2.3 What this means in practice</h3>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">You set your own services, prices, opening hours and availability.</span>
+            <h3 class="policy-section-h3">2.2 The customer contract is yours</h3>
+            <p class="policy-body">When an Owner books an appointment with you through the Platform, the contract for the grooming service is formed directly between you and the Owner. Groomr is not a party to that contract. We provide the technology that enables the booking, payment, and communication around it, but the legal responsibility for the service — including under the Consumer Rights Act 2015 — is yours.</p>
+
+            <h3 class="policy-section-h3">2.3 What this means in practice</h3>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>You set your own services, prices, opening hours and availability.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">You decide whether to accept or refuse a particular booking, subject to your stated availability and the booking flow rules.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>You decide whether to accept or refuse a particular booking, subject to your stated availability and the booking flow rules.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">You provide your own premises, tools, equipment, products and consumables.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>You provide your own premises, tools, equipment, products and consumables.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">You hold your own insurance and qualifications (see section 4).</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>You hold your own insurance and qualifications (see section 4).</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">You are responsible for the quality and safety of every appointment you accept.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>You are responsible for the quality and safety of every appointment you accept.</span>
                 </li>
             </ul>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">3. Eligibility and Verification</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">3.1 Who can register</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">To register as a Groomer you must:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">be at least 18 years old;</span>
+        <!-- Section 3 -->
+        <section id="s3" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">3. Eligibility and Verification</h2>
+
+            <h3 class="policy-section-h3">3.1 Who can register</h3>
+            <p class="policy-body mb-4">To register as a Groomer you must:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>be at least 18 years old;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">be a UK resident and operate your grooming business in the United Kingdom;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>be a UK resident and operate your grooming business in the United Kingdom;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">either trade as a sole trader registered with HMRC, or operate through a UK-registered limited company or partnership of which you are an authorised representative;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>either trade as a sole trader registered with HMRC, or operate through a UK-registered limited company or partnership of which you are an authorised representative;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">hold the qualifications and insurance required by the Groomer Verification Policy; and</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>hold the qualifications and insurance required by the Groomer Verification Policy; and</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">not have been previously removed from the Platform for cause.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>not have been previously removed from the Platform for cause.</span>
                 </li>
             </ul>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.2 The Verified badge</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr operates a Verified badge scheme, set out in full in the Groomer Verification Policy. The badge does not constitute an employment relationship, an endorsement of any particular booking, or a guarantee of outcome. It is a trust signal indicating that we have reviewed your documents. You may list and trade on the Platform without the badge, but verified Groomers benefit from search prominence and the trust signal to Owners.</p>
+            <h3 class="policy-section-h3">3.2 The Verified badge</h3>
+            <p class="policy-body">Groomr operates a Verified badge scheme, set out in full in the Groomer Verification Policy. The badge does not constitute an employment relationship, an endorsement of any particular booking, or a guarantee of outcome. It is a trust signal indicating that we have reviewed your documents. You may list and trade on the Platform without the badge, but verified Groomers benefit from search prominence and the trust signal to Owners.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.3 Document upkeep</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">You are responsible for keeping your verification documents current. In particular:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Public liability insurance must be renewed before expiry and the renewed certificate uploaded promptly; failure to do so within 14 days of expiry will result in revocation of the Verified badge.</span>
+            <h3 class="policy-section-h3">3.3 Document upkeep</h3>
+            <p class="policy-body mb-4">You are responsible for keeping your verification documents current. In particular:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Public liability insurance must be renewed before expiry and the renewed certificate uploaded promptly; failure to do so within 14 days of expiry will result in revocation of the Verified badge.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Canine first aid certification must be re-submitted every 3 years.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Canine first aid certification must be re-submitted every 3 years.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">If you employ staff, employers’ liability insurance must be maintained at a minimum of £5,000,000 cover and the certificate must be current.</span>
-                </li>
-            </ul>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">4. Insurance, Welfare and Legal Compliance</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">4.1 Mandatory insurance</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">You must maintain, at your own cost, throughout your time on the Platform:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">public liability insurance of at least £1,000,000 covering professional dog grooming activities;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">employers’ liability insurance of at least £5,000,000 if you have any employees (a UK legal requirement); and</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">any other insurance required by your local authority or by the nature of your business.</span>
-                </li>
-            </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Professional indemnity, equipment and stock insurance are strongly recommended but not currently required.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.2 Animal welfare</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You agree to operate in full compliance with the Animal Welfare Act 2006 and (if you trade in Scotland) the Animal Welfare (Scotland) Act 2006, and to uphold the Five Freedoms as the minimum standard of care for every dog in your charge. Any credible report of animal mistreatment will result in immediate account suspension pending investigation, irrespective of your verification status.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.3 Local authority licensing</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Some local authorities require a licence to operate a dog grooming business. It is your responsibility to confirm whether you require any licence, registration or permit in your area, and to hold it before accepting bookings.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.4 Other legal obligations</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">You confirm and agree that you will comply with all laws relevant to your business, including:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">HMRC requirements for self-employment, corporation tax and VAT;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">UK GDPR and the Data Protection Act 2018 in respect of personal data you hold about Owners and their dogs;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">health and safety law in respect of your premises and any staff;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">anti-discrimination law (Equality Act 2010); and</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">consumer protection law (Consumer Rights Act 2015, Consumer Contracts Regulations 2013, Digital Markets, Competition and Consumers Act 2024).</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>If you employ staff, employers' liability insurance must be maintained at a minimum of £5,000,000 cover and the certificate must be current.</span>
                 </li>
             </ul>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">5. Your Listing and Conduct on the Platform</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">5.1 Honest and accurate</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Your profile, services, pricing, photographs and credentials must be accurate, current and not misleading. You must not claim qualifications you do not hold, or misrepresent your facilities, experience, or breed specialisms.</p>
+        <!-- Section 4 -->
+        <section id="s4" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">4. Insurance, Welfare and Legal Compliance</h2>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.2 No off-platform circumvention</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">If a booking originated through the Platform, you must take and complete that booking through the Platform, including all related payments. You must not encourage Owners (whether explicitly or implicitly) to book or pay you outside the Platform for services that originated through it. Repeat off-platform circumvention is a material breach of these Terms and may result in termination.</p>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">This restriction does not prevent you from accepting direct repeat bookings from existing customers who originally found you outside the Platform, or from operating other booking channels in parallel for unrelated customers.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.3 Reviews</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may not solicit fake reviews, pay for reviews, or offer Owners any inducement (including discounts) in exchange for positive reviews. The Digital Markets, Competition and Consumers Act 2024 makes this conduct expressly illegal and we will report serious cases to the Competition and Markets Authority. You may respond to reviews professionally; you may not threaten or harass an Owner in response to a review.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.4 Communication with Owners</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Use the Platform messaging system for communications relating to bookings. Be professional, respectful, and timely. You must not use the Platform to send marketing communications to Owners that they have not opted in to. You must not use personal data obtained through a booking for any purpose other than performing that booking and (where lawful) following up with that Owner.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">6. Bookings</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">6.1 Availability and acceptance</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You control your availability via the Platform. Slots you mark as available are open for booking. Where you have enabled instant booking, a confirmed booking is binding on you when the Owner confirms it. Where you require manual acceptance, you should respond within the timeframe set in your Groomer dashboard.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">6.2 Your cancellation policy</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may select one of the deposit tiers described in the Owner Terms (No Deposit, Fixed Deposit, Full Prepayment) and an associated cancellation policy. Owners are bound to that policy on booking. Your cancellation policy must comply with consumer law — in particular, forfeiture amounts must reflect a genuine pre-estimate of your loss and not be a penalty. Groomr reserves the right to adjust cancellation policies that we consider unfair.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">6.3 If you cancel</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you cancel a confirmed booking for any reason other than the Owner’s breach (for example, your own illness, equipment failure, or scheduling conflict), the Owner is entitled to a full refund of any deposit or prepayment. We monitor cancellations by Groomers; repeated short-notice cancellations affect your search ranking and may result in suspension.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">6.4 Refusal of service</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may, in your professional judgment, refuse or stop a service if the dog is unsafe to handle, unwell, in pain, or if a requested service is not in the dog’s best interest. You may charge a reasonable handling fee where the refusal arises from a matter the Owner failed to declare at booking. Refusals must be respectful and not discriminatory within the meaning of the Equality Act 2010.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">7. Payments, Commission and Payouts</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">7.1 Stripe Connect</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Payments on the Platform are processed by Stripe Payments Europe Ltd using Stripe Connect. To receive payouts, you must complete Stripe’s onboarding and KYC checks. Your relationship with Stripe is governed by Stripe’s Connected Account Agreement, which you accept as part of onboarding.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">7.2 Commission</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr charges a commission of [X]% (excluding VAT) of the total value of each completed booking made through the Platform. Commission is deducted automatically at payout. The current commission rate is published in the Groomer dashboard. <span class="text-muted-terracotta">[REVIEW: confirm commission structure, whether tiered, and whether VAT is added to commission.]</span></p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">7.3 When you get paid</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Funds are held by Stripe in connection with your connected account from the point of payment by the Owner. Funds are released to you, less commission, after the appointment has been marked as completed and a clearance period of [24–48 hours] has elapsed (to allow for immediate disputes). The release timing may be extended where a dispute is raised under section 9. <span class="text-muted-terracotta">[REVIEW: confirm timing once Stripe Connect setup is finalised.]</span></p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">7.4 Holdbacks during disputes</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Where an Owner raises a dispute under the Owner Terms, Groomr may instruct Stripe to delay the release of the relevant booking funds until the dispute is resolved. We will notify you when a hold is placed and will aim to resolve disputes within 14 working days.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">7.5 Chargebacks and refunds</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">If an Owner successfully reverses a payment through their card issuer (a chargeback), the chargeback amount and any chargeback fee imposed by Stripe will be deducted from your future payouts or, if necessary, invoiced to you. We will work with you to challenge unjustified chargebacks where the evidence supports it.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">7.6 Tax</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You are responsible for accounting for and paying all taxes due in connection with your bookings, including income tax, corporation tax, and VAT (where applicable). Where you are VAT-registered, you must provide your VAT number to Groomr and ensure invoices issued through the Platform reflect VAT correctly. If you do not provide a VAT number, prices are treated as inclusive of VAT (if any) or as not subject to VAT.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">8. Data Protection</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">In relation to the personal data of Owners, you and Groomr are each independent controllers for our respective purposes. Groomr is the controller for the operation of the Platform; you are the controller for the personal data you handle in performing your services (for example, dog details, treatment notes, your own customer records). Each party must comply with the UK GDPR, the Data Protection Act 2018, and applicable Information Commissioner’s Office guidance in respect of its own processing.</p>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You must not use Owner personal data for marketing or other purposes without a lawful basis under the UK GDPR, including, where required, the Owner’s opt-in consent under PECR.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">9. Disputes Raised by Owners</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">If an Owner raises a dispute, you will be notified through the Platform and asked to respond with your account of the matter and any supporting evidence (photographs, notes, communications). Groomr will mediate. You agree to engage with the process in good faith and to respond within the timeframes we set out (typically 3 working days).</p>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Where a dispute is upheld in the Owner’s favour, Groomr may direct Stripe to refund the Owner in whole or in part from the held funds. This direction is given as part of the Platform service and does not preclude any independent claim you may have against the Owner in respect of the underlying service.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">10. Suspension and Termination</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">10.1 By you</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may close your Groomer account at any time by emailing <a href="mailto:partners@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">partners@groomr.uk</a>. Your profile will be hidden from search immediately. Any confirmed future bookings must either be honoured by you or cancelled with refunds to the affected Owners. Your account will be closed once all confirmed bookings are resolved.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">10.2 By us</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">We may suspend or terminate your account immediately and without prior notice if:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">there is a credible report of animal mistreatment or a welfare concern;</span>
+            <h3 class="policy-section-h3">4.1 Mandatory insurance</h3>
+            <p class="policy-body mb-4">You must maintain, at your own cost, throughout your time on the Platform:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>public liability insurance of at least £1,000,000 covering professional dog grooming activities;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you breach the Animal Welfare Act 2006 or the Animal Welfare (Scotland) Act 2006;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>employers' liability insurance of at least £5,000,000 if you have any employees (a UK legal requirement); and</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you commit a fundamental breach of these Terms;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you provide false or fraudulent verification documents;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you engage in fraud, harassment, discrimination, or unlawful conduct on or through the Platform;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you become insolvent, enter liquidation, or are subject to a similar process;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you are required to be suspended by a court, regulator, or applicable law.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>any other insurance required by your local authority or by the nature of your business.</span>
                 </li>
             </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4 mt-6">We may also suspend or terminate on 30 days’ notice if:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you persistently fail to meet service standards;</span>
+            <p class="policy-body">Professional indemnity, equipment and stock insurance are strongly recommended but not currently required.</p>
+
+            <h3 class="policy-section-h3">4.2 Animal welfare</h3>
+            <p class="policy-body">You agree to operate in full compliance with the Animal Welfare Act 2006 and (if you trade in Scotland) the Animal Welfare (Scotland) Act 2006, and to uphold the Five Freedoms as the minimum standard of care for every dog in your charge. Any credible report of animal mistreatment will result in immediate account suspension pending investigation, irrespective of your verification status.</p>
+
+            <h3 class="policy-section-h3">4.3 Local authority licensing</h3>
+            <p class="policy-body">Some local authorities require a licence to operate a dog grooming business. It is your responsibility to confirm whether you require any licence, registration or permit in your area, and to hold it before accepting bookings.</p>
+
+            <h3 class="policy-section-h3">4.4 Other legal obligations</h3>
+            <p class="policy-body mb-4">You confirm and agree that you will comply with all laws relevant to your business, including:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>HMRC requirements for self-employment, corporation tax and VAT;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you fail to keep verification documents current;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>UK GDPR and the Data Protection Act 2018 in respect of personal data you hold about Owners and their dogs;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">you have a high rate of cancellations, no-shows, or upheld disputes; or</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>health and safety law in respect of your premises and any staff;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">we decide to withdraw the Platform from your area or to discontinue the service.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>anti-discrimination law (Equality Act 2010); and</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>consumer protection law (Consumer Rights Act 2015, Consumer Contracts Regulations 2013, Digital Markets, Competition and Consumers Act 2024).</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="s5" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">5. Your Listing and Conduct on the Platform</h2>
+
+            <h3 class="policy-section-h3">5.1 Honest and accurate</h3>
+            <p class="policy-body">Your profile, services, pricing, photographs and credentials must be accurate, current and not misleading. You must not claim qualifications you do not hold, or misrepresent your facilities, experience, or breed specialisms.</p>
+
+            <h3 class="policy-section-h3">5.2 No off-platform circumvention</h3>
+            <p class="policy-body mb-4">If a booking originated through the Platform, you must take and complete that booking through the Platform, including all related payments. You must not encourage Owners (whether explicitly or implicitly) to book or pay you outside the Platform for services that originated through it. Repeat off-platform circumvention is a material breach of these Terms and may result in termination.</p>
+            <p class="policy-body">This restriction does not prevent you from accepting direct repeat bookings from existing customers who originally found you outside the Platform, or from operating other booking channels in parallel for unrelated customers.</p>
+
+            <h3 class="policy-section-h3">5.3 Reviews</h3>
+            <p class="policy-body">You may not solicit fake reviews, pay for reviews, or offer Owners any inducement (including discounts) in exchange for positive reviews. The Digital Markets, Competition and Consumers Act 2024 makes this conduct expressly illegal and we will report serious cases to the Competition and Markets Authority. You may respond to reviews professionally; you may not threaten or harass an Owner in response to a review.</p>
+
+            <h3 class="policy-section-h3">5.4 Communication with Owners</h3>
+            <p class="policy-body">Use the Platform messaging system for communications relating to bookings. Be professional, respectful, and timely. You must not use the Platform to send marketing communications to Owners that they have not opted in to. You must not use personal data obtained through a booking for any purpose other than performing that booking and (where lawful) following up with that Owner.</p>
+        </section>
+
+        <!-- Section 6 -->
+        <section id="s6" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">6. Bookings</h2>
+
+            <h3 class="policy-section-h3">6.1 Availability and acceptance</h3>
+            <p class="policy-body">You control your availability via the Platform. Slots you mark as available are open for booking. Where you have enabled instant booking, a confirmed booking is binding on you when the Owner confirms it. Where you require manual acceptance, you should respond within the timeframe set in your Groomer dashboard.</p>
+
+            <h3 class="policy-section-h3">6.2 Your cancellation policy</h3>
+            <p class="policy-body">You may select one of the deposit tiers described in the Owner Terms (No Deposit, Fixed Deposit, Full Prepayment) and an associated cancellation policy. Owners are bound to that policy on booking. Your cancellation policy must comply with consumer law — in particular, forfeiture amounts must reflect a genuine pre-estimate of your loss and not be a penalty. Groomr reserves the right to adjust cancellation policies that we consider unfair.</p>
+
+            <h3 class="policy-section-h3">6.3 If you cancel</h3>
+            <p class="policy-body">If you cancel a confirmed booking for any reason other than the Owner's breach (for example, your own illness, equipment failure, or scheduling conflict), the Owner is entitled to a full refund of any deposit or prepayment. We monitor cancellations by Groomers; repeated short-notice cancellations affect your search ranking and may result in suspension.</p>
+
+            <h3 class="policy-section-h3">6.4 Refusal of service</h3>
+            <p class="policy-body">You may, in your professional judgment, refuse or stop a service if the dog is unsafe to handle, unwell, in pain, or if a requested service is not in the dog's best interest. You may charge a reasonable handling fee where the refusal arises from a matter the Owner failed to declare at booking. Refusals must be respectful and not discriminatory within the meaning of the Equality Act 2010.</p>
+        </section>
+
+        <!-- Section 7 -->
+        <section id="s7" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">7. Payments, Commission and Payouts</h2>
+
+            <h3 class="policy-section-h3">7.1 Stripe Connect</h3>
+            <p class="policy-body">Payments on the Platform are processed by Stripe Payments Europe Ltd using Stripe Connect. To receive payouts, you must complete Stripe's onboarding and KYC checks. Your relationship with Stripe is governed by Stripe's Connected Account Agreement, which you accept as part of onboarding.</p>
+
+            <h3 class="policy-section-h3">7.2 Commission</h3>
+            <p class="policy-body">Groomr charges a commission of [X]% (excluding VAT) of the total value of each completed booking made through the Platform. Commission is deducted automatically at payout. The current commission rate is published in the Groomer dashboard. <span class="text-muted-terracotta font-bold">[REVIEW: confirm commission structure, whether tiered, and whether VAT is added to commission.]</span></p>
+
+            <h3 class="policy-section-h3">7.3 When you get paid</h3>
+            <p class="policy-body">Funds are held by Stripe in connection with your connected account from the point of payment by the Owner. Funds are released to you, less commission, after the appointment has been marked as completed and a clearance period of [24–48 hours] has elapsed (to allow for immediate disputes). The release timing may be extended where a dispute is raised under section 9. <span class="text-muted-terracotta font-bold">[REVIEW: confirm timing once Stripe Connect setup is finalised.]</span></p>
+
+            <h3 class="policy-section-h3">7.4 Holdbacks during disputes</h3>
+            <p class="policy-body">Where an Owner raises a dispute under the Owner Terms, Groomr may instruct Stripe to delay the release of the relevant booking funds until the dispute is resolved. We will notify you when a hold is placed and will aim to resolve disputes within 14 working days.</p>
+
+            <h3 class="policy-section-h3">7.5 Chargebacks and refunds</h3>
+            <p class="policy-body">If an Owner successfully reverses a payment through their card issuer (a chargeback), the chargeback amount and any chargeback fee imposed by Stripe will be deducted from your future payouts or, if necessary, invoiced to you. We will work with you to challenge unjustified chargebacks where the evidence supports it.</p>
+
+            <h3 class="policy-section-h3">7.6 Tax</h3>
+            <p class="policy-body">You are responsible for accounting for and paying all taxes due in connection with your bookings, including income tax, corporation tax, and VAT (where applicable). Where you are VAT-registered, you must provide your VAT number to Groomr and ensure invoices issued through the Platform reflect VAT correctly. If you do not provide a VAT number, prices are treated as inclusive of VAT (if any) or as not subject to VAT.</p>
+        </section>
+
+        <!-- Section 8 -->
+        <section id="s8" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">8. Data Protection</h2>
+            <p class="policy-body mb-4">In relation to the personal data of Owners, you and Groomr are each independent controllers for our respective purposes. Groomr is the controller for the operation of the Platform; you are the controller for the personal data you handle in performing your services (for example, dog details, treatment notes, your own customer records). Each party must comply with the UK GDPR, the Data Protection Act 2018, and applicable Information Commissioner's Office guidance in respect of its own processing.</p>
+            <p class="policy-body">You must not use Owner personal data for marketing or other purposes without a lawful basis under the UK GDPR, including, where required, the Owner's opt-in consent under PECR.</p>
+        </section>
+
+        <!-- Section 9 -->
+        <section id="s9" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">9. Disputes Raised by Owners</h2>
+            <p class="policy-body mb-4">If an Owner raises a dispute, you will be notified through the Platform and asked to respond with your account of the matter and any supporting evidence (photographs, notes, communications). Groomr will mediate. You agree to engage with the process in good faith and to respond within the timeframes we set out (typically 3 working days).</p>
+            <p class="policy-body">Where a dispute is upheld in the Owner's favour, Groomr may direct Stripe to refund the Owner in whole or in part from the held funds. This direction is given as part of the Platform service and does not preclude any independent claim you may have against the Owner in respect of the underlying service.</p>
+        </section>
+
+        <!-- Section 10 -->
+        <section id="s10" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">10. Suspension and Termination</h2>
+
+            <h3 class="policy-section-h3">10.1 By you</h3>
+            <p class="policy-body">You may close your Groomer account at any time by emailing <a href="mailto:partners@groomr.uk" class="policy-link">partners@groomr.uk</a>. Your profile will be hidden from search immediately. Any confirmed future bookings must either be honoured by you or cancelled with refunds to the affected Owners. Your account will be closed once all confirmed bookings are resolved.</p>
+
+            <h3 class="policy-section-h3">10.2 By us</h3>
+            <p class="policy-body mb-4">We may suspend or terminate your account immediately and without prior notice if:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>there is a credible report of animal mistreatment or a welfare concern;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you breach the Animal Welfare Act 2006 or the Animal Welfare (Scotland) Act 2006;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you commit a fundamental breach of these Terms;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you provide false or fraudulent verification documents;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you engage in fraud, harassment, discrimination, or unlawful conduct on or through the Platform;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you become insolvent, enter liquidation, or are subject to a similar process;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you are required to be suspended by a court, regulator, or applicable law.</span>
+                </li>
+            </ul>
+            <p class="policy-body mb-4">We may also suspend or terminate on 30 days' notice if:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you persistently fail to meet service standards;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you fail to keep verification documents current;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>you have a high rate of cancellations, no-shows, or upheld disputes; or</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>we decide to withdraw the Platform from your area or to discontinue the service.</span>
                 </li>
             </ul>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">10.3 Effect of termination</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">On termination, your listing will be removed from search and you will no longer be able to receive new bookings. Confirmed bookings must be honoured or cancelled. Funds held by Stripe will be released or refunded in accordance with the rules above. Reviews and booking history remain on the Platform. Provisions relating to indemnity, liability, intellectual property, and any other provision intended to survive termination shall continue to apply.</p>
+            <h3 class="policy-section-h3">10.3 Effect of termination</h3>
+            <p class="policy-body">On termination, your listing will be removed from search and you will no longer be able to receive new bookings. Confirmed bookings must be honoured or cancelled. Funds held by Stripe will be released or refunded in accordance with the rules above. Reviews and booking history remain on the Platform. Provisions relating to indemnity, liability, intellectual property, and any other provision intended to survive termination shall continue to apply.</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">11. Liability</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">11.1 Your liability to Owners</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You are directly liable to Owners for the quality and safety of the services you provide. Nothing in these Terms transfers any of that liability to Groomr.</p>
+        <!-- Section 11 -->
+        <section id="s11" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">11. Liability</h2>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">11.2 Indemnity</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You will indemnify and hold Groomr harmless against any claims, losses, liabilities, costs, fines, and reasonable legal fees arising out of or in connection with: (a) any grooming service you provide; (b) any breach by you of these Terms or applicable law; (c) any inaccurate information you provide on your profile or about a booking; (d) any claim by a third party (including an Owner, a dog’s veterinarian, or an employee of yours) relating to your business; and (e) any tax liability that arises from a misclassification of your status by an authority on the basis of conduct or representations made by you.</p>
+            <h3 class="policy-section-h3">11.1 Your liability to Owners</h3>
+            <p class="policy-body">You are directly liable to Owners for the quality and safety of the services you provide. Nothing in these Terms transfers any of that liability to Groomr.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">11.3 Our liability to you</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Our liability to you is as set out in section 9 of our Platform Terms of Use. Subject to liabilities we cannot lawfully exclude (such as death or personal injury caused by our negligence or fraud), our liability to you in connection with the Platform is capped as set out there. We are not liable for indirect, consequential, or special losses, or for loss of profits, loss of business, loss of goodwill, or loss of anticipated savings.</p>
+            <h3 class="policy-section-h3">11.2 Indemnity</h3>
+            <p class="policy-body">You will indemnify and hold Groomr harmless against any claims, losses, liabilities, costs, fines, and reasonable legal fees arising out of or in connection with: (a) any grooming service you provide; (b) any breach by you of these Terms or applicable law; (c) any inaccurate information you provide on your profile or about a booking; (d) any claim by a third party (including an Owner, a dog's veterinarian, or an employee of yours) relating to your business; and (e) any tax liability that arises from a misclassification of your status by an authority on the basis of conduct or representations made by you.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">11.4 Force majeure</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Neither party is liable for failure or delay in performance caused by events outside its reasonable control, including industrial action, internet outages, payment provider outages, government action, or natural events.</p>
+            <h3 class="policy-section-h3">11.3 Our liability to you</h3>
+            <p class="policy-body">Our liability to you is as set out in section 9 of our Platform Terms of Use. Subject to liabilities we cannot lawfully exclude (such as death or personal injury caused by our negligence or fraud), our liability to you in connection with the Platform is capped as set out there. We are not liable for indirect, consequential, or special losses, or for loss of profits, loss of business, loss of goodwill, or loss of anticipated savings.</p>
+
+            <h3 class="policy-section-h3">11.4 Force majeure</h3>
+            <p class="policy-body">Neither party is liable for failure or delay in performance caused by events outside its reasonable control, including industrial action, internet outages, payment provider outages, government action, or natural events.</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">12. Changes to these Groomer Terms</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We may update these Groomer Terms from time to time. Material changes (including changes to commission, payout timing, or core obligations) will be notified to you by email at least 30 days before they take effect. Non-material changes take effect on posting. If you do not accept a change, you may close your account before it takes effect.</p>
+        <!-- Section 12 -->
+        <section id="s12" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">12. Changes to these Groomer Terms</h2>
+            <p class="policy-body">We may update these Groomer Terms from time to time. Material changes (including changes to commission, payout timing, or core obligations) will be notified to you by email at least 30 days before they take effect. Non-material changes take effect on posting. If you do not accept a change, you may close your account before it takes effect.</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">13. General</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">13.1 Entire agreement</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">These Groomer Terms, the Platform Terms of Use, the Privacy Policy, the Groomer Verification Policy, and any other documents referred to in them constitute the entire agreement between you and Groomr in relation to your use of the Platform as a Groomer.</p>
+        <!-- Section 13 -->
+        <section id="s13" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">13. General</h2>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">13.2 No exclusivity</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr does not require exclusivity. You may list your services on other platforms or operate your own direct channels in parallel.</p>
+            <h3 class="policy-section-h3">13.1 Entire agreement</h3>
+            <p class="policy-body">These Groomer Terms, the Platform Terms of Use, the Privacy Policy, the Groomer Verification Policy, and any other documents referred to in them constitute the entire agreement between you and Groomr in relation to your use of the Platform as a Groomer.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">13.3 Assignment</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">You may not assign your rights or obligations under these Terms without our prior written consent. We may assign our rights and obligations to a successor business or group company on giving you reasonable notice.</p>
+            <h3 class="policy-section-h3">13.2 No exclusivity</h3>
+            <p class="policy-body">Groomr does not require exclusivity. You may list your services on other platforms or operate your own direct channels in parallel.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">13.4 Notices</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Notices to Groomr should be sent to <a href="mailto:partners@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">partners@groomr.uk</a> or <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a>. Notices to you will be sent to the email address registered to your account.</p>
+            <h3 class="policy-section-h3">13.3 Assignment</h3>
+            <p class="policy-body">You may not assign your rights or obligations under these Terms without our prior written consent. We may assign our rights and obligations to a successor business or group company on giving you reasonable notice.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">13.5 Third-party rights</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">A person who is not a party to these Terms has no right under the Contracts (Rights of Third Parties) Act 1999 to enforce any of its terms.</p>
+            <h3 class="policy-section-h3">13.4 Notices</h3>
+            <p class="policy-body">Notices to Groomr should be sent to <a href="mailto:partners@groomr.uk" class="policy-link">partners@groomr.uk</a> or <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a>. Notices to you will be sent to the email address registered to your account.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">13.6 Governing law</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">These Groomer Terms are governed by the laws of England and Wales, and you and Groomr submit to the non-exclusive jurisdiction of the courts of England and Wales. If you ordinarily operate your business in Scotland or Northern Ireland, you retain any mandatory protections of your local law and may bring proceedings in your local courts.</p>
+            <h3 class="policy-section-h3">13.5 Third-party rights</h3>
+            <p class="policy-body">A person who is not a party to these Terms has no right under the Contracts (Rights of Third Parties) Act 1999 to enforce any of its terms.</p>
+
+            <h3 class="policy-section-h3">13.6 Governing law</h3>
+            <p class="policy-body">These Groomer Terms are governed by the laws of England and Wales, and you and Groomr submit to the non-exclusive jurisdiction of the courts of England and Wales. If you ordinarily operate your business in Scotland or Northern Ireland, you retain any mandatory protections of your local law and may bring proceedings in your local courts.</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">14. Contact</h2>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Groomer onboarding & support:</strong> <a href="mailto:partners@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">partners@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Verification:</strong> <a href="mailto:verify@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">verify@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Disputes:</strong> <a href="mailto:disputes@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">disputes@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Welfare/safety:</strong> <a href="mailto:safety@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">safety@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Legal:</strong> <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Postal:</strong> Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</span>
-                </li>
-            </ul>
+        <!-- Section 14 -->
+        <section id="s14" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">14. Contact</h2>
+            <p class="policy-body mb-8">For questions about these Groomer Terms, your account, payments, or disputes, please use the appropriate contact below.</p>
+            <div class="policy-contact-list">
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">General enquiries:</span>
+                    <a href="mailto:hello@groomr.uk" class="policy-link">hello@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Groomer onboarding &amp; support:</span>
+                    <a href="mailto:partners@groomr.uk" class="policy-link">partners@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Verification:</span>
+                    <a href="mailto:verify@groomr.uk" class="policy-link">verify@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Legal &amp; complaints:</span>
+                    <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Disputes:</span>
+                    <a href="mailto:disputes@groomr.uk" class="policy-link">disputes@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Animal welfare &amp; safety:</span>
+                    <a href="mailto:safety@groomr.uk" class="policy-link">safety@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Postal:</span>
+                    <span>Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</span>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Data protection contact:</span>
+                    <a href="mailto:privacy@groomr.uk" class="policy-link">privacy@groomr.uk</a>
+                </div>
+            </div>
         </section>
 
     </main>
 
     <!-- Footer -->
     <footer class="w-full bg-deep-slate text-alabaster-cream py-12 px-8 md:px-12 text-center relative overflow-hidden mt-8 no-print">
-        <!-- Top border accent -->
         <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
-        
         <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain mx-auto mb-6">
-        
         <div class="space-y-1">
             <p class="font-nunito font-bold tracking-wider text-sage-leaf text-sm uppercase">Unhinged Development Group Ltd</p>
             <p class="text-xs text-pebble-grey opacity-50 uppercase mt-2">&copy; 2026 Groomr. All rights reserved.</p>

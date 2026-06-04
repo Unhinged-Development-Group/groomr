@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceptable Use Policy | Groomr</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
 
@@ -41,63 +41,15 @@
         }
     </script>
 
-    <!-- Global & Print CSS -->
-    <style>
-        body {
-            background-color: #f9f8f4;
-            color: #2c3e50;
-        }
-
-        h1, h2, .font-fredoka {
-            font-family: 'Fredoka', sans-serif;
-        }
-
-        h3, h4, p, span, div, li, td, th, .font-nunito {
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .focus-ring:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px #eae45c;
-            border-color: #eae45c;
-        }
-
-        /* Print Styles */
-        @media print {
-            @page { 
-                margin: 20mm 15mm !important; 
-                size: A4 portrait; 
-            }
-            header, footer, #print-button, .no-print { 
-                display: none !important; 
-            }
-            body { 
-                background: #ffffff !important; 
-                color: #000000 !important;
-                font-size: 10pt !important; 
-            }
-            main {
-                padding: 0 !important;
-                margin: 0 !important;
-                max-width: 100% !important;
-            }
-            section {
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 0 20px 0 !important;
-            }
-            h2, h3, h4, li, tr, .bg-muted-terracotta\/10 { 
-                page-break-inside: avoid !important; 
-            }
-        }
-    </style>
+    <!-- Shared Policy Component Stylesheet -->
+    <link rel="stylesheet" href="/policies/policy.css">
 </head>
 <body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
 
     <!-- Header -->
     <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50">
         <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" class="focus-ring rounded outline-none block">
+            <a href="https://groomr.uk" class="focus-ring rounded outline-none block">
                 <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
             </a>
             <div class="hidden md:flex items-center space-x-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
@@ -106,19 +58,41 @@
         </div>
     </header>
 
+    <!-- Print Cover Page -->
+    <div class="print-cover" aria-hidden="true">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 20px; width: 100%; max-width: 500px;">
+            <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" style="height: 54px; object-fit: contain;">
+            <div style="width: 64px; height: 3px; background-color: #2c3e50; border-radius: 2px;"></div>
+            <div>
+                <h1 style="font-family: 'Fredoka', sans-serif; font-size: 28pt; font-weight: 700; color: #2c3e50; margin: 0 0 10px 0; line-height: 1.2;">Acceptable Use Policy</h1>
+                <p style="font-family: 'Nunito', sans-serif; font-size: 11pt; color: #88a096; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0;">Version 0.1 DRAFT &nbsp;·&nbsp; May 2026</p>
+            </div>
+            <div style="width: 180px; height: 1px; background-color: #95a5a6;"></div>
+            <div style="font-family: 'Nunito', sans-serif; color: #2c3e50; text-align: center; line-height: 1.95;">
+                <p style="font-size: 12pt; font-weight: 700; margin: 0 0 4px 0;">Unhinged Development Group Ltd</p>
+                <p style="font-size: 10pt; color: #88a096; margin: 0 0 2px 0;">Trading as Groomr</p>
+                <p style="font-size: 10pt; color: #88a096; margin: 0 0 18px 0;">groomr.uk</p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">General enquiries: <strong>hello@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">Legal &amp; complaints: <strong>legal@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">Animal welfare &amp; safety: <strong>safety@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">Disputes: <strong>disputes@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0;">Data protection: <strong>privacy@groomr.uk</strong></p>
+            </div>
+            <div style="width: 180px; height: 1px; background-color: #95a5a6;"></div>
+            <p style="font-family: 'Nunito', sans-serif; font-size: 9pt; color: #95a5a6; margin: 0; text-transform: uppercase; letter-spacing: 0.08em;">Edited by Andrew Hughes</p>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="flex-1 max-w-4xl mx-auto px-6 md:px-12 py-16 space-y-12 w-full">
-        
+
         <!-- Document Title Block -->
-        <div class="text-center space-y-6 py-6">
+        <div class="text-center space-y-4 py-6 no-print">
             <h1 class="font-fredoka text-4xl md:text-6xl font-bold text-deep-slate">Acceptable Use Policy</h1>
-            <div class="space-y-2 text-sage-leaf font-bold text-sm tracking-wider uppercase">
-                <p>Version 0.1 DRAFT</p>
-                <p>Last Updated: May 2026</p>
-                <p>Edited by: Andrew Hughes</p>
+            <div class="text-sage-leaf font-bold text-sm tracking-wider uppercase">
+                <p>Version 0.1 DRAFT &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; Edited by Andrew Hughes</p>
             </div>
-            
-            <div class="flex justify-center pt-4">
+            <div class="flex justify-center pt-2">
                 <button id="print-button" onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 focus-ring cursor-pointer shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -128,623 +102,662 @@
             </div>
         </div>
 
-        <!-- Drafting Note Callout -->
-        <div class="bg-muted-terracotta/10 border border-muted-terracotta/30 p-5 rounded-xl flex items-start gap-4 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-muted-terracotta shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div class="text-deep-slate text-sm md:text-base leading-relaxed">
-                <p><strong class="font-bold text-muted-terracotta">DRAFTING NOTE — NOT FOR PUBLICATION.</strong><br>
-                This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor. Before publishing, you should have it reviewed alongside your Platform Terms, Owner Terms, and Groomer Terms so the enforcement language and definitions line up. Sections marked "<span class="font-bold text-muted-terracotta">[REVIEW]</span>" or with bracketed placeholders need explicit input.</p>
+        <!-- Table of Contents -->
+        <div class="toc-card p-8 md:p-10">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-grid">
+                <a href="#s1"  class="toc-link">1.&nbsp; About This Policy</a>
+                <a href="#s8"  class="toc-link">8.&nbsp; Safety of the Platform</a>
+                <a href="#s2"  class="toc-link">2.&nbsp; The Short Version</a>
+                <a href="#s9"  class="toc-link">9.&nbsp; Don't Try to Cut Groomr Out</a>
+                <a href="#s3"  class="toc-link">3.&nbsp; Animal Welfare</a>
+                <a href="#s10" class="toc-link">10. Legal Compliance</a>
+                <a href="#s4"  class="toc-link">4.&nbsp; Honesty and Identity</a>
+                <a href="#s11" class="toc-link">11. What Happens If You Break the Rules</a>
+                <a href="#s5"  class="toc-link">5.&nbsp; Content You Upload</a>
+                <a href="#s12" class="toc-link">12. Reporting Breaches of This AUP</a>
+                <a href="#s6"  class="toc-link">6.&nbsp; Reviews</a>
+                <a href="#s13" class="toc-link">13. Changes to This Policy</a>
+                <a href="#s7"  class="toc-link">7.&nbsp; How You Talk to Other People</a>
+                <a href="#s14" class="toc-link">14. Contact</a>
             </div>
         </div>
 
-        <!-- Sections -->
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">1. About This Policy</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">This Acceptable Use Policy (“AUP”) sets out the standards of behaviour we expect from everyone who uses Groomr — dog owners, professional groomers, and anyone who simply visits the website. It applies to the Groomr website at groomr.uk, the Groomr mobile applications, and any related online services (together, the “Platform”).</p>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">This AUP forms part of our Platform Terms of Use, Owner Terms and Groomer Terms. By using the Platform, you agree to follow it. Breaking the rules in this AUP can lead to your content being removed, your account being suspended or terminated, your bookings being cancelled, and — in serious cases — us reporting you to the police, the Information Commissioner’s Office, the relevant local authority, or an animal welfare body such as the RSPCA or SSPCA.</p>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr is operated by Unhinged Development Group Ltd, trading as Groomr (“we”, “us”).</p>
+        <!-- Drafting Note -->
+        <div class="policy-callout policy-callout-warn">
+            <svg class="policy-callout-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="policy-callout-body">
+                <strong class="font-bold text-muted-terracotta">DRAFTING NOTE — NOT FOR PUBLICATION.</strong> This is a first-draft template prepared with AI assistance. It has not been reviewed by a qualified solicitor. Before publishing, you should have it reviewed alongside your Platform Terms, Owner Terms, and Groomer Terms so the enforcement language and definitions line up. Sections marked <strong class="text-muted-terracotta">[REVIEW]</strong> or with bracketed placeholders need explicit input.
+            </div>
+        </div>
+
+        <!-- Section 1 -->
+        <section id="s1" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">1. About This Policy</h2>
+            <p class="policy-body mb-4">This Acceptable Use Policy ("AUP") sets out the standards of behaviour we expect from everyone who uses Groomr — dog owners, professional groomers, and anyone who simply visits the website. It applies to the Groomr website at groomr.uk, the Groomr mobile applications, and any related online services (together, the "Platform").</p>
+            <p class="policy-body mb-4">This AUP forms part of our Platform Terms of Use, Owner Terms and Groomer Terms. By using the Platform, you agree to follow it. Breaking the rules in this AUP can lead to your content being removed, your account being suspended or terminated, your bookings being cancelled, and — in serious cases — us reporting you to the police, the Information Commissioner's Office, the relevant local authority, or an animal welfare body such as the RSPCA or SSPCA.</p>
+            <p class="policy-body">Groomr is operated by Unhinged Development Group Ltd, trading as Groomr ("we", "us").</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">2. The Short Version</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">If you read nothing else, read this. When you use Groomr, you must:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">treat animals with kindness and respect at all times;</span>
+        <!-- Section 2 -->
+        <section id="s2" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">2. The Short Version</h2>
+            <p class="policy-body mb-4">If you read nothing else, read this. When you use Groomr, you must:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>treat animals with kindness and respect at all times;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">treat other Groomr users (owners, groomers, our team) with respect;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>treat other Groomr users (owners, groomers, our team) with respect;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">be truthful in everything you say about yourself, your dog, or your business;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>be truthful in everything you say about yourself, your dog, or your business;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">follow the law — including consumer law, animal welfare law, data protection law, and tax law as it applies to your activity on the Platform;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>follow the law — including consumer law, animal welfare law, data protection law, and tax law as it applies to your activity on the Platform;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">only upload content you have the right to upload;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>only upload content you have the right to upload;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">not try to game, exploit, or circumvent how the Platform works.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>not try to game, exploit, or circumvent how the Platform works.</span>
                 </li>
             </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">The rest of this Policy explains each of these in more detail, with examples of what is and is not allowed.</p>
+            <p class="policy-body">The rest of this Policy explains each of these in more detail, with examples of what is and is not allowed.</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">3. Animal Welfare — the Non-Negotiable Bit</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomr exists because dogs deserve to be groomed by professionals who care. Animal welfare is the single most important standard on the Platform, and any credible report of mistreatment is treated with the highest urgency.</p>
+        <!-- Section 3 -->
+        <section id="s3" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">3. Animal Welfare — the Non-Negotiable Bit</h2>
+            <p class="policy-body">Groomr exists because dogs deserve to be groomed by professionals who care. Animal welfare is the single most important standard on the Platform, and any credible report of mistreatment is treated with the highest urgency.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.1 What we expect from everyone</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">Whether you are a Groomer providing services or an Owner attending an appointment, you must:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">comply with the Animal Welfare Act 2006 and (in Scotland) the Animal Welfare (Scotland) Act 2006;</span>
+            <h3 class="policy-section-h3">3.1 What we expect from everyone</h3>
+            <p class="policy-body mb-4">Whether you are a Groomer providing services or an Owner attending an appointment, you must:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>comply with the Animal Welfare Act 2006 and (in Scotland) the Animal Welfare (Scotland) Act 2006;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">uphold the Five Freedoms: freedom from hunger and thirst; from discomfort; from pain, injury and disease; to express normal behaviour; and from fear and distress;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>uphold the Five Freedoms: freedom from hunger and thirst; from discomfort; from pain, injury and disease; to express normal behaviour; and from fear and distress;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">not subject any dog to unnecessary suffering, restraint, or distress;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>not subject any dog to unnecessary suffering, restraint, or distress;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">not use grooming techniques, products, or equipment that are known to cause pain, injury, or distress.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>not use grooming techniques, products, or equipment that are known to cause pain, injury, or distress.</span>
                 </li>
             </ul>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.2 Specific to Groomers</h3>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Use appropriate handling techniques for the breed, age, temperament, and health of the dog in your charge.</span>
+            <h3 class="policy-section-h3">3.2 Specific to Groomers</h3>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Use appropriate handling techniques for the breed, age, temperament, and health of the dog in your charge.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Stop a service immediately if continuing would cause the dog distress, pain, or harm, and explain this to the Owner.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Stop a service immediately if continuing would cause the dog distress, pain, or harm, and explain this to the Owner.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Refer dogs to a veterinarian where you observe a condition that requires veterinary attention (skin condition, injury, parasitic infestation, suspected medical issue).</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Refer dogs to a veterinarian where you observe a condition that requires veterinary attention (skin condition, injury, parasitic infestation, suspected medical issue).</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Do not use forced-air drying near a dog’s face, harsh restraints, or any practice that puts welfare below convenience.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Do not use forced-air drying near a dog's face, harsh restraints, or any practice that puts welfare below convenience.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Maintain a clean, safe, well-ventilated working environment.</span>
-                </li>
-            </ul>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.3 Specific to Owners</h3>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Be honest about your dog’s health, behaviour, and any aggression history at the point of booking.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Do not knowingly take a dog with an active parasitic infestation (fleas, mites, ticks), an open wound, or a contagious illness to a grooming appointment without prior agreement from the Groomer.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Pick up your dog promptly after the appointment.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Do not pressure a Groomer to perform a service that they have refused on welfare grounds.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Maintain a clean, safe, well-ventilated working environment.</span>
                 </li>
             </ul>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">3.4 Reporting welfare concerns</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">If you have a concern about how a dog has been treated on or in connection with the Platform, please report it to <a href="mailto:safety@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">safety@groomr.uk</a> immediately. We will investigate without delay. Where appropriate, we will suspend the account pending the outcome, refer the matter to the RSPCA or SSPCA, and cooperate with any local authority or police investigation.</p>
+            <h3 class="policy-section-h3">3.3 Specific to Owners</h3>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Be honest about your dog's health, behaviour, and any aggression history at the point of booking.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Do not knowingly take a dog with an active parasitic infestation (fleas, mites, ticks), an open wound, or a contagious illness to a grooming appointment without prior agreement from the Groomer.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Pick up your dog promptly after the appointment.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Do not pressure a Groomer to perform a service that they have refused on welfare grounds.</span>
+                </li>
+            </ul>
+
+            <h3 class="policy-section-h3">3.4 Reporting welfare concerns</h3>
+            <p class="policy-body">If you have a concern about how a dog has been treated on or in connection with the Platform, please report it to <a href="mailto:safety@groomr.uk" class="policy-link">safety@groomr.uk</a> immediately. We will investigate without delay. Where appropriate, we will suspend the account pending the outcome, refer the matter to the RSPCA or SSPCA, and cooperate with any local authority or police investigation.</p>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">4. Honesty and Identity</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">4.1 Be yourself</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">You must not:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">create an account under a false identity or using someone else’s details;</span>
+        <!-- Section 4 -->
+        <section id="s4" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">4. Honesty and Identity</h2>
+
+            <h3 class="policy-section-h3">4.1 Be yourself</h3>
+            <p class="policy-body mb-4">You must not:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>create an account under a false identity or using someone else's details;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">impersonate another person or business, real or fictional;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>impersonate another person or business, real or fictional;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">claim qualifications, certifications, awards, or insurance you do not hold;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>claim qualifications, certifications, awards, or insurance you do not hold;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">create more than one account per person or business, except where we have agreed otherwise in writing;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>create more than one account per person or business, except where we have agreed otherwise in writing;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">transfer, sell, or lend your account to anyone else.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>transfer, sell, or lend your account to anyone else.</span>
                 </li>
             </ul>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.2 Be honest about your dog (Owners)</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">When you book, you must declare:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">the dog’s correct breed, age, and approximate size and weight;</span>
+            <h3 class="policy-section-h3">4.2 Be honest about your dog (Owners)</h3>
+            <p class="policy-body mb-4">When you book, you must declare:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>the dog's correct breed, age, and approximate size and weight;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">any known health conditions, allergies, or recent veterinary treatment;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>any known health conditions, allergies, or recent veterinary treatment;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">any history of biting, severe anxiety, or aggression towards humans or other dogs;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>any history of biting, severe anxiety, or aggression towards humans or other dogs;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">any matted coat, skin condition, parasitic infestation, or ongoing treatment that could affect the appointment;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>any matted coat, skin condition, parasitic infestation, or ongoing treatment that could affect the appointment;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">whether your dog has experienced traumatic grooming sessions in the past.</span>
-                </li>
-            </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Omitting any of these in a way that puts the Groomer or your dog at risk is a breach of this AUP and may result in loss of your deposit, refusal of service, or removal from the Platform.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">4.3 Be honest about your business (Groomers)</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">Your listing must accurately reflect:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">the qualifications and certifications you hold (no embellishments, expired credentials, or borrowed ones);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">the insurance you carry;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">your services, prices, opening hours, and availability;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">the premises where the service is performed (in-salon, home, mobile);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">the breeds and dog sizes you are competent and equipped to handle.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>whether your dog has experienced traumatic grooming sessions in the past.</span>
                 </li>
             </ul>
-        </section>
+            <p class="policy-body">Omitting any of these in a way that puts the Groomer or your dog at risk is a breach of this AUP and may result in loss of your deposit, refusal of service, or removal from the Platform.</p>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">5. Content You Upload</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">This section covers photographs, profile pictures, listing copy, reviews, messages, and anything else you upload to or send through the Platform.</p>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">5.1 What you must not upload</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">You must not upload, post, or send any content that is:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">unlawful, fraudulent, deceptive, or which promotes any illegal activity;</span>
+            <h3 class="policy-section-h3">4.3 Be honest about your business (Groomers)</h3>
+            <p class="policy-body mb-4">Your listing must accurately reflect:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>the qualifications and certifications you hold (no embellishments, expired credentials, or borrowed ones);</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">threatening, harassing, abusive, hateful, or which incites violence or discrimination on the basis of any protected characteristic under the Equality Act 2010;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>the insurance you carry;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">defamatory of any person or business;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>your services, prices, opening hours, and availability;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">sexually explicit, pornographic, or otherwise inappropriate for a general audience;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>the premises where the service is performed (in-salon, home, mobile);</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">graphically violent, gory, or designed to shock — including but not limited to images of severe injury, blood, or distressed animals presented for shock value;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">infringing of any third party’s intellectual property rights (copyright, trade mark, design right, or similar);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">a depiction of, or which promotes, animal cruelty or any conduct in breach of animal welfare law;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">personal data about another person or their dog that you do not have the right to share (including photos that identify another person, vehicle registrations, addresses);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">misleading or designed to deceive other users — for example, before-and-after photos that misrepresent your work;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">spam, unsolicited advertising, chain-letter content, or promotional material for other businesses unrelated to your Groomr listing.</span>
-                </li>
-            </ul>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.2 Specifically about dog photos</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">We expect Groomr to be a place where photos of dogs are joyful, professional, and welfare-respecting. Some specific rules:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Use your own photos, or photos you have explicit permission from the photographer and the dog’s owner to use. Owners retain rights in photos of their dogs.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Do not download or repost photos from social media, Pinterest, Google Images, or other groomers’ websites — these are not yours to use, and using them is both copyright infringement and misleading.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Show real work you have done. Stock photography is not acceptable for portfolio listings.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Do not photograph a dog who is visibly distressed, in pain, or restrained against their will.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Do not use photos that show a dog’s injury or wound in a way that is gratuitous or designed to shock.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Get the Owner’s permission before posting photos of their dog in your portfolio. The Owner can withdraw permission at any time and we will remove the photo on request.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">Do not include identifying information about a dog’s owner in a photo caption (full name, address, registration plates in the background).</span>
-                </li>
-            </ul>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.3 Profile photos</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Your profile photo (for both Owners and Groomers) should be a real photograph of you or your business. Cartoons, memes, stock photos, photos of celebrities, and images of other people are not allowed. Groomer profile photos should be appropriate for a professional service business.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">5.4 Our rights over content</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We may, in our discretion, remove or refuse to publish any content that breaches this AUP, our Platform Terms, or applicable law. We do not pre-moderate every piece of content; we rely partly on user reporting and partly on automated tools to identify problems. If we remove your content, we will tell you why where it is reasonable and lawful to do so, and you can appeal by emailing <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a>.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">6. Reviews</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">6.1 Honest reviews only</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">Reviews are central to how trust works on Groomr. To keep them meaningful, you must:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">only leave a review after a completed appointment that you (or your business) booked through Groomr;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">be honest — reviews must reflect your actual experience;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">be fair — review the appointment, not the Groomer’s personal characteristics;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">not include personal data of any third party (other clients, employees, named individuals);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">not include legal accusations you cannot substantiate.</span>
-                </li>
-            </ul>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">6.2 Fake and incentivised reviews are illegal</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">Under the Digital Markets, Competition and Consumers Act 2024, fake reviews and incentivised reviews are illegal in the UK. You must not:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">write a review of your own business (or have a friend, family member, employee or business associate write one);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">pay anyone — in money, services, discounts, or anything else of value — to leave a review;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">offer a discount or freebie in exchange for a positive review;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">threaten or harass an Owner to remove a negative review;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">write a negative review of a competitor;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">commission reviews from third-party services.</span>
-                </li>
-            </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We will remove fake or incentivised reviews when we find them, suspend the accounts involved, and may report serious or systematic cases to the Competition and Markets Authority.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">6.3 Responding to reviews</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Groomers may respond to reviews professionally. You must not threaten the reviewer, reveal personal information about them, make legal threats, or attempt to coerce them into changing or removing a review.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">7. How You Talk to Other People on the Platform</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">Messages between Owners and Groomers are part of how bookings work. We expect them to be professional and respectful. You must not:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">send abusive, threatening, harassing, sexually inappropriate, or discriminatory messages;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">send unsolicited marketing or promotional messages;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">share another user’s personal data without their consent;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">attempt to recruit a Groomer’s clients to a competing business or to recruit an Owner’s pet for any unrelated commercial purpose;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">encourage the other party to book or pay outside the Platform for services that originated through Groomr (see section 9);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">contact other users outside the Platform for any purpose unrelated to a booking, unless that user has invited you to.</span>
-                </li>
-            </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We may review messages where a dispute is raised or where we receive a report of misconduct. This is described in our Privacy Policy.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">8. Safety of the Platform</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">You must not, and must not encourage anyone else to:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">introduce viruses, worms, trojans, ransomware, spyware, or other malicious code;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">attempt to gain unauthorised access to the Platform, any user account, any server, or any system associated with the Platform;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">attempt to interfere with the proper working of the Platform (including denial-of-service attempts or rate-limit evasion);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">probe, scan, or test the vulnerability of the Platform without our prior written permission;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">circumvent or attempt to circumvent any security measure or access control;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">reverse-engineer, decompile, or attempt to derive the source code of any part of the Platform, except where this is allowed by law and you have given us written notice;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">scrape, crawl, copy, or extract data from the Platform by any automated means, except where we have given express written permission;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">frame, mirror, or republish any part of the Platform without our written consent.</span>
-                </li>
-            </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We welcome responsible security disclosure. If you find a vulnerability, please email <a href="mailto:security@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">security@groomr.uk</a> with details and give us a reasonable time to fix the issue before publishing anything about it. We will not pursue legal action against good-faith researchers who follow this approach.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">9. Don’t Try to Cut Groomr Out</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">If a booking originated through Groomr, the booking, the payment, and any rescheduling must go through Groomr. You must not:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">encourage Owners to book or pay you off-platform (for example, “next time, just text me and we’ll save the fee”);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">encourage Groomers to take you off-platform (for example, asking for their personal number to book directly);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">use Groomr only to source leads and then move them to your own booking system.</span>
-                </li>
-            </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">This rule does not prevent a Groomer from accepting direct repeat bookings from clients who originally found them outside Groomr, or from running other booking channels in parallel. It also does not prevent Owners and Groomers from communicating about a current Groomr booking through ordinary channels (a confirmation call, a reminder text) where the Groomer offers that.</p>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Repeat circumvention is a material breach and can result in account termination, forfeiture of pending payouts, and — in serious cases — legal action to recover lost commission.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">10. Legal Compliance</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">By using the Platform you confirm that you will, in your activity on Groomr, comply with all law that applies to you. The most relevant areas are:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Animal welfare:</strong> Animal Welfare Act 2006 / Animal Welfare (Scotland) Act 2006.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Consumer law:</strong> Consumer Rights Act 2015; Consumer Contracts (Information, Cancellation and Additional Charges) Regulations 2013; Digital Markets, Competition and Consumers Act 2024.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Data protection:</strong> UK GDPR; Data Protection Act 2018; PECR.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Equality:</strong> Equality Act 2010 — do not discriminate against users on the basis of protected characteristics.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Tax:</strong> your own HMRC obligations as a self-employed individual or business.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Licensing:</strong> any local authority licence or registration that your business requires.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Health & safety:</strong> in respect of your premises, staff, and clients.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>the breeds and dog sizes you are competent and equipped to handle.</span>
                 </li>
             </ul>
         </section>
 
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">11. What Happens If You Break the Rules</h2>
-            
-            <h3 class="font-fredoka text-xl font-bold mb-3 text-deep-slate">11.1 How we decide what action to take</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We aim to respond proportionately. The action we take will depend on factors including: how serious the breach is; whether it is a first-time issue or a pattern; whether anyone (human or canine) has been harmed; whether you cooperate with our investigation; and whether the conduct is unlawful.</p>
+        <!-- Section 5 -->
+        <section id="s5" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">5. Content You Upload</h2>
+            <p class="policy-body">This section covers photographs, profile pictures, listing copy, reviews, messages, and anything else you upload to or send through the Platform.</p>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">11.2 The range of actions we may take</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">Depending on the circumstances, we may do any of the following:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">remove the content or message in question;</span>
+            <h3 class="policy-section-h3">5.1 What you must not upload</h3>
+            <p class="policy-body mb-4">You must not upload, post, or send any content that is:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>unlawful, fraudulent, deceptive, or which promotes any illegal activity;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">require you to correct your profile or listing;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>threatening, harassing, abusive, hateful, or which incites violence or discrimination on the basis of any protected characteristic under the Equality Act 2010;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">issue a warning;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>defamatory of any person or business;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">temporarily limit features of your account (for example, prevent new listings, hide reviews, restrict messaging);</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>sexually explicit, pornographic, or otherwise inappropriate for a general audience;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">suspend your account pending investigation;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>graphically violent, gory, or designed to shock — including but not limited to images of severe injury, blood, or distressed animals presented for shock value;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">cancel pending bookings and direct refunds in accordance with our Terms;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>infringing of any third party's intellectual property rights (copyright, trade mark, design right, or similar);</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">withhold the release of funds held with Stripe pending the outcome of any dispute;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>a depiction of, or which promotes, animal cruelty or any conduct in breach of animal welfare law;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">revoke or refuse the Verified badge;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>personal data about another person or their dog that you do not have the right to share (including photos that identify another person, vehicle registrations, addresses);</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">permanently terminate your account and ban you from creating future accounts;</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>misleading or designed to deceive other users — for example, before-and-after photos that misrepresent your work;</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">recover any losses we suffer as a result of the breach (including commission lost through off-platform circumvention);</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">report the matter to the police, the ICO, HMRC, the relevant local authority, the RSPCA / SSPCA, or any other appropriate authority or regulator;</span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1">cooperate with any criminal or civil investigation or proceedings.</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>spam, unsolicited advertising, chain-letter content, or promotional material for other businesses unrelated to your Groomr listing.</span>
                 </li>
             </ul>
 
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">11.3 Immediate action without notice</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">Where we reasonably believe there is a risk to animal welfare, to other users, or to the security of the Platform, we may take action immediately and without prior notice. Examples include credible reports of animal mistreatment, ongoing fraud, harassment of another user, or active security exploitation.</p>
-
-            <h3 class="font-fredoka text-xl font-bold mb-3 mt-8 text-deep-slate">11.4 Appeals</h3>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">If we take action against your account and you believe we have got it wrong, you may appeal by emailing <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a> within 30 days, explaining why. We will review the decision, with a different person from the one who originally took the action where possible. We aim to respond to appeals within 14 working days. Our decision on appeal is final, but does not affect any rights you have under applicable law (including your right to complain to the ICO if the issue concerns personal data).</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">12. Reporting Breaches of This AUP</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-4">If you see something on Groomr that you think breaches this AUP, please tell us. The right contact depends on the issue:</p>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-4">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Animal welfare or safety concern</strong> — <a href="mailto:safety@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">safety@groomr.uk</a></span>
+            <h3 class="policy-section-h3">5.2 Specifically about dog photos</h3>
+            <p class="policy-body mb-4">We expect Groomr to be a place where photos of dogs are joyful, professional, and welfare-respecting. Some specific rules:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Use your own photos, or photos you have explicit permission from the photographer and the dog's owner to use. Owners retain rights in photos of their dogs.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>A specific dispute about a booking you made</strong> — <a href="mailto:disputes@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">disputes@groomr.uk</a></span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Do not download or repost photos from social media, Pinterest, Google Images, or other groomers' websites — these are not yours to use, and using them is both copyright infringement and misleading.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Inappropriate content, fake reviews, or harassment</strong> — use the report button on the relevant profile or message, or email <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a></span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Show real work you have done. Stock photography is not acceptable for portfolio listings.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Security vulnerability</strong> — <a href="mailto:security@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">security@groomr.uk</a></span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Do not photograph a dog who is visibly distressed, in pain, or restrained against their will.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Suspected fraud</strong> — <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a></span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Do not use photos that show a dog's injury or wound in a way that is gratuitous or designed to shock.</span>
                 </li>
-            </ul>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We aim to acknowledge reports within 2 working days and act on them as soon as we reasonably can. Where you make a report, we will treat your identity confidentially unless we are legally required to disclose it, or unless disclosure is necessary to investigate the matter and you have agreed to it.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">13. Changes to This Policy</h2>
-            <p class="text-deep-slate leading-relaxed text-lg mb-6">We may update this AUP from time to time as we learn more about how Groomr is used and what kinds of conduct cause problems. We will post the updated AUP on the Platform and update the version date below. Where the change is material, we will tell you by email and through the Platform at least 30 days before it takes effect.</p>
-        </section>
-
-        <section class="bg-white p-8 md:p-12 rounded-2xl shadow-subtle border border-pebble-grey/20">
-            <h2 class="font-fredoka text-3xl font-bold text-deep-slate border-b-2 border-pebble-grey/20 pb-4 mb-6">14. Contact</h2>
-            <ul class="space-y-3 text-deep-slate leading-relaxed text-lg mb-6">
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>General queries about this Policy:</strong> <a href="mailto:legal@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">legal@groomr.uk</a></span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Get the Owner's permission before posting photos of their dog in your portfolio. The Owner can withdraw permission at any time and we will remove the photo on request.</span>
                 </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Animal welfare / safety:</strong> <a href="mailto:safety@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">safety@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Disputes:</strong> <a href="mailto:disputes@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">disputes@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Security:</strong> <a href="mailto:security@groomr.uk" class="text-sage-leaf font-bold hover:text-groomr-gold transition-colors focus-ring rounded">security@groomr.uk</a></span>
-                </li>
-                <li class="flex items-start gap-4">
-                    <span class="w-2 h-2 rounded-full bg-sage-leaf shrink-0 mt-2.5"></span>
-                    <span class="flex-1"><strong>Postal:</strong> Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</span>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>Do not include identifying information about a dog's owner in a photo caption (full name, address, registration plates in the background).</span>
                 </li>
             </ul>
+
+            <h3 class="policy-section-h3">5.3 Profile photos</h3>
+            <p class="policy-body">Your profile photo (for both Owners and Groomers) should be a real photograph of you or your business. Cartoons, memes, stock photos, photos of celebrities, and images of other people are not allowed. Groomer profile photos should be appropriate for a professional service business.</p>
+
+            <h3 class="policy-section-h3">5.4 Our rights over content</h3>
+            <p class="policy-body">We may, in our discretion, remove or refuse to publish any content that breaches this AUP, our Platform Terms, or applicable law. We do not pre-moderate every piece of content; we rely partly on user reporting and partly on automated tools to identify problems. If we remove your content, we will tell you why where it is reasonable and lawful to do so, and you can appeal by emailing <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a>.</p>
+        </section>
+
+        <!-- Section 6 -->
+        <section id="s6" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">6. Reviews</h2>
+
+            <h3 class="policy-section-h3">6.1 Honest reviews only</h3>
+            <p class="policy-body mb-4">Reviews are central to how trust works on Groomr. To keep them meaningful, you must:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>only leave a review after a completed appointment that you (or your business) booked through Groomr;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>be honest — reviews must reflect your actual experience;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>be fair — review the appointment, not the Groomer's personal characteristics;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>not include personal data of any third party (other clients, employees, named individuals);</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>not include legal accusations you cannot substantiate.</span>
+                </li>
+            </ul>
+
+            <h3 class="policy-section-h3">6.2 Fake and incentivised reviews are illegal</h3>
+            <p class="policy-body mb-4">Under the Digital Markets, Competition and Consumers Act 2024, fake reviews and incentivised reviews are illegal in the UK. You must not:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>write a review of your own business (or have a friend, family member, employee or business associate write one);</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>pay anyone — in money, services, discounts, or anything else of value — to leave a review;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>offer a discount or freebie in exchange for a positive review;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>threaten or harass an Owner to remove a negative review;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>write a negative review of a competitor;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>commission reviews from third-party services.</span>
+                </li>
+            </ul>
+            <p class="policy-body">We will remove fake or incentivised reviews when we find them, suspend the accounts involved, and may report serious or systematic cases to the Competition and Markets Authority.</p>
+
+            <h3 class="policy-section-h3">6.3 Responding to reviews</h3>
+            <p class="policy-body">Groomers may respond to reviews professionally. You must not threaten the reviewer, reveal personal information about them, make legal threats, or attempt to coerce them into changing or removing a review.</p>
+        </section>
+
+        <!-- Section 7 -->
+        <section id="s7" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">7. How You Talk to Other People on the Platform</h2>
+            <p class="policy-body mb-4">Messages between Owners and Groomers are part of how bookings work. We expect them to be professional and respectful. You must not:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>send abusive, threatening, harassing, sexually inappropriate, or discriminatory messages;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>send unsolicited marketing or promotional messages;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>share another user's personal data without their consent;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>attempt to recruit a Groomer's clients to a competing business or to recruit an Owner's pet for any unrelated commercial purpose;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>encourage the other party to book or pay outside the Platform for services that originated through Groomr (see section 9);</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>contact other users outside the Platform for any purpose unrelated to a booking, unless that user has invited you to.</span>
+                </li>
+            </ul>
+            <p class="policy-body">We may review messages where a dispute is raised or where we receive a report of misconduct. This is described in our Privacy Policy.</p>
+        </section>
+
+        <!-- Section 8 -->
+        <section id="s8" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">8. Safety of the Platform</h2>
+            <p class="policy-body mb-4">You must not, and must not encourage anyone else to:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>introduce viruses, worms, trojans, ransomware, spyware, or other malicious code;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>attempt to gain unauthorised access to the Platform, any user account, any server, or any system associated with the Platform;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>attempt to interfere with the proper working of the Platform (including denial-of-service attempts or rate-limit evasion);</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>probe, scan, or test the vulnerability of the Platform without our prior written permission;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>circumvent or attempt to circumvent any security measure or access control;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>reverse-engineer, decompile, or attempt to derive the source code of any part of the Platform, except where this is allowed by law and you have given us written notice;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>scrape, crawl, copy, or extract data from the Platform by any automated means, except where we have given express written permission;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>frame, mirror, or republish any part of the Platform without our written consent.</span>
+                </li>
+            </ul>
+            <p class="policy-body">We welcome responsible security disclosure. If you find a vulnerability, please email <a href="mailto:security@groomr.uk" class="policy-link">security@groomr.uk</a> with details and give us a reasonable time to fix the issue before publishing anything about it. We will not pursue legal action against good-faith researchers who follow this approach.</p>
+        </section>
+
+        <!-- Section 9 -->
+        <section id="s9" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">9. Don't Try to Cut Groomr Out</h2>
+            <p class="policy-body mb-4">If a booking originated through Groomr, the booking, the payment, and any rescheduling must go through Groomr. You must not:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>encourage Owners to book or pay you off-platform (for example, "next time, just text me and we'll save the fee");</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>encourage Groomers to take you off-platform (for example, asking for their personal number to book directly);</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>use Groomr only to source leads and then move them to your own booking system.</span>
+                </li>
+            </ul>
+            <p class="policy-body mb-4">This rule does not prevent a Groomer from accepting direct repeat bookings from clients who originally found them outside Groomr, or from running other booking channels in parallel. It also does not prevent Owners and Groomers from communicating about a current Groomr booking through ordinary channels (a confirmation call, a reminder text) where the Groomer offers that.</p>
+            <p class="policy-body">Repeat circumvention is a material breach and can result in account termination, forfeiture of pending payouts, and — in serious cases — legal action to recover lost commission.</p>
+        </section>
+
+        <!-- Section 10 -->
+        <section id="s10" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">10. Legal Compliance</h2>
+            <p class="policy-body mb-4">By using the Platform you confirm that you will, in your activity on Groomr, comply with all law that applies to you. The most relevant areas are:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Animal welfare:</strong> Animal Welfare Act 2006 / Animal Welfare (Scotland) Act 2006.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Consumer law:</strong> Consumer Rights Act 2015; Consumer Contracts (Information, Cancellation and Additional Charges) Regulations 2013; Digital Markets, Competition and Consumers Act 2024.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Data protection:</strong> UK GDPR; Data Protection Act 2018; PECR.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Equality:</strong> Equality Act 2010 — do not discriminate against users on the basis of protected characteristics.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Tax:</strong> your own HMRC obligations as a self-employed individual or business.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Licensing:</strong> any local authority licence or registration that your business requires.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Health &amp; safety:</strong> in respect of your premises, staff, and clients.</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Section 11 -->
+        <section id="s11" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">11. What Happens If You Break the Rules</h2>
+
+            <h3 class="policy-section-h3">11.1 How we decide what action to take</h3>
+            <p class="policy-body">We aim to respond proportionately. The action we take will depend on factors including: how serious the breach is; whether it is a first-time issue or a pattern; whether anyone (human or canine) has been harmed; whether you cooperate with our investigation; and whether the conduct is unlawful.</p>
+
+            <h3 class="policy-section-h3">11.2 The range of actions we may take</h3>
+            <p class="policy-body mb-4">Depending on the circumstances, we may do any of the following:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>remove the content or message in question;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>require you to correct your profile or listing;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>issue a warning;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>temporarily limit features of your account (for example, prevent new listings, hide reviews, restrict messaging);</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>suspend your account pending investigation;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>cancel pending bookings and direct refunds in accordance with our Terms;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>withhold the release of funds held with Stripe pending the outcome of any dispute;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>revoke or refuse the Verified badge;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>permanently terminate your account and ban you from creating future accounts;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>recover any losses we suffer as a result of the breach (including commission lost through off-platform circumvention);</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>report the matter to the police, the ICO, HMRC, the relevant local authority, the RSPCA / SSPCA, or any other appropriate authority or regulator;</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>cooperate with any criminal or civil investigation or proceedings.</span>
+                </li>
+            </ul>
+
+            <h3 class="policy-section-h3">11.3 Immediate action without notice</h3>
+            <p class="policy-body">Where we reasonably believe there is a risk to animal welfare, to other users, or to the security of the Platform, we may take action immediately and without prior notice. Examples include credible reports of animal mistreatment, ongoing fraud, harassment of another user, or active security exploitation.</p>
+
+            <h3 class="policy-section-h3">11.4 Appeals</h3>
+            <p class="policy-body">If we take action against your account and you believe we have got it wrong, you may appeal by emailing <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a> within 30 days, explaining why. We will review the decision, with a different person from the one who originally took the action where possible. We aim to respond to appeals within 14 working days. Our decision on appeal is final, but does not affect any rights you have under applicable law (including your right to complain to the ICO if the issue concerns personal data).</p>
+        </section>
+
+        <!-- Section 12 -->
+        <section id="s12" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">12. Reporting Breaches of This AUP</h2>
+            <p class="policy-body mb-4">If you see something on Groomr that you think breaches this AUP, please tell us. The right contact depends on the issue:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Animal welfare or safety concern</strong> — <a href="mailto:safety@groomr.uk" class="policy-link">safety@groomr.uk</a></span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>A specific dispute about a booking you made</strong> — <a href="mailto:disputes@groomr.uk" class="policy-link">disputes@groomr.uk</a></span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Inappropriate content, fake reviews, or harassment</strong> — use the report button on the relevant profile or message, or email <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a></span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Security vulnerability</strong> — <a href="mailto:security@groomr.uk" class="policy-link">security@groomr.uk</a></span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span><strong>Suspected fraud</strong> — <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a></span>
+                </li>
+            </ul>
+            <p class="policy-body">We aim to acknowledge reports within 2 working days and act on them as soon as we reasonably can. Where you make a report, we will treat your identity confidentially unless we are legally required to disclose it, or unless disclosure is necessary to investigate the matter and you have agreed to it.</p>
+        </section>
+
+        <!-- Section 13 -->
+        <section id="s13" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">13. Changes to This Policy</h2>
+            <p class="policy-body">We may update this AUP from time to time as we learn more about how Groomr is used and what kinds of conduct cause problems. We will post the updated AUP on the Platform and update the version date below. Where the change is material, we will tell you by email and through the Platform at least 30 days before it takes effect.</p>
+        </section>
+
+        <!-- Section 14 -->
+        <section id="s14" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">14. Contact</h2>
+            <p class="policy-body mb-8">For questions about this policy or to report a breach, please use the appropriate contact below.</p>
+            <div class="policy-contact-list">
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">General enquiries:</span>
+                    <a href="mailto:hello@groomr.uk" class="policy-link">hello@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Legal &amp; complaints:</span>
+                    <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Animal welfare &amp; safety:</span>
+                    <a href="mailto:safety@groomr.uk" class="policy-link">safety@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Disputes:</span>
+                    <a href="mailto:disputes@groomr.uk" class="policy-link">disputes@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Security disclosures:</span>
+                    <a href="mailto:security@groomr.uk" class="policy-link">security@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Postal:</span>
+                    <span>Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</span>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Data protection contact:</span>
+                    <a href="mailto:privacy@groomr.uk" class="policy-link">privacy@groomr.uk</a>
+                </div>
+            </div>
         </section>
 
     </main>
 
     <!-- Footer -->
     <footer class="w-full bg-deep-slate text-alabaster-cream py-12 px-8 md:px-12 text-center relative overflow-hidden mt-8 no-print">
-        <!-- Top border accent -->
         <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
-        
         <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain mx-auto mb-6">
-        
         <div class="space-y-1">
             <p class="font-nunito font-bold tracking-wider text-sage-leaf text-sm uppercase">Unhinged Development Group Ltd</p>
             <p class="text-xs text-pebble-grey opacity-50 uppercase mt-2">&copy; 2026 Groomr. All rights reserved.</p>

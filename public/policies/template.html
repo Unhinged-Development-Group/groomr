@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<!--
+    GROOMR POLICY DOCUMENT TEMPLATE
+    ════════════════════════════════
+    Copy this file to public/policies/[your-filename].html and work through
+    every TODO: marker. When all TODOs are resolved the document is ready.
+
+    After creating the file, also:
+      1. Add a route handler at app/[your-route]/route.ts
+      2. Add the route to the public list in proxy.ts
+      3. Add a row to public/policies/POLICIES.md
+      4. Update SiteFooter.tsx if the link should appear in the site footer
+
+    See public/policies/README.md for full component documentation.
+-->
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- TODO: Update page title -->
+    <title>TODO: Document Title | Groomr</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Configuration — do not modify -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'groomr-gold': '#eae45c',
+                        'deep-slate': '#2c3e50',
+                        'sage-leaf': '#88a096',
+                        'pebble-grey': '#95a5a6',
+                        'alabaster-cream': '#f9f8f4',
+                        'muted-terracotta': '#c87964',
+                    },
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                        'nunito': ['Nunito', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'subtle': '0 4px 6px -1px rgba(149, 165, 166, 0.10), 0 2px 4px -1px rgba(149, 165, 166, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Shared Policy Component Stylesheet — do not modify this path -->
+    <link rel="stylesheet" href="/policies/policy.css">
+</head>
+<body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
+
+    <!-- ─────────────────────────────────────────────────────────────
+         HEADER — do not modify, the label is intentionally generic
+         ───────────────────────────────────────────────────────────── -->
+    <header class="w-full bg-alabaster-cream border-b border-pebble-grey/20 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="https://groomr.uk" class="focus-ring rounded outline-none block">
+                <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain">
+            </a>
+            <div class="hidden md:flex items-center space-x-6 text-sm font-bold tracking-wider uppercase text-sage-leaf">
+                <span class="opacity-70">Policy Document</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─────────────────────────────────────────────────────────────
+         PRINT COVER PAGE
+         Shown only when printing / saving as PDF. Update:
+           • h1 text — document title
+           • Version line — version number and month/year
+           • Contact list — include only contacts relevant to this doc
+             (standard order: General → Legal → Disputes → Safety →
+              Verification → Postal → Data Protection)
+           • "Edited by" name
+         Do not change structure, logo URLs, or divider styling.
+         ───────────────────────────────────────────────────────────── -->
+    <div class="print-cover" aria-hidden="true">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 20px; width: 100%; max-width: 500px;">
+            <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753252/Horizontal_Lockup_-_DEEP_SLATE_lg5q91.png" alt="Groomr" style="height: 54px; object-fit: contain;">
+            <div style="width: 64px; height: 3px; background-color: #2c3e50; border-radius: 2px;"></div>
+            <div>
+                <!-- TODO: Update title and version -->
+                <h1 style="font-family: 'Fredoka', sans-serif; font-size: 33pt; font-weight: 700; color: #2c3e50; margin: 0 0 10px 0; line-height: 1.2;">TODO: Document Title</h1>
+                <p style="font-family: 'Nunito', sans-serif; font-size: 11pt; color: #88a096; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0;">Version 1 &nbsp;·&nbsp; TODO: Month Year</p>
+            </div>
+            <div style="width: 180px; height: 1px; background-color: #95a5a6;"></div>
+            <div style="font-family: 'Nunito', sans-serif; color: #2c3e50; text-align: center; line-height: 1.95;">
+                <p style="font-size: 12pt; font-weight: 700; margin: 0 0 4px 0;">Unhinged Development Group Ltd</p>
+                <p style="font-size: 10pt; color: #88a096; margin: 0 0 2px 0;">Trading as Groomr</p>
+                <p style="font-size: 10pt; color: #88a096; margin: 0 0 18px 0;">groomr.uk</p>
+                <!-- TODO: Add only the contacts relevant to this document -->
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0 0 3px 0;">General enquiries: <strong>hello@groomr.uk</strong></p>
+                <p style="font-size: 10pt; color: #2c3e50; margin: 0;">Data protection: <strong>privacy@groomr.uk</strong></p>
+            </div>
+            <div style="width: 180px; height: 1px; background-color: #95a5a6;"></div>
+            <!-- TODO: Update editor name -->
+            <p style="font-family: 'Nunito', sans-serif; font-size: 9pt; color: #95a5a6; margin: 0; text-transform: uppercase; letter-spacing: 0.08em;">Edited by TODO: Name</p>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────
+         MAIN CONTENT
+         ───────────────────────────────────────────────────────────── -->
+    <main class="flex-1 max-w-4xl mx-auto px-6 md:px-12 py-16 space-y-12 w-full">
+
+        <!-- ── Title Block ───────────────────────────────────────────
+             Hidden on print (the print cover replaces it).
+             TODO: Update title, version, month/year, and editor name.
+             ────────────────────────────────────────────────────────── -->
+        <div class="text-center space-y-4 py-6 no-print">
+            <!-- TODO: Update title -->
+            <h1 class="font-fredoka text-4xl md:text-6xl font-bold text-deep-slate">TODO: Document Title</h1>
+            <div class="text-sage-leaf font-bold text-sm tracking-wider uppercase">
+                <!-- TODO: Update version, month/year, and editor name -->
+                <p>Version 1 &nbsp;·&nbsp; TODO: Month Year &nbsp;·&nbsp; Edited by TODO: Name</p>
+            </div>
+            <div class="flex justify-center pt-2">
+                <button id="print-button" onclick="window.print()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-sage-leaf bg-pebble-grey/5 border border-pebble-grey/20 hover:bg-pebble-grey/10 hover:text-deep-slate rounded-full transition-all duration-300 focus-ring cursor-pointer shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Save as PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Table of Contents ─────────────────────────────────────
+             Add one .toc-link per section, in the interleaved column
+             order shown below (1, N/2+1, 2, N/2+2, …).
+             Use &nbsp; after single-digit numbers to align columns.
+             TODO: Replace placeholder entries with real section titles.
+             ────────────────────────────────────────────────────────── -->
+        <div class="toc-card p-8 md:p-10">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-grid">
+                <!-- TODO: Replace with real section entries -->
+                <a href="#s1" class="toc-link">1.&nbsp; TODO: Section Title</a>
+                <a href="#s2" class="toc-link">2.&nbsp; TODO: Section Title</a>
+                <!-- Add more entries here, keeping left/right columns balanced -->
+                <!-- Last entry should always be the Contact Us section -->
+            </div>
+        </div>
+
+        <!-- ── Sections ──────────────────────────────────────────────
+             Each section is a <section id="sN"> card.
+             Replace the example section below, then add more by copying
+             the pattern. The last section should always be Contact Us.
+
+             Component classes (full reference in README.md):
+               .policy-section        — the white card wrapper
+               .policy-section-h2     — numbered section heading
+               .policy-section-h3     — subsection heading (x.x)
+               .policy-body           — paragraph text
+               .policy-body.mb-4      — paragraph before a list
+               .policy-body.mb-8      — paragraph in Contact section intro
+               .policy-list           — <ul> wrapper
+               .policy-list-item      — <li> wrapper
+               .policy-list-dot       — the sage-leaf bullet dot
+               .policy-link           — hyperlinks and email addresses
+               .policy-info-block     — key-value data block
+               .policy-callout        — informational callout box
+               .policy-callout-warn   — warning callout (terracotta)
+               .policy-contact-list   — contact section wrapper
+               .policy-contact-row    — label + value row
+               .policy-contact-label  — bold label column
+             ────────────────────────────────────────────────────────── -->
+
+        <!-- TODO: Replace this example section with your first section -->
+        <section id="s1" class="policy-section p-8 md:p-12">
+            <!-- TODO: Update section title -->
+            <h2 class="policy-section-h2">1. TODO: Section Title</h2>
+
+            <!-- Example: subsection with body text -->
+            <!-- TODO: Replace or remove subsections as needed -->
+            <h3 class="policy-section-h3">1.1 TODO: Subsection Title</h3>
+            <p class="policy-body">TODO: Paragraph text.</p>
+
+            <!-- Example: paragraph introducing a list -->
+            <h3 class="policy-section-h3">1.2 TODO: Subsection Title</h3>
+            <p class="policy-body mb-4">TODO: Introductory sentence ending with a colon:</p>
+            <ul class="policy-list">
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>TODO: List item text.</span>
+                </li>
+                <li class="policy-list-item">
+                    <span class="policy-list-dot"></span>
+                    <span>TODO: List item with a <a href="/privacy-policy" class="policy-link">link</a>.</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- TODO: Add more sections here, following the same pattern -->
+        <!--
+        <section id="s2" class="policy-section p-8 md:p-12">
+            <h2 class="policy-section-h2">2. TODO: Section Title</h2>
+            <p class="policy-body">TODO: Content.</p>
+        </section>
+        -->
+
+        <!-- ── Contact Us — always the final section ─────────────────
+             TODO:
+               1. Update the section number to match your last section + 1
+               2. Update the TOC entry to point to this section's id
+               3. Write a tailored intro sentence (not generic)
+               4. Keep only the contact rows relevant to this document
+                  Standard order: General → Legal → Disputes → Safety →
+                  Verification → Postal → Data Protection
+               5. Update the print cover to match these contacts
+             ────────────────────────────────────────────────────────── -->
+        <section id="s-contact" class="policy-section p-8 md:p-12">
+            <!-- TODO: Update section number -->
+            <h2 class="policy-section-h2">TODO: N. Contact Us</h2>
+            <!-- TODO: Write a tailored intro — don't use generic placeholder text -->
+            <p class="policy-body mb-8">TODO: Tailored sentence directing users to the appropriate contact for matters relating to this document.</p>
+            <div class="policy-contact-list">
+
+                <!-- Always include general enquiries first -->
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">General enquiries:</span>
+                    <a href="mailto:hello@groomr.uk" class="policy-link">hello@groomr.uk</a>
+                </div>
+
+                <!-- TODO: Include other contacts relevant to this document.
+                     Remove any that don't apply. Options:
+
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Legal &amp; complaints:</span>
+                    <a href="mailto:legal@groomr.uk" class="policy-link">legal@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Disputes:</span>
+                    <a href="mailto:disputes@groomr.uk" class="policy-link">disputes@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Animal welfare &amp; safety concerns:</span>
+                    <a href="mailto:safety@groomr.uk" class="policy-link">safety@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Verification enquiries:</span>
+                    <a href="mailto:verification@groomr.uk" class="policy-link">verification@groomr.uk</a>
+                </div>
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Postal:</span>
+                    <span>Unhinged Development Group Ltd, [REGISTERED OFFICE ADDRESS]</span>
+                </div>
+                -->
+
+                <!-- Always include data protection last -->
+                <div class="policy-contact-row">
+                    <span class="policy-contact-label">Data protection contact:</span>
+                    <a href="mailto:privacy@groomr.uk" class="policy-link">privacy@groomr.uk</a>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ─────────────────────────────────────────────────────────────
+         FOOTER — do not modify
+         ───────────────────────────────────────────────────────────── -->
+    <footer class="w-full bg-deep-slate text-alabaster-cream py-12 px-8 md:px-12 text-center relative overflow-hidden mt-8 no-print">
+        <div class="absolute top-0 left-0 w-full h-2 bg-groomr-gold"></div>
+        <img src="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753253/Horizontal_Lockup_-_GROOMR_GOLD_kfzzzr.png" alt="Groomr Logo" class="h-8 md:h-10 w-auto object-contain mx-auto mb-6">
+        <div class="space-y-1">
+            <p class="font-nunito font-bold tracking-wider text-sage-leaf text-sm uppercase">Unhinged Development Group Ltd</p>
+            <p class="text-xs text-pebble-grey opacity-50 uppercase mt-2">&copy; 2026 Groomr. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

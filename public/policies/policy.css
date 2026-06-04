@@ -1,0 +1,270 @@
+/* ================================================================
+   GROOMR POLICY DOCUMENT — MASTER STYLESHEET
+   ─────────────────────────────────────────────────────────────────
+   Shared component library for all Groomr policy HTML documents.
+
+   Load via: <link rel="stylesheet" href="/policies/policy.css">
+
+   Pair with Tailwind CDN utilities only for responsive spacing
+   (e.g. p-8 md:p-12) and intentional margin overrides (mb-4, mb-8).
+   Never duplicate component properties as Tailwind classes.
+   ================================================================ */
+
+
+/* ── Scroll offset for sticky header ───────────────────────── */
+html { scroll-padding-top: 72px; }
+
+
+/* ── Base ───────────────────────────────────────────────────── */
+body { background-color: #f9f8f4; color: #2c3e50; }
+
+h1, h2, .font-fredoka { font-family: 'Fredoka', sans-serif; }
+h3, h4, p, span, div, li, .font-nunito { font-family: 'Nunito', sans-serif; }
+
+/* Shared focus ring for interactive elements (buttons, logo) */
+.focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px #eae45c;
+    border-color: #eae45c;
+}
+
+/* Print cover — hidden on screen, revealed in @media print */
+.print-cover { display: none; }
+
+
+/* ================================================================
+   COMPONENT LIBRARY
+   ================================================================ */
+
+/* ── Section card ─────────────────────────────────────────── */
+.policy-section {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid rgba(149, 165, 166, 0.20);
+    box-shadow: 0 4px 6px -1px rgba(149, 165, 166, 0.10),
+                0 2px 4px -1px rgba(149, 165, 166, 0.06);
+}
+
+/* ── Section heading — h2 ─────────────────────────────────── */
+.policy-section-h2 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #2c3e50;
+    border-bottom: 2px solid rgba(149, 165, 166, 0.20);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+/* ── Subsection heading — h3 ──────────────────────────────── */
+.policy-section-h3 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-top: 2rem;       /* space from preceding content */
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+}
+/* First h3 immediately after h2 needs no top margin */
+.policy-section-h2 + .policy-section-h3 { margin-top: 0; }
+
+/* ── Body text ────────────────────────────────────────────── */
+.policy-body {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.125rem;
+    line-height: 1.625;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;  /* override with Tailwind mb-4/mb-8 as needed */
+}
+
+/* ── Bullet list ──────────────────────────────────────────── */
+.policy-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.policy-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.125rem;
+    line-height: 1.625;
+    color: #2c3e50;
+}
+.policy-list-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: #88a096;
+    flex-shrink: 0;
+    margin-top: 0.625rem;   /* aligns dot with text cap-height */
+}
+
+/* ── Hyperlink within policy text ─────────────────────────── */
+.policy-link {
+    color: #88a096;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 0.25rem;
+    transition: color 0.3s;
+}
+.policy-link:hover { color: #eae45c; }
+.policy-link:focus { outline: none; box-shadow: 0 0 0 3px #eae45c; }
+
+/* ── Key-value info block (e.g. company details §1.1) ─────── */
+.policy-info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.125rem;
+    line-height: 1.625;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Contact list (§15 and equivalent) ───────────────────── */
+.policy-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.policy-contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.125rem;
+    color: #2c3e50;
+}
+.policy-contact-label {
+    font-weight: 700;
+    min-width: 240px;
+    flex-shrink: 0;
+}
+
+/* ── Callout box ──────────────────────────────────────────── */
+/*   Usage:                                                     */
+/*   <div class="policy-callout [policy-callout-warn]">         */
+/*     <svg class="policy-callout-icon">…</svg>                 */
+/*     <div class="policy-callout-body">…</div>                 */
+/*   </div>                                                     */
+.policy-callout {
+    background-color: rgba(136, 160, 150, 0.08);
+    border: 1px solid rgba(136, 160, 150, 0.30);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.policy-callout-icon {
+    color: #88a096;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.policy-callout-body {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.625;
+    color: #2c3e50;
+}
+/* Warning variant — terracotta, for important/urgent notices */
+.policy-callout-warn {
+    background-color: rgba(200, 121, 100, 0.10);
+    border-color: rgba(200, 121, 100, 0.30);
+}
+.policy-callout-warn .policy-callout-icon { color: #c87964; }
+
+/* ── Table of Contents ────────────────────────────────────── */
+.toc-card {
+    background-color: rgba(136, 160, 150, 0.05);
+    border-radius: 1rem;
+    border: 1px solid rgba(136, 160, 150, 0.20);
+}
+.toc-title {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+}
+.toc-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 2.5rem;
+    row-gap: 0.625rem;
+}
+@media (min-width: 640px) {
+    .toc-grid { grid-template-columns: 1fr 1fr; }
+}
+.toc-link {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    border-radius: 0.25rem;
+    transition: color 0.2s;
+}
+.toc-link:hover { color: #88a096; }
+.toc-link:focus { outline: none; box-shadow: 0 0 0 3px #eae45c; }
+
+
+/* ================================================================
+   Print Styles
+   ================================================================ */
+@media print {
+    @page { margin: 18mm 16mm; size: A4 portrait; }
+
+    .print-cover {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        page-break-after: always;
+        break-after: page;
+        text-align: center;
+    }
+
+    header, footer, #print-button, .no-print { display: none !important; }
+
+    body { background: #ffffff !important; color: #000000 !important; font-size: 10pt !important; }
+
+    main { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+
+    .policy-section {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 0 22px 0 !important;
+        background: transparent !important;
+        break-inside: avoid;
+    }
+    .toc-card {
+        border: 1px solid #95a5a6 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        break-inside: avoid;
+    }
+    .toc-link { color: #2c3e50 !important; text-decoration: none !important; }
+    .policy-link { color: #2c3e50 !important; }
+    .policy-section-h2 { break-after: avoid; page-break-after: avoid; }
+    .policy-section-h3 { break-after: avoid; page-break-after: avoid; break-inside: avoid; page-break-inside: avoid; }
+    .policy-list-item { break-inside: avoid !important; page-break-inside: avoid !important; }
+    .policy-body { orphans: 3; widows: 3; }
+}

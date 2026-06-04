@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export function GET() {
   const html = readFileSync(
-    join(process.cwd(), "public", "terms-owner.html"),
+    join(process.cwd(), "public", "policies", "terms-owner.html"),
     "utf-8"
   );
   return new NextResponse(html, {

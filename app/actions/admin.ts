@@ -242,11 +242,19 @@ export async function updateGroomerProfile(
   groomerProfileId: string,
   fields: {
     business_name?: string;
+    tagline?: string | null;
+    bio?: string | null;
+    city?: string | null;
+    postcode?: string | null;
     is_listed?: boolean;
     is_verified?: boolean;
-    bio?: string;
-    city?: string;
-    postcode?: string;
+    is_mobile?: boolean;
+    is_accepting_bookings?: boolean;
+    travel_radius_miles?: number | null;
+    years_experience?: number | null;
+    qualifications?: string | null;
+    deposit_type?: string;
+    deposit_percentage?: number | null;
   }
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
@@ -507,4 +515,308 @@ export async function contactUser(
   } catch {
     return { error: "Failed to send email." };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Groomer full profile (expanded edit modal)
+// ---------------------------------------------------------------------------
+
+export interface GroomerFullProfile {
+  id: string;
+  business_name: string;
+  tagline: string | null;
+  bio: string | null;
+  city: string | null;
+  postcode: string | null;
+  is_listed: boolean;
+  is_verified: boolean;
+  is_mobile: boolean;
+  is_accepting_bookings: boolean;
+  travel_radius_miles: number | null;
+  years_experience: number | null;
+  qualifications: string | null;
+  deposit_type: string;
+  deposit_percentage: number | null;
+}
+
+export async function adminGetGroomerFull(
+  groomerProfileId: string
+): Promise<{ data: GroomerFullProfile } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const { data, error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select(
+      "id, business_name, tagline, bio, city, postcode, is_listed, is_verified, is_mobile, is_accepting_bookings, travel_radius_miles, years_experience, qualifications, deposit_type, deposit_percentage"
+    )
+    .eq("id", groomerProfileId)
+    .maybeSingle();
+  if (error || !data) return { error: error?.message ?? "Not found" };
+  return { data: data as GroomerFullProfile };
+}
+
+// ---------------------------------------------------------------------------
+// Dogs (admin CRUD on behalf of owners)
+// ---------------------------------------------------------------------------
+
+export interface AdminDogFull {
+  id: string;
+  name: string;
+  breed: string | null;
+  date_of_birth: string | null;
+  size: string | null;
+  is_neutered: boolean | null;
+  coat_type: string | null;
+  coat_notes: string | null;
+  temperament_notes: string | null;
+  health_notes: string | null;
+}
+
+export async function adminGetDogsFull(
+  ownerProfileId: string
+): Promise<{ data: AdminDogFull[] } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const { data, error } = await supabaseAdmin
+    .from("dogs")
+    .select(
+      "id, name, breed, date_of_birth, size, is_neutered, coat_type, coat_notes, temperament_notes, health_notes"
+    )
+    .eq("owner_id", ownerProfileId)
+    .order("name");
+  if (error) return { error: error.message };
+  return { data: (data ?? []) as AdminDogFull[] };
+}
+
+type DogFields = {
+  name: string;
+  breed?: string | null;
+  date_of_birth?: string | null;
+  size?: string | null;
+  is_neutered?: boolean | null;
+  coat_type?: string | null;
+  coat_notes?: string | null;
+  temperament_notes?: string | null;
+  health_notes?: string | null;
+};
+
+export async function adminAddDog(
+  ownerProfileId: string,
+  fields: DogFields
+): Promise<{ data: AdminDogFull } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const { data, error } = await supabaseAdmin
+    .from("dogs")
+    .insert({ owner_id: ownerProfileId, ...fields })
+    .select(
+      "id, name, breed, date_of_birth, size, is_neutered, coat_type, coat_notes, temperament_notes, health_notes"
+    )
+    .single();
+  if (error || !data) return { error: error?.message ?? "Failed to add dog" };
+  return { data: data as AdminDogFull };
+}
+
+export async function adminUpdateDog(
+  dogId: string,
+  fields: Partial<DogFields>
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const { error } = await supabaseAdmin
+    .from("dogs")
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq("id", dogId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function adminDeleteDog(
+  dogId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const { error } = await supabaseAdmin.from("dogs").delete().eq("id", dogId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Services (admin CRUD on behalf of groomers)
+// ---------------------------------------------------------------------------
+
+export interface AdminServiceRow {
+  id: string;
+  groomer_profile_id: string;
+  name: string;
+  description: string | null;
+  duration_minutes: number | null;
+  price_pence: number;
+  is_active: boolean;
+  sort_order: number | null;
+  applicable_sizes: string[] | null;
+}
+
+export async function adminGetServices(
+  groomerProfileId: string
+): Promise<{ data: AdminServiceRow[] } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const { data, error } = await supabaseAdmin
+    .from("services")
+    .select(
+      "id, groomer_profile_id, name, description, duration_minutes, price_pence, is_active, sort_order, applicable_sizes"
+    )
+    .eq("groomer_profile_id", groomerProfileId)
+    .order("sort_order", { ascending: true });
+  if (error) return { error: error.message };
+  return { data: (data ?? []) as AdminServiceRow[] };
+}
+
+type ServiceFields = {
+  name: string;
+  description?: string | null;
+  duration_minutes?: number | null;
+  price_pence: number;
+  is_active?: boolean;
+  sort_order?: number | null;
+  applicable_sizes?: string[] | null;
+};
+
+export async function adminSaveService(
+  groomerProfileId: string,
+  serviceId: string | null,
+  fields: ServiceFields
+): Promise<{ data: AdminServiceRow } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const selectCols =
+    "id, groomer_profile_id, name, description, duration_minutes, price_pence, is_active, sort_order, applicable_sizes";
+  if (serviceId) {
+    const { data, error } = await supabaseAdmin
+      .from("services")
+      .update({ ...fields, updated_at: new Date().toISOString() })
+      .eq("id", serviceId)
+      .eq("groomer_profile_id", groomerProfileId)
+      .select(selectCols)
+      .single();
+    if (error || !data) return { error: error?.message ?? "Failed to update service" };
+    return { data: data as AdminServiceRow };
+  } else {
+    const { data, error } = await supabaseAdmin
+      .from("services")
+      .insert({ groomer_profile_id: groomerProfileId, ...fields })
+      .select(selectCols)
+      .single();
+    if (error || !data) return { error: error?.message ?? "Failed to add service" };
+    return { data: data as AdminServiceRow };
+  }
+}
+
+export async function adminDeleteService(
+  serviceId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+  const { error } = await supabaseAdmin.from("services").delete().eq("id", serviceId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Appointments (admin view + cancel)
+// ---------------------------------------------------------------------------
+
+export interface AdminAppointmentRow {
+  id: string;
+  owner_name: string | null;
+  owner_email: string | null;
+  groomer_business_name: string | null;
+  dog_name: string | null;
+  service_name: string;
+  service_price_pence: number;
+  scheduled_at: string;
+  status: string;
+  cancellation_reason: string | null;
+  created_at: string;
+}
+
+const APPT_PAGE_SIZE = 50;
+
+export async function adminGetAppointments(
+  search?: string,
+  status?: string,
+  page = 0
+): Promise<{ data: AdminAppointmentRow[] } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  let query = supabaseAdmin
+    .from("appointments")
+    .select(
+      `id, scheduled_at, status, cancellation_reason, created_at,
+       service_snapshot_name, service_snapshot_price,
+       owner:profiles!owner_id ( full_name, email ),
+       groomer:groomer_profiles!groomer_profile_id ( business_name ),
+       dog:dogs!dog_id ( name )`
+    )
+    .order("scheduled_at", { ascending: false })
+    .range(page * APPT_PAGE_SIZE, (page + 1) * APPT_PAGE_SIZE - 1);
+
+  if (status && status !== "all") {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query;
+  if (error) return { error: error.message };
+
+  const rows: AdminAppointmentRow[] = (data ?? []).map((a: any) => ({
+    id: a.id,
+    owner_name: a.owner?.full_name ?? null,
+    owner_email: a.owner?.email ?? null,
+    groomer_business_name: a.groomer?.business_name ?? null,
+    dog_name: a.dog?.name ?? null,
+    service_name: a.service_snapshot_name ?? "—",
+    service_price_pence: a.service_snapshot_price ?? 0,
+    scheduled_at: a.scheduled_at,
+    status: a.status,
+    cancellation_reason: a.cancellation_reason,
+    created_at: a.created_at,
+  }));
+
+  if (search) {
+    const q = search.toLowerCase();
+    return {
+      data: rows.filter(
+        (r) =>
+          r.owner_name?.toLowerCase().includes(q) ||
+          r.owner_email?.toLowerCase().includes(q) ||
+          r.groomer_business_name?.toLowerCase().includes(q) ||
+          r.dog_name?.toLowerCase().includes(q)
+      ),
+    };
+  }
+
+  return { data: rows };
+}
+
+export async function adminCancelAppointment(
+  appointmentId: string,
+  reason: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      status: "cancelled",
+      cancelled_by: guard.profileId,
+      cancellation_reason: reason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId);
+
+  if (error) return { error: error.message };
+  return { ok: true };
 }

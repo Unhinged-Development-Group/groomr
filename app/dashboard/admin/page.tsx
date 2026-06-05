@@ -8,6 +8,7 @@ import {
   getAllUsers,
   getAllDisputes,
   getAllSupportRequests,
+  adminGetAppointments,
 } from "@/app/actions/admin";
 import type { Metadata } from "next";
 
@@ -28,12 +29,13 @@ export default async function AdminDashboardPage() {
 
   if (!profile?.is_admin) redirect("/dashboard");
 
-  const [stats, groomers, users, disputes, support] = await Promise.all([
+  const [stats, groomers, users, disputes, support, appointments] = await Promise.all([
     getAdminOverviewStats(),
     getAllGroomers(),
     getAllUsers(),
     getAllDisputes(),
     getAllSupportRequests(),
+    adminGetAppointments(),
   ]);
 
   return (
@@ -44,6 +46,7 @@ export default async function AdminDashboardPage() {
       initialUsers={"error" in users ? [] : users.data}
       initialDisputes={"error" in disputes ? [] : disputes.data}
       initialSupport={"error" in support ? [] : support.data}
+      initialAppointments={"error" in appointments ? [] : appointments.data}
     />
   );
 }

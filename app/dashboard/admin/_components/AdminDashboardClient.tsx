@@ -8,6 +8,7 @@ import {
   PetsIcon,
   ShieldIcon,
   MessagesIcon,
+  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@/components/ui/GroomrIcons";
@@ -17,22 +18,25 @@ import { GroomersTab } from "./GroomersTab";
 import { UsersTab } from "./UsersTab";
 import { DisputesTab } from "./DisputesTab";
 import { SupportTab } from "./SupportTab";
+import { AppointmentsTab } from "./AppointmentsTab";
 import type {
   AdminOverviewStats,
   AdminGroomerRow,
   AdminUserRow,
   AdminDisputeRow,
   AdminSupportRow,
+  AdminAppointmentRow,
 } from "@/app/actions/admin";
 
-type Tab = "overview" | "groomers" | "users" | "disputes" | "support";
+type Tab = "overview" | "groomers" | "users" | "appointments" | "disputes" | "support";
 
 const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
-  { id: "overview",  label: "Overview",  Icon: AnalyticsIcon },
-  { id: "groomers",  label: "Groomers",  Icon: ScissorsIcon },
-  { id: "users",     label: "Users",     Icon: PetsIcon },
-  { id: "disputes",  label: "Disputes",  Icon: ShieldIcon },
-  { id: "support",   label: "Support",   Icon: MessagesIcon },
+  { id: "overview",     label: "Overview",     Icon: AnalyticsIcon },
+  { id: "groomers",     label: "Groomers",     Icon: ScissorsIcon },
+  { id: "users",        label: "Users",        Icon: PetsIcon },
+  { id: "appointments", label: "Appointments", Icon: CalendarIcon },
+  { id: "disputes",     label: "Disputes",     Icon: ShieldIcon },
+  { id: "support",      label: "Support",      Icon: MessagesIcon },
 ];
 
 interface Props {
@@ -42,6 +46,7 @@ interface Props {
   initialUsers: AdminUserRow[];
   initialDisputes: AdminDisputeRow[];
   initialSupport: AdminSupportRow[];
+  initialAppointments: AdminAppointmentRow[];
 }
 
 export function AdminDashboardClient({
@@ -51,6 +56,7 @@ export function AdminDashboardClient({
   initialUsers,
   initialDisputes,
   initialSupport,
+  initialAppointments,
 }: Props) {
   const [tab, setTab] = useState<Tab>("overview");
 
@@ -98,7 +104,7 @@ export function AdminDashboardClient({
         <div
           ref={tabScrollRef}
           onScroll={updateTabScroll}
-          className="flex sm:grid sm:grid-cols-5 gap-1 overflow-x-auto pb-0.5 sm:overflow-visible scrollbar-none"
+          className="flex sm:grid sm:grid-cols-6 gap-1 overflow-x-auto pb-0.5 sm:overflow-visible scrollbar-none"
         >
           {TABS.map((t) => {
             const active = tab === t.id;
@@ -139,11 +145,12 @@ export function AdminDashboardClient({
       </nav>
 
       {/* Tab content */}
-      {tab === "overview"  && <OverviewTab stats={initialStats} />}
-      {tab === "groomers"  && <GroomersTab initialGroomers={initialGroomers} />}
-      {tab === "users"     && <UsersTab initialUsers={initialUsers} />}
-      {tab === "disputes"  && <DisputesTab initialDisputes={initialDisputes} />}
-      {tab === "support"   && <SupportTab initialSupport={initialSupport} />}
+      {tab === "overview"     && <OverviewTab stats={initialStats} />}
+      {tab === "groomers"     && <GroomersTab initialGroomers={initialGroomers} />}
+      {tab === "users"        && <UsersTab initialUsers={initialUsers} />}
+      {tab === "appointments" && <AppointmentsTab initialAppointments={initialAppointments} />}
+      {tab === "disputes"     && <DisputesTab initialDisputes={initialDisputes} />}
+      {tab === "support"      && <SupportTab initialSupport={initialSupport} />}
     </div>
   );
 }

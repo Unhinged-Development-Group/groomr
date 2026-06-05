@@ -7,6 +7,7 @@ import { PencilIcon, ChevronDownIcon, ChevronRightIcon } from "@/components/ui/G
 import { getUserDogs } from "@/app/actions/admin";
 import { UserEditModal } from "./UserEditModal";
 import { ContactModal } from "./ContactModal";
+import { DogManagerModal } from "./DogManagerModal";
 import type { AdminUserRow, AdminUserDog } from "@/app/actions/admin";
 
 function formatDate(iso: string) {
@@ -18,7 +19,7 @@ function DogSizeLabel({ size }: { size: string | null }) {
   return <span>{map[size ?? ""] ?? size ?? "—"}</span>;
 }
 
-function UserRow({ user, onEdit, onContact }: { user: AdminUserRow; onEdit: () => void; onContact: () => void }) {
+function UserRow({ user, onEdit, onContact, onManageDogs }: { user: AdminUserRow; onEdit: () => void; onContact: () => void; onManageDogs: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [dogs, setDogs] = useState<AdminUserDog[] | null>(null);
   const [loadingDogs, setLoadingDogs] = useState(false);
@@ -65,6 +66,12 @@ function UserRow({ user, onEdit, onContact }: { user: AdminUserRow; onEdit: () =
         <td className="px-4 py-3">
           <div className="flex items-center justify-end gap-1.5">
             <button
+              onClick={onManageDogs}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-sage-leaf/10 text-sage-leaf hover:bg-sage-leaf/20 border border-sage-leaf/30 transition-colors focus-ring"
+            >
+              🐾 Dogs
+            </button>
+            <button
               onClick={onEdit}
               className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring"
             >
@@ -106,6 +113,7 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
   const [search, setSearch] = useState("");
   const [editUser, setEditUser] = useState<AdminUserRow | null>(null);
   const [contactUser, setContactUser] = useState<AdminUserRow | null>(null);
+  const [dogsUser, setDogsUser] = useState<AdminUserRow | null>(null);
 
   const filtered = users.filter((u) => {
     if (!search) return true;
@@ -143,6 +151,7 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
                       user={u}
                       onEdit={() => setEditUser(u)}
                       onContact={() => setContactUser(u)}
+                      onManageDogs={() => setDogsUser(u)}
                     />
                   ))}
                 </tbody>
@@ -169,6 +178,14 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
           toEmail={contactUser.email}
           toName={contactUser.full_name ?? "User"}
           onClose={() => setContactUser(null)}
+        />
+      )}
+
+      {dogsUser && (
+        <DogManagerModal
+          ownerProfileId={dogsUser.profile_id}
+          ownerName={dogsUser.full_name ?? "User"}
+          onClose={() => setDogsUser(null)}
         />
       )}
     </>

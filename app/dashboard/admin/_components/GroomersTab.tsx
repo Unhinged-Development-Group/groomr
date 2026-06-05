@@ -8,6 +8,7 @@ import { PencilIcon, CheckIcon } from "@/components/ui/GroomrIcons";
 import { verifyGroomer } from "@/app/actions/admin";
 import { GroomerEditModal } from "./GroomerEditModal";
 import { ContactModal } from "./ContactModal";
+import { ServiceManagerModal } from "./ServiceManagerModal";
 import type { AdminGroomerRow } from "@/app/actions/admin";
 
 function formatDate(iso: string) {
@@ -19,6 +20,7 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
   const [search, setSearch] = useState("");
   const [editGroomer, setEditGroomer] = useState<AdminGroomerRow | null>(null);
   const [contactGroomer, setContactGroomer] = useState<AdminGroomerRow | null>(null);
+  const [servicesGroomer, setServicesGroomer] = useState<AdminGroomerRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -124,6 +126,12 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
                             {verifyingId === g.groomer_profile_id ? "…" : g.is_verified ? "Revoke" : "Verify"}
                           </button>
                           <button
+                            onClick={() => setServicesGroomer(g)}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-sage-leaf/10 text-sage-leaf hover:bg-sage-leaf/20 border border-sage-leaf/30 transition-colors focus-ring"
+                          >
+                            Services
+                          </button>
+                          <button
                             onClick={() => setEditGroomer(g)}
                             className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring"
                           >
@@ -168,6 +176,14 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
           toEmail={contactGroomer.email}
           toName={contactGroomer.owner_name ?? contactGroomer.business_name}
           onClose={() => setContactGroomer(null)}
+        />
+      )}
+
+      {servicesGroomer && (
+        <ServiceManagerModal
+          groomerProfileId={servicesGroomer.groomer_profile_id}
+          businessName={servicesGroomer.business_name}
+          onClose={() => setServicesGroomer(null)}
         />
       )}
 

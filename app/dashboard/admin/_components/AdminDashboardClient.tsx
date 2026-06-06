@@ -161,7 +161,7 @@ export function AdminDashboardClient({
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
       {/* Header */}
-      <header className="space-y-3">
+      <header className="flex items-center justify-between gap-6 flex-wrap">
         <div className="space-y-1">
           <Eyebrow>Admin dashboard</Eyebrow>
           <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
@@ -170,7 +170,7 @@ export function AdminDashboardClient({
           <p className="text-sm text-pebble-grey font-bold">Signed in as {adminName}</p>
         </div>
 
-        {/* Pinned snapshots */}
+        {/* Pinned snapshots — circles sit to the right of the heading */}
         <SnapshotBar
           initialSnapshots={initialPreferences.snapshots}
           stats={initialStats}
@@ -179,18 +179,18 @@ export function AdminDashboardClient({
       </header>
 
       {/* Mode switcher + tab nav — grouped so they read as one nav unit */}
-      <div className="space-y-2">
-        {/* Mode switcher */}
-        <div className="flex gap-1 bg-white border border-pebble-grey/20 rounded-[20px] p-1.5 w-fit shadow-subtle">
+      <div className="space-y-0">
+        {/* Mode switcher — full-width underline tabs */}
+        <div className="flex w-full">
           {MODES.map((m) => (
             <button
               key={m.id}
               onClick={() => handleModeSwitch(m.id)}
               className={cn(
-                "px-5 py-2 rounded-[14px] font-nunito font-bold text-sm transition-all focus-ring whitespace-nowrap",
+                "flex-1 py-2 pb-3 font-fredoka text-lg font-bold border-b-[3px] transition-all focus-ring",
                 mode === m.id
-                  ? "bg-deep-slate text-alabaster-cream shadow-sm"
-                  : "text-pebble-grey hover:text-deep-slate"
+                  ? "border-groomr-gold text-deep-slate"
+                  : "border-transparent text-pebble-grey hover:text-deep-slate"
               )}
             >
               {m.label}

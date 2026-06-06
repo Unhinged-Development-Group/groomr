@@ -18,62 +18,47 @@ export interface SnapshotMetric {
 
 export const SNAPSHOT_METRICS: SnapshotMetric[] = [
   // Users
-  { key: "total_owners",      label: "Total owners",       category: "Users",    getValue: (s) => s ? s.totalOwners.toLocaleString() : "—" },
-  { key: "total_groomers",    label: "Total groomers",     category: "Users",    getValue: (s) => s ? s.totalGroomers.toLocaleString() : "—" },
-  { key: "listed_groomers",   label: "Listed groomers",    category: "Users",    getValue: (s) => s ? s.listedGroomers.toLocaleString() : "—" },
-  { key: "unverified",        label: "Pending verification", category: "Users",  getValue: (s) => s ? s.unverifiedGroomers.toLocaleString() : "—" },
-  { key: "total_dogs",        label: "Total dogs",         category: "Users",    getValue: (s) => s ? s.totalDogs.toLocaleString() : "—" },
+  { key: "total_owners",       label: "Total owners",          category: "Users",    getValue: (s)    => s ? s.totalOwners.toLocaleString() : "—" },
+  { key: "total_groomers",     label: "Total groomers",        category: "Users",    getValue: (s)    => s ? s.totalGroomers.toLocaleString() : "—" },
+  { key: "listed_groomers",    label: "Listed groomers",       category: "Users",    getValue: (s)    => s ? s.listedGroomers.toLocaleString() : "—" },
+  { key: "unverified",         label: "Pending verification",  category: "Users",    getValue: (s)    => s ? s.unverifiedGroomers.toLocaleString() : "—" },
+  { key: "total_dogs",         label: "Total dogs",            category: "Users",    getValue: (s)    => s ? s.totalDogs.toLocaleString() : "—" },
   // Bookings
-  { key: "total_appointments", label: "Total bookings",    category: "Bookings", getValue: (s) => s ? s.totalAppointments.toLocaleString() : "—" },
-  { key: "bookings_30d",      label: "Bookings (30 days)", category: "Bookings", getValue: (s) => s ? s.appointmentsLast30Days.toLocaleString() : "—" },
-  { key: "open_disputes",     label: "Open disputes",      category: "Bookings", getValue: (s) => s ? s.openDisputes.toLocaleString() : "—" },
-  { key: "open_support",      label: "Open support tickets", category: "Bookings", getValue: (s) => s ? s.openSupportRequests.toLocaleString() : "—" },
+  { key: "total_appointments", label: "Total bookings",        category: "Bookings", getValue: (s)    => s ? s.totalAppointments.toLocaleString() : "—" },
+  { key: "bookings_30d",       label: "Bookings (30 days)",    category: "Bookings", getValue: (s)    => s ? s.appointmentsLast30Days.toLocaleString() : "—" },
+  { key: "open_disputes",      label: "Open disputes",         category: "Bookings", getValue: (s)    => s ? s.openDisputes.toLocaleString() : "—" },
+  { key: "open_support",       label: "Open support",          category: "Bookings", getValue: (s)    => s ? s.openSupportRequests.toLocaleString() : "—" },
   // Revenue
-  {
-    key: "gross_revenue",
-    label: "Gross revenue",
-    category: "Revenue",
-    getValue: (s) => s ? gbp(s.grossRevenuePence) : "—",
-  },
-  {
-    key: "platform_fee",
-    label: "Commission earned",
-    category: "Revenue",
-    getValue: (s) => s ? gbp(s.platformFeePence) : "—",
-  },
-  {
-    key: "groomer_payouts",
-    label: "Groomer payouts",
-    category: "Revenue",
-    getValue: (s) => s ? gbp(s.groomerPayoutPence) : "—",
-  },
-  {
-    key: "pending_payouts",
-    label: "Pending payouts",
-    category: "Revenue",
-    getValue: (_, f) => f ? gbp(f.pendingPayoutsPence) : "—",
-  },
-  {
-    key: "total_tips",
-    label: "Tips collected",
-    category: "Revenue",
-    getValue: (_, f) => f ? gbp(f.totalTipsPence) : "—",
-  },
+  { key: "gross_revenue",      label: "Gross revenue",         category: "Revenue",  getValue: (s)    => s ? gbp(s.grossRevenuePence) : "—" },
+  { key: "platform_fee",       label: "Commission earned",     category: "Revenue",  getValue: (s)    => s ? gbp(s.platformFeePence) : "—" },
+  { key: "groomer_payouts",    label: "Groomer payouts",       category: "Revenue",  getValue: (s)    => s ? gbp(s.groomerPayoutPence) : "—" },
+  { key: "pending_payouts",    label: "Pending payouts",       category: "Revenue",  getValue: (_, f) => f ? gbp(f.pendingPayoutsPence) : "—" },
+  { key: "total_tips",         label: "Tips collected",        category: "Revenue",  getValue: (_, f) => f ? gbp(f.totalTipsPence) : "—" },
 ];
 
 function gbp(pence: number) {
-  return (pence / 100).toLocaleString("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    maximumFractionDigits: 0,
-  });
+  return (pence / 100).toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
 }
 
 const CATEGORIES: SnapshotMetric["category"][] = ["Users", "Bookings", "Revenue"];
 
-// ─── Snapshot card ────────────────────────────────────────────────────────────
+// ─── Empty circle slot ────────────────────────────────────────────────────────
 
-function SnapshotCard({
+function EmptySlot({ onAdd }: { onAdd: () => void }) {
+  return (
+    <button
+      onClick={onAdd}
+      aria-label="Add snapshot"
+      className="w-24 h-24 sm:w-[118px] sm:h-[118px] rounded-full border-2 border-dashed border-pebble-grey/35 flex items-center justify-center text-pebble-grey/40 hover:border-pebble-grey/60 hover:text-pebble-grey/70 transition-all focus-ring shrink-0"
+    >
+      <PlusIcon size={36} />
+    </button>
+  );
+}
+
+// ─── Filled circle slot ───────────────────────────────────────────────────────
+
+function FilledSlot({
   metricKey,
   stats,
   financials,
@@ -90,51 +75,43 @@ function SnapshotCard({
   if (!metric) return null;
 
   return (
-    <div className="group relative bg-white border border-pebble-grey/20 rounded-[16px] px-4 py-3 min-w-[140px] flex-1">
-      <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider leading-tight pr-4">
+    <div className="relative group w-24 h-24 sm:w-[118px] sm:h-[118px] rounded-full bg-white border border-pebble-grey/20 shadow-sm flex flex-col items-center justify-center text-center px-3 shrink-0">
+      {/* Content */}
+      <p className="text-[8px] sm:text-[9px] font-bold text-pebble-grey uppercase tracking-wider leading-tight line-clamp-2 w-full text-center">
         {metric.label}
       </p>
-      <p className="font-fredoka text-2xl text-deep-slate mt-0.5 leading-tight">
+      <p className="font-fredoka text-xl sm:text-2xl text-deep-slate leading-tight mt-0.5">
         {metric.getValue(stats, financials)}
       </p>
-      {/* Hover actions */}
-      <div className="absolute top-1.5 right-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+
+      {/* Hover overlay */}
+      <div className="absolute inset-0 rounded-full bg-deep-slate/85 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
         <button
           onClick={onEdit}
           title="Change metric"
-          className="w-5 h-5 rounded-full bg-pebble-grey/15 hover:bg-pebble-grey/30 flex items-center justify-center focus-ring transition-colors"
+          className="flex flex-col items-center gap-0.5 text-alabaster-cream/75 hover:text-alabaster-cream transition-colors focus-ring rounded"
         >
-          <span className="text-[9px] text-pebble-grey font-bold">✎</span>
+          <span className="text-sm leading-none">✎</span>
+          <span className="text-[8px] font-bold">Change</span>
         </button>
         <button
           onClick={onRemove}
-          title="Remove snapshot"
-          className="w-5 h-5 rounded-full bg-pebble-grey/15 hover:bg-muted-terracotta/20 flex items-center justify-center focus-ring transition-colors"
+          title="Remove"
+          className="flex flex-col items-center gap-0.5 text-alabaster-cream/75 hover:text-alabaster-cream transition-colors focus-ring rounded"
         >
-          <CloseIcon size={8} className="text-pebble-grey" />
+          <CloseIcon size={12} />
+          <span className="text-[8px] font-bold">Remove</span>
         </button>
       </div>
     </div>
   );
 }
 
-function EmptySlot({ onAdd }: { onAdd: () => void }) {
-  return (
-    <button
-      onClick={onAdd}
-      className="flex items-center gap-1.5 px-4 py-3 rounded-[16px] border border-dashed border-pebble-grey/30 text-pebble-grey hover:border-pebble-grey/50 hover:text-deep-slate transition-colors focus-ring min-w-[120px] flex-1"
-    >
-      <PlusIcon size={14} />
-      <span className="text-xs font-bold">Add snapshot</span>
-    </button>
-  );
-}
-
-// ─── Picker modal ─────────────────────────────────────────────────────────────
+// ─── Metric picker modal ──────────────────────────────────────────────────────
 
 function MetricPicker({
   open,
-  currentKey: _currentKey,
+  currentKey,
   usedKeys,
   onPick,
   onClose,
@@ -148,7 +125,7 @@ function MetricPicker({
   const [activeCategory, setActiveCategory] = useState<SnapshotMetric["category"]>("Users");
 
   const available = SNAPSHOT_METRICS.filter(
-    (m) => !usedKeys.includes(m.key) || m.key === _currentKey
+    (m) => !usedKeys.includes(m.key) || m.key === currentKey
   );
   const inCategory = available.filter((m) => m.category === activeCategory);
 
@@ -175,15 +152,15 @@ function MetricPicker({
           ))}
         </div>
 
-        {/* Metric options */}
-        <div className="space-y-1">
+        {/* Metric list */}
+        <div className="space-y-1 max-h-64 overflow-y-auto">
           {inCategory.map((metric) => (
             <button
               key={metric.key}
               onClick={() => { onPick(metric.key); onClose(); }}
               className={cn(
                 "w-full text-left px-3 py-2.5 rounded-[10px] font-bold text-sm transition-colors focus-ring",
-                metric.key === _currentKey
+                metric.key === currentKey
                   ? "bg-groomr-gold/20 text-deep-slate"
                   : "hover:bg-alabaster-cream text-deep-slate"
               )}
@@ -202,7 +179,7 @@ function MetricPicker({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 interface Props {
   initialSnapshots: (string | null)[];
@@ -212,7 +189,6 @@ interface Props {
 
 export function SnapshotBar({ initialSnapshots, stats, financials }: Props) {
   const [snapshots, setSnapshots] = useState<(string | null)[]>(
-    // ensure always 4 slots
     [...initialSnapshots, null, null, null, null].slice(0, 4)
   );
   const [pickerSlot, setPickerSlot] = useState<number | null>(null);
@@ -238,16 +214,18 @@ export function SnapshotBar({ initialSnapshots, stats, financials }: Props) {
     persist(next);
   }
 
-  const filledSlots = snapshots.filter(Boolean).length;
+  const filledCount = snapshots.filter(Boolean).length;
+  // Progressive reveal: show all filled slots + one empty slot (up to 4 total)
+  const visibleCount = Math.min(filledCount + 1, 4);
+  const visibleSlots = snapshots.slice(0, visibleCount);
   const usedKeys = snapshots.filter(Boolean) as string[];
 
-  // Only render the bar if there are filled slots or the user can still add
   return (
     <>
-      <div className="flex flex-wrap gap-2 items-stretch">
-        {snapshots.map((key, i) =>
+      <div className="flex gap-3 items-center">
+        {visibleSlots.map((key, i) =>
           key ? (
-            <SnapshotCard
+            <FilledSlot
               key={i}
               metricKey={key}
               stats={stats}
@@ -255,9 +233,9 @@ export function SnapshotBar({ initialSnapshots, stats, financials }: Props) {
               onEdit={() => setPickerSlot(i)}
               onRemove={() => handleRemove(i)}
             />
-          ) : filledSlots < 4 ? (
+          ) : (
             <EmptySlot key={i} onAdd={() => setPickerSlot(i)} />
-          ) : null
+          )
         )}
       </div>
 

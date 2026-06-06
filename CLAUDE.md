@@ -292,9 +292,29 @@ name text | email text | subject text | message text
 status support_request_status DEFAULT 'open' | admin_reply text
 ```
 
+#### `admin_audit_log`
+```
+id uuid PK | admin_profile_id uuid → profiles (ON DELETE SET NULL)
+action text NOT NULL    -- e.g. 'verify_groomer' | 'cancel_appointment' | 'grant_admin' | etc.
+target_table text | target_id text
+metadata jsonb DEFAULT '{}'
+created_at timestamptz (indexed DESC)
+```
+> Written by `logAdminAction()` in `app/actions/admin.ts` — fire-and-forget, non-fatal. Read by `adminGetAuditLog()`.
+
+#### `platform_settings`
+```
+id uuid PK
+platform_fee_pct numeric DEFAULT 0.08        -- standard commission rate
+founding_groomer_fee_pct numeric DEFAULT 0.00 -- rate for is_founding_groomer = true
+founding_groomer_deadline date               -- when founding rate expires (nullable)
+updated_at timestamptz | updated_by uuid → profiles
+```
+> Singleton table (one row). Seeded by migration. Read/written via `adminGetPlatformSettings` / `adminSavePlatformSettings`. Note: `lib/stripe.ts` still has `PLATFORM_FEE_PCT = 0.08` hardcoded — update both and redeploy to keep in sync.
+
 ### Migrations
 
-26 files in `supabase/migrations/`. All must be applied to the remote DB via `supabase db push` or Supabase Dashboard SQL editor (see gotcha below about MCP).
+28 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
 
 ---
 
@@ -332,6 +352,8 @@ $$;
 | `support_requests` | Own + admin | Own | — | — (admin only) |
 | `portfolio_photos` | Public | Own groomer | Own groomer | Own groomer |
 | `time_blocks` | Own groomer | Own groomer | Own groomer | Own groomer |
+| `admin_audit_log` | Admin only | supabaseAdmin (via `logAdminAction`) | — | — |
+| `platform_settings` | Admin only | — | Admin only | — |
 
 Every table has an `admin_all` policy for `is_admin = true`.
 
@@ -345,7 +367,7 @@ All in `app/actions/`. Pattern: `"use server"`, return `{ data } | { error: stri
 
 | File | Key exports |
 |---|---|
-| `admin.ts` | `getAdminOverviewStats`, `getAllUsers`, `getAllGroomers`, `getAllSupportRequests`, `getAllDisputes`, `verifyGroomer`, `updateDisputeStatus` |
+| `admin.ts` | `getAdminOverviewStats`, `getAllGroomers`, `getAllUsers`, `getAllDisputes`, `getAllSupportRequests`, `verifyGroomer`, `updateGroomerProfile`, `updateUserProfile`, `updateDisputeStatus`, `replyToSupportRequest`, `contactUser`, `adminGetGroomerFull`, `adminGetDogsFull`, `adminAddDog`, `adminUpdateDog`, `adminDeleteDog`, `adminGetServices`, `adminSaveService`, `adminDeleteService`, `adminGetAppointments`, `adminCancelAppointment`, `adminGetPreferences`, `adminSavePreferences`, `adminGetFinancials`, `adminGetTeam`, `adminRevokeAdmin`, `adminGrantAdmin`, `adminFindProfileByEmail`, `adminGetPlatformSettings`, `adminSavePlatformSettings`, `adminGetAuditLog` |
 | `appointments.ts` | `getOwnerAppointments`, `getGroomerAppointments`, `createAppointment` |
 | `booking.ts` | `getAvailableSlots(groomerProfileId, serviceId, dateStr)`, `createAppointment`, `createGroupAppointment` |
 | `client-settings.ts` | `getClientSettings`, `getClientTermsStatus`, `saveClientPricing` |
@@ -429,7 +451,7 @@ NEXT_PUBLIC_POSTHOG_KEY=
 | `auth.uid()` in RLS | References Supabase Auth — doesn't work. Use `get_clerk_user_id()` |
 | Prices in pence | All `*_pence` / `*_amount_pence` are integers — divide by 100 for display; pass integer to Stripe |
 | `supabaseAdmin` bypasses RLS | Service role skips all policies — only use server-side, never in client components |
-| Supabase MCP project mismatch | MCP resolves to project `pbqgppbierllialjjhkm` ("Unhinged Development Group"), NOT `fvbxjwfxcbhjoidrmzgv` (the app). Never apply migrations via MCP — use `supabase db push` or Supabase dashboard SQL editor |
+| Supabase MCP project mismatch | MCP defaults to project `pbqgppbierllialjjhkm` ("Unhinged Development Group"), NOT `fvbxjwfxcbhjoidrmzgv` (the app). Always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly to every MCP tool call (`apply_migration`, `execute_sql`, etc.) |
 | `searchParams` in Next.js 16 | Must be awaited: `const params = searchParams ? await searchParams : {}` |
 | Supabase Realtime | `supabaseAdmin` doesn't support Realtime — use anon client (`lib/supabase.ts`) in client components for `channel().on(...)` |
 | PostGIS via Supabase JS | `.select()` can't call `ST_X`/`ST_Y` — use `.rpc()` with a Postgres function |
@@ -496,7 +518,7 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | `/dashboard/groomer/messages` | [`documents/pages/dashboard-groomer-messages.md`](documents/pages/dashboard-groomer-messages.md) | Real-time messaging |
 | `/dashboard/groomer/notifications` | — | Notification preferences |
 | `/dashboard/groomer/portfolio` | — | Photo gallery management |
-| `/dashboard/admin` | — | Admin: verification queue, disputes, moderation |
+| `/dashboard/admin` | — | Platform Control — User Management (Overview, Groomers, Users, Appointments, Disputes, Support) + Groomr Management (Financials, Team, Settings, Audit Log, Support). Template for new tabs at `_templates/NewTab.tsx` |
 | `/terms`, `/privacy-policy`, `/cookie-policy`, `/verification-policy`, `/acceptable-use` | — | Legal pages |
 
 **API Routes:**
@@ -531,11 +553,15 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | Tips | Real — `tips` table + Stripe PaymentIntent |
 | Portfolio photos | Real — `app/dashboard/groomer/portfolio/`, Cloudinary |
 | Public groomer profiles | Real — `/groomers/[id]` (slug-based) |
-| Admin dashboard | Real (partial) — `/dashboard/admin`, verification + support |
+| Groomer bookings tab | Real — live appointment data |
+| Groomer clients tab | Real — live client data |
+| Groomer earnings tab | Real — live payment data |
+| Team member appointment assignment UI | Real — assignment wired to `assigned_to_team_member_id` |
+| Admin dashboard — User Management | Real — Overview, Groomers (verify/edit/services), Users (edit/dogs), Appointments (cancel), Disputes, Support |
+| Admin dashboard — Groomr Management | Real — Financials (revenue breakdown), Team (grant/revoke admin), Platform Settings (commission rates + integration health), Audit Log (all mutating actions logged), Support (stats + tickets) |
+| Admin pinned snapshots | Infrastructure only — `profiles.admin_preferences`, `adminGetPreferences`/`adminSavePreferences` built; snapshot picker UI **not yet built** |
 | Support requests | Real — `support_requests` table, admin replies |
 | `time_blocks` → booking conflicts | Table + UI built; **not yet wired into `getAvailableSlots()`** |
 | Break windows in booking | `break_start/end_time` on `availability`; **not yet used in slot generation** |
-| Groomer bookings/clients/earnings tabs | Mock data only |
-| Team member appointment assignment UI | `assigned_to_team_member_id` column exists; no UI yet |
 | PostHog analytics | Not built |
 | Google Calendar sync | Not built |

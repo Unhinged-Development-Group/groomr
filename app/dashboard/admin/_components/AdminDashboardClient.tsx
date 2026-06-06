@@ -16,6 +16,7 @@ import {
   ChevronRightIcon,
 } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
+import { SnapshotBar } from "./SnapshotBar";
 import { OverviewTab } from "./OverviewTab";
 import { GroomersTab } from "./GroomersTab";
 import { UsersTab } from "./UsersTab";
@@ -104,6 +105,7 @@ export function AdminDashboardClient({
   initialDisputes,
   initialSupport,
   initialAppointments,
+  initialPreferences,
   initialFinancials,
   initialTeam,
   initialPlatformSettings,
@@ -159,12 +161,21 @@ export function AdminDashboardClient({
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
       {/* Header */}
-      <header className="space-y-1">
-        <Eyebrow>Admin dashboard</Eyebrow>
-        <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
-          Platform Control
-        </h1>
-        <p className="text-sm text-pebble-grey font-bold">Signed in as {adminName}</p>
+      <header className="space-y-3">
+        <div className="space-y-1">
+          <Eyebrow>Admin dashboard</Eyebrow>
+          <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
+            Platform Control
+          </h1>
+          <p className="text-sm text-pebble-grey font-bold">Signed in as {adminName}</p>
+        </div>
+
+        {/* Pinned snapshots */}
+        <SnapshotBar
+          initialSnapshots={initialPreferences.snapshots}
+          stats={initialStats}
+          financials={initialFinancials}
+        />
       </header>
 
       {/* Mode switcher + tab nav — grouped so they read as one nav unit */}

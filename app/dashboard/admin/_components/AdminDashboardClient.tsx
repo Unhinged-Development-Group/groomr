@@ -61,7 +61,7 @@ const MODES: { id: Mode; label: string }[] = [
 const USER_TABS: TabDef[] = [
   { id: "overview",     label: "Overview",     Icon: AnalyticsIcon },
   { id: "groomers",     label: "Groomers",     Icon: ScissorsIcon },
-  { id: "users",        label: "Users",        Icon: PetsIcon },
+  { id: "users",        label: "Owners",       Icon: PetsIcon },
   { id: "appointments", label: "Appointments", Icon: CalendarIcon },
   { id: "disputes",     label: "Disputes",     Icon: ShieldIcon },
   { id: "support",      label: "Support",      Icon: MessagesIcon },
@@ -260,7 +260,7 @@ export function AdminDashboardClient({
 
       {/* ── User Management tab content ─────────────────────────────────── */}
       {mode === "user_management" && activeUserTab === "overview" && (
-        <OverviewTab stats={initialStats} />
+        <OverviewTab stats={initialStats} platformSettings={initialPlatformSettings} />
       )}
       {mode === "user_management" && activeUserTab === "groomers" && (
         <GroomersTab initialGroomers={initialGroomers} />

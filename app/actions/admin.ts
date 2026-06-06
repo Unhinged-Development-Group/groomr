@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { resend, FROM_EMAIL } from "@/lib/resend";
 
@@ -37,7 +38,7 @@ function logAdminAction(
       target_id: targetId ?? null,
       metadata: metadata ?? {},
     })
-    .then(() => {}, () => {}); // fire and forget, suppress errors
+    .then(() => {}, () => {}); // fire and forget
 }
 
 // ---------------------------------------------------------------------------
@@ -52,11 +53,16 @@ export interface AdminOverviewStats {
   totalDogs: number;
   totalAppointments: number;
   appointmentsLast30Days: number;
+  pendingAppointments: number;
+  noShowCount: number;
   grossRevenuePence: number;
   platformFeePence: number;
   groomerPayoutPence: number;
   openDisputes: number;
   openSupportRequests: number;
+  totalReviews: number;
+  averageRating: number;
+  reviewsLast30Days: number;
 }
 
 export interface AdminGroomerRow {
@@ -65,8 +71,12 @@ export interface AdminGroomerRow {
   business_name: string;
   owner_name: string | null;
   email: string | null;
+  phone: string | null;
+  city: string | null;
   is_listed: boolean;
   is_verified: boolean;
+  verification_status: string;
+  public_slug: string | null;
   average_rating: number;
   total_reviews: number;
   created_at: string;
@@ -76,8 +86,10 @@ export interface AdminUserRow {
   profile_id: string;
   full_name: string | null;
   email: string | null;
+  phone: string | null;
   roles: string[];
   is_admin: boolean;
+  is_active: boolean;
   dog_count: number;
   created_at: string;
 }
@@ -114,6 +126,25 @@ export interface AdminSupportRow {
   created_at: string;
 }
 
+export interface AdminAppointmentRow {
+  id: string;
+  owner_id: string | null;
+  owner_name: string | null;
+  owner_email: string | null;
+  groomer_profile_id: string | null;
+  groomer_business_name: string | null;
+  dog_name: string | null;
+  service_name: string;
+  service_price_pence: number;
+  scheduled_at: string;
+  status: string;
+  cancellation_reason: string | null;
+  groomer_notes: string | null;
+  owner_notes: string | null;
+  booking_group_id: string | null;
+  created_at: string;
+}
+
 // ---------------------------------------------------------------------------
 // Overview stats
 // ---------------------------------------------------------------------------
@@ -124,6 +155,7 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoIso = thirtyDaysAgo.toISOString();
 
   const [
     ownersResult,
@@ -133,9 +165,14 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     dogsResult,
     apptAllResult,
     appt30Result,
+    apptPendingResult,
+    apptNoShowResult,
     revenueResult,
     disputesResult,
     supportResult,
+    reviewsAllResult,
+    reviews30Result,
+    reviewsRatingResult,
   ] = await Promise.all([
     supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).contains("roles", ["owner"]),
     supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }),
@@ -143,10 +180,15 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).eq("is_verified", false),
     supabaseAdmin.from("dogs").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }),
-    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gte("scheduled_at", thirtyDaysAgo.toISOString()),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gte("scheduled_at", thirtyDaysAgoIso),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "no_show"),
     supabaseAdmin.from("payments").select("full_amount_pence, platform_fee_pence, groomer_payout_amount_pence"),
     supabaseAdmin.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabaseAdmin.from("support_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
+    supabaseAdmin.from("reviews").select("id", { count: "exact", head: true }),
+    supabaseAdmin.from("reviews").select("id", { count: "exact", head: true }).gte("created_at", thirtyDaysAgoIso),
+    supabaseAdmin.from("reviews").select("rating"),
   ]);
 
   type PaymentRow = { full_amount_pence: number | null; platform_fee_pence: number | null; groomer_payout_amount_pence: number | null };
@@ -154,6 +196,11 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
   const grossRevenuePence = payments.reduce((sum, p) => sum + (p.full_amount_pence ?? 0), 0);
   const platformFeePence = payments.reduce((sum, p) => sum + (p.platform_fee_pence ?? 0), 0);
   const groomerPayoutPence = payments.reduce((sum, p) => sum + (p.groomer_payout_amount_pence ?? 0), 0);
+
+  const ratingRows: { rating: number }[] = reviewsRatingResult.data ?? [];
+  const averageRating = ratingRows.length > 0
+    ? ratingRows.reduce((sum, r) => sum + r.rating, 0) / ratingRows.length
+    : 0;
 
   return {
     totalOwners: ownersResult.count ?? 0,
@@ -163,11 +210,16 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     totalDogs: dogsResult.count ?? 0,
     totalAppointments: apptAllResult.count ?? 0,
     appointmentsLast30Days: appt30Result.count ?? 0,
+    pendingAppointments: apptPendingResult.count ?? 0,
+    noShowCount: apptNoShowResult.count ?? 0,
     grossRevenuePence,
     platformFeePence,
     groomerPayoutPence,
     openDisputes: disputesResult.count ?? 0,
     openSupportRequests: supportResult.count ?? 0,
+    totalReviews: reviewsAllResult.count ?? 0,
+    averageRating: Math.round(averageRating * 10) / 10,
+    reviewsLast30Days: reviews30Result.count ?? 0,
   };
 }
 
@@ -180,22 +232,24 @@ export async function getAllGroomers(search?: string, page = 0): Promise<{ data:
   if ("error" in guard) return guard;
 
   const PAGE_SIZE = 50;
-  let query = supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("groomer_profiles")
     .select(`
       id,
       business_name,
       is_listed,
       is_verified,
+      verification_status,
+      public_slug,
+      city,
       average_rating,
       total_reviews,
       created_at,
-      profiles!groomer_profiles_user_id_fkey ( id, full_name, email )
+      profiles!groomer_profiles_user_id_fkey ( id, full_name, email, phone )
     `)
     .order("created_at", { ascending: false })
     .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-  const { data, error } = await query;
   if (error) return { error: error.message };
 
   const rows: AdminGroomerRow[] = (data ?? []).map((g: any) => ({
@@ -204,8 +258,12 @@ export async function getAllGroomers(search?: string, page = 0): Promise<{ data:
     business_name: g.business_name,
     owner_name: g.profiles?.full_name ?? null,
     email: g.profiles?.email ?? null,
+    phone: g.profiles?.phone ?? null,
+    city: g.city ?? null,
     is_listed: g.is_listed,
     is_verified: g.is_verified,
+    verification_status: g.verification_status ?? "not_submitted",
+    public_slug: g.public_slug ?? null,
     average_rating: g.average_rating ?? 0,
     total_reviews: g.total_reviews ?? 0,
     created_at: g.created_at,
@@ -228,12 +286,15 @@ export async function verifyGroomer(
 
   const { error } = await supabaseAdmin
     .from("groomer_profiles")
-    .update({ is_verified: verified, updated_at: new Date().toISOString() })
+    .update({
+      is_verified: verified,
+      verification_status: verified ? "verified" : "revoked_temp",
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", groomerProfileId);
 
   if (error) return { error: error.message };
 
-  // Send email notification when verifying
   if (verified) {
     const { data: gp } = await supabaseAdmin
       .from("groomer_profiles")
@@ -259,6 +320,52 @@ export async function verifyGroomer(
   return { ok: true };
 }
 
+export async function adminUpdateVerificationStatus(
+  groomerProfileId: string,
+  status: "not_submitted" | "awaiting" | "verified" | "revoked_temp" | "revoked_perm"
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data: current } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("verification_status, business_name, profiles!groomer_profiles_user_id_fkey ( email, full_name )")
+    .eq("id", groomerProfileId)
+    .maybeSingle();
+
+  const oldStatus = (current as any)?.verification_status ?? "not_submitted";
+
+  const isVerified = status === "verified";
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({
+      verification_status: status,
+      is_verified: isVerified,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", groomerProfileId);
+
+  if (error) return { error: error.message };
+
+  // Send email on verification
+  if (status === "verified") {
+    const email = (current as any)?.profiles?.email;
+    const name = (current as any)?.profiles?.full_name ?? "there";
+    const business = (current as any)?.business_name ?? "your business";
+    if (email) {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: "Your Groomr profile has been verified ✓",
+        text: `Hi ${name},\n\nGreat news — ${business} has been verified on Groomr. Your profile will now appear in search results and you can start accepting bookings.\n\nThe Groomr team`,
+      }).catch(() => {});
+    }
+  }
+
+  logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: oldStatus, to: status });
+  return { ok: true };
+}
+
 export async function updateGroomerProfile(
   groomerProfileId: string,
   fields: {
@@ -267,15 +374,20 @@ export async function updateGroomerProfile(
     bio?: string | null;
     city?: string | null;
     postcode?: string | null;
+    address_line_1?: string | null;
+    address_line_2?: string | null;
     is_listed?: boolean;
     is_verified?: boolean;
     is_mobile?: boolean;
     is_accepting_bookings?: boolean;
+    is_founding_groomer?: boolean;
     travel_radius_miles?: number | null;
     years_experience?: number | null;
     qualifications?: string | null;
     deposit_type?: string;
     deposit_percentage?: number | null;
+    default_buffer_minutes?: number | null;
+    has_employees?: boolean;
   }
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
@@ -292,7 +404,336 @@ export async function updateGroomerProfile(
 }
 
 // ---------------------------------------------------------------------------
-// Users
+// Groomer full profile (expanded edit modal)
+// ---------------------------------------------------------------------------
+
+export interface GroomerFullProfile {
+  id: string;
+  business_name: string;
+  tagline: string | null;
+  bio: string | null;
+  city: string | null;
+  postcode: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  is_listed: boolean;
+  is_verified: boolean;
+  is_mobile: boolean;
+  is_accepting_bookings: boolean;
+  is_founding_groomer: boolean;
+  travel_radius_miles: number | null;
+  years_experience: number | null;
+  qualifications: string | null;
+  deposit_type: string;
+  deposit_percentage: number | null;
+  default_buffer_minutes: number | null;
+  has_employees: boolean;
+  verification_status: string;
+  public_slug: string | null;
+  profile_image_url: string | null;
+  cover_photo_url: string | null;
+  insurance_doc_url: string | null;
+  qualification_doc_url: string | null;
+  first_aid_doc_url: string | null;
+  photo_id_doc_url: string | null;
+  employers_liability_doc_url: string | null;
+  insurance_doc_verified: boolean;
+  qualification_doc_verified: boolean;
+  first_aid_doc_verified: boolean;
+  photo_id_doc_verified: boolean;
+  employers_liability_doc_verified: boolean;
+  // From profiles join
+  phone: string | null;
+  email: string | null;
+  owner_name: string | null;
+}
+
+export interface AdminAvailabilityRow {
+  id: string;
+  day_of_week: number;
+  start_time: string | null;
+  end_time: string | null;
+  is_active: boolean;
+}
+
+export interface AdminGroomerTeamMember {
+  id: string;
+  name: string;
+  role: string;
+  email: string | null;
+  invite_status: string;
+}
+
+export interface GroomerFullData {
+  profile: GroomerFullProfile;
+  availability: AdminAvailabilityRow[];
+  services: AdminServiceRow[];
+  teamMembers: AdminGroomerTeamMember[];
+}
+
+export async function adminGetGroomerFull(
+  groomerProfileId: string
+): Promise<{ data: GroomerFullData } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const [profileResult, availResult, servicesResult, teamResult] = await Promise.all([
+    supabaseAdmin
+      .from("groomer_profiles")
+      .select(`
+        id, business_name, tagline, bio, city, postcode, address_line_1, address_line_2,
+        is_listed, is_verified, is_mobile, is_accepting_bookings, is_founding_groomer,
+        travel_radius_miles, years_experience, qualifications,
+        deposit_type, deposit_percentage, default_buffer_minutes, has_employees,
+        verification_status, public_slug, profile_image_url, cover_photo_url,
+        insurance_doc_url, qualification_doc_url, first_aid_doc_url,
+        photo_id_doc_url, employers_liability_doc_url,
+        insurance_doc_verified, qualification_doc_verified, first_aid_doc_verified,
+        photo_id_doc_verified, employers_liability_doc_verified,
+        profiles!groomer_profiles_user_id_fkey ( full_name, email, phone )
+      `)
+      .eq("id", groomerProfileId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("availability")
+      .select("id, day_of_week, start_time, end_time, is_active")
+      .eq("groomer_profile_id", groomerProfileId)
+      .order("day_of_week"),
+    supabaseAdmin
+      .from("services")
+      .select("id, groomer_profile_id, name, description, duration_minutes, price_pence, is_active, sort_order, applicable_sizes")
+      .eq("groomer_profile_id", groomerProfileId)
+      .order("sort_order", { ascending: true }),
+    supabaseAdmin
+      .from("team_members")
+      .select("id, name, role, email, invite_status")
+      .eq("groomer_profile_id", groomerProfileId)
+      .order("name"),
+  ]);
+
+  if (profileResult.error || !profileResult.data) {
+    return { error: profileResult.error?.message ?? "Groomer not found" };
+  }
+
+  const raw = profileResult.data as any;
+  const profile: GroomerFullProfile = {
+    id: raw.id,
+    business_name: raw.business_name,
+    tagline: raw.tagline,
+    bio: raw.bio,
+    city: raw.city,
+    postcode: raw.postcode,
+    address_line_1: raw.address_line_1,
+    address_line_2: raw.address_line_2,
+    is_listed: raw.is_listed,
+    is_verified: raw.is_verified,
+    is_mobile: raw.is_mobile,
+    is_accepting_bookings: raw.is_accepting_bookings,
+    is_founding_groomer: raw.is_founding_groomer ?? false,
+    travel_radius_miles: raw.travel_radius_miles,
+    years_experience: raw.years_experience,
+    qualifications: raw.qualifications,
+    deposit_type: raw.deposit_type ?? "none",
+    deposit_percentage: raw.deposit_percentage,
+    default_buffer_minutes: raw.default_buffer_minutes,
+    has_employees: raw.has_employees ?? false,
+    verification_status: raw.verification_status ?? "not_submitted",
+    public_slug: raw.public_slug,
+    profile_image_url: raw.profile_image_url,
+    cover_photo_url: raw.cover_photo_url,
+    insurance_doc_url: raw.insurance_doc_url,
+    qualification_doc_url: raw.qualification_doc_url,
+    first_aid_doc_url: raw.first_aid_doc_url,
+    photo_id_doc_url: raw.photo_id_doc_url,
+    employers_liability_doc_url: raw.employers_liability_doc_url,
+    insurance_doc_verified: raw.insurance_doc_verified ?? false,
+    qualification_doc_verified: raw.qualification_doc_verified ?? false,
+    first_aid_doc_verified: raw.first_aid_doc_verified ?? false,
+    photo_id_doc_verified: raw.photo_id_doc_verified ?? false,
+    employers_liability_doc_verified: raw.employers_liability_doc_verified ?? false,
+    phone: raw.profiles?.phone ?? null,
+    email: raw.profiles?.email ?? null,
+    owner_name: raw.profiles?.full_name ?? null,
+  };
+
+  return {
+    data: {
+      profile,
+      availability: (availResult.data ?? []) as AdminAvailabilityRow[],
+      services: (servicesResult.data ?? []) as AdminServiceRow[],
+      teamMembers: (teamResult.data ?? []) as AdminGroomerTeamMember[],
+    },
+  };
+}
+
+export async function adminSaveAvailability(
+  groomerProfileId: string,
+  rows: { day_of_week: number; start_time: string | null; end_time: string | null; is_active: boolean }[]
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  // Delete all existing availability rows for this groomer, then reinsert
+  const { error: delErr } = await supabaseAdmin
+    .from("availability")
+    .delete()
+    .eq("groomer_profile_id", groomerProfileId);
+
+  if (delErr) return { error: delErr.message };
+
+  if (rows.length > 0) {
+    const { error: insErr } = await supabaseAdmin
+      .from("availability")
+      .insert(rows.map((r) => ({ ...r, groomer_profile_id: groomerProfileId })));
+    if (insErr) return { error: insErr.message };
+  }
+
+  logAdminAction(guard.profileId, "update_availability", "availability", groomerProfileId);
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Groomer stats (lazy-loaded on tab mount)
+// ---------------------------------------------------------------------------
+
+export interface AdminGroomerStats {
+  totalGroomers: number;
+  listedGroomers: number;
+  verifiedGroomers: number;
+  awaitingVerification: number;
+  notSubmitted: number;
+  avgAppointmentsPerGroomerPerWeek: number;
+  groomersByCity: { city: string; count: number }[];
+}
+
+export async function adminGetGroomerStats(): Promise<{ data: AdminGroomerStats } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const fourWeeksAgo = new Date();
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+  const [totalRes, listedRes, verifiedRes, awaitingRes, notSubmittedRes, cityRes, apptRes] = await Promise.all([
+    supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }),
+    supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).eq("is_listed", true),
+    supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).eq("verification_status", "verified"),
+    supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).eq("verification_status", "awaiting"),
+    supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).eq("verification_status", "not_submitted"),
+    supabaseAdmin.from("groomer_profiles").select("city").not("city", "is", null),
+    supabaseAdmin.from("appointments").select("groomer_profile_id").gte("scheduled_at", fourWeeksAgo.toISOString()),
+  ]);
+
+  // Group by city in JS
+  const cityCount: Record<string, number> = {};
+  for (const row of (cityRes.data ?? []) as { city: string | null }[]) {
+    if (row.city) cityCount[row.city] = (cityCount[row.city] ?? 0) + 1;
+  }
+  const groomersByCity = Object.entries(cityCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([city, count]) => ({ city, count }));
+
+  // Avg appointments per groomer per week over last 4 weeks
+  const apptRows = (apptRes.data ?? []) as { groomer_profile_id: string }[];
+  const total = totalRes.count ?? 1;
+  const avgAppointmentsPerGroomerPerWeek = total > 0
+    ? Math.round((apptRows.length / total / 4) * 10) / 10
+    : 0;
+
+  return {
+    data: {
+      totalGroomers: totalRes.count ?? 0,
+      listedGroomers: listedRes.count ?? 0,
+      verifiedGroomers: verifiedRes.count ?? 0,
+      awaitingVerification: awaitingRes.count ?? 0,
+      notSubmitted: notSubmittedRes.count ?? 0,
+      avgAppointmentsPerGroomerPerWeek,
+      groomersByCity,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Groomer export
+// ---------------------------------------------------------------------------
+
+export async function adminExportGroomers(): Promise<{ data: Record<string, unknown>[] } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data, error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select(`
+      id, business_name, tagline, bio, city, postcode, is_listed, is_verified,
+      verification_status, is_mobile, travel_radius_miles, years_experience,
+      qualifications, average_rating, total_reviews, is_founding_groomer,
+      is_accepting_bookings, created_at, public_slug,
+      profiles!groomer_profiles_user_id_fkey ( full_name, email, phone )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) return { error: error.message };
+
+  return {
+    data: (data ?? []).map((g: any) => ({
+      groomer_profile_id: g.id,
+      business_name: g.business_name,
+      owner_name: g.profiles?.full_name,
+      email: g.profiles?.email,
+      phone: g.profiles?.phone,
+      city: g.city,
+      postcode: g.postcode,
+      is_listed: g.is_listed,
+      is_verified: g.is_verified,
+      verification_status: g.verification_status,
+      is_mobile: g.is_mobile,
+      travel_radius_miles: g.travel_radius_miles,
+      years_experience: g.years_experience,
+      qualifications: g.qualifications,
+      is_founding_groomer: g.is_founding_groomer,
+      is_accepting_bookings: g.is_accepting_bookings,
+      average_rating: g.average_rating,
+      total_reviews: g.total_reviews,
+      public_slug: g.public_slug,
+      created_at: g.created_at,
+    })),
+  };
+}
+
+export async function adminExportIndividualGroomer(
+  groomerProfileId: string
+): Promise<{ data: Record<string, unknown> } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const [fullResult, reviewsResult, apptsResult] = await Promise.all([
+    adminGetGroomerFull(groomerProfileId),
+    supabaseAdmin
+      .from("reviews")
+      .select("id, rating, body, is_visible, groomer_reply, created_at, profiles!owner_id ( full_name )")
+      .eq("groomer_profile_id", groomerProfileId)
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("appointments")
+      .select("id, scheduled_at, status, service_snapshot_name, service_snapshot_price, created_at")
+      .eq("groomer_profile_id", groomerProfileId)
+      .order("scheduled_at", { ascending: false }),
+  ]);
+
+  if ("error" in fullResult) return fullResult;
+
+  return {
+    data: {
+      exported_at: new Date().toISOString(),
+      ...fullResult.data,
+      reviews: reviewsResult.data ?? [],
+      appointments: apptsResult.data ?? [],
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Users / Owners
 // ---------------------------------------------------------------------------
 
 export async function getAllUsers(search?: string, page = 0): Promise<{ data: AdminUserRow[] } | { error: string }> {
@@ -302,7 +743,7 @@ export async function getAllUsers(search?: string, page = 0): Promise<{ data: Ad
   const PAGE_SIZE = 50;
   const { data, error } = await supabaseAdmin
     .from("profiles")
-    .select("id, full_name, email, roles, is_admin, created_at")
+    .select("id, full_name, email, phone, roles, is_admin, is_active, created_at")
     .order("created_at", { ascending: false })
     .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -323,8 +764,10 @@ export async function getAllUsers(search?: string, page = 0): Promise<{ data: Ad
     profile_id: p.id,
     full_name: p.full_name,
     email: p.email,
+    phone: p.phone ?? null,
     roles: p.roles ?? [],
     is_admin: p.is_admin ?? false,
+    is_active: p.is_active ?? true,
     dog_count: dogCountMap[p.id] ?? 0,
     created_at: p.created_at,
   }));
@@ -356,17 +799,12 @@ export async function updateUserProfile(
   fields: {
     full_name?: string;
     email?: string;
-    roles?: string[];
-    is_admin?: boolean;
+    phone?: string | null;
+    is_active?: boolean;
   }
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
-
-  // Prevent self-demotion
-  if (fields.is_admin === false && profileId === guard.profileId) {
-    return { error: "You cannot remove your own admin privileges." };
-  }
 
   const { error } = await supabaseAdmin
     .from("profiles")
@@ -376,6 +814,184 @@ export async function updateUserProfile(
   if (error) return { error: error.message };
   logAdminAction(guard.profileId, "update_user_profile", "profiles", profileId);
   return { ok: true };
+}
+
+export async function adminDeleteOwner(
+  profileId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  // Check for upcoming confirmed/pending appointments
+  const { data: activeAppts, error: apptErr } = await supabaseAdmin
+    .from("appointments")
+    .select("id")
+    .eq("owner_id", profileId)
+    .in("status", ["pending", "confirmed"])
+    .gte("scheduled_at", new Date().toISOString())
+    .limit(1);
+
+  if (apptErr) return { error: apptErr.message };
+  if (activeAppts && activeAppts.length > 0) {
+    return { error: "Cannot delete: this owner has upcoming appointments. Cancel them first." };
+  }
+
+  // Fetch clerk_id before deactivating
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("clerk_id")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  // Soft-delete in Supabase
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq("id", profileId);
+
+  if (error) return { error: error.message };
+
+  // Disable in Clerk if we have their clerk_id
+  if ((profile as any)?.clerk_id) {
+    try {
+      const client = await clerkClient();
+      await client.users.updateUser((profile as any).clerk_id, {
+        publicMetadata: { groomr_deactivated: true },
+      });
+    } catch {
+      // Non-fatal — Supabase deactivation is the source of truth
+    }
+  }
+
+  logAdminAction(guard.profileId, "delete_owner", "profiles", profileId);
+  return { ok: true };
+}
+
+export async function adminSendPasswordReset(
+  email: string,
+  name: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  if (!email) return { error: "Email is required." };
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://groomr.uk";
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      replyTo: "support@groomr.uk",
+      to: email,
+      subject: "Reset your Groomr password",
+      text: `Hi ${name || "there"},\n\nA member of the Groomr team has requested a password reset for your account.\n\nTo reset your password, visit the link below and click "Forgot password":\n${appUrl}/sign-in\n\nIf you didn't expect this, please ignore this email or contact us at support@groomr.uk.\n\nThe Groomr team`,
+    });
+  } catch {
+    return { error: "Failed to send reset email." };
+  }
+
+  logAdminAction(guard.profileId, "send_password_reset", "profiles", undefined, { email });
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Owner stats (lazy-loaded on tab mount)
+// ---------------------------------------------------------------------------
+
+export interface AdminOwnerStats {
+  totalOwners: number;
+  totalDogs: number;
+  avgDogsPerOwner: number;
+}
+
+export async function adminGetOwnerStats(): Promise<{ data: AdminOwnerStats } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const [ownersRes, dogsRes] = await Promise.all([
+    supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).contains("roles", ["owner"]),
+    supabaseAdmin.from("dogs").select("id", { count: "exact", head: true }),
+  ]);
+
+  const totalOwners = ownersRes.count ?? 0;
+  const totalDogs = dogsRes.count ?? 0;
+  const avgDogsPerOwner = totalOwners > 0 ? Math.round((totalDogs / totalOwners) * 10) / 10 : 0;
+
+  return { data: { totalOwners, totalDogs, avgDogsPerOwner } };
+}
+
+// ---------------------------------------------------------------------------
+// Owner export
+// ---------------------------------------------------------------------------
+
+export async function adminExportOwners(): Promise<{ data: Record<string, unknown>[] } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data: profiles, error: pErr } = await supabaseAdmin
+    .from("profiles")
+    .select("id, full_name, email, phone, roles, is_active, created_at")
+    .contains("roles", ["owner"])
+    .order("created_at", { ascending: false });
+
+  if (pErr) return { error: pErr.message };
+
+  const profileIds = (profiles ?? []).map((p: any) => p.id);
+  const { data: dogs } = await supabaseAdmin
+    .from("dogs")
+    .select("id, owner_id, name, breed, size, date_of_birth")
+    .in("owner_id", profileIds);
+
+  const dogsByOwner: Record<string, any[]> = {};
+  (dogs ?? []).forEach((d: any) => {
+    if (!dogsByOwner[d.owner_id]) dogsByOwner[d.owner_id] = [];
+    dogsByOwner[d.owner_id].push(d);
+  });
+
+  return {
+    data: (profiles ?? []).map((p: any) => ({
+      profile_id: p.id,
+      full_name: p.full_name,
+      email: p.email,
+      phone: p.phone,
+      is_active: p.is_active,
+      created_at: p.created_at,
+      dog_count: (dogsByOwner[p.id] ?? []).length,
+      dogs: (dogsByOwner[p.id] ?? []).map((d) => ({ name: d.name, breed: d.breed, size: d.size, date_of_birth: d.date_of_birth })),
+    })),
+  };
+}
+
+export async function adminExportIndividualOwner(
+  profileId: string
+): Promise<{ data: Record<string, unknown> } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const [profileRes, dogsRes, apptsRes] = await Promise.all([
+    supabaseAdmin.from("profiles").select("id, full_name, email, phone, roles, is_active, created_at").eq("id", profileId).maybeSingle(),
+    supabaseAdmin.from("dogs").select("*").eq("owner_id", profileId).order("name"),
+    supabaseAdmin
+      .from("appointments")
+      .select("id, scheduled_at, status, service_snapshot_name, service_snapshot_price, cancellation_reason, created_at, groomer:groomer_profiles!groomer_profile_id ( business_name )")
+      .eq("owner_id", profileId)
+      .order("scheduled_at", { ascending: false }),
+  ]);
+
+  if (!profileRes.data) return { error: "Profile not found" };
+
+  return {
+    data: {
+      exported_at: new Date().toISOString(),
+      profile: profileRes.data,
+      dogs: dogsRes.data ?? [],
+      appointments: (apptsRes.data ?? []).map((a: any) => ({
+        ...a,
+        groomer_name: a.groomer?.business_name,
+        groomer: undefined,
+      })),
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -539,44 +1155,6 @@ export async function contactUser(
   } catch {
     return { error: "Failed to send email." };
   }
-}
-
-// ---------------------------------------------------------------------------
-// Groomer full profile (expanded edit modal)
-// ---------------------------------------------------------------------------
-
-export interface GroomerFullProfile {
-  id: string;
-  business_name: string;
-  tagline: string | null;
-  bio: string | null;
-  city: string | null;
-  postcode: string | null;
-  is_listed: boolean;
-  is_verified: boolean;
-  is_mobile: boolean;
-  is_accepting_bookings: boolean;
-  travel_radius_miles: number | null;
-  years_experience: number | null;
-  qualifications: string | null;
-  deposit_type: string;
-  deposit_percentage: number | null;
-}
-
-export async function adminGetGroomerFull(
-  groomerProfileId: string
-): Promise<{ data: GroomerFullProfile } | { error: string }> {
-  const guard = await requireAdmin();
-  if ("error" in guard) return guard;
-  const { data, error } = await supabaseAdmin
-    .from("groomer_profiles")
-    .select(
-      "id, business_name, tagline, bio, city, postcode, is_listed, is_verified, is_mobile, is_accepting_bookings, travel_radius_miles, years_experience, qualifications, deposit_type, deposit_percentage"
-    )
-    .eq("id", groomerProfileId)
-    .maybeSingle();
-  if (error || !data) return { error: error?.message ?? "Not found" };
-  return { data: data as GroomerFullProfile };
 }
 
 // ---------------------------------------------------------------------------
@@ -750,22 +1328,8 @@ export async function adminDeleteService(
 }
 
 // ---------------------------------------------------------------------------
-// Appointments (admin view + cancel)
+// Appointments (admin view + cancel + edit)
 // ---------------------------------------------------------------------------
-
-export interface AdminAppointmentRow {
-  id: string;
-  owner_name: string | null;
-  owner_email: string | null;
-  groomer_business_name: string | null;
-  dog_name: string | null;
-  service_name: string;
-  service_price_pence: number;
-  scheduled_at: string;
-  status: string;
-  cancellation_reason: string | null;
-  created_at: string;
-}
 
 const APPT_PAGE_SIZE = 50;
 
@@ -780,10 +1344,11 @@ export async function adminGetAppointments(
   let query = supabaseAdmin
     .from("appointments")
     .select(
-      `id, scheduled_at, status, cancellation_reason, created_at,
+      `id, scheduled_at, status, cancellation_reason, groomer_notes, owner_notes,
+       booking_group_id, created_at,
        service_snapshot_name, service_snapshot_price,
-       owner:profiles!owner_id ( full_name, email ),
-       groomer:groomer_profiles!groomer_profile_id ( business_name ),
+       owner:profiles!owner_id ( id, full_name, email ),
+       groomer:groomer_profiles!groomer_profile_id ( id, business_name ),
        dog:dogs!dog_id ( name )`
     )
     .order("scheduled_at", { ascending: false })
@@ -798,8 +1363,10 @@ export async function adminGetAppointments(
 
   const rows: AdminAppointmentRow[] = (data ?? []).map((a: any) => ({
     id: a.id,
+    owner_id: a.owner?.id ?? null,
     owner_name: a.owner?.full_name ?? null,
     owner_email: a.owner?.email ?? null,
+    groomer_profile_id: a.groomer?.id ?? null,
     groomer_business_name: a.groomer?.business_name ?? null,
     dog_name: a.dog?.name ?? null,
     service_name: a.service_snapshot_name ?? "—",
@@ -807,6 +1374,9 @@ export async function adminGetAppointments(
     scheduled_at: a.scheduled_at,
     status: a.status,
     cancellation_reason: a.cancellation_reason,
+    groomer_notes: a.groomer_notes,
+    owner_notes: a.owner_notes,
+    booking_group_id: a.booking_group_id,
     created_at: a.created_at,
   }));
 
@@ -824,6 +1394,165 @@ export async function adminGetAppointments(
   }
 
   return { data: rows };
+}
+
+export async function adminCancelAppointment(
+  appointmentId: string,
+  reason: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      status: "cancelled",
+      cancelled_by: guard.profileId,
+      cancellation_reason: reason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId);
+
+  if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "cancel_appointment", "appointments", appointmentId, { reason });
+  return { ok: true };
+}
+
+export async function adminUpdateAppointmentNotes(
+  appointmentId: string,
+  notes: { groomerNotes?: string | null; ownerNotes?: string | null }
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      groomer_notes: notes.groomerNotes ?? null,
+      owner_notes: notes.ownerNotes ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId);
+
+  if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "edit_appointment_notes", "appointments", appointmentId);
+  return { ok: true };
+}
+
+export async function adminMarkNoShow(
+  appointmentId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({ status: "no_show", updated_at: new Date().toISOString() })
+    .eq("id", appointmentId);
+
+  if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "mark_no_show", "appointments", appointmentId);
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Appointment stats (lazy-loaded on tab mount)
+// ---------------------------------------------------------------------------
+
+export interface AdminAppointmentStats {
+  totalAppointments: number;
+  completedCount: number;
+  cancelledCount: number;
+  noShowCount: number;
+  pendingCount: number;
+  confirmedCount: number;
+  appointmentsLast30Days: number;
+  avgPerGroomer: number;
+  avgPerOwner: number;
+  mostPopularServices: { name: string; count: number }[];
+  highestCancellationGroomers: { name: string; count: number }[];
+  highestCancellationOwners: { name: string; count: number }[];
+}
+
+export async function adminGetAppointmentStats(): Promise<{ data: AdminAppointmentStats } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const [totalRes, completedRes, cancelledRes, noShowRes, pendingRes, confirmedRes, last30Res, serviceRes, cancelledFullRes] = await Promise.all([
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "completed"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "cancelled"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "no_show"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gte("scheduled_at", thirtyDaysAgo.toISOString()),
+    supabaseAdmin.from("appointments").select("service_snapshot_name, groomer_profile_id, owner_id"),
+    supabaseAdmin.from("appointments").select(`
+      groomer:groomer_profiles!groomer_profile_id ( business_name ),
+      owner:profiles!owner_id ( full_name )
+    `).eq("status", "cancelled"),
+  ]);
+
+  // Popular services aggregation
+  const serviceNames: Record<string, number> = {};
+  const groomerIds: string[] = [];
+  const ownerIds: string[] = [];
+  for (const row of (serviceRes.data ?? []) as { service_snapshot_name: string | null; groomer_profile_id: string | null; owner_id: string | null }[]) {
+    if (row.service_snapshot_name) {
+      serviceNames[row.service_snapshot_name] = (serviceNames[row.service_snapshot_name] ?? 0) + 1;
+    }
+    if (row.groomer_profile_id) groomerIds.push(row.groomer_profile_id);
+    if (row.owner_id) ownerIds.push(row.owner_id);
+  }
+  const mostPopularServices = Object.entries(serviceNames)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  // Avg per groomer / per owner
+  const uniqueGroomers = new Set(groomerIds).size;
+  const uniqueOwners = new Set(ownerIds).size;
+  const total = totalRes.count ?? 0;
+  const avgPerGroomer = uniqueGroomers > 0 ? Math.round((total / uniqueGroomers) * 10) / 10 : 0;
+  const avgPerOwner = uniqueOwners > 0 ? Math.round((total / uniqueOwners) * 10) / 10 : 0;
+
+  // Cancellation leaders
+  const cancelledGroomers: Record<string, number> = {};
+  const cancelledOwners: Record<string, number> = {};
+  for (const row of (cancelledFullRes.data ?? []) as unknown as { groomer: { business_name: string } | null; owner: { full_name: string } | null }[]) {
+    const gName = row.groomer?.business_name;
+    const oName = row.owner?.full_name;
+    if (gName) cancelledGroomers[gName] = (cancelledGroomers[gName] ?? 0) + 1;
+    if (oName) cancelledOwners[oName] = (cancelledOwners[oName] ?? 0) + 1;
+  }
+  const highestCancellationGroomers = Object.entries(cancelledGroomers)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+  const highestCancellationOwners = Object.entries(cancelledOwners)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  return {
+    data: {
+      totalAppointments: total,
+      completedCount: completedRes.count ?? 0,
+      cancelledCount: cancelledRes.count ?? 0,
+      noShowCount: noShowRes.count ?? 0,
+      pendingCount: pendingRes.count ?? 0,
+      confirmedCount: confirmedRes.count ?? 0,
+      appointmentsLast30Days: last30Res.count ?? 0,
+      avgPerGroomer,
+      avgPerOwner,
+      mostPopularServices,
+      highestCancellationGroomers,
+      highestCancellationOwners,
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -867,28 +1596,6 @@ export async function adminSavePreferences(
     .eq("id", guard.profileId);
 
   if (error) return { error: error.message };
-  return { ok: true };
-}
-
-export async function adminCancelAppointment(
-  appointmentId: string,
-  reason: string
-): Promise<{ ok: boolean } | { error: string }> {
-  const guard = await requireAdmin();
-  if ("error" in guard) return guard;
-
-  const { error } = await supabaseAdmin
-    .from("appointments")
-    .update({
-      status: "cancelled",
-      cancelled_by: guard.profileId,
-      cancellation_reason: reason,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", appointmentId);
-
-  if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "cancel_appointment", "appointments", appointmentId, { reason });
   return { ok: true };
 }
 
@@ -969,7 +1676,7 @@ export async function adminGetFinancials(): Promise<{ data: AdminFinancials } | 
       pendingPayoutsCount += 1;
     }
 
-    const month = p.created_at.slice(0, 7); // 'YYYY-MM'
+    const month = p.created_at.slice(0, 7);
     if (!monthly[month]) {
       monthly[month] = { month, revenuePence: 0, feePence: 0, payoutPence: 0, refundPence: 0, appointmentCount: 0 };
     }

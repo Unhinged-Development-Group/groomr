@@ -1,7 +1,7 @@
 "use client";
 
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import type { AdminOverviewStats } from "@/app/actions/admin";
+import type { AdminOverviewStats, PlatformSettings } from "@/app/actions/admin";
 
 function StatCard({
   label,
@@ -37,7 +37,24 @@ function StatCard({
   );
 }
 
-export function OverviewTab({ stats }: { stats: AdminOverviewStats | null }) {
+function HealthDot({ label, ok }: { label: string; ok: boolean }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span
+        className="w-2 h-2 rounded-full shrink-0"
+        style={{ background: ok ? "#88a096" : "#c87964" }}
+      />
+      <span className="text-[10px] sm:text-xs font-bold text-deep-slate">{label}</span>
+    </div>
+  );
+}
+
+interface Props {
+  stats: AdminOverviewStats | null;
+  platformSettings: PlatformSettings | null;
+}
+
+export function OverviewTab({ stats, platformSettings }: Props) {
   if (!stats) {
     return (
       <div className="text-center py-12 text-pebble-grey font-bold">
@@ -54,10 +71,13 @@ export function OverviewTab({ stats }: { stats: AdminOverviewStats | null }) {
     });
   }
 
+  const integrations = platformSettings?.integrations;
+
   return (
     <section className="space-y-6">
+      {/* Users */}
       <div>
-        <Eyebrow className="mb-3">Platform snapshot</Eyebrow>
+        <Eyebrow className="mb-3">Users</Eyebrow>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
           <StatCard
             label="Total owners"
@@ -81,14 +101,15 @@ export function OverviewTab({ stats }: { stats: AdminOverviewStats | null }) {
             label="Unverified groomers"
             value={stats.unverifiedGroomers.toLocaleString()}
             sub="awaiting verification"
-            tone="terra"
+            tone={stats.unverifiedGroomers > 0 ? "terra" : "sage"}
           />
         </div>
       </div>
 
+      {/* Bookings */}
       <div>
-        <Eyebrow className="mb-3">Bookings & revenue</Eyebrow>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+        <Eyebrow className="mb-3">Bookings</Eyebrow>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
           <StatCard
             label="Total appointments"
             value={stats.totalAppointments.toLocaleString()}
@@ -102,26 +123,71 @@ export function OverviewTab({ stats }: { stats: AdminOverviewStats | null }) {
             tone="sage"
           />
           <StatCard
-            label="Total revenue"
-            value={gbp(stats.grossRevenuePence)}
-            sub="gross payments collected"
+            label="Pending"
+            value={stats.pendingAppointments.toLocaleString()}
+            sub="awaiting confirmation"
             tone="slate"
+          />
+          <StatCard
+            label="No shows"
+            value={stats.noShowCount.toLocaleString()}
+            sub="all time"
+            tone={stats.noShowCount > 0 ? "terra" : "sage"}
+          />
+        </div>
+      </div>
+
+      {/* Financial */}
+      <div>
+        <Eyebrow className="mb-3">Financial</Eyebrow>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+          <StatCard
+            label="Gross revenue"
+            value={gbp(stats.grossRevenuePence)}
+            sub="total payments collected"
+            tone="gold"
           />
           <StatCard
             label="Groomr commission"
             value={gbp(stats.platformFeePence)}
             sub="platform fees earned"
-            tone="gold"
+            tone="sage"
           />
           <StatCard
             label="Groomer payouts"
             value={gbp(stats.groomerPayoutPence)}
             sub="paid out to groomers"
-            tone="sage"
+            tone="slate"
           />
         </div>
       </div>
 
+      {/* Reviews */}
+      <div>
+        <Eyebrow className="mb-3">Reviews</Eyebrow>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+          <StatCard
+            label="Total reviews"
+            value={stats.totalReviews.toLocaleString()}
+            sub="platform wide"
+            tone="gold"
+          />
+          <StatCard
+            label="Average rating"
+            value={stats.averageRating > 0 ? `${stats.averageRating.toFixed(1)} ★` : "—"}
+            sub="across all groomers"
+            tone="sage"
+          />
+          <StatCard
+            label="Last 30 days"
+            value={stats.reviewsLast30Days.toLocaleString()}
+            sub="new reviews"
+            tone="slate"
+          />
+        </div>
+      </div>
+
+      {/* Needs attention */}
       <div>
         <Eyebrow className="mb-3">Needs attention</Eyebrow>
         <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-4">
@@ -139,6 +205,23 @@ export function OverviewTab({ stats }: { stats: AdminOverviewStats | null }) {
           />
         </div>
       </div>
+
+      {/* Platform health */}
+      {integrations && (
+        <div>
+          <Eyebrow className="mb-3">Platform health</Eyebrow>
+          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-4 sm:p-5">
+            <div className="flex flex-wrap gap-x-6 gap-y-2.5">
+              <HealthDot label="Stripe" ok={integrations.stripe} />
+              <HealthDot label="Resend" ok={integrations.resend} />
+              <HealthDot label="Twilio" ok={integrations.twilio} />
+              <HealthDot label="Google Maps" ok={integrations.googleMaps} />
+              <HealthDot label="Clerk" ok={integrations.clerk} />
+              <HealthDot label="Supabase" ok={integrations.supabase} />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

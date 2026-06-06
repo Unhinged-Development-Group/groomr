@@ -20,6 +20,26 @@ async function requireAdmin(): Promise<{ profileId: string } | { error: string }
   return { profileId: data.id };
 }
 
+// Internal — fire-and-forget audit log writer (non-blocking)
+function logAdminAction(
+  adminProfileId: string,
+  action: string,
+  targetTable?: string,
+  targetId?: string,
+  metadata?: Record<string, unknown>
+): void {
+  supabaseAdmin
+    .from("admin_audit_log")
+    .insert({
+      admin_profile_id: adminProfileId,
+      action,
+      target_table: targetTable ?? null,
+      target_id: targetId ?? null,
+      metadata: metadata ?? {},
+    })
+    .then(() => {}, () => {}); // fire and forget, suppress errors
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -235,6 +255,7 @@ export async function verifyGroomer(
     }
   }
 
+  logAdminAction(guard.profileId, verified ? "verify_groomer" : "revoke_groomer_verification", "groomer_profiles", groomerProfileId);
   return { ok: true };
 }
 
@@ -266,6 +287,7 @@ export async function updateGroomerProfile(
     .eq("id", groomerProfileId);
 
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "update_groomer_profile", "groomer_profiles", groomerProfileId);
   return { ok: true };
 }
 
@@ -352,6 +374,7 @@ export async function updateUserProfile(
     .eq("id", profileId);
 
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "update_user_profile", "profiles", profileId);
   return { ok: true };
 }
 
@@ -485,6 +508,7 @@ export async function replyToSupportRequest(
     .eq("id", id);
 
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "reply_support_request", "support_requests", id);
   return { ok: true };
 }
 
@@ -638,6 +662,7 @@ export async function adminDeleteDog(
   if ("error" in guard) return guard;
   const { error } = await supabaseAdmin.from("dogs").delete().eq("id", dogId);
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "delete_dog", "dogs", dogId);
   return { ok: true };
 }
 
@@ -720,6 +745,7 @@ export async function adminDeleteService(
   if ("error" in guard) return guard;
   const { error } = await supabaseAdmin.from("services").delete().eq("id", serviceId);
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "delete_service", "services", serviceId);
   return { ok: true };
 }
 
@@ -800,6 +826,50 @@ export async function adminGetAppointments(
   return { data: rows };
 }
 
+// ---------------------------------------------------------------------------
+// Admin preferences (per-admin, persisted to profiles.admin_preferences)
+// ---------------------------------------------------------------------------
+
+export interface AdminPreferences {
+  /** Up to 4 pinned snapshot metric keys — null means an empty slot */
+  snapshots: (string | null)[];
+}
+
+export async function adminGetPreferences(): Promise<{ data: AdminPreferences } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("admin_preferences")
+    .eq("id", guard.profileId)
+    .maybeSingle();
+
+  if (error) return { error: error.message };
+
+  const stored = data?.admin_preferences as AdminPreferences | null;
+  return {
+    data: {
+      snapshots: stored?.snapshots ?? [null, null, null, null],
+    },
+  };
+}
+
+export async function adminSavePreferences(
+  preferences: AdminPreferences
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ admin_preferences: preferences })
+    .eq("id", guard.profileId);
+
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function adminCancelAppointment(
   appointmentId: string,
   reason: string
@@ -818,5 +888,340 @@ export async function adminCancelAppointment(
     .eq("id", appointmentId);
 
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "cancel_appointment", "appointments", appointmentId, { reason });
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Financials (Groomr Management)
+// ---------------------------------------------------------------------------
+
+export interface AdminMonthlyStats {
+  month: string; // 'YYYY-MM'
+  revenuePence: number;
+  feePence: number;
+  payoutPence: number;
+  refundPence: number;
+  appointmentCount: number;
+}
+
+export interface AdminFinancials {
+  totalRevenuePence: number;
+  totalFeePence: number;
+  totalPayoutPence: number;
+  totalRefundedPence: number;
+  totalTipsPence: number;
+  pendingPayoutsPence: number;
+  pendingPayoutsCount: number;
+  monthlyBreakdown: AdminMonthlyStats[];
+}
+
+export async function adminGetFinancials(): Promise<{ data: AdminFinancials } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const [paymentsResult, tipsResult] = await Promise.all([
+    supabaseAdmin
+      .from("payments")
+      .select(
+        "full_amount_pence, platform_fee_pence, groomer_payout_amount_pence, refund_amount_pence, refund_status, payout_status, created_at"
+      ),
+    supabaseAdmin.from("tips").select("amount_pence, status, created_at").eq("status", "succeeded"),
+  ]);
+
+  if (paymentsResult.error) return { error: paymentsResult.error.message };
+
+  type PaymentFull = {
+    full_amount_pence: number | null;
+    platform_fee_pence: number | null;
+    groomer_payout_amount_pence: number | null;
+    refund_amount_pence: number | null;
+    refund_status: string | null;
+    payout_status: string | null;
+    created_at: string;
+  };
+
+  const payments = (paymentsResult.data ?? []) as PaymentFull[];
+  const tips = (tipsResult.data ?? []) as { amount_pence: number | null; created_at: string }[];
+
+  let totalRevenuePence = 0;
+  let totalFeePence = 0;
+  let totalPayoutPence = 0;
+  let totalRefundedPence = 0;
+  let pendingPayoutsPence = 0;
+  let pendingPayoutsCount = 0;
+
+  const monthly: Record<string, AdminMonthlyStats> = {};
+
+  for (const p of payments) {
+    const rev = p.full_amount_pence ?? 0;
+    const fee = p.platform_fee_pence ?? 0;
+    const payout = p.groomer_payout_amount_pence ?? 0;
+    const refund = p.refund_status === "processed" ? (p.refund_amount_pence ?? 0) : 0;
+
+    totalRevenuePence += rev;
+    totalFeePence += fee;
+    totalPayoutPence += payout;
+    totalRefundedPence += refund;
+
+    if (p.payout_status === "pending") {
+      pendingPayoutsPence += payout;
+      pendingPayoutsCount += 1;
+    }
+
+    const month = p.created_at.slice(0, 7); // 'YYYY-MM'
+    if (!monthly[month]) {
+      monthly[month] = { month, revenuePence: 0, feePence: 0, payoutPence: 0, refundPence: 0, appointmentCount: 0 };
+    }
+    monthly[month].revenuePence += rev;
+    monthly[month].feePence += fee;
+    monthly[month].payoutPence += payout;
+    monthly[month].refundPence += refund;
+    monthly[month].appointmentCount += 1;
+  }
+
+  const totalTipsPence = tips.reduce((sum, t) => sum + (t.amount_pence ?? 0), 0);
+  const monthlyBreakdown = Object.values(monthly)
+    .sort((a, b) => b.month.localeCompare(a.month))
+    .slice(0, 6);
+
+  return {
+    data: {
+      totalRevenuePence,
+      totalFeePence,
+      totalPayoutPence,
+      totalRefundedPence,
+      totalTipsPence,
+      pendingPayoutsPence,
+      pendingPayoutsCount,
+      monthlyBreakdown,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Team / admin users (Groomr Management)
+// ---------------------------------------------------------------------------
+
+export interface AdminTeamMember {
+  profile_id: string;
+  full_name: string | null;
+  email: string | null;
+  created_at: string;
+  is_you: boolean;
+}
+
+export async function adminGetTeam(): Promise<{ data: AdminTeamMember[] } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, full_name, email, created_at")
+    .eq("is_admin", true)
+    .order("created_at", { ascending: true });
+
+  if (error) return { error: error.message };
+  return {
+    data: (data ?? []).map((p: any) => ({
+      profile_id: p.id,
+      full_name: p.full_name,
+      email: p.email,
+      created_at: p.created_at,
+      is_you: p.id === guard.profileId,
+    })),
+  };
+}
+
+export async function adminRevokeAdmin(
+  profileId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  if (profileId === guard.profileId) {
+    return { error: "You cannot remove your own admin access." };
+  }
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ is_admin: false })
+    .eq("id", profileId);
+
+  if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "revoke_admin", "profiles", profileId);
+  return { ok: true };
+}
+
+export async function adminGrantAdmin(
+  profileId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ is_admin: true })
+    .eq("id", profileId);
+
+  if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "grant_admin", "profiles", profileId);
+  return { ok: true };
+}
+
+export async function adminFindProfileByEmail(
+  email: string
+): Promise<{ data: AdminTeamMember | null } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, full_name, email, created_at")
+    .ilike("email", email.trim())
+    .maybeSingle();
+
+  if (error) return { error: error.message };
+  if (!data) return { data: null };
+  return {
+    data: {
+      profile_id: (data as any).id,
+      full_name: (data as any).full_name,
+      email: (data as any).email,
+      created_at: (data as any).created_at,
+      is_you: (data as any).id === guard.profileId,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Platform settings (Groomr Management)
+// ---------------------------------------------------------------------------
+
+export interface PlatformSettings {
+  id: string;
+  platform_fee_pct: number;
+  founding_groomer_fee_pct: number;
+  founding_groomer_deadline: string | null;
+  updated_at: string;
+  updated_by_name: string | null;
+  integrations: {
+    stripe: boolean;
+    resend: boolean;
+    twilio: boolean;
+    googleMaps: boolean;
+    clerk: boolean;
+    supabase: boolean;
+  };
+}
+
+export async function adminGetPlatformSettings(): Promise<{ data: PlatformSettings } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data, error } = await supabaseAdmin
+    .from("platform_settings")
+    .select("id, platform_fee_pct, founding_groomer_fee_pct, founding_groomer_deadline, updated_at, updated_by")
+    .limit(1)
+    .maybeSingle();
+
+  if (error) return { error: error.message };
+
+  let updatedByName: string | null = null;
+  if ((data as any)?.updated_by) {
+    const { data: p } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", (data as any).updated_by)
+      .maybeSingle();
+    updatedByName = (p as any)?.full_name ?? null;
+  }
+
+  return {
+    data: {
+      id: (data as any)?.id ?? "",
+      platform_fee_pct: (data as any)?.platform_fee_pct ?? 0.08,
+      founding_groomer_fee_pct: (data as any)?.founding_groomer_fee_pct ?? 0,
+      founding_groomer_deadline: (data as any)?.founding_groomer_deadline ?? null,
+      updated_at: (data as any)?.updated_at ?? new Date().toISOString(),
+      updated_by_name: updatedByName,
+      integrations: {
+        stripe: !!process.env.STRIPE_SECRET_KEY,
+        resend: !!process.env.RESEND_API_KEY,
+        twilio: !!process.env.TWILIO_ACCOUNT_SID,
+        googleMaps: !!process.env.GOOGLE_MAPS_API_KEY,
+        clerk: !!process.env.CLERK_SECRET_KEY,
+        supabase: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      },
+    },
+  };
+}
+
+export async function adminSavePlatformSettings(
+  settingsId: string,
+  fields: {
+    platform_fee_pct?: number;
+    founding_groomer_fee_pct?: number;
+    founding_groomer_deadline?: string | null;
+  }
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("platform_settings")
+    .update({ ...fields, updated_at: new Date().toISOString(), updated_by: guard.profileId })
+    .eq("id", settingsId);
+
+  if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "update_platform_settings", "platform_settings", settingsId, fields as Record<string, unknown>);
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Audit log (Groomr Management)
+// ---------------------------------------------------------------------------
+
+export interface AdminAuditEntry {
+  id: string;
+  admin_name: string | null;
+  admin_email: string | null;
+  action: string;
+  target_table: string | null;
+  target_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+const AUDIT_PAGE_SIZE = 50;
+
+export async function adminGetAuditLog(
+  page = 0
+): Promise<{ data: AdminAuditEntry[] } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data, error } = await supabaseAdmin
+    .from("admin_audit_log")
+    .select(
+      `id, action, target_table, target_id, metadata, created_at,
+       admin:profiles!admin_profile_id ( full_name, email )`
+    )
+    .order("created_at", { ascending: false })
+    .range(page * AUDIT_PAGE_SIZE, (page + 1) * AUDIT_PAGE_SIZE - 1);
+
+  if (error) return { error: error.message };
+
+  return {
+    data: (data ?? []).map((e: any) => ({
+      id: e.id,
+      admin_name: e.admin?.full_name ?? null,
+      admin_email: e.admin?.email ?? null,
+      action: e.action,
+      target_table: e.target_table,
+      target_id: e.target_id,
+      metadata: e.metadata ?? {},
+      created_at: e.created_at,
+    })),
+  };
 }

@@ -9,6 +9,11 @@ import {
   getAllDisputes,
   getAllSupportRequests,
   adminGetAppointments,
+  adminGetPreferences,
+  adminGetFinancials,
+  adminGetTeam,
+  adminGetPlatformSettings,
+  adminGetAuditLog,
 } from "@/app/actions/admin";
 import type { Metadata } from "next";
 
@@ -29,24 +34,48 @@ export default async function AdminDashboardPage() {
 
   if (!profile?.is_admin) redirect("/dashboard");
 
-  const [stats, groomers, users, disputes, support, appointments] = await Promise.all([
+  const [
+    stats,
+    groomers,
+    users,
+    disputes,
+    support,
+    appointments,
+    preferences,
+    financials,
+    team,
+    platformSettings,
+    auditLog,
+  ] = await Promise.all([
     getAdminOverviewStats(),
     getAllGroomers(),
     getAllUsers(),
     getAllDisputes(),
     getAllSupportRequests(),
     adminGetAppointments(),
+    adminGetPreferences(),
+    adminGetFinancials(),
+    adminGetTeam(),
+    adminGetPlatformSettings(),
+    adminGetAuditLog(),
   ]);
 
   return (
     <AdminDashboardClient
       adminName={profile.full_name ?? user.firstName ?? "Admin"}
+      // User Management
       initialStats={"error" in stats ? null : stats}
       initialGroomers={"error" in groomers ? [] : groomers.data}
       initialUsers={"error" in users ? [] : users.data}
       initialDisputes={"error" in disputes ? [] : disputes.data}
       initialSupport={"error" in support ? [] : support.data}
       initialAppointments={"error" in appointments ? [] : appointments.data}
+      initialPreferences={"error" in preferences ? { snapshots: [null, null, null, null] } : preferences.data}
+      // Groomr Management
+      initialFinancials={"error" in financials ? null : financials.data}
+      initialTeam={"error" in team ? [] : team.data}
+      initialPlatformSettings={"error" in platformSettings ? null : platformSettings.data}
+      initialAuditLog={"error" in auditLog ? [] : auditLog.data}
     />
   );
 }

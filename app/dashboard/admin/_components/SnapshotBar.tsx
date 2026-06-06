@@ -222,21 +222,23 @@ export function SnapshotBar({ initialSnapshots, stats, financials }: Props) {
 
   return (
     <>
-      <div className="flex gap-3 items-center">
-        {visibleSlots.map((key, i) =>
-          key ? (
-            <FilledSlot
-              key={i}
-              metricKey={key}
-              stats={stats}
-              financials={financials}
-              onEdit={() => setPickerSlot(i)}
-              onRemove={() => handleRemove(i)}
-            />
-          ) : (
-            <EmptySlot key={i} onAdd={() => setPickerSlot(i)} />
-          )
-        )}
+      {/* Each slot gets flex-1 so circles space evenly across the full width */}
+      <div className="flex items-center w-full">
+        {visibleSlots.map((key, i) => (
+          <div key={i} className="flex-1 flex items-center justify-center">
+            {key ? (
+              <FilledSlot
+                metricKey={key}
+                stats={stats}
+                financials={financials}
+                onEdit={() => setPickerSlot(i)}
+                onRemove={() => handleRemove(i)}
+              />
+            ) : (
+              <EmptySlot onAdd={() => setPickerSlot(i)} />
+            )}
+          </div>
+        ))}
       </div>
 
       <MetricPicker

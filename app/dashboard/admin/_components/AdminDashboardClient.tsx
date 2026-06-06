@@ -168,11 +168,14 @@ export function AdminDashboardClient({
           <p className="text-sm text-pebble-grey font-bold">Signed in as {adminName}</p>
         </div>
 
-        <SnapshotBar
-          initialSnapshots={initialPreferences.snapshots}
-          stats={initialStats}
-          financials={initialFinancials}
-        />
+        {/* flex-1 so the bar stretches to match the tab bar's full width */}
+        <div className="flex-1 min-w-0">
+          <SnapshotBar
+            initialSnapshots={initialPreferences.snapshots}
+            stats={initialStats}
+            financials={initialFinancials}
+          />
+        </div>
       </header>
 
       {/* Mode switcher + tab nav — grouped so they read as one nav unit */}

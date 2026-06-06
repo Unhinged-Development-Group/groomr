@@ -159,16 +159,15 @@ export function AdminDashboardClient({
 
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
-      {/* Header */}
-      <header className="space-y-3">
-        <div className="space-y-1">
+      {/* Header — title + snapshots inline, left-aligned */}
+      <header className="flex items-center gap-6 flex-wrap">
+        <div className="space-y-1 shrink-0">
           <h1 className="font-fredoka text-3xl md:text-4xl text-deep-slate leading-tight">
             Platform Control
           </h1>
           <p className="text-sm text-pebble-grey font-bold">Signed in as {adminName}</p>
         </div>
 
-        {/* Pinned snapshots — left-aligned under the heading */}
         <SnapshotBar
           initialSnapshots={initialPreferences.snapshots}
           stats={initialStats}
@@ -188,7 +187,7 @@ export function AdminDashboardClient({
                 "flex-1 py-2 pb-3 font-fredoka text-lg font-bold border-b-[3px] transition-all focus-ring",
                 mode === m.id
                   ? "border-groomr-gold text-deep-slate"
-                  : "border-transparent text-pebble-grey hover:border-groomr-gold/40 hover:text-deep-slate"
+                  : "border-transparent text-pebble-grey hover:border-groomr-gold/40 hover:text-deep-slate hover:bg-black/5 rounded-t-lg"
               )}
             >
               {m.label}
@@ -222,7 +221,7 @@ export function AdminDashboardClient({
                   onClick={() => setActiveTab(t.id)}
                   className={cn(
                     "relative flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-nunito font-bold text-sm transition-colors focus-ring shrink-0 sm:shrink whitespace-nowrap min-w-[90px]",
-                    active ? "bg-deep-slate text-alabaster-cream" : "text-deep-slate hover:bg-alabaster-cream"
+                    active ? "bg-groomr-gold text-deep-slate" : "text-deep-slate hover:bg-alabaster-cream"
                   )}
                 >
                   <t.Icon size={18} />
@@ -232,7 +231,7 @@ export function AdminDashboardClient({
                       className={cn(
                         "min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
                         active
-                          ? "bg-groomr-gold text-deep-slate"
+                          ? "bg-deep-slate text-alabaster-cream"
                           : "bg-muted-terracotta text-alabaster-cream"
                       )}
                     >

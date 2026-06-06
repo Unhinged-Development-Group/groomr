@@ -49,7 +49,7 @@ function EmptySlot({ onAdd }: { onAdd: () => void }) {
     <button
       onClick={onAdd}
       aria-label="Add snapshot"
-      className="w-24 h-24 sm:w-[118px] sm:h-[118px] rounded-full border-2 border-dashed border-pebble-grey/35 flex items-center justify-center text-pebble-grey/40 hover:border-pebble-grey/60 hover:text-pebble-grey/70 transition-all focus-ring shrink-0"
+      className="w-24 h-24 sm:w-[118px] sm:h-[118px] rounded-full border-2 border-dashed border-pebble-grey/35 flex items-center justify-center text-pebble-grey/40 hover:border-deep-slate hover:bg-deep-slate/8 hover:text-deep-slate transition-all hover:scale-105 focus-ring shrink-0"
     >
       <PlusIcon size={36} />
     </button>
@@ -75,21 +75,21 @@ function FilledSlot({
   if (!metric) return null;
 
   return (
-    <div className="relative group w-24 h-24 sm:w-[118px] sm:h-[118px] rounded-full bg-white border border-pebble-grey/20 shadow-sm flex flex-col items-center justify-center text-center px-3 shrink-0">
+    <div className="relative group w-24 h-24 sm:w-[118px] sm:h-[118px] rounded-full bg-deep-slate shadow-sm flex flex-col items-center justify-center text-center px-3 shrink-0">
       {/* Content */}
-      <p className="text-[8px] sm:text-[9px] font-bold text-pebble-grey uppercase tracking-wider leading-tight line-clamp-2 w-full text-center">
+      <p className="text-[8px] sm:text-[9px] font-bold text-alabaster-cream/60 uppercase tracking-wider leading-tight line-clamp-2 w-full text-center">
         {metric.label}
       </p>
-      <p className="font-fredoka text-xl sm:text-2xl text-deep-slate leading-tight mt-0.5">
+      <p className="font-fredoka text-xl sm:text-2xl text-alabaster-cream leading-tight mt-0.5">
         {metric.getValue(stats, financials)}
       </p>
 
-      {/* Hover overlay */}
-      <div className="absolute inset-0 rounded-full bg-deep-slate/85 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+      {/* Hover overlay — groomr gold */}
+      <div className="absolute inset-0 rounded-full bg-groomr-gold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
         <button
           onClick={onEdit}
           title="Change metric"
-          className="flex flex-col items-center gap-0.5 text-alabaster-cream/75 hover:text-alabaster-cream transition-colors focus-ring rounded"
+          className="flex flex-col items-center gap-0.5 text-deep-slate/70 hover:text-deep-slate transition-colors focus-ring rounded"
         >
           <span className="text-sm leading-none">✎</span>
           <span className="text-[8px] font-bold">Change</span>
@@ -97,7 +97,7 @@ function FilledSlot({
         <button
           onClick={onRemove}
           title="Remove"
-          className="flex flex-col items-center gap-0.5 text-alabaster-cream/75 hover:text-alabaster-cream transition-colors focus-ring rounded"
+          className="flex flex-col items-center gap-0.5 text-deep-slate/70 hover:text-deep-slate transition-colors focus-ring rounded"
         >
           <CloseIcon size={12} />
           <span className="text-[8px] font-bold">Remove</span>

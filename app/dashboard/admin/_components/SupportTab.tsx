@@ -153,6 +153,10 @@ export function SupportTab({ initialSupport }: { initialSupport: AdminSupportRow
 
   const filtered = filter === "all" ? requests : requests.filter((r) => r.status === filter);
 
+  const open = requests.filter((r) => r.status === "open").length;
+  const inProgress = requests.filter((r) => r.status === "in_progress").length;
+  const closed = requests.filter((r) => r.status === "closed").length;
+
   function handleUpdated(id: string, status: SupportStatus, adminReply: string) {
     setRequests((prev) =>
       prev.map((r) => (r.id === id ? { ...r, status, admin_reply: adminReply } : r))
@@ -161,6 +165,32 @@ export function SupportTab({ initialSupport }: { initialSupport: AdminSupportRow
 
   return (
     <div className="space-y-4">
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        {[
+          { label: "Total requests", value: requests.length, tone: "" },
+          { label: "Open", value: open, tone: open > 0 ? "terra" : "" },
+          { label: "In progress", value: inProgress, tone: inProgress > 0 ? "gold" : "" },
+          { label: "Closed", value: closed, tone: "" },
+        ].map(({ label, value, tone }) => (
+          <div
+            key={label}
+            className={`bg-white border rounded-[14px] p-3 sm:p-4 space-y-0.5 ${
+              tone === "terra" ? "border-muted-terracotta/30 bg-muted-terracotta/5" :
+              tone === "gold" ? "border-groomr-gold/30 bg-groomr-gold/5" :
+              "border-pebble-grey/20"
+            }`}
+          >
+            <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider">{label}</p>
+            <p className={`font-fredoka text-2xl sm:text-3xl leading-tight ${
+              tone === "terra" ? "text-muted-terracotta" :
+              tone === "gold" ? "text-deep-slate" :
+              "text-deep-slate"
+            }`}>{value}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="flex items-center gap-2 flex-wrap">
         {STATUS_FILTERS.map((f) => (
           <button

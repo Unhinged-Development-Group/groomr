@@ -120,13 +120,26 @@ export interface AdminDisputeRow {
   id: string;
   subject: string;
   description: string | null;
-  status: "open" | "in_review" | "resolved";
+  status: "pending" | "open" | "in_review" | "awaiting_agreement" | "final_review" | "awaiting_final_agreement" | "resolved";
   admin_notes: string | null;
   appointment_id: string | null;
+  raised_by: string | null;
+  owner_id: string | null;
+  groomer_id: string | null;
   owner_name: string | null;
   owner_email: string | null;
   groomer_name: string | null;
   groomer_email: string | null;
+  owner_comment: string | null;
+  groomer_comment: string | null;
+  proposed_resolution: string | null;
+  resolution_proposed_at: string | null;
+  owner_agreed: boolean | null;
+  groomer_agreed: boolean | null;
+  final_resolution: string | null;
+  final_resolution_proposed_at: string | null;
+  owner_agreed_final: boolean | null;
+  groomer_agreed_final: boolean | null;
   created_at: string;
 }
 
@@ -1086,6 +1099,10 @@ export async function getAllDisputes(status?: string): Promise<{ data: AdminDisp
     .from("disputes")
     .select(`
       id, subject, description, status, admin_notes, appointment_id, created_at,
+      raised_by, owner_id, groomer_id,
+      owner_comment, groomer_comment,
+      proposed_resolution, resolution_proposed_at, owner_agreed, groomer_agreed,
+      final_resolution, final_resolution_proposed_at, owner_agreed_final, groomer_agreed_final,
       owner:profiles!disputes_owner_id_fkey ( full_name, email ),
       groomer:profiles!disputes_groomer_id_fkey ( full_name, email )
     `)
@@ -1105,10 +1122,23 @@ export async function getAllDisputes(status?: string): Promise<{ data: AdminDisp
     status: d.status,
     admin_notes: d.admin_notes,
     appointment_id: d.appointment_id,
+    raised_by: d.raised_by,
+    owner_id: d.owner_id,
+    groomer_id: d.groomer_id,
     owner_name: d.owner?.full_name ?? null,
     owner_email: d.owner?.email ?? null,
     groomer_name: d.groomer?.full_name ?? null,
     groomer_email: d.groomer?.email ?? null,
+    owner_comment: d.owner_comment,
+    groomer_comment: d.groomer_comment,
+    proposed_resolution: d.proposed_resolution,
+    resolution_proposed_at: d.resolution_proposed_at,
+    owner_agreed: d.owner_agreed,
+    groomer_agreed: d.groomer_agreed,
+    final_resolution: d.final_resolution,
+    final_resolution_proposed_at: d.final_resolution_proposed_at,
+    owner_agreed_final: d.owner_agreed_final,
+    groomer_agreed_final: d.groomer_agreed_final,
     created_at: d.created_at,
   }));
 
@@ -1117,7 +1147,7 @@ export async function getAllDisputes(status?: string): Promise<{ data: AdminDisp
 
 export async function updateDisputeStatus(
   id: string,
-  status: "open" | "in_review" | "resolved",
+  status: AdminDisputeRow["status"],
   adminNotes: string
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
@@ -1129,6 +1159,121 @@ export async function updateDisputeStatus(
     .eq("id", id);
 
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "update_dispute_status", "disputes", id, { status });
+  return { ok: true };
+}
+
+export async function adminProposeResolution(
+  id: string,
+  resolutionText: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data: d } = await supabaseAdmin
+    .from("disputes")
+    .select(`
+      subject,
+      owner:profiles!disputes_owner_id_fkey ( email, full_name ),
+      groomer:profiles!disputes_groomer_id_fkey ( email, full_name )
+    `)
+    .eq("id", id)
+    .maybeSingle();
+
+  const dAny = d as any;
+  const ownerEmail = dAny?.owner?.email ?? null;
+  const ownerName = dAny?.owner?.full_name ?? "Owner";
+  const groomerEmail = dAny?.groomer?.email ?? null;
+  const groomerName = dAny?.groomer?.full_name ?? "Groomer";
+  const subject = dAny?.subject ?? "your dispute";
+  const link = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://groomr.uk"}/disputes/${id}`;
+
+  const emailText = (name: string) =>
+    `Hi ${name},\n\nGroomr has reviewed your dispute regarding "${subject}" and proposed the following resolution:\n\n${resolutionText}\n\nPlease log in to review and accept or decline this proposal:\n${link}\n\nThe Groomr team`;
+
+  const { error } = await supabaseAdmin
+    .from("disputes")
+    .update({
+      proposed_resolution: resolutionText,
+      resolution_proposed_at: new Date().toISOString(),
+      status: "awaiting_agreement",
+      owner_agreed: null,
+      groomer_agreed: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  if (ownerEmail) resend.emails.send({ from: FROM_EMAIL, to: ownerEmail, subject: `Groomr has proposed a resolution for your dispute`, text: emailText(ownerName) }).catch(() => {});
+  if (groomerEmail) resend.emails.send({ from: FROM_EMAIL, to: groomerEmail, subject: `Groomr has proposed a resolution for your dispute`, text: emailText(groomerName) }).catch(() => {});
+
+  logAdminAction(guard.profileId, "propose_resolution", "disputes", id);
+  return { ok: true };
+}
+
+export async function adminSendFinalResolution(
+  id: string,
+  finalResolutionText: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data: d } = await supabaseAdmin
+    .from("disputes")
+    .select(`
+      subject,
+      owner:profiles!disputes_owner_id_fkey ( email, full_name ),
+      groomer:profiles!disputes_groomer_id_fkey ( email, full_name )
+    `)
+    .eq("id", id)
+    .maybeSingle();
+
+  const dAny = d as any;
+  const ownerEmail = dAny?.owner?.email ?? null;
+  const ownerName = dAny?.owner?.full_name ?? "Owner";
+  const groomerEmail = dAny?.groomer?.email ?? null;
+  const groomerName = dAny?.groomer?.full_name ?? "Groomer";
+  const subject = dAny?.subject ?? "your dispute";
+  const link = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://groomr.uk"}/disputes/${id}`;
+
+  const emailText = (name: string) =>
+    `Hi ${name},\n\nThis is Groomr's final decision regarding your dispute "${subject}":\n\n${finalResolutionText}\n\nThis decision is final. Please log in to acknowledge this resolution:\n${link}\n\nNote: Continued non-compliance with this decision may result in removal from the Groomr platform.\n\nThe Groomr team`;
+
+  const { error } = await supabaseAdmin
+    .from("disputes")
+    .update({
+      final_resolution: finalResolutionText,
+      final_resolution_proposed_at: new Date().toISOString(),
+      status: "awaiting_final_agreement",
+      owner_agreed_final: null,
+      groomer_agreed_final: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  if (ownerEmail) resend.emails.send({ from: FROM_EMAIL, to: ownerEmail, subject: `Final resolution: Groomr's decision on your dispute`, text: emailText(ownerName) }).catch(() => {});
+  if (groomerEmail) resend.emails.send({ from: FROM_EMAIL, to: groomerEmail, subject: `Final resolution: Groomr's decision on your dispute`, text: emailText(groomerName) }).catch(() => {});
+
+  logAdminAction(guard.profileId, "send_final_resolution", "disputes", id);
+  return { ok: true };
+}
+
+export async function adminCloseDispute(
+  id: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { error } = await supabaseAdmin
+    .from("disputes")
+    .update({ status: "resolved", updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "close_dispute", "disputes", id);
   return { ok: true };
 }
 
@@ -1982,6 +2127,95 @@ export interface AdminAuditEntry {
   metadata: Record<string, unknown>;
   created_at: string;
 }
+
+// ---------------------------------------------------------------------------
+// Analytics (Groomr Management)
+// ---------------------------------------------------------------------------
+
+export interface AnalyticsMonthPoint {
+  month: string; // 'YYYY-MM'
+  value: number;
+}
+
+export interface AnalyticsSignupPoint {
+  month: string;
+  owners: number;
+  groomers: number;
+}
+
+export interface AnalyticsData {
+  signups: AnalyticsSignupPoint[];
+  bookings: AnalyticsMonthPoint[];
+  revenue: AnalyticsMonthPoint[];
+}
+
+export async function adminGetAnalytics(
+  months: number
+): Promise<{ data: AnalyticsData } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const since = new Date();
+  since.setMonth(since.getMonth() - months);
+  const sinceIso = since.toISOString();
+
+  const [profilesResult, appointmentsResult, paymentsResult] = await Promise.all([
+    supabaseAdmin.from("profiles").select("created_at, roles").gte("created_at", sinceIso),
+    supabaseAdmin.from("appointments").select("scheduled_at").gte("scheduled_at", sinceIso),
+    supabaseAdmin.from("payments").select("created_at, full_amount_pence").gte("created_at", sinceIso),
+  ]);
+
+  // Build the ordered list of YYYY-MM labels from `since` up to now
+  const labels: string[] = [];
+  const cursor = new Date(since);
+  cursor.setDate(1);
+  const now = new Date();
+  const endYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  while (true) {
+    const ym = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
+    labels.push(ym);
+    if (ym === endYM) break;
+    cursor.setMonth(cursor.getMonth() + 1);
+    if (labels.length > 60) break; // safety cap
+  }
+
+  const toYM = (iso: string) => iso.slice(0, 7);
+
+  const signupsByMonth: Record<string, { owners: number; groomers: number }> = Object.fromEntries(
+    labels.map((l) => [l, { owners: 0, groomers: 0 }])
+  );
+  for (const p of (profilesResult.data ?? []) as { created_at: string; roles: string[] }[]) {
+    const ym = toYM(p.created_at);
+    if (signupsByMonth[ym]) {
+      if (p.roles?.includes("groomer")) signupsByMonth[ym].groomers++;
+      else signupsByMonth[ym].owners++;
+    }
+  }
+
+  const bookingsByMonth: Record<string, number> = Object.fromEntries(labels.map((l) => [l, 0]));
+  for (const a of (appointmentsResult.data ?? []) as { scheduled_at: string }[]) {
+    const ym = toYM(a.scheduled_at);
+    if (bookingsByMonth[ym] !== undefined) bookingsByMonth[ym]++;
+  }
+
+  const revenueByMonth: Record<string, number> = Object.fromEntries(labels.map((l) => [l, 0]));
+  for (const p of (paymentsResult.data ?? []) as { created_at: string; full_amount_pence: number | null }[]) {
+    const ym = toYM(p.created_at);
+    if (revenueByMonth[ym] !== undefined) revenueByMonth[ym] += p.full_amount_pence ?? 0;
+  }
+
+  return {
+    data: {
+      signups: labels.map((m) => ({ month: m, owners: signupsByMonth[m].owners, groomers: signupsByMonth[m].groomers })),
+      bookings: labels.map((m) => ({ month: m, value: bookingsByMonth[m] })),
+      revenue: labels.map((m) => ({ month: m, value: revenueByMonth[m] })),
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Audit log (Groomr Management)
+// ---------------------------------------------------------------------------
 
 const AUDIT_PAGE_SIZE = 50;
 

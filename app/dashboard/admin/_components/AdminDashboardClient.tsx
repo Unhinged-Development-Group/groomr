@@ -26,7 +26,7 @@ import { FinancialsTab } from "./FinancialsTab";
 import { TeamTab } from "./TeamTab";
 import { PlatformSettingsTab } from "./PlatformSettingsTab";
 import { AuditLogTab } from "./AuditLogTab";
-import { GroomrSupportTab } from "./GroomrSupportTab";
+import { AnalyticsTab } from "./AnalyticsTab";
 import type {
   AdminOverviewStats,
   AdminGroomerRow,
@@ -45,7 +45,7 @@ import type {
 
 type Mode = "overview" | "user_management" | "groomr_management";
 type UserTab = "groomers" | "users" | "appointments" | "disputes" | "support";
-type GroomrTab = "financials" | "team" | "platform_settings" | "audit_log" | "groomr_support";
+type GroomrTab = "financials" | "team" | "platform_settings" | "audit_log" | "analytics";
 
 interface TabDef {
   id: string;
@@ -72,7 +72,7 @@ const GROOMR_TABS: TabDef[] = [
   { id: "team",              label: "Team",         Icon: AccountIcon },
   { id: "platform_settings", label: "Settings",     Icon: SettingsIcon },
   { id: "audit_log",         label: "Audit Log",    Icon: ShieldIcon },
-  { id: "groomr_support",    label: "Support",      Icon: MessagesIcon },
+  { id: "analytics",         label: "Analytics",    Icon: AnalyticsIcon },
 ];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -141,7 +141,7 @@ export function AdminDashboardClient({
       if (tabId === "support") return openSupport;
     } else {
       if (tabId === "financials") return pendingPayoutsCount;
-      if (tabId === "groomr_support") return openSupport;
+      if (tabId === "analytics") return 0;
     }
     return 0;
   }
@@ -317,8 +317,8 @@ export function AdminDashboardClient({
       {mode === "groomr_management" && activeGroomrTab === "audit_log" && (
         <AuditLogTab initialEntries={initialAuditLog} />
       )}
-      {mode === "groomr_management" && activeGroomrTab === "groomr_support" && (
-        <GroomrSupportTab initialSupport={initialSupport} />
+      {mode === "groomr_management" && activeGroomrTab === "analytics" && (
+        <AnalyticsTab />
       )}
     </div>
   );

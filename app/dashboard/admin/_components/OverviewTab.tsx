@@ -211,7 +211,7 @@ export function OverviewTab({ stats, platformSettings, onNavigate }: Props) {
       {/* Bookings */}
       <div>
         <Eyebrow className="mb-3">Bookings</Eyebrow>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
           <StatCard
             label="Total appointments"
             value={stats.totalAppointments.toLocaleString()}
@@ -242,13 +242,6 @@ export function OverviewTab({ stats, platformSettings, onNavigate }: Props) {
             tone="sage"
             onClick={goUsers("appointments")}
           />
-          <StatCard
-            label="No shows"
-            value={stats.noShowCount.toLocaleString()}
-            sub="all time"
-            tone={stats.noShowCount > 0 ? "terra" : "sage"}
-            onClick={goUsers("appointments")}
-          />
         </div>
       </div>
 
@@ -266,22 +259,22 @@ export function OverviewTab({ stats, platformSettings, onNavigate }: Props) {
           <StatCard
             label="Groomr commission"
             value={gbp(stats.platformFeePence)}
-            sub="platform fees earned"
+            sub="8% platform fee"
             tone="sage"
             onClick={goGroomr("financials")}
           />
           <StatCard
-            label="Net to groomers"
-            value={gbp(stats.groomerPayoutPence)}
-            sub="paid out to groomers"
-            tone="slate"
+            label="Stripe fees"
+            value={gbp(stats.stripeFeePence)}
+            sub="processing fees paid to Stripe"
+            tone="terra"
             onClick={goGroomr("financials")}
           />
           <StatCard
-            label="Pending payouts"
-            value={gbp(stats.pendingPayoutsAmountPence)}
-            sub="owed but not yet transferred"
-            tone={stats.pendingPayoutsAmountPence > 0 ? "terra" : "sage"}
+            label="Net revenue (Groomr)"
+            value={gbp(stats.netRevenuePence)}
+            sub="commission after Stripe fees"
+            tone={stats.netRevenuePence >= 0 ? "sage" : "terra"}
             onClick={goGroomr("financials")}
           />
         </div>

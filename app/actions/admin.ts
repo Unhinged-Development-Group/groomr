@@ -61,6 +61,8 @@ export interface AdminOverviewStats {
   platformFeePence: number;
   groomerPayoutPence: number;
   pendingPayoutsAmountPence: number;
+  stripeFeePence: number;
+  netRevenuePence: number;
   openDisputes: number;
   openSupportRequests: number;
   totalReviews: number;
@@ -201,7 +203,7 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "completed"),
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "no_show"),
-    supabaseAdmin.from("payments").select("full_amount_pence, platform_fee_pence, groomer_payout_amount_pence"),
+    supabaseAdmin.from("payments").select("full_amount_pence, platform_fee_pence, groomer_payout_amount_pence, stripe_fee_pence"),
     supabaseAdmin.from("payments").select("groomer_payout_amount_pence").eq("payout_status", "pending"),
     supabaseAdmin.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabaseAdmin.from("support_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
@@ -212,11 +214,13 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).gt("total_reviews", 0).lt("average_rating", 3),
   ]);
 
-  type PaymentRow = { full_amount_pence: number | null; platform_fee_pence: number | null; groomer_payout_amount_pence: number | null };
+  type PaymentRow = { full_amount_pence: number | null; platform_fee_pence: number | null; groomer_payout_amount_pence: number | null; stripe_fee_pence: number | null };
   const payments: PaymentRow[] = revenueResult.data ?? [];
   const grossRevenuePence = payments.reduce((sum, p) => sum + (p.full_amount_pence ?? 0), 0);
   const platformFeePence = payments.reduce((sum, p) => sum + (p.platform_fee_pence ?? 0), 0);
   const groomerPayoutPence = payments.reduce((sum, p) => sum + (p.groomer_payout_amount_pence ?? 0), 0);
+  const stripeFeePence = payments.reduce((sum, p) => sum + (p.stripe_fee_pence ?? 0), 0);
+  const netRevenuePence = platformFeePence - stripeFeePence;
   const pendingPayoutsAmountPence = (pendingPayoutsResult.data ?? []).reduce(
     (sum: number, p: any) => sum + (p.groomer_payout_amount_pence ?? 0), 0
   );
@@ -242,6 +246,8 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     platformFeePence,
     groomerPayoutPence,
     pendingPayoutsAmountPence,
+    stripeFeePence,
+    netRevenuePence,
     openDisputes: disputesResult.count ?? 0,
     openSupportRequests: supportResult.count ?? 0,
     totalReviews: reviewsAllResult.count ?? 0,

@@ -89,9 +89,25 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
   const isDeposit = pi.metadata?.is_deposit === "true";
   const now = new Date().toISOString();
 
+  // Retrieve the Stripe processing fee from the balance transaction.
+  // Webhook payloads don't expand latest_charge, so we fetch it separately.
+  let stripeFee = 0;
+  if (pi.latest_charge) {
+    try {
+      const charge = await stripe.charges.retrieve(pi.latest_charge as string, {
+        expand: ["balance_transaction"],
+      });
+      if (typeof charge.balance_transaction === "object" && charge.balance_transaction) {
+        stripeFee = charge.balance_transaction.fee;
+      }
+    } catch (err) {
+      console.warn(`[stripe-webhook] Could not retrieve balance_transaction for ${pi.id}:`, err);
+    }
+  }
+
   const { data: payment } = await supabaseAdmin
     .from("payments")
-    .select("id, stripe_payment_intent_id, full_payment_intent_id")
+    .select("id, stripe_fee_pence")
     .eq("appointment_id", appointmentId)
     .maybeSingle();
 
@@ -106,6 +122,8 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
       .update({
         deposit_paid_at: now,
         deposit_status: "paid",
+        // Accumulate fees: deposit fee added now, full payment fee added later
+        stripe_fee_pence: (payment.stripe_fee_pence ?? 0) + stripeFee,
       })
       .eq("id", payment.id);
   } else {
@@ -113,11 +131,15 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
       .from("payments")
       .update({
         full_payment_paid_at: now,
+        stripe_fee_pence: (payment.stripe_fee_pence ?? 0) + stripeFee,
       })
       .eq("id", payment.id);
   }
 
-  console.log(`[stripe-webhook] payment_intent.succeeded → appointment ${appointmentId}`);
+  console.log(
+    `[stripe-webhook] payment_intent.succeeded → appointment ${appointmentId}`,
+    `stripe_fee=${stripeFee}p`
+  );
 }
 
 async function onPaymentIntentFailed(pi: Stripe.PaymentIntent) {

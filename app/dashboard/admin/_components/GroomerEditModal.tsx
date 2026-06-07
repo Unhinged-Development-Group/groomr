@@ -205,6 +205,7 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
   }
 
   function saveAvailability() {
+    if (!profile) return;
     startAvail(async () => {
       const [availRes, profileRes] = await Promise.all([
         adminSaveAvailability(
@@ -217,8 +218,8 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
           }))
         ),
         updateGroomerProfile(groomer.groomer_profile_id, {
-          is_accepting_bookings: profile?.is_accepting_bookings,
-          default_buffer_minutes: profile?.default_buffer_minutes,
+          is_accepting_bookings: profile.is_accepting_bookings,
+          default_buffer_minutes: profile.default_buffer_minutes,
         }),
       ]);
       if ("error" in availRes) { setToast(availRes.error); return; }
@@ -301,18 +302,19 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
   return (
     <>
       <Modal open size="lg" onClose={onClose}>
-        <div className="space-y-1">
-          <div className="pb-3 border-b border-pebble-grey/10">
-            <h2 className="font-fredoka text-2xl text-deep-slate">Edit groomer</h2>
-            <p className="text-sm text-pebble-grey font-bold mt-0.5">{groomer.business_name}</p>
-          </div>
+        {/* Sticky header — lives inside the Modal's single overflow-y-auto container */}
+        <div className="sticky top-0 bg-alabaster-cream z-10 pb-3 border-b border-pebble-grey/10 -mt-2 pt-2">
+          <h2 className="font-fredoka text-2xl text-deep-slate pr-10">Edit groomer</h2>
+          <p className="text-sm text-pebble-grey font-bold mt-0.5">{groomer.business_name}</p>
+        </div>
 
+        <div>
           {loading ? (
             <div className="py-12 text-center text-pebble-grey font-bold">Loading…</div>
           ) : !profile ? (
             <div className="py-10 text-center text-muted-terracotta font-bold">Failed to load profile.</div>
           ) : (
-            <div className="divide-y divide-pebble-grey/10 max-h-[70vh] overflow-y-auto pr-1">
+            <div className="divide-y divide-pebble-grey/10">
 
               {/* ── Business Basics ── */}
               <div>
@@ -357,29 +359,30 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
                       <input type="checkbox" checked={profile.is_mobile} onChange={(e) => updateProfile({ is_mobile: e.target.checked })} className="w-4 h-4 accent-groomr-gold" />
                       <span className="text-sm font-bold text-deep-slate">Mobile groomer</span>
                     </label>
-                    {profile.is_mobile ? (
+                    {/* Address always shown — mobile groomers need it as their radius centre point */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <FieldLabel>Address line 1</FieldLabel>
+                        <input className="field w-full" value={profile.address_line_1 ?? ""} onChange={(e) => updateProfile({ address_line_1: e.target.value || null })} />
+                      </div>
+                      <div>
+                        <FieldLabel>Address line 2</FieldLabel>
+                        <input className="field w-full" value={profile.address_line_2 ?? ""} onChange={(e) => updateProfile({ address_line_2: e.target.value || null })} />
+                      </div>
+                      <div>
+                        <FieldLabel>City</FieldLabel>
+                        <input className="field w-full" value={profile.city ?? ""} onChange={(e) => updateProfile({ city: e.target.value || null })} placeholder="e.g. Edinburgh" />
+                      </div>
+                      <div>
+                        <FieldLabel>Postcode</FieldLabel>
+                        <input className="field w-full" value={profile.postcode ?? ""} onChange={(e) => updateProfile({ postcode: e.target.value || null })} placeholder="e.g. EH1 1AB" />
+                      </div>
+                    </div>
+                    {profile.is_mobile && (
                       <div>
                         <FieldLabel>Travel radius (miles)</FieldLabel>
-                        <input type="number" min={1} max={50} className="field w-full" value={profile.travel_radius_miles ?? ""} onChange={(e) => updateProfile({ travel_radius_miles: e.target.value ? Number(e.target.value) : null })} placeholder="e.g. 10" />
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <FieldLabel>Address line 1</FieldLabel>
-                          <input className="field w-full" value={profile.address_line_1 ?? ""} onChange={(e) => updateProfile({ address_line_1: e.target.value || null })} />
-                        </div>
-                        <div>
-                          <FieldLabel>Address line 2</FieldLabel>
-                          <input className="field w-full" value={profile.address_line_2 ?? ""} onChange={(e) => updateProfile({ address_line_2: e.target.value || null })} />
-                        </div>
-                        <div>
-                          <FieldLabel>City</FieldLabel>
-                          <input className="field w-full" value={profile.city ?? ""} onChange={(e) => updateProfile({ city: e.target.value || null })} placeholder="e.g. Edinburgh" />
-                        </div>
-                        <div>
-                          <FieldLabel>Postcode</FieldLabel>
-                          <input className="field w-full" value={profile.postcode ?? ""} onChange={(e) => updateProfile({ postcode: e.target.value || null })} placeholder="e.g. EH1 1AB" />
-                        </div>
+                        <input type="number" min={1} max={50} className="field w-full sm:w-32" value={profile.travel_radius_miles ?? ""} onChange={(e) => updateProfile({ travel_radius_miles: e.target.value ? Number(e.target.value) : null })} placeholder="e.g. 10" />
+                        <p className="text-xs text-pebble-grey mt-1">Radius is measured from the address above.</p>
                       </div>
                     )}
                     <SaveRow onSave={saveOperation} pending={operationPending} />
@@ -614,15 +617,16 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
 
             </div>
           )}
+        </div>
 
-          <div className="flex justify-end pt-3 border-t border-pebble-grey/10">
-            <button
-              className="btn-secondary font-nunito font-bold px-5 py-2 rounded-full text-sm focus-ring"
-              onClick={onClose}
-            >
-              Close
-            </button>
-          </div>
+        {/* Sticky footer — stays visible at the bottom of the Modal's scroll */}
+        <div className="sticky bottom-0 bg-alabaster-cream z-10 pt-3 border-t border-pebble-grey/10 mt-4 flex justify-end">
+          <button
+            className="btn-secondary font-nunito font-bold px-5 py-2 rounded-full text-sm focus-ring"
+            onClick={onClose}
+          >
+            Close
+          </button>
         </div>
       </Modal>
       <Toast message={toast} onDismiss={() => setToast(null)} />

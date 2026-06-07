@@ -269,7 +269,7 @@ export function AppointmentsTab({ initialAppointments }: { initialAppointments: 
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <AppointmentStatsBar />
+      <AppointmentStatsBar appointments={appointments} />
 
       {/* Controls */}
       <div className="flex items-center justify-between gap-3 flex-wrap">

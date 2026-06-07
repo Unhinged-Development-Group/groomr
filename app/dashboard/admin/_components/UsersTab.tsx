@@ -2,7 +2,6 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { SearchPill } from "@/components/ui/SearchPill";
-import { Badge } from "@/components/ui/Badge";
 import { Toast } from "@/components/ui/Toast";
 import { PencilIcon, ChevronDownIcon, ChevronRightIcon, TrashIcon } from "@/components/ui/GroomrIcons";
 import { getUserDogs, adminDeleteOwner, adminSendPasswordReset, adminExportOwners, adminExportIndividualOwner } from "@/app/actions/admin";
@@ -11,6 +10,9 @@ import { ContactModal } from "./ContactModal";
 import { DogManagerModal } from "./DogManagerModal";
 import { OwnerStatsBar } from "./OwnerStatsBar";
 import type { AdminUserRow, AdminUserDog } from "@/app/actions/admin";
+
+type SortKey = "joined" | "name" | "dogs";
+type DogFilter = "all" | "has_dogs" | "no_dogs";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -36,18 +38,22 @@ function objectsToCSV(rows: Record<string, unknown>[]): string {
   return [keys.join(","), ...rows.map((r) => keys.map((k) => escape(r[k])).join(","))].join("\n");
 }
 
-type SortKey = "joined" | "name" | "dogs";
-type DogFilter = "all" | "has_dogs" | "no_dogs";
+const DOG_FILTER_PILLS: { id: DogFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "has_dogs", label: "Has dogs" },
+  { id: "no_dogs", label: "No dogs" },
+];
+
+const SORT_PILLS: { id: SortKey; label: string }[] = [
+  { id: "joined", label: "Joined" },
+  { id: "name", label: "Name" },
+  { id: "dogs", label: "Dog count" },
+];
+
+interface DeleteConfirm { profileId: string; name: string; }
 
 function UserRow({
-  user,
-  onEdit,
-  onContact,
-  onManageDogs,
-  onDelete,
-  onPasswordReset,
-  onDownload,
-  deleteDisabled,
+  user, onEdit, onContact, onManageDogs, onDelete, onPasswordReset, onDownload, deleteDisabled,
 }: {
   user: AdminUserRow;
   onEdit: () => void;
@@ -81,18 +87,13 @@ function UserRow({
               <p className="font-bold text-deep-slate leading-tight">{user.full_name ?? "—"}</p>
               <p className="text-xs text-pebble-grey">{user.email}</p>
             </div>
-            {!user.is_active && (
-              <Badge tone="terra">Inactive</Badge>
-            )}
+            {!user.is_active && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted-terracotta/10 text-muted-terracotta border border-muted-terracotta/30">Inactive</span>}
           </div>
         </td>
         <td className="px-4 py-3 hidden lg:table-cell text-pebble-grey text-sm">{formatDate(user.created_at)}</td>
         <td className="px-4 py-3 text-center">
           {user.dog_count > 0 ? (
-            <button
-              onClick={toggleDogs}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-groomr-gold/20 text-deep-slate hover:bg-groomr-gold/40 border border-groomr-gold/40 transition-colors focus-ring"
-            >
+            <button onClick={toggleDogs} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-groomr-gold/20 text-deep-slate hover:bg-groomr-gold/40 border border-groomr-gold/40 transition-colors focus-ring">
               {expanded ? <ChevronDownIcon size={12} /> : <ChevronRightIcon size={12} />}
               {loadingDogs ? "…" : user.dog_count}
             </button>
@@ -118,10 +119,10 @@ function UserRow({
                 </button>
               </>
             )}
-            <button onClick={onDownload} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring" title="Download JSON">
+            <button onClick={onDownload} title="Download JSON" className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring">
               ↓
             </button>
-            <button onClick={onDelete} disabled={deleteDisabled} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-muted-terracotta/10 text-muted-terracotta hover:bg-muted-terracotta/20 border border-muted-terracotta/30 transition-colors focus-ring disabled:opacity-50" title="Delete account">
+            <button onClick={onDelete} disabled={deleteDisabled} title="Delete account" className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-muted-terracotta/10 text-muted-terracotta hover:bg-muted-terracotta/20 border border-muted-terracotta/30 transition-colors focus-ring disabled:opacity-50">
               <TrashIcon size={12} />
             </button>
           </div>
@@ -146,11 +147,6 @@ function UserRow({
   );
 }
 
-interface DeleteConfirm {
-  profileId: string;
-  name: string;
-}
-
 export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
   const [users, setUsers] = useState<AdminUserRow[]>(initialUsers);
   const [search, setSearch] = useState("");
@@ -165,8 +161,6 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
   const [resetPendingId, setResetPendingId] = useState<string | null>(null);
   const [exportingBulk, startBulkExport] = useTransition();
 
-  const totalDogs = users.reduce((sum, u) => sum + (u.dog_count ?? 0), 0);
-
   const filtered = users
     .filter((u) => {
       if (dogFilter === "has_dogs" && u.dog_count === 0) return false;
@@ -178,7 +172,6 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
     .sort((a, b) => {
       if (sort === "name") return (a.full_name ?? "").localeCompare(b.full_name ?? "");
       if (sort === "dogs") return b.dog_count - a.dog_count;
-      // joined (default desc)
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 
@@ -229,60 +222,53 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
   return (
     <>
       <div className="space-y-4">
-        <OwnerStatsBar />
+        {/* Stats bar — computed from owners data */}
+        <OwnerStatsBar owners={users} />
 
-        {/* Header row */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-sm font-bold text-pebble-grey">
-            {filtered.length === users.length
-              ? `${users.length} owners · ${totalDogs} dogs`
-              : `${filtered.length} of ${users.length} owners`}
-          </p>
+        {/* List controls: filter pills + sort pills | search + export */}
+        <div className="flex items-center gap-2 flex-wrap justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={handleExportBulk} disabled={exportingBulk} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors disabled:opacity-50">
-              {exportingBulk ? "Exporting…" : "Export all (CSV)"}
+            {/* Dog filter pills */}
+            <div className="flex items-center gap-1">
+              {DOG_FILTER_PILLS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setDogFilter(f.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors focus-ring ${
+                    dogFilter === f.id
+                      ? "bg-deep-slate text-alabaster-cream border-deep-slate"
+                      : "bg-white text-pebble-grey border-pebble-grey/20 hover:border-pebble-grey/50"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            {/* Sort pills */}
+            <div className="flex items-center gap-1 border-l border-pebble-grey/20 pl-2 ml-1">
+              {SORT_PILLS.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSort(s.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors focus-ring ${
+                    sort === s.id
+                      ? "bg-groomr-gold text-deep-slate border-groomr-gold"
+                      : "bg-white text-pebble-grey border-pebble-grey/20 hover:border-pebble-grey/50"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-pebble-grey font-bold hidden sm:block">
+              {filtered.length === users.length ? `${users.length}` : `${filtered.length}/${users.length}`} owners
+            </span>
+            <SearchPill value={search} onChange={setSearch} placeholder="Search…" size="sm" />
+            <button onClick={handleExportBulk} disabled={exportingBulk} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors disabled:opacity-50 whitespace-nowrap">
+              {exportingBulk ? "Exporting…" : "Export CSV"}
             </button>
-            <SearchPill value={search} onChange={setSearch} placeholder="Search owners…" size="sm" />
-          </div>
-        </div>
-
-        {/* Controls row */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Sort</span>
-            <div className="flex gap-1">
-              {(["joined", "name", "dogs"] as SortKey[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSort(s)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors focus-ring ${
-                    sort === s
-                      ? "bg-deep-slate text-alabaster-cream border-deep-slate"
-                      : "bg-white text-pebble-grey border-pebble-grey/20 hover:border-pebble-grey/50"
-                  }`}
-                >
-                  {s === "joined" ? "Joined" : s === "name" ? "Name" : "Dog count"}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Filter</span>
-            <div className="flex gap-1">
-              {(["all", "has_dogs", "no_dogs"] as DogFilter[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setDogFilter(f)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors focus-ring ${
-                    dogFilter === f
-                      ? "bg-deep-slate text-alabaster-cream border-deep-slate"
-                      : "bg-white text-pebble-grey border-pebble-grey/20 hover:border-pebble-grey/50"
-                  }`}
-                >
-                  {f === "all" ? "All" : f === "has_dogs" ? "Has dogs" : "No dogs"}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -327,48 +313,24 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
           <div className="absolute inset-0 bg-deep-slate/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
           <div className="relative bg-white rounded-[24px] p-6 shadow-modal max-w-sm w-full space-y-4">
             <h3 className="font-fredoka text-xl text-deep-slate">Delete {deleteConfirm.name}?</h3>
-            <p className="text-sm text-pebble-grey">
-              This permanently deletes the owner account and disables Clerk access. It cannot be undone.
-              <span className="block mt-1 font-bold text-muted-terracotta">If they have confirmed or pending appointments, deletion will be blocked — cancel those first.</span>
-            </p>
+            <p className="text-sm text-pebble-grey">This permanently deletes the owner account and disables Clerk access. It cannot be undone.</p>
+            <p className="text-xs font-bold text-muted-terracotta">If they have confirmed or pending appointments, deletion will be blocked — cancel those first.</p>
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button onClick={() => setDeleteConfirm(null)} className="btn-secondary font-nunito font-bold px-5 py-2 rounded-full text-sm focus-ring">
-                Cancel
-              </button>
-              <button onClick={handleDelete} className="font-nunito font-bold px-5 py-2 rounded-full text-sm bg-muted-terracotta text-white hover:opacity-90 transition-opacity focus-ring">
-                Delete account
-              </button>
+              <button onClick={() => setDeleteConfirm(null)} className="btn-secondary font-nunito font-bold px-5 py-2 rounded-full text-sm focus-ring">Cancel</button>
+              <button onClick={handleDelete} className="font-nunito font-bold px-5 py-2 rounded-full text-sm bg-muted-terracotta text-white hover:opacity-90 transition-opacity focus-ring">Delete account</button>
             </div>
           </div>
         </div>
       )}
 
       {editUser && (
-        <UserEditModal
-          user={editUser}
-          onClose={() => setEditUser(null)}
-          onSaved={(updated) => {
-            setUsers((prev) =>
-              prev.map((u) => (u.profile_id === editUser.profile_id ? { ...u, ...updated } : u))
-            );
-          }}
-        />
+        <UserEditModal user={editUser} onClose={() => setEditUser(null)} onSaved={(updated) => { setUsers((prev) => prev.map((u) => (u.profile_id === editUser.profile_id ? { ...u, ...updated } : u))); }} />
       )}
-
       {contactUser && contactUser.email && (
-        <ContactModal
-          toEmail={contactUser.email}
-          toName={contactUser.full_name ?? "Owner"}
-          onClose={() => setContactUser(null)}
-        />
+        <ContactModal toEmail={contactUser.email} toName={contactUser.full_name ?? "Owner"} onClose={() => setContactUser(null)} />
       )}
-
       {dogsUser && (
-        <DogManagerModal
-          ownerProfileId={dogsUser.profile_id}
-          ownerName={dogsUser.full_name ?? "Owner"}
-          onClose={() => setDogsUser(null)}
-        />
+        <DogManagerModal ownerProfileId={dogsUser.profile_id} ownerName={dogsUser.full_name ?? "Owner"} onClose={() => setDogsUser(null)} />
       )}
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

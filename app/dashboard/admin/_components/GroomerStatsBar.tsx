@@ -1,53 +1,53 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { adminGetGroomerStats } from "@/app/actions/admin";
-import type { AdminGroomerStats } from "@/app/actions/admin";
+import { useState } from "react";
+import type { AdminGroomerRow } from "@/app/actions/admin";
 
 interface Props {
-  onCityFilter: (city: string | null) => void;
+  groomers: AdminGroomerRow[];
 }
 
-export function GroomerStatsBar({ onCityFilter }: Props) {
-  const [stats, setStats] = useState<AdminGroomerStats | null>(null);
-  const [selectedCity, setSelectedCity] = useState<string>("");
+export function GroomerStatsBar({ groomers }: Props) {
+  const [selectedCity, setSelectedCity] = useState("");
 
-  useEffect(() => {
-    adminGetGroomerStats().then((res) => {
-      if ("data" in res) setStats(res.data);
-    });
-  }, []);
+  const cities = Array.from(
+    new Set(groomers.map((g) => g.city).filter(Boolean) as string[])
+  ).sort();
 
-  function handleCityChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const val = e.target.value;
-    setSelectedCity(val);
-    onCityFilter(val || null);
-  }
+  const subset = selectedCity
+    ? groomers.filter((g) => g.city === selectedCity)
+    : groomers;
 
-  if (!stats) {
-    return (
-      <div className="h-10 bg-white border border-pebble-grey/20 rounded-[20px] animate-pulse" />
-    );
-  }
+  const total = subset.length;
+  const listed = subset.filter((g) => g.is_listed).length;
+  const verified = subset.filter((g) => g.is_verified).length;
+  const awaiting = subset.filter((g) => g.verification_status === "awaiting").length;
+  const avgRating =
+    subset.length > 0
+      ? subset.reduce((sum, g) => sum + (g.average_rating ?? 0), 0) / subset.length
+      : 0;
 
   return (
     <div className="bg-white border border-pebble-grey/20 rounded-[20px] px-4 sm:px-5 py-3 flex items-center gap-4 sm:gap-6 flex-wrap">
-      <Chip label="Total" value={stats.totalGroomers.toLocaleString()} />
-      <Chip label="Listed" value={stats.listedGroomers.toLocaleString()} />
-      <Chip label="Verified" value={stats.verifiedGroomers.toLocaleString()} />
-      <Chip label="Avg appts/groomer/wk" value={stats.avgAppointmentsPerGroomerPerWeek.toString()} />
+      <Chip label="Total" value={total.toLocaleString()} />
+      <Chip label="Listed" value={listed.toLocaleString()} />
+      <Chip label="Verified" value={verified.toLocaleString()} tone="sage" />
+      {awaiting > 0 && <Chip label="Awaiting" value={awaiting.toLocaleString()} tone="gold" />}
+      {avgRating > 0 && <Chip label="Avg rating" value={`${avgRating.toFixed(1)} ★`} />}
 
-      {stats.groomersByCity.length > 0 && (
+      {cities.length > 0 && (
         <div className="ml-auto flex items-center gap-2">
-          <label className="text-xs font-bold text-pebble-grey uppercase tracking-wider shrink-0">Filter by city</label>
+          <label className="text-xs font-bold text-pebble-grey uppercase tracking-wider shrink-0">City</label>
           <select
             className="field text-xs py-1 pl-2 pr-6"
             value={selectedCity}
-            onChange={handleCityChange}
+            onChange={(e) => setSelectedCity(e.target.value)}
           >
             <option value="">All cities</option>
-            {stats.groomersByCity.map(({ city, count }) => (
-              <option key={city} value={city}>{city} ({count})</option>
+            {cities.map((city) => (
+              <option key={city} value={city}>
+                {city} ({groomers.filter((g) => g.city === city).length})
+              </option>
             ))}
           </select>
         </div>
@@ -56,11 +56,15 @@ export function GroomerStatsBar({ onCityFilter }: Props) {
   );
 }
 
-function Chip({ label, value }: { label: string; value: string }) {
+function Chip({ label, value, tone }: { label: string; value: string; tone?: "sage" | "gold" }) {
+  const valueClass =
+    tone === "sage" ? "text-sage-leaf" :
+    tone === "gold" ? "text-deep-slate" :
+    "text-deep-slate";
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-[10px] font-bold text-pebble-grey uppercase tracking-wider">{label}</span>
-      <span className="font-fredoka text-base text-deep-slate leading-none">{value}</span>
+      <span className={`font-fredoka text-base leading-none ${valueClass}`}>{value}</span>
     </div>
   );
 }

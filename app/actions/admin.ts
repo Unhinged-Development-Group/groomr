@@ -133,6 +133,7 @@ export interface AdminAppointmentRow {
   owner_email: string | null;
   groomer_profile_id: string | null;
   groomer_business_name: string | null;
+  groomer_city: string | null;
   dog_name: string | null;
   service_name: string;
   service_price_pence: number;
@@ -363,6 +364,35 @@ export async function adminUpdateVerificationStatus(
   }
 
   logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: oldStatus, to: status });
+  return { ok: true };
+}
+
+export async function adminSendVerificationReminder(
+  groomerProfileId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const { data } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("business_name, profiles!groomer_profiles_user_id_fkey ( email, full_name )")
+    .eq("id", groomerProfileId)
+    .maybeSingle();
+
+  const email = (data as any)?.profiles?.email;
+  const name = (data as any)?.profiles?.full_name ?? "there";
+  const business = (data as any)?.business_name ?? "your business";
+
+  if (!email) return { error: "No email address found for this groomer" };
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "Action required: Complete your Groomr verification",
+    text: `Hi ${name},\n\nWe noticed that ${business} hasn't yet submitted verification documents on Groomr.\n\nTo appear in search results and start accepting bookings, please upload your documents in your groomer dashboard under Settings > Verification.\n\nIf you have any questions, feel free to reply to this email.\n\nThe Groomr team`,
+  }).catch(() => {});
+
+  logAdminAction(guard.profileId, "send_verification_reminder", "groomer_profiles", groomerProfileId);
   return { ok: true };
 }
 
@@ -1304,6 +1334,7 @@ export async function adminSaveService(
       .select(selectCols)
       .single();
     if (error || !data) return { error: error?.message ?? "Failed to update service" };
+    logAdminAction(guard.profileId, "update_service", "services", serviceId, { name: fields.name });
     return { data: data as AdminServiceRow };
   } else {
     const { data, error } = await supabaseAdmin
@@ -1312,6 +1343,7 @@ export async function adminSaveService(
       .select(selectCols)
       .single();
     if (error || !data) return { error: error?.message ?? "Failed to add service" };
+    logAdminAction(guard.profileId, "add_service", "services", (data as any).id, { name: fields.name, groomer_profile_id: groomerProfileId });
     return { data: data as AdminServiceRow };
   }
 }
@@ -1348,7 +1380,7 @@ export async function adminGetAppointments(
        booking_group_id, created_at,
        service_snapshot_name, service_snapshot_price,
        owner:profiles!owner_id ( id, full_name, email ),
-       groomer:groomer_profiles!groomer_profile_id ( id, business_name ),
+       groomer:groomer_profiles!groomer_profile_id ( id, business_name, city ),
        dog:dogs!dog_id ( name )`
     )
     .order("scheduled_at", { ascending: false })
@@ -1368,6 +1400,7 @@ export async function adminGetAppointments(
     owner_email: a.owner?.email ?? null,
     groomer_profile_id: a.groomer?.id ?? null,
     groomer_business_name: a.groomer?.business_name ?? null,
+    groomer_city: a.groomer?.city ?? null,
     dog_name: a.dog?.name ?? null,
     service_name: a.service_snapshot_name ?? "—",
     service_price_pence: a.service_snapshot_price ?? 0,

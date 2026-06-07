@@ -12,6 +12,9 @@ import { VerificationCallout } from "./VerificationCallout";
 import { GroomerStatsBar } from "./GroomerStatsBar";
 import type { AdminGroomerRow } from "@/app/actions/admin";
 
+type ListFilter = "all" | "listed" | "unlisted" | "verified" | "awaiting" | "not_submitted";
+type ListSort = "joined" | "name" | "rating";
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
@@ -44,26 +47,52 @@ function objectsToCSV(rows: Record<string, unknown>[]): string {
   return [keys.join(","), ...rows.map((r) => keys.map((k) => escape(r[k])).join(","))].join("\n");
 }
 
+const FILTER_PILLS: { id: ListFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "listed", label: "Listed" },
+  { id: "unlisted", label: "Unlisted" },
+  { id: "verified", label: "Verified" },
+  { id: "awaiting", label: "Awaiting" },
+  { id: "not_submitted", label: "Not submitted" },
+];
+
+const SORT_PILLS: { id: ListSort; label: string }[] = [
+  { id: "joined", label: "Joined" },
+  { id: "name", label: "Name" },
+  { id: "rating", label: "Rating" },
+];
+
 export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomerRow[] }) {
   const [groomers, setGroomers] = useState<AdminGroomerRow[]>(initialGroomers);
   const [search, setSearch] = useState("");
-  const [cityFilter, setCityFilter] = useState<string | null>(null);
+  const [listFilter, setListFilter] = useState<ListFilter>("all");
+  const [listSort, setListSort] = useState<ListSort>("joined");
   const [editGroomer, setEditGroomer] = useState<AdminGroomerRow | null>(null);
   const [contactGroomer, setContactGroomer] = useState<AdminGroomerRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [exportingBulk, startBulkExport] = useTransition();
   const [resetPendingId, setResetPendingId] = useState<string | null>(null);
 
-  const filtered = groomers.filter((g) => {
-    if (cityFilter && g.city?.toLowerCase() !== cityFilter.toLowerCase()) return false;
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      g.business_name?.toLowerCase().includes(q) ||
-      g.owner_name?.toLowerCase().includes(q) ||
-      g.email?.toLowerCase().includes(q)
-    );
-  });
+  const filtered = groomers
+    .filter((g) => {
+      if (listFilter === "listed" && !g.is_listed) return false;
+      if (listFilter === "unlisted" && g.is_listed) return false;
+      if (listFilter === "verified" && g.verification_status !== "verified") return false;
+      if (listFilter === "awaiting" && g.verification_status !== "awaiting") return false;
+      if (listFilter === "not_submitted" && g.verification_status !== "not_submitted") return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        g.business_name?.toLowerCase().includes(q) ||
+        g.owner_name?.toLowerCase().includes(q) ||
+        g.email?.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (listSort === "name") return (a.business_name ?? "").localeCompare(b.business_name ?? "");
+      if (listSort === "rating") return (b.average_rating ?? 0) - (a.average_rating ?? 0);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   function handleStatusChanged(id: string, status: string) {
     setGroomers((prev) =>
@@ -108,28 +137,61 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
   return (
     <>
       <div className="space-y-4">
-        {/* Stats bar */}
-        <GroomerStatsBar onCityFilter={setCityFilter} />
+        {/* Stats bar — city filter controls numbers in bar */}
+        <GroomerStatsBar groomers={groomers} />
 
         {/* Verification callout */}
         <VerificationCallout groomers={groomers} onStatusChanged={handleStatusChanged} />
 
-        {/* Header row */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-sm font-bold text-pebble-grey">
-            {filtered.length === groomers.length
-              ? `${groomers.length} groomers`
-              : `${filtered.length} of ${groomers.length} groomers`}
-          </p>
+        {/* List controls: filter pills + sort pills | search + export */}
+        <div className="flex items-center gap-2 flex-wrap justify-between">
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Filter pills */}
+            <div className="flex items-center gap-1 flex-wrap">
+              {FILTER_PILLS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setListFilter(f.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors focus-ring ${
+                    listFilter === f.id
+                      ? "bg-deep-slate text-alabaster-cream border-deep-slate"
+                      : "bg-white text-pebble-grey border-pebble-grey/20 hover:border-pebble-grey/50"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            {/* Sort pills */}
+            <div className="flex items-center gap-1 border-l border-pebble-grey/20 pl-2 ml-1">
+              {SORT_PILLS.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setListSort(s.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors focus-ring ${
+                    listSort === s.id
+                      ? "bg-groomr-gold text-deep-slate border-groomr-gold"
+                      : "bg-white text-pebble-grey border-pebble-grey/20 hover:border-pebble-grey/50"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-pebble-grey font-bold hidden sm:block">
+              {filtered.length === groomers.length ? `${groomers.length}` : `${filtered.length}/${groomers.length}`} groomers
+            </span>
+            <SearchPill value={search} onChange={setSearch} placeholder="Search…" size="sm" />
             <button
               onClick={handleExportBulk}
               disabled={exportingBulk}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
-              {exportingBulk ? "Exporting…" : "Export all (CSV)"}
+              {exportingBulk ? "Exporting…" : "Export CSV"}
             </button>
-            <SearchPill value={search} onChange={setSearch} placeholder="Search groomers…" size="sm" />
           </div>
         </div>
 
@@ -158,8 +220,9 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
                       <tr key={g.groomer_profile_id} className="hover:bg-alabaster-cream/50 transition-colors">
                         <td className="px-4 py-3">
                           <p className="font-bold text-deep-slate leading-tight">{g.business_name}</p>
+                          {g.city && <p className="text-xs text-pebble-grey">{g.city}</p>}
                           {g.average_rating > 0 && (
-                            <p className="text-xs text-pebble-grey mt-0.5">★ {g.average_rating.toFixed(1)} ({g.total_reviews})</p>
+                            <p className="text-xs text-pebble-grey">★ {g.average_rating.toFixed(1)} ({g.total_reviews})</p>
                           )}
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell">
@@ -176,44 +239,24 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
                             {profileUrl && (
-                              <a
-                                href={profileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-sage-leaf/10 text-sage-leaf hover:bg-sage-leaf/20 border border-sage-leaf/30 transition-colors focus-ring"
-                              >
-                                View profile
+                              <a href={profileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-sage-leaf/10 text-sage-leaf hover:bg-sage-leaf/20 border border-sage-leaf/30 transition-colors focus-ring">
+                                View
                               </a>
                             )}
-                            <button
-                              onClick={() => setEditGroomer(g)}
-                              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring"
-                            >
-                              <PencilIcon size={12} />
-                              Edit
+                            <button onClick={() => setEditGroomer(g)} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-deep-slate hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring">
+                              <PencilIcon size={12} /> Edit
                             </button>
                             {g.email && (
                               <>
-                                <button
-                                  onClick={() => setContactGroomer(g)}
-                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-groomr-gold/20 text-deep-slate hover:bg-groomr-gold/40 border border-groomr-gold/40 transition-colors focus-ring"
-                                >
+                                <button onClick={() => setContactGroomer(g)} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-groomr-gold/20 text-deep-slate hover:bg-groomr-gold/40 border border-groomr-gold/40 transition-colors focus-ring">
                                   Email
                                 </button>
-                                <button
-                                  onClick={() => handlePasswordReset(g)}
-                                  disabled={resetPendingId === g.groomer_profile_id}
-                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring disabled:opacity-50"
-                                >
-                                  {resetPendingId === g.groomer_profile_id ? "Sending…" : "Reset pwd"}
+                                <button onClick={() => handlePasswordReset(g)} disabled={resetPendingId === g.groomer_profile_id} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring disabled:opacity-50">
+                                  {resetPendingId === g.groomer_profile_id ? "…" : "Reset pwd"}
                                 </button>
                               </>
                             )}
-                            <button
-                              onClick={() => handleExportIndividual(g.groomer_profile_id, g.business_name)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring"
-                              title="Download JSON"
-                            >
+                            <button onClick={() => handleExportIndividual(g.groomer_profile_id, g.business_name)} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring" title="Download JSON">
                               ↓
                             </button>
                           </div>

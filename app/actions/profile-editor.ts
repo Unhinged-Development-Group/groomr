@@ -537,8 +537,9 @@ export async function getCoverPhotoSignature(groomerProfileId: string): Promise<
 
   const timestamp = Math.round(Date.now() / 1000);
   const folder = `groomr/cover-photos/${groomerProfileId}`;
+  const allowed_formats = "jpg,jpeg,png,webp";
   const signature = cloudinary.utils.api_sign_request(
-    { folder, timestamp },
+    { folder, timestamp, allowed_formats },
     process.env.CLOUDINARY_API_SECRET!
   );
 
@@ -548,6 +549,7 @@ export async function getCoverPhotoSignature(groomerProfileId: string): Promise<
     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
     apiKey: process.env.CLOUDINARY_API_KEY!,
     folder,
+    allowedFormats: allowed_formats,
   };
 }
 
@@ -612,8 +614,9 @@ export async function getProfileImageSignature(groomerProfileId: string): Promis
 
   const timestamp = Math.round(Date.now() / 1000);
   const folder = `groomr/profile-images/${groomerProfileId}`;
+  const allowed_formats = "jpg,jpeg,png,webp";
   const signature = cloudinary.utils.api_sign_request(
-    { folder, timestamp },
+    { folder, timestamp, allowed_formats },
     process.env.CLOUDINARY_API_SECRET!
   );
 
@@ -623,6 +626,7 @@ export async function getProfileImageSignature(groomerProfileId: string): Promis
     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
     apiKey: process.env.CLOUDINARY_API_KEY!,
     folder,
+    allowedFormats: allowed_formats,
   };
 }
 
@@ -638,8 +642,9 @@ export async function getVerificationDocSignature(groomerProfileId: string): Pro
 
   const timestamp = Math.round(Date.now() / 1000);
   const folder = `groomr/verification/${groomerProfileId}`;
+  const allowed_formats = "jpg,jpeg,png,webp,pdf";
   const signature = cloudinary.utils.api_sign_request(
-    { folder, timestamp },
+    { folder, timestamp, allowed_formats },
     process.env.CLOUDINARY_API_SECRET!
   );
 
@@ -649,6 +654,7 @@ export async function getVerificationDocSignature(groomerProfileId: string): Pro
     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
     apiKey: process.env.CLOUDINARY_API_KEY!,
     folder,
+    allowedFormats: allowed_formats,
   };
 }
 

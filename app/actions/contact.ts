@@ -2,6 +2,10 @@
 
 import { resend, FROM_EMAIL } from "@/lib/resend";
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export async function sendContactInquiry(
   groomerName: string,
   groomerProfileId: string,
@@ -15,6 +19,9 @@ export async function sendContactInquiry(
 
   if (!trimName || !trimEmail || !trimMessage) {
     return { ok: false, error: "Please fill in all fields" };
+  }
+  if (!isValidEmail(trimEmail)) {
+    return { ok: false, error: "Please enter a valid email address" };
   }
 
   try {

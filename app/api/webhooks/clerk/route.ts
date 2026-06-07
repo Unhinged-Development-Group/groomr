@@ -99,12 +99,13 @@ export async function POST(req: Request) {
   if (evt.type === 'user.deleted') {
     const { id } = evt.data
 
+    // Soft-delete: retain for 30 days for dispute/financial record lookups (UK GDPR)
     const { error } = await supabaseAdmin
       .from('profiles')
-      .delete()
+      .update({ is_deleted: true, deleted_at: new Date().toISOString() })
       .eq('clerk_id', id)
 
-    console.log('user.deleted — profile delete:', error ?? 'ok')
+    console.log('user.deleted — profile soft-deleted:', error ?? 'ok')
   }
 
   if (evt.type === 'user.updated') {

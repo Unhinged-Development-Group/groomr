@@ -55,10 +55,10 @@ export async function getAvailableSlots(
   const [y, mo, d] = dateStr.split("-").map(Number);
   const dayOfWeek = new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
 
-  const [availRes, overrideRes, serviceRes, gpRes] = await Promise.all([
+  const [availRes, overrideRes, serviceRes, gpRes, timeBlockRes] = await Promise.all([
     supabaseAdmin
       .from("availability")
-      .select("start_time, end_time")
+      .select("start_time, end_time, break_start_time, break_end_time")
       .eq("groomer_profile_id", groomerProfileId)
       .eq("day_of_week", dayOfWeek)
       .eq("is_active", true)
@@ -80,10 +80,21 @@ export async function getAvailableSlots(
       .select("default_buffer_minutes")
       .eq("id", groomerProfileId)
       .maybeSingle(),
+    // time_blocks: groomer-declared unavailability periods overlapping this date
+    supabaseAdmin
+      .from("time_blocks")
+      .select("start_time, end_time, all_day")
+      .eq("groomer_profile_id", groomerProfileId)
+      .lte("start_date", dateStr)
+      .gte("end_date", dateStr),
   ]);
 
   if (!availRes.data) return [];
   if (overrideRes.data && !overrideRes.data.is_available) return [];
+
+  // Any all-day time block → groomer entirely unavailable
+  const timeBlocks = timeBlockRes.data ?? [];
+  if (timeBlocks.some((b) => b.all_day)) return [];
 
   const startTime  = (overrideRes.data?.start_time ?? availRes.data.start_time) as string;
   const endTime    = (overrideRes.data?.end_time   ?? availRes.data.end_time)   as string;
@@ -103,16 +114,33 @@ export async function getAvailableSlots(
     .gte("scheduled_at", `${dateStr}T00:00:00Z`)
     .lte("scheduled_at", `${dateStr}T23:59:59Z`);
 
-  const bookedIntervals = (existing ?? [])
-    .map((a) => {
-      const dt    = new Date(a.scheduled_at);
-      const start = dt.getUTCHours() * 60 + dt.getUTCMinutes();
-      const dur   = a.service_snapshot_duration ?? 60;
-      return { start, end: start + dur };
-    })
-    .sort((a, b) => a.start - b.start);
+  // Merge all blocked intervals: appointments + partial-day time_blocks + break window
+  const bookedIntervals: Array<{ start: number; end: number }> = [];
 
-  // Build free windows between bookings within the working day
+  for (const a of existing ?? []) {
+    const dt    = new Date(a.scheduled_at);
+    const start = dt.getUTCHours() * 60 + dt.getUTCMinutes();
+    bookedIntervals.push({ start, end: start + (a.service_snapshot_duration ?? 60) });
+  }
+
+  for (const block of timeBlocks.filter((b) => !b.all_day)) {
+    if (block.start_time && block.end_time) {
+      bookedIntervals.push({
+        start: toMinutes(block.start_time as string),
+        end:   toMinutes(block.end_time   as string),
+      });
+    }
+  }
+
+  const breakStart = availRes.data.break_start_time as string | null;
+  const breakEnd   = availRes.data.break_end_time   as string | null;
+  if (breakStart && breakEnd) {
+    bookedIntervals.push({ start: toMinutes(breakStart), end: toMinutes(breakEnd) });
+  }
+
+  bookedIntervals.sort((a, b) => a.start - b.start);
+
+  // Build free windows between booked intervals within the working day
   const windows: { start: number; end: number }[] = [];
   let cursor = dayStart;
   for (const booked of bookedIntervals) {
@@ -217,9 +245,8 @@ export async function createAppointment(
       .maybeSingle();
 
     if (clientSettings?.discount_percentage != null) {
-      effectivePricePence = Math.round(
-        service.price_pence * (1 - clientSettings.discount_percentage / 100),
-      );
+      const pct = Math.max(0, Math.min(100, clientSettings.discount_percentage));
+      effectivePricePence = Math.round(service.price_pence * (1 - pct / 100));
     }
   }
 
@@ -337,9 +364,8 @@ export async function createGroupAppointment(input: {
         .maybeSingle();
 
       if (clientSettings?.discount_percentage != null) {
-        effectivePricePence = Math.round(
-          service.price_pence * (1 - clientSettings.discount_percentage / 100),
-        );
+        const pct = Math.max(0, Math.min(100, clientSettings.discount_percentage));
+        effectivePricePence = Math.round(service.price_pence * (1 - pct / 100));
       }
     }
 

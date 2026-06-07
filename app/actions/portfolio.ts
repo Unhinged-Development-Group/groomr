@@ -69,8 +69,9 @@ export async function getPortfolioUploadSignature(groomerProfileId: string): Pro
 
   const timestamp = Math.round(Date.now() / 1000);
   const folder = `groomr/portfolio/${groomerProfileId}`;
+  const allowed_formats = "jpg,jpeg,png,webp";
   const signature = cloudinary.utils.api_sign_request(
-    { folder, timestamp },
+    { folder, timestamp, allowed_formats },
     process.env.CLOUDINARY_API_SECRET!
   );
 
@@ -80,6 +81,7 @@ export async function getPortfolioUploadSignature(groomerProfileId: string): Pro
     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
     apiKey: process.env.CLOUDINARY_API_KEY!,
     folder,
+    allowedFormats: allowed_formats,
   };
 }
 

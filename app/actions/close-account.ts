@@ -67,13 +67,19 @@ export async function closeOwnerAccount(): Promise<{ error?: string }> {
 
   const profileId = profile.id;
 
-  // Delete in dependency order
+  // Hard-delete non-financial operational data immediately
   await supabaseAdmin.from("favourites").delete().eq("owner_id", profileId);
-  await supabaseAdmin.from("appointments").delete().eq("owner_id", profileId);
   await supabaseAdmin.from("dogs").delete().eq("owner_id", profileId);
-  await supabaseAdmin.from("profiles").delete().eq("id", profileId);
+  // Appointments are retained: groomers need payment history for their own records.
+  // The soft-deleted profile is anonymised by the 30-day hard-delete cron.
 
-  // Delete Clerk user
+  // Soft-delete profile — retained 30 days for dispute/financial lookups (UK GDPR)
+  await supabaseAdmin
+    .from("profiles")
+    .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+    .eq("id", profileId);
+
+  // Delete Clerk user (also fires user.deleted webhook → idempotent soft-delete)
   try {
     const client = await clerkClient();
     await client.users.deleteUser(userId);
@@ -108,23 +114,28 @@ export async function closeGroomerAccount(): Promise<{ error?: string }> {
   if (groomerProfile) {
     const gpId = groomerProfile.id;
 
-    // Delete groomer data in dependency order
-    await supabaseAdmin.from("reviews").delete().in(
-      "appointment_id",
-      (await supabaseAdmin.from("appointments").select("id").eq("groomer_profile_id", gpId)).data?.map(a => a.id) ?? []
-    );
-    await supabaseAdmin.from("appointments").delete().eq("groomer_profile_id", gpId);
+    // Hard-delete operational data that has no retention obligation
     await supabaseAdmin.from("services").delete().eq("groomer_profile_id", gpId);
     await supabaseAdmin.from("availability").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("team_members").delete().eq("groomer_profile_id", gpId);
+    await supabaseAdmin.from("availability_overrides").delete().eq("groomer_profile_id", gpId);
     await supabaseAdmin.from("time_blocks").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("favourites").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("groomer_profiles").delete().eq("id", gpId);
+    await supabaseAdmin.from("team_members").delete().eq("groomer_profile_id", gpId);
+    await supabaseAdmin.from("favourite_groomers").delete().eq("groomer_profile_id", gpId);
+    // Appointments + payments retained: financial records (UK 7-year tax law).
+    // Deactivate the profile so the groomer no longer appears in search.
+    await supabaseAdmin
+      .from("groomer_profiles")
+      .update({ is_listed: false, is_accepting_bookings: false })
+      .eq("id", gpId);
   }
 
-  await supabaseAdmin.from("profiles").delete().eq("id", profileId);
+  // Soft-delete profile — retained 30 days for dispute/financial lookups (UK GDPR)
+  await supabaseAdmin
+    .from("profiles")
+    .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+    .eq("id", profileId);
 
-  // Delete Clerk user
+  // Delete Clerk user (also fires user.deleted webhook → idempotent soft-delete)
   try {
     const client = await clerkClient();
     await client.users.deleteUser(userId);

@@ -5,7 +5,16 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 // Low-level send wrapper — never throws
 // ---------------------------------------------------------------------------
 
+// E.164 UK format: +44 followed by 9 or 10 digits (covers mobiles and landlines)
+function isValidUKPhone(phone: string): boolean {
+  return /^\+44\d{9,10}$/.test(phone.replace(/\s/g, ""));
+}
+
 async function sendSMS(to: string, body: string): Promise<void> {
+  if (!isValidUKPhone(to)) {
+    console.warn("[sms] skipped — not a valid UK E.164 number:", to);
+    return;
+  }
   try {
     await twilioClient.messages.create({ from: FROM_NUMBER, to, body });
   } catch (err) {

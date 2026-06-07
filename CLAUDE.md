@@ -285,6 +285,22 @@ amount_pence integer NOT NULL | stripe_payment_intent_id text UNIQUE
 status text DEFAULT 'pending'    -- 'pending' | 'succeeded' | 'failed'
 ```
 
+#### `disputes`
+```
+id uuid PK | owner_id uuid → profiles | groomer_id uuid → profiles
+appointment_id uuid → appointments (nullable)
+subject text | description text | status text
+  -- 'pending' | 'open' | 'awaiting_agreement' | 'awaiting_final_agreement' | 'final_review' | 'resolved' | 'closed'
+raised_by text    -- 'owner' | 'groomer'
+owner_comment text | groomer_comment text
+proposed_resolution text | resolution_proposed_at timestamptz
+owner_agreed boolean | groomer_agreed boolean
+final_resolution text | final_resolution_proposed_at timestamptz
+owner_agreed_final boolean | groomer_agreed_final boolean
+```
+> Two-round resolution: admin proposes → parties agree/reject → if rejected, admin sends final resolution.
+> `/disputes/[id]` renders party-scoped view via `getDisputeForParty()` in `app/actions/disputes.ts`.
+
 #### `support_requests`
 ```
 id uuid PK | profile_id uuid → profiles (nullable)
@@ -367,13 +383,14 @@ All in `app/actions/`. Pattern: `"use server"`, return `{ data } | { error: stri
 
 | File | Key exports |
 |---|---|
-| `admin.ts` | `getAdminOverviewStats`, `getAllGroomers`, `getAllUsers`, `getAllDisputes`, `getAllSupportRequests`, `verifyGroomer`, `updateGroomerProfile`, `updateUserProfile`, `updateDisputeStatus`, `replyToSupportRequest`, `contactUser`, `adminGetGroomerFull`, `adminGetDogsFull`, `adminAddDog`, `adminUpdateDog`, `adminDeleteDog`, `adminGetServices`, `adminSaveService`, `adminDeleteService`, `adminGetAppointments`, `adminCancelAppointment`, `adminGetPreferences`, `adminSavePreferences`, `adminGetFinancials`, `adminGetTeam`, `adminRevokeAdmin`, `adminGrantAdmin`, `adminFindProfileByEmail`, `adminGetPlatformSettings`, `adminSavePlatformSettings`, `adminGetAuditLog` |
+| `admin.ts` | `getAdminOverviewStats`, `getAllGroomers`, `getAllUsers`, `getAllDisputes`, `getAllSupportRequests`, `verifyGroomer`, `updateGroomerProfile`, `updateUserProfile`, `updateDisputeStatus`, `replyToSupportRequest`, `contactUser`, `adminGetGroomerFull`, `adminGetDogsFull`, `adminAddDog`, `adminUpdateDog`, `adminDeleteDog`, `adminGetServices`, `adminSaveService`, `adminDeleteService`, `adminGetAppointments`, `adminCancelAppointment`, `adminGetPreferences`, `adminSavePreferences`, `adminGetFinancials`, `adminGetTeam`, `adminRevokeAdmin`, `adminGrantAdmin`, `adminFindProfileByEmail`, `adminGetPlatformSettings`, `adminSavePlatformSettings`, `adminGetAuditLog`, `adminGetAnalytics` |
 | `appointments.ts` | `getOwnerAppointments`, `getGroomerAppointments`, `createAppointment` |
 | `booking.ts` | `getAvailableSlots(groomerProfileId, serviceId, dateStr)`, `createAppointment`, `createGroupAppointment` |
 | `client-settings.ts` | `getClientSettings`, `getClientTermsStatus`, `saveClientPricing` |
 | `close-account.ts` | `closeOwnerAccount`, `closeGroomerAccount`, `exportAccountData` |
 | `contact.ts` | `sendContactInquiry`, `contactUser` |
 | `contract-terms.ts` | `getContractTerms`, `checkTermsAcceptance`, `acceptContractTerms`, `saveContractTerms` |
+| `disputes.ts` | `getDisputeForParty`, `submitDisputeComment`, `respondToDisputeResolution` |
 | `dogs.ts` | `getDogs`, `addDog`, `updateDog`, `deleteDog` |
 | `favourites.ts` | `getFavouriteGroomers`, `addFavourite`, `removeFavourite` |
 | `groomer-registration.ts` | `registerGroomer`, `getInsuranceUploadSignature`, `getVerificationDocSignature` |
@@ -462,9 +479,12 @@ NEXT_PUBLIC_POSTHOG_KEY=
 | Next.js 16 middleware | `proxy.ts` not `middleware.ts` — all route protection goes in `proxy.ts` |
 | Clerk `SignInButton`/`SignUpButton` | Take exactly one child element |
 | Cloudinary in Next.js | `res.cloudinary.com` must be in `remotePatterns` in `next.config.ts` (already configured) |
-| `time_blocks` not in booking | `getAvailableSlots` doesn't check `time_blocks` table — blocked dates are NOT enforced in booking flow yet |
-| `break_start/end_time` not in booking | `availability` break columns exist but `getAvailableSlots` doesn't subtract them — breaks don't block slots |
+| `time_blocks` now in booking | `getAvailableSlots` checks `time_blocks` — all-day blocks return `[]`; partial-day blocks are booked intervals |
+| `break_start/end_time` now in booking | `getAvailableSlots` subtracts break windows. However `profile-editor.ts` writes JSON to these `time` columns (a bug) — fix that write before breaks will work end-to-end |
 | Admin UI uses anon client | `supabaseAdmin` bypasses `admin_all` RLS policies — admin pages must use the anon client to trigger those policies correctly |
+| No CSP headers | `next.config.ts` has no `headers()` security config — no Content-Security-Policy, X-Frame-Options, or X-Content-Type-Options set |
+| `dangerouslyAllowSVG` removed | `next.config.ts` no longer allows SVG via Next.js Image — do not re-add for user-uploaded content |
+| Discount % not server-validated | `createAppointment` in `booking.ts` applies discount without clamping to 0–100 — a DB value >100 produces negative price |
 
 ---
 
@@ -518,7 +538,7 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | `/dashboard/groomer/messages` | [`documents/pages/dashboard-groomer-messages.md`](documents/pages/dashboard-groomer-messages.md) | Real-time messaging |
 | `/dashboard/groomer/notifications` | — | Notification preferences |
 | `/dashboard/groomer/portfolio` | — | Photo gallery management |
-| `/dashboard/admin` | — | Platform Control — User Management (Overview, Groomers, Users, Appointments, Disputes, Support) + Groomr Management (Financials, Team, Settings, Audit Log, Support). Template for new tabs at `_templates/NewTab.tsx` |
+| `/dashboard/admin` | — | Platform Control — User Management (Overview, Groomers, Users, Appointments, Disputes, Support) + Groomr Management (Financials, Team, Settings, Audit Log, Analytics, Support). Template for new tabs at `_templates/NewTab.tsx` |
 | `/terms`, `/privacy-policy`, `/cookie-policy`, `/verification-policy`, `/acceptable-use` | — | Legal pages |
 
 **API Routes:**
@@ -558,10 +578,65 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | Groomer earnings tab | Real — live payment data |
 | Team member appointment assignment UI | Real — assignment wired to `assigned_to_team_member_id` |
 | Admin dashboard — User Management | Real — Overview, Groomers (verify/edit/services), Users (edit/dogs), Appointments (cancel), Disputes, Support |
-| Admin dashboard — Groomr Management | Real — Financials (revenue breakdown), Team (grant/revoke admin), Platform Settings (commission rates + integration health), Audit Log (all mutating actions logged), Support (stats + tickets) |
+| Admin dashboard — Groomr Management | Real — Financials (revenue breakdown), Team (grant/revoke admin), Platform Settings (commission rates + integration health), Audit Log (all mutating actions logged), Analytics (revenue + booking charts via Recharts), Support (stats + tickets) |
 | Admin pinned snapshots | Infrastructure only — `profiles.admin_preferences`, `adminGetPreferences`/`adminSavePreferences` built; snapshot picker UI **not yet built** |
+| Dispute workflow | Real — `disputes` table, two-party comment + resolution flow, admin adjudication, `/disputes/[id]` page |
 | Support requests | Real — `support_requests` table, admin replies |
-| `time_blocks` → booking conflicts | Table + UI built; **not yet wired into `getAvailableSlots()`** |
-| Break windows in booking | `break_start/end_time` on `availability`; **not yet used in slot generation** |
+| `time_blocks` → booking conflicts | Real — wired into `getAvailableSlots()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals |
+| Break windows in booking | Real — `break_start_time`/`break_end_time` now subtracted from available slots in `getAvailableSlots()`. Note: `profile-editor.ts` incorrectly writes JSON to these `time` columns — breaks won't take effect until that write is fixed |
+| Discount % capping | `client_settings.discount_percentage` is not validated ≤ 100 in `createAppointment` — values > 100 produce negative prices |
 | PostHog analytics | Not built |
 | Google Calendar sync | Not built |
+| **Vaccination & health reminders** (owner) | Planned — store vaccine due-dates on `dogs`, send email/SMS N days before expiry via existing Resend + Twilio stack; needs a `dog_health_reminders` table or date fields on `dogs`, plus a cron job |
+| **Booking receipt download** (owner) | Planned — PDF or formatted HTML email receipt per appointment; server-side render with existing appointment + payment data, send via Resend on demand or post-completion |
+| **Groomer comparison tool** (owner) | Planned — pin 2–3 groomers from search, view side-by-side (price, distance, rating, availability preview); pure UI addition on top of existing search + groomer data |
+| **Waitlist management** (groomer) | Planned — owners join waitlist when groomer is fully booked; cancellation hook notifies groomer who can offer the slot in waitlist order; needs `waitlist_entries` table |
+| **Weekly business summary email** (groomer) | Planned — Monday digest: last week revenue, upcoming bookings, new vs. repeat clients, top services; one Resend template + extension to existing daily cron, no new DB tables |
+| **Per-client groom notes** (groomer) | Planned — structured per-session notes (coat condition, behaviour flags, products used) linked to `appointments`; groomer writes, owner reads summary; needs `groom_notes` table + bookings tab UI |
+| **Revenue forecasting** (admin) | Planned — project GMV for next 30/60/90 days from confirmed upcoming appointments + `service_snapshot_price`; query on existing data, display as card in Analytics or Financials tab |
+| **Groomer onboarding funnel analytics** (admin) | Planned — track step-by-step drop-off through the 6-step registration wizard; needs `registration_events` table (or PostHog when integrated); display funnel in admin Analytics tab |
+| **Fraud / anomaly alerts** (admin) | Planned — flag: owner with >3 cancellations in 30 days, groomer with >20% dispute rate, payment intents never confirmed; runs via existing daily cron, alerts to `notifications@groomr.uk` |
+
+---
+
+## Security Backlog
+
+Findings from the June 2026 security audit. Update `Status` as each is resolved.
+
+### Critical
+
+| # | Status | Issue | Location | Fix |
+|---|---|---|---|---|
+| S1 | ✅ Done | `dangerouslyAllowSVG: true` | [`next.config.ts`](next.config.ts) | Removed — SVGs can contain embedded JS. User-uploaded content never needs SVG. |
+| S2 | ✅ Done | No HTTP security headers | [`next.config.ts`](next.config.ts) | Added `headers()` with `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and CSP covering Clerk, Stripe, Google Maps, Supabase, Cloudinary |
+| S3 | ✅ Done | Discount % not clamped server-side | [`app/actions/booking.ts`](app/actions/booking.ts) | `Math.max(0, Math.min(100, pct))` applied in both `createAppointment` and `createGroupAppointment` |
+
+### High
+
+| # | Status | Issue | Location | Fix |
+|---|---|---|---|---|
+| S4 | ⬜ Open | No rate limiting on public API routes | [`proxy.ts`](proxy.ts), `/api/calendar/[groomerProfileId]` | Add Vercel Edge rate limiting (`@upstash/ratelimit` or Vercel's built-in) — calendar endpoint is unauthenticated and hits DB on every request |
+
+| S5 | ⬜ Open | Cloudinary signature issued without auth (registration) | [`app/actions/groomer-registration.ts:19`](app/actions/groomer-registration.ts) | Intentional — wizard runs before Clerk account exists. Mitigate: add short TTL (`timestamp` already included) and rate-limit the server action endpoint |
+| S6 | ✅ Done | No file-type restriction in Cloudinary signatures | `dogs.ts`, `portfolio.ts`, `profile-editor.ts` (×3), `groomer-registration.ts` | `allowed_formats` added to all 6 `api_sign_request` calls — images get `jpg,jpeg,png,webp`; verification/insurance docs also allow `pdf`. `allowedFormats` returned to client from each function. |
+| S7 | ✅ Done | Hard-delete on `user.deleted` webhook | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), [`app/actions/close-account.ts`](app/actions/close-account.ts) | Soft-delete added (`is_deleted`, `deleted_at` on `profiles`, migration `20260607000004`). `closeOwnerAccount` retains appointments; `closeGroomerAccount` retains appointments/payments and deactivates groomer listing. A 30-day hard-delete cron job is still needed (S7b). |
+
+### Medium
+
+| # | Status | Issue | Location | Fix |
+|---|---|---|---|---|
+| S8 | 🔄 Code done — GCP action needed | Google Maps API key not split | `.env.local` | Code already uses `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (browser) and `GOOGLE_MAPS_API_KEY` (server) separately. **Action**: create two keys in Google Cloud Console — browser key restricted to `https://groomr.uk/*`, server key restricted by Vercel outbound IP ranges — then update Vercel env vars. |
+| S9 | ✅ Done | SMS phone number not validated | [`lib/sms/send.ts`](lib/sms/send.ts) | `isValidUKPhone()` added — validates E.164 `+44` format (strips spaces) before every Twilio call; invalid numbers are skipped with a warning log |
+| S10 | ✅ Done | Contact form `senderEmail` not validated | [`app/actions/contact.ts`](app/actions/contact.ts) | `isValidEmail()` regex check added before Resend call; returns `{ ok: false, error }` on invalid format |
+| S11 | ⬜ Open | Stripe webhook handler errors silent | [`app/api/webhooks/stripe/route.ts:34`](app/api/webhooks/stripe/route.ts) | Returning 200 on handler error is correct (prevents Stripe retries) but add structured logging / alerting (e.g. log to `admin_audit_log` or POST to a monitoring endpoint) |
+
+### Low
+
+| # | Status | Issue | Notes |
+|---|---|---|---|
+| S12 | 🔄 See S8 | Two identical Google Maps keys | Same key used for both env vars — resolved once S8 GCP action is completed |
+| S13 | ⬜ Open | Admin role enforced in code only | `requireAdmin()` guard is correct but adding a DB-level RLS policy for `is_admin = true` would be belt-and-suspenders |
+| S14 | ⬜ Open | Cron endpoint must not leak query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Ensure response body never includes raw DB rows — return a summary count only |
+| S15 | ⬜ Open | Team member invite matched by email only | [`app/api/webhooks/clerk/route.ts:69`](app/api/webhooks/clerk/route.ts) | Race condition: two accounts created with same email could claim one invite. Add an invite token to harden |
+
+> **Key:** ⬜ Open · 🔄 In Progress · ✅ Done

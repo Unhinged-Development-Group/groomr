@@ -63,6 +63,7 @@ export async function getPortfolioUploadSignature(groomerProfileId: string): Pro
   cloudName: string;
   apiKey: string;
   folder: string;
+  allowedFormats: string;
 }> {
   const { userId } = await auth();
   if (!userId) throw new Error("Not authenticated");

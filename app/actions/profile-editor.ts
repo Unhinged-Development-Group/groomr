@@ -531,6 +531,7 @@ export async function getCoverPhotoSignature(groomerProfileId: string): Promise<
   cloudName: string;
   apiKey: string;
   folder: string;
+  allowedFormats: string;
 }> {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) throw new Error("Not authenticated");
@@ -608,6 +609,7 @@ export async function getProfileImageSignature(groomerProfileId: string): Promis
   cloudName: string;
   apiKey: string;
   folder: string;
+  allowedFormats: string;
 }> {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) throw new Error("Not authenticated");
@@ -636,6 +638,7 @@ export async function getVerificationDocSignature(groomerProfileId: string): Pro
   cloudName: string;
   apiKey: string;
   folder: string;
+  allowedFormats: string;
 }> {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) throw new Error("Not authenticated");

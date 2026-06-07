@@ -66,6 +66,7 @@ export async function getCloudinarySignature(): Promise<{
   cloudName: string;
   apiKey: string;
   folder: string;
+  allowedFormats: string;
 } | { error: string }> {
   const { userId } = await auth();
   if (!userId) return { error: "Not authenticated." };

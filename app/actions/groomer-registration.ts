@@ -22,6 +22,7 @@ export async function getInsuranceUploadSignature(): Promise<{
   cloudName: string;
   apiKey: string;
   folder: string;
+  allowedFormats: string;
 }> {
   const timestamp = Math.round(Date.now() / 1000);
   const folder    = "groomr/verification";

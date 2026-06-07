@@ -3,12 +3,37 @@
    ─────────────────────────────────────────────────────────────────
    Shared component library for all Groomr policy HTML documents.
 
-   Load via: <link rel="stylesheet" href="/policies/policy.css">
+   Load via (in this order):
+     <link rel="stylesheet" href="/policies/policy-tailwind.css">
+     <link rel="stylesheet" href="/policies/policy.css">
 
-   Pair with Tailwind CDN utilities only for responsive spacing
-   (e.g. p-8 md:p-12) and intentional margin overrides (mb-4, mb-8).
-   Never duplicate component properties as Tailwind classes.
+   policy-tailwind.css is a compiled Tailwind v3 build generated from
+   the policy HTML files. Regenerate it with: npm run build:policy-css
    ================================================================ */
+
+
+/* ── Local fonts (served from /public/fonts/) ───────────────── */
+@font-face {
+    font-family: 'Fredoka';
+    src: url('/fonts/Fredoka-VariableFont_wdth_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Nunito';
+    src: url('/fonts/Nunito-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Nunito';
+    src: url('/fonts/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
 
 
 /* ── Scroll offset for sticky header ───────────────────────── */

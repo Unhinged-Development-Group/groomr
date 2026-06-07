@@ -6,7 +6,8 @@
     "dev": "set NODE_OPTIONS=--dns-result-order=ipv4first && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:policy-css": "npx tailwindcss@3 -c public/policies/tailwind.config.js -i public/policies/tailwind.input.css -o public/policies/policy-tailwind.css --minify"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.7",

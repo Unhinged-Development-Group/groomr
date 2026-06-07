@@ -14,6 +14,20 @@ const CSP = [
   "base-uri 'self'",
 ].join("; ");
 
+// Policy HTML pages are standalone documents — more restrictive than the app CSP
+// (no Clerk, Stripe, or Maps) since they load no external scripts or fonts.
+const POLICY_CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
+  "img-src 'self' data: https://res.cloudinary.com",
+  "frame-src 'none'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join("; ");
+
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
@@ -30,6 +44,18 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
           { key: "Content-Security-Policy", value: CSP },
+        ],
+      },
+      {
+        source: "/(privacy-policy|cookie-policy|acceptable-use|verification-policy)",
+        headers: [
+          { key: "Content-Security-Policy", value: POLICY_CSP },
+        ],
+      },
+      {
+        source: "/terms/:doc(platform|owner|groomer)",
+        headers: [
+          { key: "Content-Security-Policy", value: POLICY_CSP },
         ],
       },
     ];

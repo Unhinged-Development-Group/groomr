@@ -221,9 +221,10 @@ export function SnapshotBar({ initialSnapshots, stats, financials }: Props) {
   }
 
   function handleRemove(slot: number) {
-    const next = [...snapshots];
-    next[slot] = null;
-    persist(next);
+    const withHole = snapshots.map((k, i) => (i === slot ? null : k));
+    const filled = withHole.filter(Boolean) as string[];
+    const compacted: (string | null)[] = [...filled, null, null, null, null].slice(0, 4);
+    persist(compacted);
   }
 
   const filledCount = snapshots.filter(Boolean).length;

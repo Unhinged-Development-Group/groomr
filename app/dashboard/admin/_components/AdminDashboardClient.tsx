@@ -91,6 +91,7 @@ interface Props {
   initialFinancials: AdminFinancials | null;
   initialTeam: AdminTeamMember[];
   initialPlatformSettings: PlatformSettings | null;
+  platformSettingsError: string | null;
   initialAuditLog: AdminAuditEntry[];
 }
 
@@ -108,6 +109,7 @@ export function AdminDashboardClient({
   initialFinancials,
   initialTeam,
   initialPlatformSettings,
+  platformSettingsError,
   initialAuditLog,
 }: Props) {
   const [mode, setMode] = useState<Mode>("overview");
@@ -310,7 +312,7 @@ export function AdminDashboardClient({
         <TeamTab initialTeam={initialTeam} />
       )}
       {mode === "groomr_management" && activeGroomrTab === "platform_settings" && (
-        <PlatformSettingsTab settings={initialPlatformSettings} />
+        <PlatformSettingsTab settings={initialPlatformSettings} loadError={platformSettingsError} />
       )}
       {mode === "groomr_management" && activeGroomrTab === "audit_log" && (
         <AuditLogTab initialEntries={initialAuditLog} />

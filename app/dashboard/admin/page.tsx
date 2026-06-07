@@ -75,6 +75,7 @@ export default async function AdminDashboardPage() {
       initialFinancials={"error" in financials ? null : financials.data}
       initialTeam={"error" in team ? [] : team.data}
       initialPlatformSettings={"error" in platformSettings ? null : platformSettings.data}
+      platformSettingsError={"error" in platformSettings ? platformSettings.error : null}
       initialAuditLog={"error" in auditLog ? [] : auditLog.data}
     />
   );

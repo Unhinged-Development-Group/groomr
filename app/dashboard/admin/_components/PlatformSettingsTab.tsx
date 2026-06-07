@@ -17,9 +17,10 @@ function formatDate(iso: string) {
 
 interface Props {
   settings: PlatformSettings | null;
+  loadError: string | null;
 }
 
-export function PlatformSettingsTab({ settings }: Props) {
+export function PlatformSettingsTab({ settings, loadError }: Props) {
   const [toast, setToast] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [dirty, setDirty] = useState(false);
@@ -35,8 +36,13 @@ export function PlatformSettingsTab({ settings }: Props) {
 
   if (!settings) {
     return (
-      <div className="py-12 text-center text-pebble-grey font-bold">
-        Failed to load platform settings.
+      <div className="py-12 text-center space-y-2">
+        <p className="text-pebble-grey font-bold">Failed to load platform settings.</p>
+        {loadError && (
+          <p className="text-xs text-muted-terracotta font-mono bg-muted-terracotta/10 px-3 py-2 rounded-lg inline-block">
+            {loadError}
+          </p>
+        )}
       </div>
     );
   }

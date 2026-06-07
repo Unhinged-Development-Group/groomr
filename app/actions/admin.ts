@@ -70,6 +70,14 @@ export interface AdminOverviewStats {
   reviewsLast30Days: number;
   reviewsWithReply: number;
   groomersBelow3Star: number;
+  integrations: {
+    stripe: boolean;
+    resend: boolean;
+    twilio: boolean;
+    googleMaps: boolean;
+    clerk: boolean;
+    supabase: boolean;
+  };
 }
 
 export interface AdminGroomerRow {
@@ -255,6 +263,14 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     reviewsLast30Days: reviews30Result.count ?? 0,
     reviewsWithReply: reviewsWithReplyResult.count ?? 0,
     groomersBelow3Star: groomersBelow3StarResult.count ?? 0,
+    integrations: {
+      stripe: !!process.env.STRIPE_SECRET_KEY,
+      resend: !!process.env.RESEND_API_KEY,
+      twilio: !!process.env.TWILIO_ACCOUNT_SID,
+      googleMaps: !!process.env.GOOGLE_MAPS_API_KEY,
+      clerk: !!process.env.CLERK_SECRET_KEY,
+      supabase: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    },
   };
 }
 

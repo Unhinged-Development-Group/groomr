@@ -159,7 +159,7 @@ export function OverviewTab({ stats, platformSettings, onNavigate }: Props) {
     });
   }
 
-  const integrations = platformSettings?.integrations;
+  const integrations = stats.integrations;
   const replyRate = stats.totalReviews > 0
     ? Math.round((stats.reviewsWithReply / stats.totalReviews) * 100)
     : 0;
@@ -346,21 +346,19 @@ export function OverviewTab({ stats, platformSettings, onNavigate }: Props) {
       </div>
 
       {/* Platform health */}
-      {integrations && (
-        <div>
-          <Eyebrow className="mb-3">Platform health</Eyebrow>
-          <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-4 sm:p-5">
-            <div className="flex flex-wrap gap-x-6 gap-y-2.5">
-              <HealthDot label="Stripe" ok={integrations.stripe} />
-              <HealthDot label="Resend" ok={integrations.resend} />
-              <HealthDot label="Twilio" ok={integrations.twilio} />
-              <HealthDot label="Google Maps" ok={integrations.googleMaps} />
-              <HealthDot label="Clerk" ok={integrations.clerk} />
-              <HealthDot label="Supabase" ok={integrations.supabase} />
-            </div>
+      <div>
+        <Eyebrow className="mb-3">Platform health</Eyebrow>
+        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-4 sm:p-5">
+          <div className="flex flex-wrap gap-x-6 gap-y-2.5">
+            <HealthDot label="Stripe" ok={integrations.stripe} />
+            <HealthDot label="Resend" ok={integrations.resend} />
+            <HealthDot label="Twilio" ok={integrations.twilio} />
+            <HealthDot label="Google Maps" ok={integrations.googleMaps} />
+            <HealthDot label="Clerk" ok={integrations.clerk} />
+            <HealthDot label="Supabase" ok={integrations.supabase} />
           </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }

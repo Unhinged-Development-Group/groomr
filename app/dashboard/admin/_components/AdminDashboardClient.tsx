@@ -211,15 +211,15 @@ export function AdminDashboardClient({
         <div
           className={cn(
             "overflow-hidden transition-all duration-300 ease-in-out",
-            mode === "overview" ? "max-h-0 opacity-0" : "max-h-16 opacity-100"
+            mode === "overview" ? "max-h-0 opacity-0" : "max-h-20 opacity-100"
           )}
         >
-          <div className="relative pt-1">
+          <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-1.5 shadow-subtle relative">
             {tabScroll.left && (
               <button
                 aria-hidden
                 onClick={() => { tabScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" }); }}
-                className="sm:hidden absolute left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-alabaster-cream/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
+                className="sm:hidden absolute left-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
               >
                 <ChevronLeftIcon size={12} />
               </button>
@@ -228,7 +228,7 @@ export function AdminDashboardClient({
             <div
               ref={tabScrollRef}
               onScroll={updateTabScroll}
-              className="flex gap-1.5 overflow-x-auto scrollbar-none px-1"
+              className="flex gap-1 overflow-x-auto sm:overflow-visible scrollbar-none"
             >
               {currentTabs.map((t) => {
                 const active = currentActiveTab === t.id;
@@ -238,10 +238,10 @@ export function AdminDashboardClient({
                     key={t.id}
                     onClick={() => setActiveTab(t.id)}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full font-nunito font-bold text-xs transition-all focus-ring shrink-0 whitespace-nowrap",
+                      "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-2xl font-nunito font-bold text-xs transition-colors focus-ring shrink-0 sm:shrink whitespace-nowrap min-w-[72px]",
                       active
-                        ? "bg-deep-slate text-alabaster-cream shadow-sm"
-                        : "text-deep-slate/60 hover:text-deep-slate hover:bg-black/5"
+                        ? "bg-groomr-gold/40 text-deep-slate"
+                        : "text-pebble-grey hover:text-deep-slate hover:bg-alabaster-cream"
                     )}
                   >
                     <t.Icon size={14} className="shrink-0" />
@@ -251,7 +251,7 @@ export function AdminDashboardClient({
                         className={cn(
                           "min-w-[14px] h-[14px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
                           active
-                            ? "bg-alabaster-cream text-deep-slate"
+                            ? "bg-deep-slate text-alabaster-cream"
                             : "bg-muted-terracotta text-alabaster-cream"
                         )}
                       >
@@ -267,12 +267,12 @@ export function AdminDashboardClient({
               <button
                 aria-hidden
                 onClick={() => { tabScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" }); }}
-                className="sm:hidden absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-alabaster-cream/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
+                className="sm:hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
               >
                 <ChevronRightIcon size={12} />
               </button>
             )}
-          </div>
+          </nav>
         </div>
       </div>
 

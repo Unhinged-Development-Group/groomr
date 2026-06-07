@@ -43,8 +43,8 @@ import type {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Mode = "user_management" | "groomr_management";
-type UserTab = "overview" | "groomers" | "users" | "appointments" | "disputes" | "support";
+type Mode = "overview" | "user_management" | "groomr_management";
+type UserTab = "groomers" | "users" | "appointments" | "disputes" | "support";
 type GroomrTab = "financials" | "team" | "platform_settings" | "audit_log" | "groomr_support";
 
 interface TabDef {
@@ -54,12 +54,12 @@ interface TabDef {
 }
 
 const MODES: { id: Mode; label: string }[] = [
-  { id: "user_management",  label: "User Management" },
+  { id: "overview",          label: "Overview" },
+  { id: "user_management",   label: "User Management" },
   { id: "groomr_management", label: "Groomr Management" },
 ];
 
 const USER_TABS: TabDef[] = [
-  { id: "overview",     label: "Overview",     Icon: AnalyticsIcon },
   { id: "groomers",     label: "Groomers",     Icon: ScissorsIcon },
   { id: "users",        label: "Owners",       Icon: PetsIcon },
   { id: "appointments", label: "Appointments", Icon: CalendarIcon },
@@ -110,8 +110,8 @@ export function AdminDashboardClient({
   initialPlatformSettings,
   initialAuditLog,
 }: Props) {
-  const [mode, setMode] = useState<Mode>("user_management");
-  const [activeUserTab, setActiveUserTab] = useState<UserTab>("overview");
+  const [mode, setMode] = useState<Mode>("overview");
+  const [activeUserTab, setActiveUserTab] = useState<UserTab>("groomers");
   const [activeGroomrTab, setActiveGroomrTab] = useState<GroomrTab>("financials");
 
   const tabScrollRef = useRef<HTMLDivElement>(null);
@@ -157,6 +157,13 @@ export function AdminDashboardClient({
     if (tabScrollRef.current) tabScrollRef.current.scrollLeft = 0;
   }
 
+  function handleOverviewNavigate(newMode: Mode, tab?: string) {
+    setMode(newMode);
+    if (tab && newMode === "user_management") setActiveUserTab(tab as UserTab);
+    if (tab && newMode === "groomr_management") setActiveGroomrTab(tab as GroomrTab);
+    if (tabScrollRef.current) tabScrollRef.current.scrollLeft = 0;
+  }
+
   return (
     <div className="page-fade w-full px-6 lg:px-12 xl:px-20 py-8 space-y-7">
       {/* Header — title + snapshots inline, left-aligned */}
@@ -198,8 +205,8 @@ export function AdminDashboardClient({
           ))}
         </div>
 
-        {/* Tab bar */}
-        <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle relative">
+        {/* Tab bar — hidden when in Overview mode (no sub-tabs) */}
+        {mode !== "overview" && <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle relative">
           {tabScroll.left && (
             <button
               aria-hidden
@@ -255,13 +262,19 @@ export function AdminDashboardClient({
               <ChevronRightIcon size={14} />
             </button>
           )}
-        </nav>
+        </nav>}
       </div>
 
-      {/* ── User Management tab content ─────────────────────────────────── */}
-      {mode === "user_management" && activeUserTab === "overview" && (
-        <OverviewTab stats={initialStats} platformSettings={initialPlatformSettings} />
+      {/* ── Overview (top-level mode) ───────────────────────────────────── */}
+      {mode === "overview" && (
+        <OverviewTab
+          stats={initialStats}
+          platformSettings={initialPlatformSettings}
+          onNavigate={handleOverviewNavigate}
+        />
       )}
+
+      {/* ── User Management tab content ─────────────────────────────────── */}
       {mode === "user_management" && activeUserTab === "groomers" && (
         <GroomersTab initialGroomers={initialGroomers} />
       )}

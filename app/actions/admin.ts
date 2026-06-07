@@ -53,16 +53,21 @@ export interface AdminOverviewStats {
   totalDogs: number;
   totalAppointments: number;
   appointmentsLast30Days: number;
-  pendingAppointments: number;
+  appointmentsNext30Days: number;
+  confirmedAppointments: number;
+  completedAppointments: number;
   noShowCount: number;
   grossRevenuePence: number;
   platformFeePence: number;
   groomerPayoutPence: number;
+  pendingPayoutsAmountPence: number;
   openDisputes: number;
   openSupportRequests: number;
   totalReviews: number;
   averageRating: number;
   reviewsLast30Days: number;
+  reviewsWithReply: number;
+  groomersBelow3Star: number;
 }
 
 export interface AdminGroomerRow {
@@ -154,9 +159,14 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
 
-  const thirtyDaysAgo = new Date();
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysFromNow = new Date(now);
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  const nowIso = now.toISOString();
   const thirtyDaysAgoIso = thirtyDaysAgo.toISOString();
+  const thirtyDaysFromNowIso = thirtyDaysFromNow.toISOString();
 
   const [
     ownersResult,
@@ -166,14 +176,19 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     dogsResult,
     apptAllResult,
     appt30Result,
-    apptPendingResult,
+    apptNext30Result,
+    apptConfirmedResult,
+    apptCompletedResult,
     apptNoShowResult,
     revenueResult,
+    pendingPayoutsResult,
     disputesResult,
     supportResult,
     reviewsAllResult,
     reviews30Result,
     reviewsRatingResult,
+    reviewsWithReplyResult,
+    groomersBelow3StarResult,
   ] = await Promise.all([
     supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).contains("roles", ["owner"]),
     supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }),
@@ -181,15 +196,20 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).eq("is_verified", false),
     supabaseAdmin.from("dogs").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }),
-    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gte("scheduled_at", thirtyDaysAgoIso),
-    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gte("scheduled_at", thirtyDaysAgoIso).lte("scheduled_at", nowIso),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gt("scheduled_at", nowIso).lte("scheduled_at", thirtyDaysFromNowIso),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
+    supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "completed"),
     supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).eq("status", "no_show"),
     supabaseAdmin.from("payments").select("full_amount_pence, platform_fee_pence, groomer_payout_amount_pence"),
+    supabaseAdmin.from("payments").select("groomer_payout_amount_pence").eq("payout_status", "pending"),
     supabaseAdmin.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabaseAdmin.from("support_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabaseAdmin.from("reviews").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("reviews").select("id", { count: "exact", head: true }).gte("created_at", thirtyDaysAgoIso),
     supabaseAdmin.from("reviews").select("rating"),
+    supabaseAdmin.from("reviews").select("id", { count: "exact", head: true }).not("groomer_reply", "is", null),
+    supabaseAdmin.from("groomer_profiles").select("id", { count: "exact", head: true }).gt("total_reviews", 0).lt("average_rating", 3),
   ]);
 
   type PaymentRow = { full_amount_pence: number | null; platform_fee_pence: number | null; groomer_payout_amount_pence: number | null };
@@ -197,6 +217,9 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
   const grossRevenuePence = payments.reduce((sum, p) => sum + (p.full_amount_pence ?? 0), 0);
   const platformFeePence = payments.reduce((sum, p) => sum + (p.platform_fee_pence ?? 0), 0);
   const groomerPayoutPence = payments.reduce((sum, p) => sum + (p.groomer_payout_amount_pence ?? 0), 0);
+  const pendingPayoutsAmountPence = (pendingPayoutsResult.data ?? []).reduce(
+    (sum: number, p: any) => sum + (p.groomer_payout_amount_pence ?? 0), 0
+  );
 
   const ratingRows: { rating: number }[] = reviewsRatingResult.data ?? [];
   const averageRating = ratingRows.length > 0
@@ -211,16 +234,21 @@ export async function getAdminOverviewStats(): Promise<AdminOverviewStats | { er
     totalDogs: dogsResult.count ?? 0,
     totalAppointments: apptAllResult.count ?? 0,
     appointmentsLast30Days: appt30Result.count ?? 0,
-    pendingAppointments: apptPendingResult.count ?? 0,
+    appointmentsNext30Days: apptNext30Result.count ?? 0,
+    confirmedAppointments: apptConfirmedResult.count ?? 0,
+    completedAppointments: apptCompletedResult.count ?? 0,
     noShowCount: apptNoShowResult.count ?? 0,
     grossRevenuePence,
     platformFeePence,
     groomerPayoutPence,
+    pendingPayoutsAmountPence,
     openDisputes: disputesResult.count ?? 0,
     openSupportRequests: supportResult.count ?? 0,
     totalReviews: reviewsAllResult.count ?? 0,
     averageRating: Math.round(averageRating * 10) / 10,
     reviewsLast30Days: reviews30Result.count ?? 0,
+    reviewsWithReply: reviewsWithReplyResult.count ?? 0,
+    groomersBelow3Star: groomersBelow3StarResult.count ?? 0,
   };
 }
 

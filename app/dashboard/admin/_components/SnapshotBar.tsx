@@ -12,35 +12,47 @@ import { cn } from "@/lib/utils";
 export interface SnapshotMetric {
   key: string;
   label: string;
-  category: "Users" | "Bookings" | "Revenue";
+  category: "Users" | "Bookings" | "Revenue" | "Reviews";
   getValue: (stats: AdminOverviewStats | null, financials: AdminFinancials | null) => string;
 }
 
 export const SNAPSHOT_METRICS: SnapshotMetric[] = [
   // Users
-  { key: "total_owners",       label: "Total owners",          category: "Users",    getValue: (s)    => s ? s.totalOwners.toLocaleString() : "—" },
-  { key: "total_groomers",     label: "Total groomers",        category: "Users",    getValue: (s)    => s ? s.totalGroomers.toLocaleString() : "—" },
-  { key: "listed_groomers",    label: "Listed groomers",       category: "Users",    getValue: (s)    => s ? s.listedGroomers.toLocaleString() : "—" },
-  { key: "unverified",         label: "Pending verification",  category: "Users",    getValue: (s)    => s ? s.unverifiedGroomers.toLocaleString() : "—" },
-  { key: "total_dogs",         label: "Total dogs",            category: "Users",    getValue: (s)    => s ? s.totalDogs.toLocaleString() : "—" },
+  { key: "total_owners",            label: "Total owners",          category: "Users",    getValue: (s)    => s ? s.totalOwners.toLocaleString() : "—" },
+  { key: "total_groomers",          label: "Total groomers",        category: "Users",    getValue: (s)    => s ? s.totalGroomers.toLocaleString() : "—" },
+  { key: "listed_groomers",         label: "Listed groomers",       category: "Users",    getValue: (s)    => s ? s.listedGroomers.toLocaleString() : "—" },
+  { key: "unverified",              label: "Pending verification",  category: "Users",    getValue: (s)    => s ? s.unverifiedGroomers.toLocaleString() : "—" },
+  { key: "total_dogs",              label: "Total dogs",            category: "Users",    getValue: (s)    => s ? s.totalDogs.toLocaleString() : "—" },
   // Bookings
-  { key: "total_appointments", label: "Total bookings",        category: "Bookings", getValue: (s)    => s ? s.totalAppointments.toLocaleString() : "—" },
-  { key: "bookings_30d",       label: "Bookings (30 days)",    category: "Bookings", getValue: (s)    => s ? s.appointmentsLast30Days.toLocaleString() : "—" },
-  { key: "open_disputes",      label: "Open disputes",         category: "Bookings", getValue: (s)    => s ? s.openDisputes.toLocaleString() : "—" },
-  { key: "open_support",       label: "Open support",          category: "Bookings", getValue: (s)    => s ? s.openSupportRequests.toLocaleString() : "—" },
+  { key: "total_appointments",      label: "Total bookings",        category: "Bookings", getValue: (s)    => s ? s.totalAppointments.toLocaleString() : "—" },
+  { key: "bookings_30d",            label: "Bookings (last 30d)",   category: "Bookings", getValue: (s)    => s ? s.appointmentsLast30Days.toLocaleString() : "—" },
+  { key: "bookings_next30d",        label: "Bookings (next 30d)",   category: "Bookings", getValue: (s)    => s ? s.appointmentsNext30Days.toLocaleString() : "—" },
+  { key: "confirmed_appointments",  label: "Confirmed bookings",    category: "Bookings", getValue: (s)    => s ? s.confirmedAppointments.toLocaleString() : "—" },
+  { key: "completed_appointments",  label: "Completed bookings",    category: "Bookings", getValue: (s)    => s ? s.completedAppointments.toLocaleString() : "—" },
+  { key: "open_disputes",           label: "Open disputes",         category: "Bookings", getValue: (s)    => s ? s.openDisputes.toLocaleString() : "—" },
+  { key: "open_support",            label: "Open support",          category: "Bookings", getValue: (s)    => s ? s.openSupportRequests.toLocaleString() : "—" },
   // Revenue
-  { key: "gross_revenue",      label: "Gross revenue",         category: "Revenue",  getValue: (s)    => s ? gbp(s.grossRevenuePence) : "—" },
-  { key: "platform_fee",       label: "Commission earned",     category: "Revenue",  getValue: (s)    => s ? gbp(s.platformFeePence) : "—" },
-  { key: "groomer_payouts",    label: "Groomer payouts",       category: "Revenue",  getValue: (s)    => s ? gbp(s.groomerPayoutPence) : "—" },
-  { key: "pending_payouts",    label: "Pending payouts",       category: "Revenue",  getValue: (_, f) => f ? gbp(f.pendingPayoutsPence) : "—" },
-  { key: "total_tips",         label: "Tips collected",        category: "Revenue",  getValue: (_, f) => f ? gbp(f.totalTipsPence) : "—" },
+  { key: "gross_revenue",           label: "Gross revenue",         category: "Revenue",  getValue: (s)    => s ? gbp(s.grossRevenuePence) : "—" },
+  { key: "platform_fee",            label: "Commission earned",     category: "Revenue",  getValue: (s)    => s ? gbp(s.platformFeePence) : "—" },
+  { key: "stripe_fees",             label: "Stripe fees",           category: "Revenue",  getValue: (s)    => s ? gbp(s.stripeFeePence) : "—" },
+  { key: "net_revenue",             label: "Net revenue (Groomr)",  category: "Revenue",  getValue: (s)    => s ? gbp(s.netRevenuePence) : "—" },
+  { key: "groomer_payouts",         label: "Groomer payouts",       category: "Revenue",  getValue: (s)    => s ? gbp(s.groomerPayoutPence) : "—" },
+  { key: "pending_payouts",         label: "Pending payouts",       category: "Revenue",  getValue: (_, f) => f ? gbp(f.pendingPayoutsPence) : "—" },
+  { key: "total_tips",              label: "Tips collected",        category: "Revenue",  getValue: (_, f) => f ? gbp(f.totalTipsPence) : "—" },
+  // Reviews
+  { key: "total_reviews",           label: "Total reviews",         category: "Reviews",  getValue: (s)    => s ? s.totalReviews.toLocaleString() : "—" },
+  { key: "avg_rating",              label: "Average rating",        category: "Reviews",  getValue: (s)    => s && s.averageRating > 0 ? `${s.averageRating.toFixed(1)} ★` : "—" },
+  { key: "reviews_30d",             label: "Reviews (last 30d)",    category: "Reviews",  getValue: (s)    => s ? s.reviewsLast30Days.toLocaleString() : "—" },
+  { key: "reply_rate",              label: "Groomer reply rate",    category: "Reviews",  getValue: (s)    => s && s.totalReviews > 0 ? `${Math.round((s.reviewsWithReply / s.totalReviews) * 100)}%` : "—" },
+  { key: "review_rate",             label: "Review rate",           category: "Reviews",  getValue: (s)    => s && s.completedAppointments > 0 ? `${Math.round((s.totalReviews / s.completedAppointments) * 100)}%` : "—" },
+  { key: "below_3_star",            label: "Below 3★ groomers",     category: "Reviews",  getValue: (s)    => s ? s.groomersBelow3Star.toLocaleString() : "—" },
 ];
 
 function gbp(pence: number) {
   return (pence / 100).toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
 }
 
-const CATEGORIES: SnapshotMetric["category"][] = ["Users", "Bookings", "Revenue"];
+const CATEGORIES: SnapshotMetric["category"][] = ["Users", "Bookings", "Revenue", "Reviews"];
 
 // ─── Empty circle slot ────────────────────────────────────────────────────────
 

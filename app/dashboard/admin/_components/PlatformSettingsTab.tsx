@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { Toast } from "@/components/ui/Toast";
-import { Badge } from "@/components/ui/Badge";
 import { adminSavePlatformSettings } from "@/app/actions/admin";
 import type { PlatformSettings } from "@/app/actions/admin";
 
@@ -193,9 +192,14 @@ export function PlatformSettingsTab({ settings }: Props) {
                 className="flex items-center justify-between px-3 py-2.5 rounded-[12px] bg-alabaster-cream border border-pebble-grey/10"
               >
                 <span className="text-sm font-bold text-deep-slate">{label}</span>
-                <Badge tone={integrations[key] ? "sage" : "terra"}>
+                <span
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border"
+                  style={integrations[key]
+                    ? { background: "#dcfce7", color: "#15803d", borderColor: "#bbf7d0" }
+                    : { background: "#fee2e2", color: "#b91c1c", borderColor: "#fecaca" }}
+                >
                   {integrations[key] ? "OK" : "Missing"}
-                </Badge>
+                </span>
               </div>
             ))}
           </div>

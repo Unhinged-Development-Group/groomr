@@ -134,7 +134,7 @@ function SplitStatCard({
 function HealthDot({ label, ok }: { label: string; ok: boolean }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: ok ? "#88a096" : "#c87964" }} />
+      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: ok ? "#22c55e" : "#c87964" }} />
       <span className="text-[10px] sm:text-xs font-bold text-deep-slate">{label}</span>
     </div>
   );

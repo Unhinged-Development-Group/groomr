@@ -53,10 +53,10 @@ interface TabDef {
   Icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
-const MODES: { id: Mode; label: string }[] = [
-  { id: "overview",          label: "Overview" },
-  { id: "user_management",   label: "User Management" },
-  { id: "groomr_management", label: "Groomr Management" },
+const MODES: { id: Mode; label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+  { id: "overview",          label: "Overview",          Icon: AnalyticsIcon },
+  { id: "user_management",   label: "User Management",   Icon: PetsIcon },
+  { id: "groomr_management", label: "Groomr Management", Icon: ScissorsIcon },
 ];
 
 const USER_TABS: TabDef[] = [
@@ -185,84 +185,95 @@ export function AdminDashboardClient({
         </div>
       </header>
 
-      {/* Mode switcher + tab nav — grouped so they read as one nav unit */}
-      <div className="space-y-0">
-        {/* Mode switcher — full-width underline tabs */}
-        <div className="flex w-full">
-          {MODES.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => handleModeSwitch(m.id)}
-              className={cn(
-                "flex-1 py-2 pb-3 font-fredoka text-lg font-bold border-b-[3px] transition-all focus-ring",
-                mode === m.id
-                  ? "border-groomr-gold text-deep-slate"
-                  : "border-transparent text-pebble-grey hover:border-groomr-gold/40 hover:text-deep-slate hover:bg-black/5 rounded-t-lg"
-              )}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab bar — hidden when in Overview mode (no sub-tabs) */}
-        {mode !== "overview" && <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle relative">
-          {tabScroll.left && (
-            <button
-              aria-hidden
-              onClick={() => { tabScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" }); }}
-              className="sm:hidden absolute left-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
-            >
-              <ChevronLeftIcon size={14} />
-            </button>
-          )}
-
-          <div
-            ref={tabScrollRef}
-            onScroll={updateTabScroll}
-            className="flex gap-1 overflow-x-auto pb-0.5 sm:overflow-visible scrollbar-none"
-          >
-            {currentTabs.map((t) => {
-              const active = currentActiveTab === t.id;
-              const badge = getBadge(t.id);
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={cn(
-                    "relative flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-nunito font-bold text-sm transition-colors focus-ring shrink-0 sm:shrink whitespace-nowrap min-w-[90px]",
-                    active ? "bg-groomr-gold text-deep-slate" : "text-deep-slate hover:bg-alabaster-cream"
-                  )}
-                >
-                  <t.Icon size={18} />
-                  {t.label}
-                  {badge > 0 && (
-                    <span
-                      className={cn(
-                        "min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
-                        active
-                          ? "bg-deep-slate text-alabaster-cream"
-                          : "bg-muted-terracotta text-alabaster-cream"
-                      )}
-                    >
-                      {badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+      {/* Nav — primary mode pill bar always visible; sub-tabs slide in below */}
+      <div className="space-y-2">
+        {/* Primary pill bar — all 3 modes always present */}
+        <nav className="bg-white border border-pebble-grey/20 rounded-[20px] p-2 shadow-subtle">
+          <div className="flex gap-1">
+            {MODES.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => handleModeSwitch(m.id)}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-nunito font-bold text-sm transition-colors focus-ring whitespace-nowrap",
+                  mode === m.id ? "bg-groomr-gold text-deep-slate" : "text-deep-slate hover:bg-alabaster-cream"
+                )}
+              >
+                <m.Icon size={18} className="shrink-0" />
+                <span className="hidden sm:inline">{m.label}</span>
+                <span className="sm:hidden">{m.id === "groomr_management" ? "Groomr" : m.label.split(" ")[0]}</span>
+              </button>
+            ))}
           </div>
+        </nav>
 
-          {tabScroll.right && (
-            <button
-              aria-hidden
-              onClick={() => { tabScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" }); }}
-              className="sm:hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
-            >
-              <ChevronRightIcon size={14} />
-            </button>
+        {/* Secondary sub-tab row — animates in/out below the primary bar */}
+        <div
+          className={cn(
+            "overflow-hidden transition-all duration-300 ease-in-out",
+            mode === "overview" ? "max-h-0 opacity-0" : "max-h-16 opacity-100"
           )}
-        </nav>}
+        >
+          <div className="relative pt-1">
+            {tabScroll.left && (
+              <button
+                aria-hidden
+                onClick={() => { tabScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" }); }}
+                className="sm:hidden absolute left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-alabaster-cream/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
+              >
+                <ChevronLeftIcon size={12} />
+              </button>
+            )}
+
+            <div
+              ref={tabScrollRef}
+              onScroll={updateTabScroll}
+              className="flex gap-1.5 overflow-x-auto scrollbar-none px-1"
+            >
+              {currentTabs.map((t) => {
+                const active = currentActiveTab === t.id;
+                const badge = getBadge(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full font-nunito font-bold text-xs transition-all focus-ring shrink-0 whitespace-nowrap",
+                      active
+                        ? "bg-deep-slate text-alabaster-cream shadow-sm"
+                        : "text-deep-slate/60 hover:text-deep-slate hover:bg-black/5"
+                    )}
+                  >
+                    <t.Icon size={14} className="shrink-0" />
+                    {t.label}
+                    {badge > 0 && (
+                      <span
+                        className={cn(
+                          "min-w-[14px] h-[14px] px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center",
+                          active
+                            ? "bg-alabaster-cream text-deep-slate"
+                            : "bg-muted-terracotta text-alabaster-cream"
+                        )}
+                      >
+                        {badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {tabScroll.right && (
+              <button
+                aria-hidden
+                onClick={() => { tabScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" }); }}
+                className="sm:hidden absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-alabaster-cream/95 shadow-subtle border border-pebble-grey/20 flex items-center justify-center"
+              >
+                <ChevronRightIcon size={12} />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ── Overview (top-level mode) ───────────────────────────────────── */}

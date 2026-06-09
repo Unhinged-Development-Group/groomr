@@ -132,10 +132,17 @@ export async function getAvailableSlots(
     }
   }
 
-  const breakStart = availRes.data.break_start_time as string | null;
-  const breakEnd   = availRes.data.break_end_time   as string | null;
-  if (breakStart && breakEnd) {
-    bookedIntervals.push({ start: toMinutes(breakStart), end: toMinutes(breakEnd) });
+  const rawBreakStart = availRes.data.break_start_time as string | null;
+  const rawBreakEnd   = availRes.data.break_end_time   as string | null;
+  if (rawBreakStart?.startsWith("[")) {
+    try {
+      const breaks = JSON.parse(rawBreakStart) as { s: string; e: string }[];
+      for (const b of breaks) {
+        if (b.s && b.e) bookedIntervals.push({ start: toMinutes(b.s), end: toMinutes(b.e) });
+      }
+    } catch { /* ignore bad JSON */ }
+  } else if (rawBreakStart && rawBreakEnd) {
+    bookedIntervals.push({ start: toMinutes(rawBreakStart), end: toMinutes(rawBreakEnd) });
   }
 
   bookedIntervals.sort((a, b) => a.start - b.start);
@@ -401,6 +408,24 @@ export async function createGroupAppointment(input: {
   });
 
   if (hasConflict) return { error: "That slot conflicts with an existing booking — please pick another time." };
+
+  // Check time_blocks
+  const { data: groupTimeBlocks } = await supabaseAdmin
+    .from("time_blocks")
+    .select("start_time, end_time, all_day")
+    .eq("groomer_profile_id", input.groomerProfileId)
+    .lte("start_date", dateStr)
+    .gte("end_date", dateStr);
+
+  const hasTimeBlockConflict = (groupTimeBlocks ?? []).some((b) => {
+    if (b.all_day) return true;
+    if (!b.start_time || !b.end_time) return false;
+    const bStart = toMinutes(b.start_time as string);
+    const bEnd   = toMinutes(b.end_time   as string);
+    return groupStart < bEnd && groupEnd > bStart;
+  });
+
+  if (hasTimeBlockConflict) return { error: "That time is blocked — please choose a different time." };
 
   // Build appointment rows with sequential start times
   const bookingGroupId = crypto.randomUUID();

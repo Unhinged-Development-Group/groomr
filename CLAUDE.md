@@ -593,8 +593,8 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | Admin pinned snapshots | Real — 4-slot `SnapshotBar` with dashed empty slots, filled metric circles, category-tabbed picker modal (Users / Bookings / Revenue / Reviews, 20+ metrics). Persists to `profiles.admin_preferences` via `adminSavePreferences` |
 | Dispute workflow | Real — `disputes` table, two-party comment + resolution flow, admin adjudication, `/disputes/[id]` page |
 | Support requests | Real — `support_requests` table, admin replies |
-| `time_blocks` → booking conflicts | Real — wired into `getAvailableSlots()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals. **Gap:** `createGroupAppointment()` does not validate `time_blocks` — group bookings can land in blocked periods |
-| Break windows in booking | Real — `break_start_time`/`break_end_time` now subtracted from available slots in `getAvailableSlots()`. Note: `profile-editor.ts` incorrectly writes JSON to these `time` columns — breaks won't take effect until that write is fixed |
+| `time_blocks` → booking conflicts | Real — wired into `getAvailableSlots()` and `createGroupAppointment()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals. |
+| Break windows in booking | Real — breaks stored as JSON array in `break_start_time`; `getAvailableSlots()` parses both JSON and legacy plain-string formats and subtracts all breaks from available slots. |
 | Discount % capping | `client_settings.discount_percentage` is validated ≤ 100 in `createAppointment` and `createGroupAppointment` (clamped `Math.max(0, Math.min(100, pct))`) |
 | Soft-delete on account close | Real — `profiles.is_deleted` + `profiles.deleted_at` (migration `20260607000004`); `closeOwnerAccount` / `closeGroomerAccount` soft-delete; hard-delete cron (30-day) **not yet built** |
 | Groomer verification status | Real — `verification_status` enum on `groomer_profiles` (migration `20260607000001`): `not_submitted → awaiting → verified / revoked_temp / revoked_perm`. Replaces the simple boolean `is_verified` |

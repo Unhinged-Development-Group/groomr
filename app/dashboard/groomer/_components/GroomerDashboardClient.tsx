@@ -513,7 +513,7 @@ export function GroomerDashboardClient({
       </nav>
 
       {/* Tab content */}
-      {tab === "bookings" && <BookingsView appointments={scopedAppointments} availability={editorData.availability} onBeginGroom={handleBeginGroom} activeGroomId={activeGroom?.appointmentId ?? null} />}
+      {tab === "bookings" && <BookingsView appointments={scopedAppointments} availability={editorData.availability} timeBlocks={timeBlocks} onBeginGroom={handleBeginGroom} activeGroomId={activeGroom?.appointmentId ?? null} />}
       {tab === "clients"  && <ClientsView appointments={scopedAppointments} services={editorData.services} />}
       {tab === "earnings" && <EarningsView payments={initialPayments} appointments={scopedAppointments} />}
       {tab === "reviews"  && (

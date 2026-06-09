@@ -5,7 +5,13 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { MessageIcon, ChevronRightIcon, ChevronLeftIcon } from "@/components/ui/GroomrIcons";
 import type { ActiveGroom } from "./LiveGroomTracker";
 import type { Appointment } from "@/app/actions/appointments";
+import type { TimeBlock } from "@/app/actions/time-blocks";
 import { BookingDetailModal } from "./BookingDetailModal";
+
+function toMins(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
 
 function StatusDot({ status }: { status: string }) {
   const tone: Record<string, [string, string]> = {
@@ -54,10 +60,11 @@ function fmtHour(h: number) {
   return h < 12 ? `${h}am` : `${h - 12}pm`;
 }
 
-function TodayView({ appointments, refDate, availability, onBeginGroom, activeGroomId }: {
+function TodayView({ appointments, refDate, availability, timeBlocks = [], onBeginGroom, activeGroomId }: {
   appointments: any[];
   refDate: Date;
   availability: import("@/types/groomer-dashboard").AvailabilityRow[];
+  timeBlocks?: TimeBlock[];
   onBeginGroom?: (g: ActiveGroom) => void;
   activeGroomId?: string | null;
 }) {
@@ -69,6 +76,10 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
   const dayAvail = availability.find(a => a.isActive && a.dayOfWeek === refDate.getDay());
   const openHour  = dayAvail ? parseInt(dayAvail.startTime.split(":")[0]) : 8;
   const closeHour = dayAvail ? parseInt(dayAvail.endTime.split(":")[0])   : 18;
+
+  const dateKey = `${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,"0")}-${String(refDate.getDate()).padStart(2,"0")}`;
+  const dayTimeBlocks = timeBlocks.filter(b => b.startDate <= dateKey && b.endDate >= dateKey);
+  const isFullDayBlocked = dayTimeBlocks.some(b => b.allDay);
   const hours = Array.from({ length: closeHour - openHour + 1 }, (_, i) => openHour + i);
 
   const todayAppts = appointments.filter(a => {
@@ -165,7 +176,48 @@ function TodayView({ appointments, refDate, availability, onBeginGroom, activeGr
                 </div>
               ))}
 
-              {/* Closed / out-of-hours shading — none needed, timeline IS the hours */}
+              {/* Break windows */}
+              {!isFullDayBlocked && (dayAvail?.breaks ?? []).map((b, i) => {
+                const bStartMins = toMins(b.startTime);
+                const bEndMins   = toMins(b.endTime);
+                const top    = ((bStartMins - openHour * 60) / 60) * DAY_ROW_H;
+                const height = ((bEndMins - bStartMins) / 60) * DAY_ROW_H;
+                if (height <= 0) return null;
+                return (
+                  <div key={`break-${i}`} className="absolute left-16 right-0 z-10 pointer-events-none"
+                    style={{ top, height, background: "repeating-linear-gradient(45deg,rgba(149,165,166,0.12),rgba(149,165,166,0.12) 4px,transparent 4px,transparent 10px)" }}>
+                    {height >= 22 && (
+                      <span className="absolute left-3 top-1 text-[10px] font-bold text-pebble-grey">Break</span>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Time blocks */}
+              {isFullDayBlocked ? (
+                <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center"
+                  style={{ background: "rgba(44,62,80,0.06)" }}>
+                  <span className="text-xs font-bold text-pebble-grey bg-white/80 px-3 py-1 rounded-full">
+                    {dayTimeBlocks.find(b => b.allDay)?.reason ?? "Blocked"}
+                  </span>
+                </div>
+              ) : dayTimeBlocks.filter(b => !b.allDay).map((b, i) => {
+                const bStartMins = toMins(b.startTime);
+                const bEndMins   = toMins(b.endTime);
+                const top    = ((bStartMins - openHour * 60) / 60) * DAY_ROW_H;
+                const height = ((bEndMins - bStartMins) / 60) * DAY_ROW_H;
+                if (height <= 0) return null;
+                return (
+                  <div key={`block-${i}`} className="absolute left-16 right-0 z-10 pointer-events-none"
+                    style={{ top, height, background: "rgba(44,62,80,0.07)", borderLeft: "3px solid rgba(44,62,80,0.25)" }}>
+                    {height >= 22 && (
+                      <span className="absolute left-3 top-1 text-[10px] font-bold text-deep-slate/50 truncate right-3">
+                        {b.reason ?? "Blocked"}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
 
               {/* Current time indicator */}
               {showNow && (
@@ -345,7 +397,7 @@ const ROW_H = 60;
 
 const CAL_HOURS = ["08","09","10","11","12","13","14","15","16","17","18"];
 
-function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Date }) {
+function WeekView({ appointments, refDate, timeBlocks = [] }: { appointments: any[]; refDate: Date; timeBlocks?: TimeBlock[] }) {
   const now = new Date();
   const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
 
@@ -357,11 +409,15 @@ function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Dat
   const weekDays = Array.from({length: 7}).map((_, i) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + i);
+    const dayKey = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
     const dayAppointments = appointments.filter(a => {
       const d = new Date(a.scheduled_at);
       return d.getDate() === date.getDate() && d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear() && a.status !== 'cancelled';
     });
-    
+    const dayBlocks = timeBlocks.filter(b => b.startDate <= dayKey && b.endDate >= dayKey);
+    const isBlocked = dayBlocks.some(b => b.allDay);
+    const partialBlocks = dayBlocks.filter(b => !b.allDay);
+
     return {
       dow: date.toLocaleDateString('en-GB', { weekday: 'short' }),
       date: date.getDate().toString(),
@@ -369,7 +425,9 @@ function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Dat
       hours: dayAppointments.reduce((sum, a) => sum + (a.service_snapshot_duration || 0), 0) / 60,
       today: date.getDate() === now.getDate() && date.getMonth() === now.getMonth(),
       off: dayAppointments.length === 0,
-      appointments: dayAppointments
+      appointments: dayAppointments,
+      isBlocked,
+      partialBlocks,
     };
   });
 
@@ -404,8 +462,24 @@ function WeekView({ appointments, refDate }: { appointments: any[]; refDate: Dat
             ))}
           </div>
           {weekDays.map((d, dayIdx) => (
-            <div key={dayIdx} className={`relative border-l border-pebble-grey/10 ${d.today ? "bg-groomr-gold/[0.04]" : ""} ${d.off ? "bg-pebble-grey/5" : ""}`}>
+            <div key={dayIdx} className={`relative border-l border-pebble-grey/10 ${d.today ? "bg-groomr-gold/[0.04]" : ""} ${d.off && !d.isBlocked ? "bg-pebble-grey/5" : ""}`}>
               {CAL_HOURS.map(h => <div key={h} className="border-t border-pebble-grey/10" style={{ height: ROW_H }} />)}
+              {d.isBlocked && (
+                <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center" style={{ background: "rgba(44,62,80,0.06)" }}>
+                  <span className="text-[9px] font-bold text-pebble-grey rotate-90 whitespace-nowrap">Blocked</span>
+                </div>
+              )}
+              {!d.isBlocked && d.partialBlocks.map((b, bi) => {
+                const bStartMins = toMins(b.startTime);
+                const bEndMins   = toMins(b.endTime);
+                const top    = ((bStartMins / 60) - 8) * ROW_H;
+                const height = ((bEndMins - bStartMins) / 60) * ROW_H;
+                if (height <= 0) return null;
+                return (
+                  <div key={bi} className="absolute left-0 right-0 z-10 pointer-events-none"
+                    style={{ top, height, background: "rgba(44,62,80,0.07)", borderLeft: "2px solid rgba(44,62,80,0.2)" }} />
+                );
+              })}
               {d.appointments.map((a, i) => {
                 const date = new Date(a.scheduled_at);
                 const startHour = date.getHours() + (date.getMinutes() / 60);
@@ -615,9 +689,10 @@ function navLabel(view: BookingSubView, refDate: Date): string {
   return refDate.getFullYear().toString();
 }
 
-export function BookingsView({ appointments, availability = [], onBeginGroom, activeGroomId }: {
+export function BookingsView({ appointments, availability = [], timeBlocks = [], onBeginGroom, activeGroomId }: {
   appointments: any[];
   availability?: import("@/types/groomer-dashboard").AvailabilityRow[];
+  timeBlocks?: TimeBlock[];
   onBeginGroom?: (g: ActiveGroom) => void;
   activeGroomId?: string | null;
 }) {
@@ -676,8 +751,8 @@ export function BookingsView({ appointments, availability = [], onBeginGroom, ac
           </button>
         </div>
       </div>
-      {view === "today" && <TodayView appointments={appointments} refDate={refDate} availability={availability} onBeginGroom={onBeginGroom} activeGroomId={activeGroomId} />}
-      {view === "week"  && <WeekView  appointments={appointments} refDate={refDate} />}
+      {view === "today" && <TodayView appointments={appointments} refDate={refDate} availability={availability} timeBlocks={timeBlocks} onBeginGroom={onBeginGroom} activeGroomId={activeGroomId} />}
+      {view === "week"  && <WeekView  appointments={appointments} refDate={refDate} timeBlocks={timeBlocks} />}
       {view === "month" && <MonthView appointments={appointments} refDate={refDate} onDayClick={handleDayClick} />}
       {view === "year"  && <YearView  appointments={appointments} refDate={refDate} onMonthClick={handleMonthClick} />}
     </section>

@@ -92,12 +92,25 @@ function ShareBar({ groomerProfileId, publicSlug }: { groomerProfileId: string; 
   const [linkCopied, setLinkCopied] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
   const [calCopied, setCalCopied] = useState(false);
+  const calRef = useRef<HTMLDivElement>(null);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
   const profilePath = publicSlug ? `/groomers/${publicSlug}` : `/groomers/${groomerProfileId}`;
   const bookingUrl = `${appUrl}${profilePath}`;
   const calendarHttpUrl = `${appUrl}/api/calendar/${groomerProfileId}`;
-  const calendarWebcalUrl = calendarHttpUrl.replace(/^https?/, "webcal");
+  const calendarWebcalUrl = calendarHttpUrl.replace(/^https?:\/\//, "webcal://");
+
+  // Close popover on outside click
+  useEffect(() => {
+    if (!calOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (calRef.current && !calRef.current.contains(e.target as Node)) {
+        setCalOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [calOpen]);
 
   function copyBookingLink() {
     navigator.clipboard.writeText(bookingUrl);
@@ -110,6 +123,9 @@ function ShareBar({ groomerProfileId, publicSlug }: { groomerProfileId: string; 
     setCalCopied(true);
     setTimeout(() => setCalCopied(false), 2500);
   }
+
+  // Google Calendar expects an https:// URL in the cid parameter
+  const googleCalUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(calendarHttpUrl)}`;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -132,7 +148,7 @@ function ShareBar({ groomerProfileId, publicSlug }: { groomerProfileId: string; 
       </div>
 
       {/* Calendar sync */}
-      <div className="relative">
+      <div className="relative" ref={calRef}>
         <button
           onClick={() => setCalOpen((o) => !o)}
           className="flex items-center gap-1.5 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors px-3 py-1.5 rounded-full border border-pebble-grey/20 bg-white hover:bg-alabaster-cream focus-ring"
@@ -141,29 +157,52 @@ function ShareBar({ groomerProfileId, publicSlug }: { groomerProfileId: string; 
           Sync calendar
         </button>
         {calOpen && (
-          <div className="absolute top-full mt-2 left-0 z-30 bg-white border border-pebble-grey/20 rounded-2xl shadow-modal p-3 w-64 space-y-2">
-            <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em] pb-1 border-b border-pebble-grey/10">
-              Subscribe to your booking calendar
-            </p>
+          <div className="absolute top-full mt-2 left-0 z-30 bg-white border border-pebble-grey/20 rounded-2xl shadow-modal p-4 w-72 space-y-3">
+            <div className="pb-2 border-b border-pebble-grey/10">
+              <p className="text-[10px] font-bold text-pebble-grey uppercase tracking-[0.12em]">
+                Sync your booking calendar
+              </p>
+              <p className="text-xs text-pebble-grey/80 mt-1 leading-relaxed">
+                Your bookings and any blocked time will appear in your calendar and stay up to date automatically.
+              </p>
+            </div>
+
+            {/* Apple Calendar */}
             <a
               href={calendarWebcalUrl}
-              className="flex items-center gap-2 text-sm font-bold text-deep-slate hover:text-sage-leaf transition-colors py-1"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 text-sm font-bold text-deep-slate hover:text-sage-leaf transition-colors py-0.5 group"
             >
-              <CalendarIcon size={15} /> Add to Apple Calendar
+              <span className="w-7 h-7 rounded-lg bg-alabaster-cream group-hover:bg-sage-leaf/10 flex items-center justify-center transition-colors shrink-0">
+                <CalendarIcon size={14} />
+              </span>
+              Add to Apple Calendar
             </a>
+
+            {/* Google Calendar */}
             <a
-              href={`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(calendarWebcalUrl)}`}
+              href={googleCalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm font-bold text-deep-slate hover:text-sage-leaf transition-colors py-1"
+              className="flex items-center gap-2.5 text-sm font-bold text-deep-slate hover:text-sage-leaf transition-colors py-0.5 group"
             >
-              <CalendarIcon size={15} /> Add to Google Calendar
+              <span className="w-7 h-7 rounded-lg bg-alabaster-cream group-hover:bg-sage-leaf/10 flex items-center justify-center transition-colors shrink-0">
+                <CalendarIcon size={14} />
+              </span>
+              Add to Google Calendar
             </a>
+
+            {/* Manual URL copy */}
             <div className="flex items-center gap-2 border-t border-pebble-grey/10 pt-2">
-              <span className="text-xs text-pebble-grey font-bold truncate flex-1">{calendarHttpUrl.replace("http://", "").replace("https://", "")}</span>
-              <button onClick={copyCalLink} className="shrink-0 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors flex items-center gap-1">
+              <span className="text-[11px] text-pebble-grey font-medium truncate flex-1">
+                {calendarHttpUrl.replace(/^https?:\/\//, "")}
+              </span>
+              <button
+                onClick={copyCalLink}
+                className="shrink-0 text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors flex items-center gap-1"
+              >
                 {calCopied ? <CheckIcon size={12} className="text-sage-leaf" /> : <UploadIcon size={12} />}
-                {calCopied ? "Copied" : "Copy URL"}
+                {calCopied ? "Copied" : "Copy"}
               </button>
             </div>
           </div>

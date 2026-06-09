@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 function formatIcalDate(date: Date): string {
   return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -52,9 +53,15 @@ const VTIMEZONE_LONDON = [
 ].join("\r\n");
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ groomerProfileId: string }> }
 ) {
+  // 60 requests per IP per hour — generous for legitimate calendar clients
+  // (polling multiple groomer feeds) while blocking enumeration scraping.
+  if (checkRateLimit(req, "calendar-feed", { max: 60, windowMs: 60 * 60 * 1000 })) {
+    return new NextResponse("Too Many Requests", { status: 429 });
+  }
+
   const { groomerProfileId } = await params;
 
   const [{ data: appointments }, { data: profile }, { data: timeBlocks }] =

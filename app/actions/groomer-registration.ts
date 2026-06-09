@@ -4,6 +4,7 @@ import { clerkClient, auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { generateUniqueGroomerSlug } from "@/lib/slug";
 import { v2 as cloudinary } from "cloudinary";
+import { isRateLimited } from "@/lib/rate-limit";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -24,6 +25,10 @@ export async function getInsuranceUploadSignature(): Promise<{
   folder: string;
   allowedFormats: string;
 }> {
+  if (await isRateLimited("cloudinary-sig-registration", { max: 20, windowMs: 15 * 60 * 1000 })) {
+    throw new Error("Too many upload requests. Please try again later.");
+  }
+
   const timestamp = Math.round(Date.now() / 1000);
   const folder    = "groomr/verification";
   const allowed_formats = "jpg,jpeg,png,webp,pdf";

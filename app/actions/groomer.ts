@@ -4,7 +4,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Appointment } from "@/app/actions/appointments";
 import { resend, FROM_EMAIL } from "@/lib/resend";
-import { groomCompleteEmail } from "@/lib/emails/groom-complete";
+import { renderGroomComplete } from "@/lib/emails/groom-complete";
 
 export interface GroomerProfileDetails {
   id: string;
@@ -400,7 +400,7 @@ export async function markAppointmentComplete(appointmentId: string): Promise<{ 
         .join(", ") || null;
 
       if (ownerEmail) {
-        const { subject, html, text } = groomCompleteEmail({
+        const { subject, html, text } = await renderGroomComplete({
           ownerName,
           dogName,
           salonName,

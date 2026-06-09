@@ -35,6 +35,7 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 | **Google Maps** | ^1.8.3 | `@vis.gl/react-google-maps` (client, `ssr:false`) + server-side geocoding |
 | **Stripe Connect** | ^22.1.1 | Destination charges, 8% platform fee. `lib/stripe.ts` (server), `lib/stripe-client.ts` (browser). See `documents/stripe-setup.md` |
 | **Resend** | ^6.12.3 | Transactional email. `lib/resend.ts`, templates in `lib/emails/`. FROM: `notifications@groomr.uk` |
+| **React Email** | @react-email/components + @react-email/render | Email templates as React components. Preview: `npx react-email dev --dir lib/emails`. Each template: named component + `render*()` async fn + default export preview wrapper with hardcoded data |
 | **Twilio** | ^6.0.2 | SMS notifications. `lib/sms/client.ts` + `lib/sms/send.ts` |
 
 ### Clerk API (Next.js 16)
@@ -58,7 +59,13 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 | `lib/dog-breeds.ts` | `DOG_BREEDS: string[]` — comprehensive breed list |
 | `lib/search.ts` | Groomer search (PostGIS + Google Maps geocoding) |
 | `lib/emails/send.ts` | Email dispatch functions |
-| `lib/emails/*.ts` | Templates: booking-confirmation-owner/groomer, appointment-cancelled, appointment-reminder, groom-complete, review-reminder |
+| `lib/emails/components/Layout.tsx` | Shared React Email wrapper — slate header band with gold Cloudinary logo, card, footer. Brand `colors` exported from here |
+| `lib/emails/components/DetailRow.tsx` | Label/value row component used in appointment detail blocks |
+| `lib/emails/booking-confirmation-owner.tsx` | Owner booking confirmation template |
+| `lib/emails/appointment-cancelled.tsx` | Cancellation template (sent to both owner and groomer) |
+| `lib/emails/appointment-reminder.tsx` | 24h reminder template |
+| `lib/emails/groom-complete.tsx` | Pickup-ready + tip CTA template |
+| `lib/emails/review-reminder.tsx` | Post-groom review request template |
 | `lib/sms/client.ts` | Twilio client wrapper |
 | `lib/sms/send.ts` | SMS dispatch: `sendBookingConfirmationSMS()` etc. |
 
@@ -68,7 +75,7 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 
 1. Clerk handles all auth (email + Google OAuth)
 2. On `user.created`: webhook (`/api/webhooks/clerk`) creates `profiles` row with `roles = {owner}`
-3. Team member sign-up: webhook checks `public_metadata.groomr_team_invite === true`, links `team_members` row and grants `groomer` role
+3. Team member sign-up: webhook checks `public_metadata.groomr_team_invite === true` **and** `invite_token` (UUID stored on `team_members`, passed through Clerk `publicMetadata`). Webhook does a single atomic `UPDATE … WHERE invite_token = ? AND invite_status = 'pending'` — eliminates the email-spoof and concurrent-webhook race (S15)
 4. `/dashboard` reads `profiles.roles` and redirects: `groomer` → `/dashboard/groomer`, otherwise → `/dashboard/owner`
 5. Server actions/components get Clerk user via `auth()` / `currentUser()`, then look up `profiles.id` by `clerk_id`
 6. Race condition fallback: `getOrCreateProfile()` in `app/dashboard/owner/page.tsx`
@@ -207,6 +214,7 @@ name text NOT NULL | role text NOT NULL | since_year smallint | public_slug text
 average_rating numeric | total_reviews integer | email text
 user_id uuid → profiles ON DELETE SET NULL
 invite_status text DEFAULT 'pending'    -- pending | accepted | revoked
+invite_token uuid UNIQUE               -- generated server-side, passed in Clerk publicMetadata; matched atomically in user.created webhook
 clerk_invitation_id text | invited_at timestamptz | accepted_at timestamptz
 ```
 
@@ -653,6 +661,6 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 | S12 | 🔄 See S8 | Two identical Google Maps keys | Same key used for both env vars — resolved once S8 GCP action is completed |
 | S13 | ⬜ Open | Admin role enforced in code only | `requireAdmin()` guard is correct but adding a DB-level RLS policy for `is_admin = true` would be belt-and-suspenders |
 | S14 | ⬜ Open | Cron endpoint leaks raw query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Line 22 returns `{ reminders, reviews, smsReminders }` which are raw arrays from the DB. Return summary counts only (e.g. `{ sent: reminders.length, ... }`) |
-| S15 | ⬜ Open | Team member invite matched by email only | [`app/api/webhooks/clerk/route.ts:69`](app/api/webhooks/clerk/route.ts) | Race condition: two accounts created with same email could claim one invite. Add an invite token to harden |
+| S15 | ✅ Done | Team member invite matched by email only | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts) | `invite_token uuid UNIQUE` added to `team_members` (migration `20260609000001`). Token generated in `inviteTeamMember`, stored in DB and passed via Clerk `publicMetadata`. Webhook does atomic `UPDATE … WHERE invite_token = ? AND invite_status = 'pending'` — closes both email-spoof and TOCTOU race |
 
 > **Key:** ⬜ Open · 🔄 In Progress · ✅ Done

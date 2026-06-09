@@ -48,6 +48,8 @@ export async function inviteTeamMember(
     if (existing.invite_status === "pending")  return { error: "An invite is already pending for this email." };
   }
 
+  const inviteToken = crypto.randomUUID();
+
   // Send Clerk invitation — Clerk emails the invite link
   let clerkInvitationId: string | null = null;
   try {
@@ -58,6 +60,7 @@ export async function inviteTeamMember(
       publicMetadata: {
         groomr_team_invite: true,
         groomer_profile_id: groomerProfileId,
+        invite_token: inviteToken,
       },
     });
     clerkInvitationId = invitation.id;
@@ -88,6 +91,7 @@ export async function inviteTeamMember(
       role: input.role,
       email: input.email,
       invite_status: "pending",
+      invite_token: inviteToken,
       clerk_invitation_id: clerkInvitationId,
       since_year: new Date().getFullYear(),
       public_slug: `${slug}-at-profile`,

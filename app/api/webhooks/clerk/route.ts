@@ -60,38 +60,34 @@ export async function POST(req: Request) {
 
     console.log('user.created — profile insert:', profileData?.id, profileError)
 
-    // If this sign-up was triggered by a team invite, link the team_members row
+    // If this sign-up was triggered by a team invite, link the team_members row.
+    // Matching on invite_token (unique, secret) + atomic UPDATE WHERE invite_status='pending'
+    // prevents both email-spoofing and the TOCTOU race where two concurrent webhook
+    // deliveries both win a SELECT before either commits an UPDATE.
     const meta = public_metadata as Record<string, unknown> | undefined
     const isTeamInvite = meta?.groomr_team_invite === true
-    const groomerProfileId = meta?.groomer_profile_id as string | undefined
+    const inviteToken = meta?.invite_token as string | undefined
 
-    if (isTeamInvite && groomerProfileId && profileData && email) {
-      const { data: teamMember } = await supabaseAdmin
+    if (isTeamInvite && inviteToken && profileData) {
+      const { data: claimed } = await supabaseAdmin
         .from('team_members')
-        .select('id')
-        .eq('groomer_profile_id', groomerProfileId)
-        .eq('email', email)
+        .update({
+          user_id: profileData.id,
+          invite_status: 'accepted',
+          accepted_at: new Date().toISOString(),
+        })
+        .eq('invite_token', inviteToken)
         .eq('invite_status', 'pending')
-        .maybeSingle()
+        .select('id')
+        .single()
 
-      if (teamMember) {
-        await Promise.all([
-          supabaseAdmin
-            .from('team_members')
-            .update({
-              user_id: profileData.id,
-              invite_status: 'accepted',
-              accepted_at: new Date().toISOString(),
-            })
-            .eq('id', teamMember.id),
-          // Grant groomer role so the dashboard router sends them to /dashboard/groomer
-          supabaseAdmin
-            .from('profiles')
-            .update({ roles: '{owner,groomer}' })
-            .eq('id', profileData.id),
-        ])
+      if (claimed) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ roles: '{owner,groomer}' })
+          .eq('id', profileData.id)
 
-        console.log('user.created — team invite accepted for', teamMember.id)
+        console.log('user.created — team invite accepted for', claimed.id)
       }
     }
   }

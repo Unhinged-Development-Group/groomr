@@ -1,10 +1,9 @@
 import { resend, FROM_EMAIL } from "@/lib/resend";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { bookingConfirmationOwnerEmail } from "./booking-confirmation-owner";
-import { bookingConfirmationGroomerEmail } from "./booking-confirmation-groomer";
-import { appointmentCancelledEmail } from "./appointment-cancelled";
-import { appointmentReminderEmail } from "./appointment-reminder";
-import { reviewReminderEmail } from "./review-reminder";
+import { renderBookingConfirmationOwner } from "./booking-confirmation-owner";
+import { renderAppointmentCancelled } from "./appointment-cancelled";
+import { renderAppointmentReminder } from "./appointment-reminder";
+import { renderReviewReminder } from "./review-reminder";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://groomr.uk";
 
@@ -95,22 +94,13 @@ export async function sendBookingConfirmationEmails(appointmentId: string): Prom
   const d = await fetchAppointmentEmailData(appointmentId);
   if (!d) return;
 
-  const ownerEmail = bookingConfirmationOwnerEmail({
+  const ownerEmail = await renderBookingConfirmationOwner({
     ownerName:   d.ownerName,
     dogName:     d.dogName,
     salonName:   d.salonName,
     serviceName: d.serviceName,
     scheduledAt: d.scheduledAt,
     address:     d.address,
-    appUrl:      APP_URL,
-  });
-
-  const groomerEmail = bookingConfirmationGroomerEmail({
-    groomerName: d.groomerName,
-    ownerName:   d.ownerName,
-    dogName:     d.dogName,
-    serviceName: d.serviceName,
-    scheduledAt: d.scheduledAt,
     appUrl:      APP_URL,
   });
 
@@ -128,18 +118,6 @@ export async function sendBookingConfirmationEmails(appointmentId: string): Prom
     );
   }
 
-  if (d.groomerEmail) {
-    sends.push(
-      resend.emails.send({
-        from:    FROM_EMAIL,
-        to:      d.groomerEmail,
-        subject: groomerEmail.subject,
-        html:    groomerEmail.html,
-        text:    groomerEmail.text,
-      }),
-    );
-  }
-
   const results = await Promise.allSettled(sends);
   results.forEach((r, i) => {
     if (r.status === "rejected") {
@@ -152,27 +130,28 @@ export async function sendCancellationEmails(appointmentId: string): Promise<voi
   const d = await fetchAppointmentEmailData(appointmentId);
   if (!d) return;
 
-  const toOwner = appointmentCancelledEmail({
-    recipientName:   d.ownerName,
-    dogName:         d.dogName,
-    salonName:       d.salonName,
-    serviceName:     d.serviceName,
-    scheduledAt:     d.scheduledAt,
-    cancelledByOwner: d.cancelledByOwner,
-    reason:          d.cancellationReason,
-    appUrl:          APP_URL,
-  });
-
-  const toGroomer = appointmentCancelledEmail({
-    recipientName:   d.groomerName,
-    dogName:         d.dogName,
-    salonName:       d.salonName,
-    serviceName:     d.serviceName,
-    scheduledAt:     d.scheduledAt,
-    cancelledByOwner: d.cancelledByOwner,
-    reason:          d.cancellationReason,
-    appUrl:          APP_URL,
-  });
+  const [toOwner, toGroomer] = await Promise.all([
+    renderAppointmentCancelled({
+      recipientName:    d.ownerName,
+      dogName:          d.dogName,
+      salonName:        d.salonName,
+      serviceName:      d.serviceName,
+      scheduledAt:      d.scheduledAt,
+      cancelledByOwner: d.cancelledByOwner,
+      reason:           d.cancellationReason,
+      appUrl:           APP_URL,
+    }),
+    renderAppointmentCancelled({
+      recipientName:    d.groomerName,
+      dogName:          d.dogName,
+      salonName:        d.salonName,
+      serviceName:      d.serviceName,
+      scheduledAt:      d.scheduledAt,
+      cancelledByOwner: d.cancelledByOwner,
+      reason:           d.cancellationReason,
+      appUrl:           APP_URL,
+    }),
+  ]);
 
   const sends = [];
 
@@ -260,7 +239,7 @@ export async function sendAppointmentReminders(): Promise<{ sent: number; errors
 
     const addressParts = [gp?.address_line_1, gp?.city, gp?.postcode].filter(Boolean);
 
-    const email = appointmentReminderEmail({
+    const email = await renderAppointmentReminder({
       ownerName:   ownerProfile?.full_name ?? "there",
       dogName:     (apt.dogs as { name: string }[] | null)?.[0]?.name ?? "your dog",
       salonName:   gp?.business_name ?? "your groomer",
@@ -330,7 +309,7 @@ export async function sendReviewReminders(): Promise<{ sent: number; errors: num
     const gpRaw = apt.groomer_profiles as { business_name: string | null }[] | null;
     const gp2 = Array.isArray(gpRaw) ? gpRaw[0] ?? null : gpRaw;
 
-    const email = reviewReminderEmail({
+    const email = await renderReviewReminder({
       ownerName:     ownerProfile?.full_name ?? "there",
       dogName:       (apt.dogs as { name: string }[] | null)?.[0]?.name ?? "your dog",
       salonName:     gp2?.business_name ?? "your groomer",

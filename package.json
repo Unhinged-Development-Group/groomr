@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.7",
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.8",
     "@stripe/react-stripe-js": "^6.4.0",
     "@stripe/stripe-js": "^9.6.0",
     "@supabase/supabase-js": "^2.104.1",
@@ -29,12 +31,14 @@
     "twilio": "^6.0.2"
   },
   "devDependencies": {
+    "@react-email/ui": "^6.6.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "react-email": "^6.6.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

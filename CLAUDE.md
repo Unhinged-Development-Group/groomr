@@ -82,13 +82,16 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 
 ### Custom Types
 ```sql
-CREATE TYPE user_role            AS ENUM ('owner', 'groomer', 'admin');
-CREATE TYPE appointment_status   AS ENUM ('pending', 'confirmed', 'completed', 'cancelled', 'no_show');
-CREATE TYPE dog_size             AS ENUM ('small', 'medium', 'large', 'giant');
-CREATE TYPE coat_type            AS ENUM ('short', 'medium', 'long', 'curly', 'double', 'wire');
-CREATE TYPE payout_status        AS ENUM ('pending', 'paid', 'failed');
-CREATE TYPE refund_status        AS ENUM ('none', 'requested', 'approved', 'rejected', 'processed');
+CREATE TYPE user_role              AS ENUM ('owner', 'groomer', 'admin');
+CREATE TYPE appointment_status     AS ENUM ('pending', 'confirmed', 'completed', 'cancelled', 'no_show');
+CREATE TYPE dog_size               AS ENUM ('xs', 'small', 'medium', 'large', 'xl');
+CREATE TYPE coat_type              AS ENUM ('smooth', 'double', 'long', 'wire', 'curly', 'hairless');
+CREATE TYPE payout_status          AS ENUM ('pending', 'initiated', 'paid', 'failed');
+CREATE TYPE refund_status          AS ENUM ('none', 'partial', 'full', 'failed');
 CREATE TYPE support_request_status AS ENUM ('open', 'in_progress', 'closed');
+CREATE TYPE verification_status    AS ENUM ('not_submitted', 'awaiting', 'verified', 'revoked_temp', 'revoked_perm');
+-- dispute_status base: 'open', 'in_review', 'resolved' — extended by migration 20260607000003 with:
+-- 'pending', 'awaiting_agreement', 'awaiting_final_agreement', 'final_review'
 ```
 
 ### Core Tables
@@ -97,6 +100,8 @@ CREATE TYPE support_request_status AS ENUM ('open', 'in_progress', 'closed');
 ```
 id uuid PK | clerk_id text UNIQUE | full_name text | email text | phone text
 avatar_url text | roles user_role[] DEFAULT '{owner}' | is_admin boolean | is_active boolean
+is_deleted boolean DEFAULT false | deleted_at timestamptz    -- soft-delete (migration 20260607000004)
+admin_preferences jsonb                                       -- pinned snapshot config (migration 20260606000001)
 ```
 > No FK to `auth.users` — intentional. Clerk is auth source of truth.
 
@@ -112,6 +117,7 @@ is_verified boolean DEFAULT false
 is_listed boolean DEFAULT false
 is_accepting_bookings boolean DEFAULT false   -- controls search visibility
 is_founding_groomer boolean DEFAULT false     -- 0% commission for 6 months
+verification_status verification_status DEFAULT 'not_submitted'   -- migration 20260607000001; replaces boolean is_verified
 stripe_account_id text
 average_rating numeric | total_reviews integer
 profile_image_url text | banner_image_url text | cover_photo_url text
@@ -175,6 +181,7 @@ full_payment_intent_id text | full_amount_pence integer | full_payment_paid_at t
 platform_fee_pence integer | platform_fee_pct numeric | groomer_payout_amount_pence integer
 stripe_transfer_id text | payout_status payout_status | payout_initiated_at timestamptz
 refund_status refund_status | refund_amount_pence integer | stripe_refund_id text | refunded_at timestamptz
+stripe_fee_pence integer DEFAULT 0    -- Stripe's own processing fee (migration 20260607000002)
 currency char(3) DEFAULT 'gbp'
 ```
 
@@ -289,8 +296,10 @@ status text DEFAULT 'pending'    -- 'pending' | 'succeeded' | 'failed'
 ```
 id uuid PK | owner_id uuid → profiles | groomer_id uuid → profiles
 appointment_id uuid → appointments (nullable)
-subject text | description text | status text
-  -- 'pending' | 'open' | 'awaiting_agreement' | 'awaiting_final_agreement' | 'final_review' | 'resolved' | 'closed'
+subject text | description text
+status dispute_status
+  -- base (migration 20260524): 'open' | 'in_review' | 'resolved'
+  -- extended (migration 20260607000003): + 'pending' | 'awaiting_agreement' | 'awaiting_final_agreement' | 'final_review'
 raised_by text    -- 'owner' | 'groomer'
 owner_comment text | groomer_comment text
 proposed_resolution text | resolution_proposed_at timestamptz
@@ -330,7 +339,7 @@ updated_at timestamptz | updated_by uuid → profiles
 
 ### Migrations
 
-28 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
+32 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
 
 ---
 
@@ -540,6 +549,8 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | `/dashboard/groomer/portfolio` | — | Photo gallery management |
 | `/dashboard/admin` | — | Platform Control — User Management (Overview, Groomers, Users, Appointments, Disputes, Support) + Groomr Management (Financials, Team, Settings, Audit Log, Analytics, Support). Template for new tabs at `_templates/NewTab.tsx` |
 | `/terms`, `/privacy-policy`, `/cookie-policy`, `/verification-policy`, `/acceptable-use` | — | Legal pages |
+| `/support` | — | Public support page — FAQ accordion + contact form (routes to `support_requests` table) |
+| `/dashboard/messages` | — | Role-based redirect: `groomer` → `/dashboard/groomer/messages`, else → `/dashboard/owner/messages` |
 
 **API Routes:**
 
@@ -548,7 +559,7 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | `/api/webhooks/clerk` | Clerk → Supabase user sync |
 | `/api/webhooks/stripe` | Stripe payment + account events |
 | `/api/calendar/[groomerProfileId]` | Calendar availability endpoint |
-| `/api/cron/notifications` | Daily cron at 08:00 UTC (`vercel.json`): booking reminders + review requests |
+| `/api/cron/notifications` | Hourly cron (`vercel.json`: `"0 * * * *"`): booking reminders + review requests + SMS reminders |
 
 ---
 
@@ -579,14 +590,17 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | Team member appointment assignment UI | Real — assignment wired to `assigned_to_team_member_id` |
 | Admin dashboard — User Management | Real — Overview, Groomers (verify/edit/services), Users (edit/dogs), Appointments (cancel), Disputes, Support |
 | Admin dashboard — Groomr Management | Real — Financials (revenue breakdown), Team (grant/revoke admin), Platform Settings (commission rates + integration health), Audit Log (all mutating actions logged), Analytics (revenue + booking charts via Recharts), Support (stats + tickets) |
-| Admin pinned snapshots | Infrastructure only — `profiles.admin_preferences`, `adminGetPreferences`/`adminSavePreferences` built; snapshot picker UI **not yet built** |
+| Admin pinned snapshots | Real — 4-slot `SnapshotBar` with dashed empty slots, filled metric circles, category-tabbed picker modal (Users / Bookings / Revenue / Reviews, 20+ metrics). Persists to `profiles.admin_preferences` via `adminSavePreferences` |
 | Dispute workflow | Real — `disputes` table, two-party comment + resolution flow, admin adjudication, `/disputes/[id]` page |
 | Support requests | Real — `support_requests` table, admin replies |
-| `time_blocks` → booking conflicts | Real — wired into `getAvailableSlots()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals |
+| `time_blocks` → booking conflicts | Real — wired into `getAvailableSlots()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals. **Gap:** `createGroupAppointment()` does not validate `time_blocks` — group bookings can land in blocked periods |
 | Break windows in booking | Real — `break_start_time`/`break_end_time` now subtracted from available slots in `getAvailableSlots()`. Note: `profile-editor.ts` incorrectly writes JSON to these `time` columns — breaks won't take effect until that write is fixed |
-| Discount % capping | `client_settings.discount_percentage` is not validated ≤ 100 in `createAppointment` — values > 100 produce negative prices |
-| PostHog analytics | Not built |
-| Google Calendar sync | Not built |
+| Discount % capping | `client_settings.discount_percentage` is validated ≤ 100 in `createAppointment` and `createGroupAppointment` (clamped `Math.max(0, Math.min(100, pct))`) |
+| Soft-delete on account close | Real — `profiles.is_deleted` + `profiles.deleted_at` (migration `20260607000004`); `closeOwnerAccount` / `closeGroomerAccount` soft-delete; hard-delete cron (30-day) **not yet built** |
+| Groomer verification status | Real — `verification_status` enum on `groomer_profiles` (migration `20260607000001`): `not_submitted → awaiting → verified / revoked_temp / revoked_perm`. Replaces the simple boolean `is_verified` |
+| Public support page (`/support`) | Real — FAQ accordion + contact form, wires to `support_requests` table |
+| PostHog analytics | Not built — env vars set but no code integrated |
+| Google Calendar sync | Not built — only a link to Google Calendar's "add calendar" dialog with the iCal feed |
 | **Vaccination & health reminders** (owner) | Planned — store vaccine due-dates on `dogs`, send email/SMS N days before expiry via existing Resend + Twilio stack; needs a `dog_health_reminders` table or date fields on `dogs`, plus a cron job |
 | **Booking receipt download** (owner) | Planned — PDF or formatted HTML email receipt per appointment; server-side render with existing appointment + payment data, send via Resend on demand or post-completion |
 | **Groomer comparison tool** (owner) | Planned — pin 2–3 groomers from search, view side-by-side (price, distance, rating, availability preview); pure UI addition on top of existing search + groomer data |
@@ -608,8 +622,8 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 | # | Status | Issue | Location | Fix |
 |---|---|---|---|---|
 | S1 | ✅ Done | `dangerouslyAllowSVG: true` | [`next.config.ts`](next.config.ts) | Removed — SVGs can contain embedded JS. User-uploaded content never needs SVG. |
-| S2 | ✅ Done | No HTTP security headers | [`next.config.ts`](next.config.ts) | Added `headers()` with `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and CSP covering Clerk, Stripe, Google Maps, Supabase, Cloudinary |
-| S3 | ✅ Done | Discount % not clamped server-side | [`app/actions/booking.ts`](app/actions/booking.ts) | `Math.max(0, Math.min(100, pct))` applied in both `createAppointment` and `createGroupAppointment` |
+| S2 | ✅ Done | No HTTP security headers | [`next.config.ts`](next.config.ts) | Added `headers()` with `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and CSP. **Note:** Clerk's FAPI loads JS from `https://full-jaguar-15.clerk.accounts.dev` — this exact host must be in `script-src`, `connect-src`, `img-src`, and `frame-src`. Wildcards like `*.clerk.accounts.dev` do not reliably match in Chrome. |
+| S3 | ✅ Done | Discount % not clamped server-side | [`app/actions/booking.ts`](app/actions/booking.ts) | `Math.max(0, Math.min(100, pct))` applied in both `createAppointment` and `createGroupAppointment`. Also reflected in Feature Status table. |
 
 ### High
 
@@ -619,7 +633,8 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 
 | S5 | ⬜ Open | Cloudinary signature issued without auth (registration) | [`app/actions/groomer-registration.ts:19`](app/actions/groomer-registration.ts) | Intentional — wizard runs before Clerk account exists. Mitigate: add short TTL (`timestamp` already included) and rate-limit the server action endpoint |
 | S6 | ✅ Done | No file-type restriction in Cloudinary signatures | `dogs.ts`, `portfolio.ts`, `profile-editor.ts` (×3), `groomer-registration.ts` | `allowed_formats` added to all 6 `api_sign_request` calls — images get `jpg,jpeg,png,webp`; verification/insurance docs also allow `pdf`. `allowedFormats` returned to client from each function. |
-| S7 | ✅ Done | Hard-delete on `user.deleted` webhook | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), [`app/actions/close-account.ts`](app/actions/close-account.ts) | Soft-delete added (`is_deleted`, `deleted_at` on `profiles`, migration `20260607000004`). `closeOwnerAccount` retains appointments; `closeGroomerAccount` retains appointments/payments and deactivates groomer listing. A 30-day hard-delete cron job is still needed (S7b). |
+| S7 | ✅ Done | Hard-delete on `user.deleted` webhook | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), [`app/actions/close-account.ts`](app/actions/close-account.ts) | Soft-delete added (`is_deleted`, `deleted_at` on `profiles`, migration `20260607000004`). `closeOwnerAccount` retains appointments; `closeGroomerAccount` retains appointments/payments and deactivates groomer listing. |
+| S7b | ⬜ Open | 30-day hard-delete cron missing | `app/api/cron/` | Migration `20260607000004` explicitly calls this out. Need a new cron endpoint that hard-deletes `profiles` where `is_deleted = true AND deleted_at < now() - interval '30 days'`, excluding profiles with open disputes or payments within 7-year tax retention window. |
 
 ### Medium
 
@@ -636,7 +651,7 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 |---|---|---|---|
 | S12 | 🔄 See S8 | Two identical Google Maps keys | Same key used for both env vars — resolved once S8 GCP action is completed |
 | S13 | ⬜ Open | Admin role enforced in code only | `requireAdmin()` guard is correct but adding a DB-level RLS policy for `is_admin = true` would be belt-and-suspenders |
-| S14 | ⬜ Open | Cron endpoint must not leak query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Ensure response body never includes raw DB rows — return a summary count only |
+| S14 | ⬜ Open | Cron endpoint leaks raw query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Line 22 returns `{ reminders, reviews, smsReminders }` which are raw arrays from the DB. Return summary counts only (e.g. `{ sent: reminders.length, ... }`) |
 | S15 | ⬜ Open | Team member invite matched by email only | [`app/api/webhooks/clerk/route.ts:69`](app/api/webhooks/clerk/route.ts) | Race condition: two accounts created with same email could claim one invite. Add an invite token to harden |
 
 > **Key:** ⬜ Open · 🔄 In Progress · ✅ Done

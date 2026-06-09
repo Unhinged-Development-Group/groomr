@@ -108,6 +108,7 @@ CREATE TYPE verification_status    AS ENUM ('not_submitted', 'awaiting', 'verifi
 id uuid PK | clerk_id text UNIQUE | full_name text | email text | phone text
 avatar_url text | roles user_role[] DEFAULT '{owner}' | is_admin boolean | is_active boolean
 is_deleted boolean DEFAULT false | deleted_at timestamptz    -- soft-delete (migration 20260607000004)
+anonymised_at timestamptz    -- set by /api/cron/cleanup when PII is scrubbed (migration 20260610000001)
 admin_preferences jsonb                                       -- pinned snapshot config (migration 20260606000001)
 ```
 > No FK to `auth.users` — intentional. Clerk is auth source of truth.
@@ -347,7 +348,7 @@ updated_at timestamptz | updated_by uuid → profiles
 
 ### Migrations
 
-32 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
+34 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
 
 ---
 
@@ -567,7 +568,8 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | `/api/webhooks/clerk` | Clerk → Supabase user sync |
 | `/api/webhooks/stripe` | Stripe payment + account events |
 | `/api/calendar/[groomerProfileId]` | Calendar availability endpoint |
-| `/api/cron/notifications` | Hourly cron (`vercel.json`: `"0 * * * *"`): booking reminders + review requests + SMS reminders |
+| `/api/cron/notifications` | Daily cron (`vercel.json`: `"0 8 * * *"`): booking reminders + review requests + SMS reminders |
+| `/api/cron/cleanup` | Daily cron (`vercel.json`: `"30 3 * * *"`): GDPR sweep of profiles soft-deleted >30 days — hard-delete (no financial records), anonymise (PII scrub, retention applies), or skip (open dispute). Logs to `admin_audit_log` |
 
 ---
 
@@ -604,7 +606,7 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | `time_blocks` → booking conflicts | Real — wired into `getAvailableSlots()` and `createGroupAppointment()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals. |
 | Break windows in booking | Real — breaks stored as JSON array in `break_start_time`; `getAvailableSlots()` parses both JSON and legacy plain-string formats and subtracts all breaks from available slots. |
 | Discount % capping | `client_settings.discount_percentage` is validated ≤ 100 in `createAppointment` and `createGroupAppointment` (clamped `Math.max(0, Math.min(100, pct))`) |
-| Soft-delete on account close | Real — `profiles.is_deleted` + `profiles.deleted_at` (migration `20260607000004`); `closeOwnerAccount` / `closeGroomerAccount` soft-delete; hard-delete cron (30-day) **not yet built** |
+| Soft-delete on account close | Real — `profiles.is_deleted` + `profiles.deleted_at` (migration `20260607000004`); `closeOwnerAccount` / `closeGroomerAccount` soft-delete; 30-day cleanup cron at `/api/cron/cleanup` hard-deletes or anonymises (`profiles.anonymised_at`, migration `20260610000001`) |
 | Groomer verification status | Real — `verification_status` enum on `groomer_profiles` (migration `20260607000001`): `not_submitted → awaiting → verified / revoked_temp / revoked_perm`. Replaces the simple boolean `is_verified` |
 | Public support page (`/support`) | Real — FAQ accordion + contact form, wires to `support_requests` table |
 | PostHog analytics | Not built — env vars set but no code integrated |
@@ -643,7 +645,7 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 | S5 | ✅ Done | Cloudinary signature issued without auth (registration) | [`app/actions/groomer-registration.ts:19`](app/actions/groomer-registration.ts) | Intentional — wizard runs before Clerk account exists. Mitigated: `isRateLimited()` in `lib/rate-limit.ts` enforces 20 req/15 min per IP (in-memory sliding window). Cloudinary timestamp TTL already bounds signature lifetime. |
 | S6 | ✅ Done | No file-type restriction in Cloudinary signatures | `dogs.ts`, `portfolio.ts`, `profile-editor.ts` (×3), `groomer-registration.ts` | `allowed_formats` added to all 6 `api_sign_request` calls — images get `jpg,jpeg,png,webp`; verification/insurance docs also allow `pdf`. `allowedFormats` returned to client from each function. |
 | S7 | ✅ Done | Hard-delete on `user.deleted` webhook | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), [`app/actions/close-account.ts`](app/actions/close-account.ts) | Soft-delete added (`is_deleted`, `deleted_at` on `profiles`, migration `20260607000004`). `closeOwnerAccount` retains appointments; `closeGroomerAccount` retains appointments/payments and deactivates groomer listing. |
-| S7b | ⬜ Open | 30-day hard-delete cron missing | `app/api/cron/` | Migration `20260607000004` explicitly calls this out. Need a new cron endpoint that hard-deletes `profiles` where `is_deleted = true AND deleted_at < now() - interval '30 days'`, excluding profiles with open disputes or payments within 7-year tax retention window. |
+| S7b | ✅ Done | 30-day hard-delete cron missing | [`app/api/cron/cleanup/route.ts`](app/api/cron/cleanup/route.ts) | Daily cron (`vercel.json`: `30 3 * * *`). Profiles soft-deleted >30 days: hard-deleted when no appointments/tips exist (FK cascades clean up the rest); **anonymised** when financial records require retention (PII scrubbed, bank details nulled, `anonymised_at` set — migration `20260610000001`); skipped while a dispute is unresolved. All actions logged to `admin_audit_log`. |
 
 ### Medium
 
@@ -652,15 +654,15 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 | S8 | 🔄 Code done — GCP action needed | Google Maps API key not split | `.env.local` | Code already uses `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (browser) and `GOOGLE_MAPS_API_KEY` (server) separately. **Action**: create two keys in Google Cloud Console — browser key restricted to `https://groomr.uk/*`, server key restricted by Vercel outbound IP ranges — then update Vercel env vars. |
 | S9 | ✅ Done | SMS phone number not validated | [`lib/sms/send.ts`](lib/sms/send.ts) | `isValidUKPhone()` added — validates E.164 `+44` format (strips spaces) before every Twilio call; invalid numbers are skipped with a warning log |
 | S10 | ✅ Done | Contact form `senderEmail` not validated | [`app/actions/contact.ts`](app/actions/contact.ts) | `isValidEmail()` regex check added before Resend call; returns `{ ok: false, error }` on invalid format |
-| S11 | ⬜ Open | Stripe webhook handler errors silent | [`app/api/webhooks/stripe/route.ts:34`](app/api/webhooks/stripe/route.ts) | Returning 200 on handler error is correct (prevents Stripe retries) but add structured logging / alerting (e.g. log to `admin_audit_log` or POST to a monitoring endpoint) |
+| S11 | ✅ Done | Stripe webhook handler errors silent | [`app/api/webhooks/stripe/route.ts`](app/api/webhooks/stripe/route.ts) | Handler errors now inserted into `admin_audit_log` (action `stripe_webhook_error`, `target_id` = Stripe event ID, metadata = event type + error message) before returning 200 — visible in the admin Audit Log tab |
 
 ### Low
 
 | # | Status | Issue | Notes |
 |---|---|---|---|
 | S12 | 🔄 See S8 | Two identical Google Maps keys | Same key used for both env vars — resolved once S8 GCP action is completed |
-| S13 | ⬜ Open | Admin role enforced in code only | `requireAdmin()` guard is correct but adding a DB-level RLS policy for `is_admin = true` would be belt-and-suspenders |
-| S14 | ⬜ Open | Cron endpoint leaks raw query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Line 22 returns `{ reminders, reviews, smsReminders }` which are raw arrays from the DB. Return summary counts only (e.g. `{ sent: reminders.length, ... }`) |
+| S13 | ✅ Done | Admin role enforced in code only | Migration `20260610000001` (applied): added the missing `admin_all` policies (`availability_overrides`, `messages`, `portfolio_photos`, `notifications`, `client_settings`, `client_service_prices`, `recurring_series`, `contract_terms`, `contract_acceptances`, `tips`) and a `protect_is_admin` BEFORE UPDATE trigger on `profiles` that blocks `is_admin` changes from anon/authenticated connections unless the actor is already an admin |
+| S14 | ✅ Done | Cron endpoint leaks raw query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Send functions already returned `{ sent, errors }` counts (finding was stale); response now maps fields explicitly so a future return-shape change can't leak rows. `/api/cron/cleanup` follows the same counts-only rule. |
 | S15 | ✅ Done | Team member invite matched by email only | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts) | `invite_token uuid UNIQUE` added to `team_members` (migration `20260609000001`). Token generated in `inviteTeamMember`, stored in DB and passed via Clerk `publicMetadata`. Webhook does atomic `UPDATE … WHERE invite_token = ? AND invite_status = 'pending'` — closes both email-spoof and TOCTOU race |
 
 > **Key:** ⬜ Open · 🔄 In Progress · ✅ Done

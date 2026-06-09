@@ -34,7 +34,7 @@ export async function exportAccountData(): Promise<{ data: Record<string, unknow
       `)
       .eq("owner_id", profileId)
       .order("scheduled_at", { ascending: false }),
-    supabaseAdmin.from("favourites").select("*, groomer_profiles (business_name)").eq("owner_id", profileId),
+    supabaseAdmin.from("favourite_groomers").select("*, groomer_profiles (business_name)").eq("owner_id", profileId),
   ]);
 
   return {
@@ -68,7 +68,7 @@ export async function closeOwnerAccount(): Promise<{ error?: string }> {
   const profileId = profile.id;
 
   // Hard-delete non-financial operational data immediately
-  await supabaseAdmin.from("favourites").delete().eq("owner_id", profileId);
+  await supabaseAdmin.from("favourite_groomers").delete().eq("owner_id", profileId);
   await supabaseAdmin.from("dogs").delete().eq("owner_id", profileId);
   // Appointments are retained: groomers need payment history for their own records.
   // The soft-deleted profile is anonymised by the 30-day hard-delete cron.

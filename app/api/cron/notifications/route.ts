@@ -19,5 +19,10 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   console.log("[cron/notifications] reminders:", reminders, "reviews:", reviews, "smsReminders:", smsReminders);
 
-  return NextResponse.json({ reminders, reviews, smsReminders });
+  // Summary counts only — never echo DB rows back in the response body (S14)
+  return NextResponse.json({
+    emailReminders: { sent: reminders.sent, errors: reminders.errors },
+    reviewReminders: { sent: reviews.sent, errors: reviews.errors },
+    smsReminders: { sent: smsReminders.sent, errors: smsReminders.errors },
+  });
 }

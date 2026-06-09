@@ -31,7 +31,22 @@ export async function POST(req: NextRequest) {
     await handleEvent(event);
   } catch (err) {
     console.error(`[stripe-webhook] Handler error for ${event.type}:`, err);
-    // Return 200 anyway — Stripe will retry on 4xx/5xx; handler errors shouldn't cause retries
+    // Return 200 anyway — Stripe will retry on 4xx/5xx; handler errors shouldn't cause retries.
+    // Surface the failure in the admin audit log so it isn't lost in serverless logs (S11).
+    try {
+      await supabaseAdmin.from("admin_audit_log").insert({
+        admin_profile_id: null,
+        action: "stripe_webhook_error",
+        target_table: "stripe_events",
+        target_id: event.id,
+        metadata: {
+          event_type: event.type,
+          error: err instanceof Error ? err.message : String(err),
+        },
+      });
+    } catch (logErr) {
+      console.error("[stripe-webhook] Failed to write audit log entry:", logErr);
+    }
   }
 
   return NextResponse.json({ received: true });

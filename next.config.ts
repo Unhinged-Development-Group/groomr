@@ -4,12 +4,19 @@ const CSP = [
   "default-src 'self'",
   // Next.js requires unsafe-inline for hydration scripts; unsafe-eval for dev HMR
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://*.clerk.com https://*.clerk.dev https://full-jaguar-15.clerk.accounts.dev",
+  // Clerk spawns web workers from blob: URLs; without worker-src the browser
+  // falls back to script-src, which blocks blob:
+  "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://full-jaguar-15.clerk.accounts.dev https://lh3.googleusercontent.com https://images.unsplash.com https://avatars.githubusercontent.com https://maps.gstatic.com https://maps.googleapis.com",
+  // Google Maps loads tiles/markers from several *.googleapis.com subdomains
+  // (khms*, streetviewpixels-pa, ...) — images only, so the wildcard is safe
+  // i.pravatar.cc serves the placeholder testimonial avatars on the landing page —
+  // remove once real testimonial photos replace them
+  "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://full-jaguar-15.clerk.accounts.dev https://lh3.googleusercontent.com https://images.unsplash.com https://avatars.githubusercontent.com https://*.gstatic.com https://*.googleapis.com https://i.pravatar.cc",
   "font-src 'self'",
   // Stripe PaymentElement renders inside an iframe served from js.stripe.com
   "frame-src https://js.stripe.com https://full-jaguar-15.clerk.accounts.dev",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.clerk.com https://*.clerk.dev https://full-jaguar-15.clerk.accounts.dev",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.clerk.com https://*.clerk.dev https://full-jaguar-15.clerk.accounts.dev https://clerk-telemetry.com",
   "object-src 'none'",
   "base-uri 'self'",
 ].join("; ");

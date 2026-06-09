@@ -16,6 +16,17 @@ const isPublicRoute = createRouteMatcher([
   '/cookie-policy(.*)',
   '/verification-policy(.*)',
   '/acceptable-use(.*)',
+  '/disputes-policy(.*)',
+  '/refunds-policy(.*)',
+  '/code-of-conduct(.*)',
+  '/personal-development-policy(.*)',
+  '/employee-benefits-policy(.*)',
+  '/holidays-policy(.*)',
+  '/sickness-policy(.*)',
+  '/remote-working-policy(.*)',
+  '/travel-for-work-policy(.*)',
+  '/expenses-policy(.*)',
+  '/use-of-company-equipment-policy(.*)',
   '/groomer-sign-up-incentive(.*)',
 ])
 

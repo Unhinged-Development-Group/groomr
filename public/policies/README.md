@@ -2,10 +2,13 @@
 
 How to build a new Groomr policy HTML document from scratch, using the shared component library.
 
-**Stylesheet:** `public/policies/policy.css` — served at `/policies/policy.css`  
-**Canonical reference:** `public/policies/terms-platform.html`  
+**Stylesheets (load in this order):**
+1. `public/policies/policy-tailwind.css` — compiled Tailwind v3 utilities; regenerate with `npm run build:policy-css` if you add new Tailwind classes
+2. `public/policies/policy.css` — component library + local `@font-face` declarations (Fredoka, Nunito served from `/public/fonts/`)
+
+**Canonical reference:** `public/policies/acceptable-use.html`  
 **Output location:** `public/policies/` — e.g. `public/policies/my-new-policy.html`  
-**Existing documents:** `terms-platform.html`, `terms-owner.html`, `terms-groomer.html`, `privacy-policy.html`, `cookie-policy.html`, `acceptable-use.html`, `verification-policy.html`
+**Existing documents:** `terms-platform.html`, `terms-owner.html`, `terms-groomer.html`, `privacy-policy.html`, `cookie-policy.html`, `acceptable-use.html`, `verification-policy.html`, `disputes-policy.html`, `refunds-policy.html`, `code-of-conduct.html`, `personal-development-policy.html`, `employee-benefits-policy.html`, `holidays-policy.html`, `sickness-policy.html`, `remote-working-policy.html`, `travel-for-work-policy.html`, `expenses-policy.html`, `use-of-company-equipment-policy.html`
 
 ---
 
@@ -17,7 +20,7 @@ How to build a new Groomr policy HTML document from scratch, using the shared co
 4. Add your sections to the TOC with matching `id` anchors.
 5. Register a route handler in `app/[your-route]/route.ts` pointing to `public/policies/[your-file].html`.
 
-> The `<link rel="stylesheet" href="/policies/policy.css">` tag loads the entire component library. Do not copy any inline `<style>` block — just add the link tag.
+> Do not copy any inline `<style>` block. Do not add Google Fonts link tags — fonts are served locally. Do not add a Tailwind CDN script — the compiled build is already in `policy-tailwind.css`.
 
 ---
 
@@ -32,36 +35,9 @@ How to build a new Groomr policy HTML document from scratch, using the shared co
     <title>YOUR DOCUMENT TITLE | Groomr</title>
 
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dr8adq7nl/image/upload/v1774753273/DEEP_SLATE_auun2o.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'groomr-gold': '#eae45c',
-                        'deep-slate': '#2c3e50',
-                        'sage-leaf': '#88a096',
-                        'pebble-grey': '#95a5a6',
-                        'alabaster-cream': '#f9f8f4',
-                        'muted-terracotta': '#c87964',
-                    },
-                    fontFamily: {
-                        'fredoka': ['Fredoka', 'sans-serif'],
-                        'nunito': ['Nunito', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'subtle': '0 4px 6px -1px rgba(149, 165, 166, 0.10), 0 2px 4px -1px rgba(149, 165, 166, 0.06)',
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Shared Policy Component Stylesheet -->
+    <!-- Groomr Policy Stylesheets — order matters, do not swap -->
+    <link rel="stylesheet" href="/policies/policy-tailwind.css">
     <link rel="stylesheet" href="/policies/policy.css">
 </head>
 <body class="font-nunito antialiased selection:bg-groomr-gold selection:text-deep-slate flex flex-col min-h-screen">
@@ -186,11 +162,13 @@ Then add the route to the public routes list in `proxy.ts`:
 
 ### Rule: CSS classes vs Tailwind
 
-The component library lives in `policy.css`. Tailwind is used **only** for responsive spacing. The rule is:
+The component library lives in `policy.css`. Tailwind is used **only** for layout and spacing utilities. The rule is:
 
 - **Never** add Tailwind equivalents of a CSS component property (e.g. don't add `bg-white` to a `.policy-section` element — the CSS class already sets the background).
 - **Do** pair CSS classes with Tailwind responsive spacing: `class="policy-section p-8 md:p-12"`.
-- When a Tailwind margin class (`mb-4`, `mb-8`) is added alongside a CSS class, Tailwind wins because the CDN injects styles after the static `<link>` tag. This is intentional and used to override the default `margin-bottom` of `.policy-body`.
+- Tailwind margin overrides (`mb-4`, `mb-8`) on `.policy-body` elements work as documented in the Body Text section below.
+
+**Adding new Tailwind classes:** `policy-tailwind.css` is a pre-compiled build generated by scanning all policy HTML files. If you introduce a Tailwind utility class that isn't already used in any existing policy document, it won't be in the compiled output and will have no effect. Run `npm run build:policy-css` after adding the new document to regenerate the compiled CSS.
 
 ---
 
@@ -258,7 +236,7 @@ Standard paragraph. Default `margin-bottom: 1.5rem` (24px). **Do not add `text-d
 
 #### Margin overrides
 
-Tailwind margin utilities override the CSS default because Tailwind injects after the static stylesheet:
+Use Tailwind margin utilities to control spacing around `.policy-body` elements:
 
 | Usage | Class | When to use |
 |---|---|---|
@@ -487,11 +465,11 @@ The `@media print` block in `policy.css` handles all print formatting automatica
 
 ## Gotchas
 
-**Tailwind CDN overrides CSS classes on shared properties**  
-The Tailwind CDN Play script injects styles into the `<head>` after static stylesheets load. For any property defined in both `policy.css` and a Tailwind utility on the same element, Tailwind wins. This is by design — it's how `mb-4` overrides the default `mb-6` of `.policy-body`. Never add Tailwind utilities that duplicate a component property unless you specifically want to override it.
+**New Tailwind classes require a rebuild**  
+`policy-tailwind.css` is compiled from the set of Tailwind classes found in all policy HTML files at build time. Adding a class that exists in no other policy document — say, a new responsive breakpoint or colour variant — will silently have no effect until you run `npm run build:policy-css`. Always check whether the class you're adding is already used elsewhere before deciding if a rebuild is needed.
 
-**`@apply` is not available with the CDN**  
-The Tailwind Play CDN does not support `@apply` in `<style>` blocks. All component definitions in `policy.css` use plain CSS.
+**No Google Fonts, no CDN Tailwind script**  
+Fonts are served locally from `/public/fonts/` via `@font-face` rules in `policy.css`. Do not add Google Fonts preconnect or stylesheet links — they'll cause a redundant network request and a flash of wrong font if the local font hasn't loaded. Do not add a Tailwind CDN script — it conflicts with the compiled build.
 
 **h3 top margin and the sibling rule**  
 The CSS rule `.policy-section-h2 + .policy-section-h3 { margin-top: 0; }` only fires when the `h3` is the *immediate next sibling* of the `h2` — no elements between them. If there is any content (even a `<!-- comment -->`) between the `h2` and the first `h3`, the rule will not apply and the `h3` will get its default `2rem` top margin. This is usually correct, but be aware of it.
@@ -508,5 +486,5 @@ The title block (`<div class="... no-print">`) is hidden on print because the pr
 **External links in print**  
 `.policy-link` is rendered in black with no underline or decoration in print. External links (e.g. `stripe.com/legal`) will appear as plain text. If you need URLs to be visible in print, add the URL as visible text alongside the link text: `Stripe's terms (<a href="https://stripe.com/legal" class="policy-link">stripe.com/legal</a>)`.
 
-**Stylesheet path is absolute**  
-The `<link href="/policies/policy.css">` uses an absolute path. This works correctly regardless of which URL the document is served from (e.g. `/privacy-policy`, `/terms/platform`). Do not use a relative path like `./policy.css` or `../policies/policy.css` — it would break depending on the route structure.
+**Stylesheet paths are absolute**  
+Both `<link href="/policies/policy-tailwind.css">` and `<link href="/policies/policy.css">` use absolute paths. This works correctly regardless of which URL the document is served from (e.g. `/disputes-policy`, `/terms`). Do not use relative paths like `./policy.css` or `../policies/policy.css` — they break depending on the route.

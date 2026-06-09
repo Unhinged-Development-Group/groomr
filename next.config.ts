@@ -3,13 +3,13 @@ import type { NextConfig } from "next";
 const CSP = [
   "default-src 'self'",
   // Next.js requires unsafe-inline for hydration scripts; unsafe-eval for dev HMR
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://*.clerk.com https://*.clerk.dev",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://*.clerk.com https://*.clerk.dev https://full-jaguar-15.clerk.accounts.dev",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://lh3.googleusercontent.com https://images.unsplash.com https://avatars.githubusercontent.com https://maps.gstatic.com https://maps.googleapis.com",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://full-jaguar-15.clerk.accounts.dev https://lh3.googleusercontent.com https://images.unsplash.com https://avatars.githubusercontent.com https://maps.gstatic.com https://maps.googleapis.com",
   "font-src 'self'",
   // Stripe PaymentElement renders inside an iframe served from js.stripe.com
-  "frame-src https://js.stripe.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.clerk.com https://*.clerk.dev",
+  "frame-src https://js.stripe.com https://full-jaguar-15.clerk.accounts.dev",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.clerk.com https://*.clerk.dev https://full-jaguar-15.clerk.accounts.dev",
   "object-src 'none'",
   "base-uri 'self'",
 ].join("; ");

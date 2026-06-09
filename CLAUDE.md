@@ -476,13 +476,13 @@ NEXT_PUBLIC_POSTHOG_KEY=
 | Two Google Maps env vars | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (browser); `GOOGLE_MAPS_API_KEY` (server geocoding) |
 | Supabase join returns array | `.select('*, profiles(full_name)')` — `profiles` is an array even on FK-to-single-row joins |
 | CSS cascade layers | Unlayered CSS beats `@layer utilities` — wrap base/typography rules in `@layer base` in `globals.css` |
-| Next.js 16 middleware | `proxy.ts` not `middleware.ts` — all route protection goes in `proxy.ts` |
+| Next.js 16 proxy | `proxy.ts` not `middleware.ts` — all route protection goes in `proxy.ts`. In Next.js 16, `middleware.ts` is the deprecated name; `proxy.ts` is the correct convention. |
 | Clerk `SignInButton`/`SignUpButton` | Take exactly one child element |
 | Cloudinary in Next.js | `res.cloudinary.com` must be in `remotePatterns` in `next.config.ts` (already configured) |
 | `time_blocks` now in booking | `getAvailableSlots` checks `time_blocks` — all-day blocks return `[]`; partial-day blocks are booked intervals |
 | `break_start/end_time` now in booking | `getAvailableSlots` subtracts break windows. However `profile-editor.ts` writes JSON to these `time` columns (a bug) — fix that write before breaks will work end-to-end |
 | Admin UI uses anon client | `supabaseAdmin` bypasses `admin_all` RLS policies — admin pages must use the anon client to trigger those policies correctly |
-| No CSP headers | `next.config.ts` has no `headers()` security config — no Content-Security-Policy, X-Frame-Options, or X-Content-Type-Options set |
+| Clerk CSP domain | Clerk's FAPI is at `*.accounts.dev` (not `*.clerk.dev`) — both `script-src` and `connect-src` must include `https://*.accounts.dev` or `useUser()` never resolves and auth buttons vanish |
 | `dangerouslyAllowSVG` removed | `next.config.ts` no longer allows SVG via Next.js Image — do not re-add for user-uploaded content |
 | Discount % not server-validated | `createAppointment` in `booking.ts` applies discount without clamping to 0–100 — a DB value >100 produces negative price |
 

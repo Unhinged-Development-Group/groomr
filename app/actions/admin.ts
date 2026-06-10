@@ -474,6 +474,7 @@ export async function updateGroomerProfile(
     is_mobile?: boolean;
     is_accepting_bookings?: boolean;
     is_founding_groomer?: boolean;
+    founding_until?: string | null;
     travel_radius_miles?: number | null;
     years_experience?: number | null;
     qualifications?: string | null;
@@ -514,6 +515,7 @@ export interface GroomerFullProfile {
   is_mobile: boolean;
   is_accepting_bookings: boolean;
   is_founding_groomer: boolean;
+  founding_until: string | null;
   travel_radius_miles: number | null;
   years_experience: number | null;
   qualifications: string | null;
@@ -575,7 +577,7 @@ export async function adminGetGroomerFull(
       .from("groomer_profiles")
       .select(`
         id, business_name, tagline, bio, city, postcode, address_line_1, address_line_2,
-        is_listed, is_verified, is_mobile, is_accepting_bookings, is_founding_groomer,
+        is_listed, is_verified, is_mobile, is_accepting_bookings, is_founding_groomer, founding_until,
         travel_radius_miles, years_experience, qualifications,
         deposit_type, deposit_percentage, default_buffer_minutes, has_employees,
         verification_status, public_slug, profile_image_url, cover_photo_url,
@@ -623,6 +625,7 @@ export async function adminGetGroomerFull(
     is_mobile: raw.is_mobile,
     is_accepting_bookings: raw.is_accepting_bookings,
     is_founding_groomer: raw.is_founding_groomer ?? false,
+    founding_until: raw.founding_until ?? null,
     travel_radius_miles: raw.travel_radius_miles,
     years_experience: raw.years_experience,
     qualifications: raw.qualifications,
@@ -2033,11 +2036,18 @@ export async function adminFindProfileByEmail(
 // Platform settings (Groomr Management)
 // ---------------------------------------------------------------------------
 
+export interface FoundingGroomerRow {
+  id: string;
+  business_name: string | null;
+  founding_until: string | null; // null = no expiry set (global deadline applies)
+}
+
 export interface PlatformSettings {
   id: string;
   platform_fee_pct: number;
   founding_groomer_fee_pct: number;
   founding_groomer_deadline: string | null;
+  founding_groomers: FoundingGroomerRow[];
   updated_at: string;
   updated_by_name: string | null;
   integrations: {
@@ -2054,11 +2064,18 @@ export async function adminGetPlatformSettings(): Promise<{ data: PlatformSettin
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
 
-  const { data, error } = await supabaseAdmin
-    .from("platform_settings")
-    .select("id, platform_fee_pct, founding_groomer_fee_pct, founding_groomer_deadline, updated_at, updated_by")
-    .limit(1)
-    .maybeSingle();
+  const [{ data, error }, { data: foundingGroomers }] = await Promise.all([
+    supabaseAdmin
+      .from("platform_settings")
+      .select("id, platform_fee_pct, founding_groomer_fee_pct, founding_groomer_deadline, updated_at, updated_by")
+      .limit(1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("groomer_profiles")
+      .select("id, business_name, founding_until")
+      .eq("is_founding_groomer", true)
+      .order("founding_until", { ascending: true, nullsFirst: false }),
+  ]);
 
   if (error) return { error: error.message };
 
@@ -2078,6 +2095,7 @@ export async function adminGetPlatformSettings(): Promise<{ data: PlatformSettin
       platform_fee_pct: (data as any)?.platform_fee_pct ?? 0.08,
       founding_groomer_fee_pct: (data as any)?.founding_groomer_fee_pct ?? 0,
       founding_groomer_deadline: (data as any)?.founding_groomer_deadline ?? null,
+      founding_groomers: (foundingGroomers ?? []) as FoundingGroomerRow[],
       updated_at: (data as any)?.updated_at ?? new Date().toISOString(),
       updated_by_name: updatedByName,
       integrations: {

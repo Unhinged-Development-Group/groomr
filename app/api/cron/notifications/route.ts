@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { sendAppointmentReminders, sendReviewReminders } from "@/lib/emails/send";
 import { sendAppointmentReminderSMS } from "@/lib/sms/send";
 
-// Vercel Cron: runs every hour on the hour
-// vercel.json: { "crons": [{ "path": "/api/cron/notifications", "schedule": "0 * * * *" }] }
+// Vercel Cron: runs daily at 08:00
+// vercel.json: { "crons": [{ "path": "/api/cron/notifications", "schedule": "0 8 * * *" }] }
 
 export async function GET(request: Request): Promise<NextResponse> {
   const authHeader = request.headers.get("authorization");

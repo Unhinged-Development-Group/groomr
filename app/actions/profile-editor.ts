@@ -292,12 +292,19 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     : null;
 
   const isFoundingGroomer = (groomerProfile.is_founding_groomer as boolean) ?? false;
-  const createdAt = groomerProfile.created_at as string | null;
   let foundingCommissionExpiresAt: string | null = null;
-  if (isFoundingGroomer && createdAt) {
-    const expires = new Date(createdAt);
-    expires.setMonth(expires.getMonth() + 6);
-    foundingCommissionExpiresAt = expires.toISOString();
+  if (isFoundingGroomer) {
+    // founding_until is the source of truth (admin-editable); fall back to
+    // created_at + 6 months for rows predating the column
+    const foundingUntil = groomerProfile.founding_until as string | null;
+    const createdAt = groomerProfile.created_at as string | null;
+    if (foundingUntil) {
+      foundingCommissionExpiresAt = new Date(foundingUntil).toISOString();
+    } else if (createdAt) {
+      const expires = new Date(createdAt);
+      expires.setMonth(expires.getMonth() + 6);
+      foundingCommissionExpiresAt = expires.toISOString();
+    }
   }
 
   return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0, contractTerms, isFoundingGroomer, foundingCommissionExpiresAt };

@@ -51,7 +51,8 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 |---|---|
 | `lib/supabase-admin.ts` | Service-role client (`supabaseAdmin`) — server-side only, bypasses RLS |
 | `lib/supabase.ts` | Anon client — use only for Realtime subscriptions in client components |
-| `lib/stripe.ts` | Server Stripe client + `PLATFORM_FEE_PCT = 0.08` |
+| `lib/stripe.ts` | Server Stripe client + `calcPlatformFee(pence, pct)` / `calcGroomerPayout(pence, pct)`. `PLATFORM_FEE_PCT = 0.08` is the **fallback only** |
+| `lib/fees.ts` | `resolvePlatformFeePct(groomerProfileId)` — live commission rate from `platform_settings`; founding groomers get `founding_groomer_fee_pct` until `founding_until` (or global deadline) passes |
 | `lib/stripe-client.ts` | Browser Stripe client (`getStripeClient()`) |
 | `lib/resend.ts` | Resend email client |
 | `lib/utils.ts` | `cn()` — classname merger (clsx + tailwind-merge) |
@@ -121,12 +122,13 @@ qualifications text | insurance_provider/policy_ref/doc_url text
 address_line_1/2 text | city text | postcode text
 location geography          -- PostGIS; insert: ST_MakePoint(lng, lat)::geography
 travel_radius_miles smallint | is_mobile boolean
-is_verified boolean DEFAULT false
+is_verified boolean DEFAULT false             -- legacy; superseded by verification_status
 is_listed boolean DEFAULT false
 is_accepting_bookings boolean DEFAULT false   -- controls search visibility
-is_founding_groomer boolean DEFAULT false     -- 0% commission for 6 months
+is_founding_groomer boolean DEFAULT false     -- founding rate while founding_until hasn't passed
+founding_until date                           -- per-groomer founding-rate end date (migration 20260610000002); NULL = global deadline applies
 verification_status verification_status DEFAULT 'not_submitted'   -- migration 20260607000001; replaces boolean is_verified
-stripe_account_id text
+stripe_account_id text | stripe_charges_enabled boolean | stripe_details_submitted boolean   -- synced by account.updated webhook
 average_rating numeric | total_reviews integer
 profile_image_url text | banner_image_url text | cover_photo_url text
 deposit_type text DEFAULT 'none'              -- 'none' | 'percentage' | 'full'
@@ -156,7 +158,7 @@ deposit_pence integer | applicable_sizes dog_size[] | is_active boolean | sort_o
 id uuid PK | groomer_profile_id uuid → groomer_profiles
 day_of_week smallint NOT NULL    -- 0=Sunday … 6=Saturday
 start_time time | end_time time
-break_start_time time | break_end_time time    -- lunch/break window (NOT yet used in getAvailableSlots)
+break_start_time time | break_end_time time    -- break windows; stored as JSON array in break_start_time (getAvailableSlots parses JSON + legacy plain-string)
 is_active boolean DEFAULT true
 ```
 
@@ -231,7 +233,7 @@ id uuid PK | groomer_profile_id uuid → groomer_profiles
 start_date date NOT NULL | end_date date NOT NULL
 start_time time | end_time time | all_day boolean DEFAULT true | reason text
 ```
-> Groomer-declared unavailability. **NOT yet wired into `getAvailableSlots()`** — currently ignored during booking.
+> Groomer-declared unavailability. Wired into `getAvailableSlots()` and `createGroupAppointment()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals.
 
 #### `favourite_groomers`
 ```
@@ -344,11 +346,11 @@ founding_groomer_fee_pct numeric DEFAULT 0.00 -- rate for is_founding_groomer = 
 founding_groomer_deadline date               -- when founding rate expires (nullable)
 updated_at timestamptz | updated_by uuid → profiles
 ```
-> Singleton table (one row). Seeded by migration. Read/written via `adminGetPlatformSettings` / `adminSavePlatformSettings`. Note: `lib/stripe.ts` still has `PLATFORM_FEE_PCT = 0.08` hardcoded — update both and redeploy to keep in sync.
+> Singleton table (one row). Seeded by migration. Read/written via `adminGetPlatformSettings` / `adminSavePlatformSettings`. The Stripe payment flow reads rates from this table at charge time via `resolvePlatformFeePct()` in `lib/fees.ts` — admin changes apply to new payments immediately, no redeploy. `PLATFORM_FEE_PCT` in `lib/stripe.ts` is only the fallback if the row is unreadable. Each `payments` row records the pct actually charged.
 
 ### Migrations
 
-34 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
+35 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
 
 ---
 
@@ -427,7 +429,7 @@ All in `app/actions/`. Pattern: `"use server"`, return `{ data } | { error: stri
 | `tips.ts` | `createTipPaymentIntent`, `getOwnerTips` |
 
 ### Booking logic notes
-- `getAvailableSlots` uses: weekly schedule + date overrides + confirmed appointments. It does **not** yet factor in `time_blocks` or `break_start_time`/`break_end_time`.
+- `getAvailableSlots` uses: weekly schedule + date overrides + confirmed appointments + `time_blocks` + break windows (JSON array in `break_start_time`, legacy plain-string also parsed).
 - `createAppointment` resolves pricing: `client_service_prices` fixed override → `client_settings.discount_percentage` → standard price.
 - `createAppointment` fires both email (Resend) and SMS (Twilio) confirmations after insert.
 - `createGroupAppointment` books multiple dogs back-to-back; all rows share a `booking_group_id`.
@@ -470,7 +472,7 @@ TWILIO_AUTH_TOKEN=
 TWILIO_FROM_NUMBER=
 
 # Cron
-CRON_SECRET=                        # Random secret; set in Vercel; authenticates /api/cron/notifications
+CRON_SECRET=                        # Random secret; set in Vercel; authenticates /api/cron/notifications + /api/cron/cleanup
 
 # PostHog (future)
 NEXT_PUBLIC_POSTHOG_KEY=
@@ -498,11 +500,12 @@ NEXT_PUBLIC_POSTHOG_KEY=
 | Clerk `SignInButton`/`SignUpButton` | Take exactly one child element |
 | Cloudinary in Next.js | `res.cloudinary.com` must be in `remotePatterns` in `next.config.ts` (already configured) |
 | `time_blocks` now in booking | `getAvailableSlots` checks `time_blocks` — all-day blocks return `[]`; partial-day blocks are booked intervals |
-| `break_start/end_time` now in booking | `getAvailableSlots` subtracts break windows. However `profile-editor.ts` writes JSON to these `time` columns (a bug) — fix that write before breaks will work end-to-end |
+| `break_start/end_time` now in booking | `getAvailableSlots` subtracts break windows. Breaks are stored as a JSON array in `break_start_time`; both JSON and legacy plain-string formats are parsed |
 | Admin UI uses anon client | `supabaseAdmin` bypasses `admin_all` RLS policies — admin pages must use the anon client to trigger those policies correctly |
 | Clerk CSP domain | Clerk's FAPI is at `*.accounts.dev` (not `*.clerk.dev`) — both `script-src` and `connect-src` must include `https://*.accounts.dev` or `useUser()` never resolves and auth buttons vanish |
 | `dangerouslyAllowSVG` removed | `next.config.ts` no longer allows SVG via Next.js Image — do not re-add for user-uploaded content |
-| Discount % not server-validated | `createAppointment` in `booking.ts` applies discount without clamping to 0–100 — a DB value >100 produces negative price |
+| `NEXT_PUBLIC_*` env vars baked at build | Changing them in Vercel does nothing until a redeploy — they're compiled into the JS bundle. Same applies to CSP/headers in `next.config.ts` (written into the build's routes manifest) |
+| `is_admin` protected by trigger | `protect_is_admin` BEFORE UPDATE trigger on `profiles` (migration `20260610000001`) blocks `is_admin` changes from anon/authenticated connections unless the actor is already an admin. Service role and dashboard are unaffected |
 
 ---
 
@@ -633,7 +636,7 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 | # | Status | Issue | Location | Fix |
 |---|---|---|---|---|
 | S1 | ✅ Done | `dangerouslyAllowSVG: true` | [`next.config.ts`](next.config.ts) | Removed — SVGs can contain embedded JS. User-uploaded content never needs SVG. |
-| S2 | ✅ Done | No HTTP security headers | [`next.config.ts`](next.config.ts) | Added `headers()` with `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and CSP. **Note:** Clerk's FAPI loads JS from `https://full-jaguar-15.clerk.accounts.dev` — this exact host must be in `script-src`, `connect-src`, `img-src`, and `frame-src`. Wildcards like `*.clerk.accounts.dev` do not reliably match in Chrome. |
+| S2 | ✅ Done | No HTTP security headers | [`next.config.ts`](next.config.ts) | Added `headers()` with `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and CSP. **Notes:** (1) Clerk's FAPI loads JS from `https://full-jaguar-15.clerk.accounts.dev` — this exact host must be in `script-src`, `connect-src`, `img-src`, and `frame-src`; wildcards like `*.clerk.accounts.dev` do not reliably match in Chrome. (2) Clerk also spawns workers from `blob:` — `worker-src 'self' blob:` is required or auth breaks. (3) `connect-src` includes `clerk-telemetry.com` (dev-key telemetry). (4) `img-src` allows `https://*.googleapis.com` + `https://*.gstatic.com` (Maps tiles) and `https://i.pravatar.cc` (placeholder testimonial avatars on `/` — remove when real photos land). (5) CSP is baked into the build manifest — changes require a redeploy. |
 | S3 | ✅ Done | Discount % not clamped server-side | [`app/actions/booking.ts`](app/actions/booking.ts) | `Math.max(0, Math.min(100, pct))` applied in both `createAppointment` and `createGroupAppointment`. Also reflected in Feature Status table. |
 
 ### High
@@ -645,13 +648,14 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 | S5 | ✅ Done | Cloudinary signature issued without auth (registration) | [`app/actions/groomer-registration.ts:19`](app/actions/groomer-registration.ts) | Intentional — wizard runs before Clerk account exists. Mitigated: `isRateLimited()` in `lib/rate-limit.ts` enforces 20 req/15 min per IP (in-memory sliding window). Cloudinary timestamp TTL already bounds signature lifetime. |
 | S6 | ✅ Done | No file-type restriction in Cloudinary signatures | `dogs.ts`, `portfolio.ts`, `profile-editor.ts` (×3), `groomer-registration.ts` | `allowed_formats` added to all 6 `api_sign_request` calls — images get `jpg,jpeg,png,webp`; verification/insurance docs also allow `pdf`. `allowedFormats` returned to client from each function. |
 | S7 | ✅ Done | Hard-delete on `user.deleted` webhook | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), [`app/actions/close-account.ts`](app/actions/close-account.ts) | Soft-delete added (`is_deleted`, `deleted_at` on `profiles`, migration `20260607000004`). `closeOwnerAccount` retains appointments; `closeGroomerAccount` retains appointments/payments and deactivates groomer listing. |
+| S16 | ⬜ Open | Clerk development keys in production | Clerk dashboard + Vercel | Production runs the Clerk **dev** instance (`full-jaguar-15.clerk.accounts.dev`) — strict usage caps, console warning banner. Create a production instance in the Clerk dashboard (needs real domain + DNS records), swap `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` / `CLERK_WEBHOOK_SECRET` in Vercel, and update the CSP hosts in `next.config.ts` (the `full-jaguar-15.clerk.accounts.dev` entries change to the production FAPI domain). **Launch blocker.** |
 | S7b | ✅ Done | 30-day hard-delete cron missing | [`app/api/cron/cleanup/route.ts`](app/api/cron/cleanup/route.ts) | Daily cron (`vercel.json`: `30 3 * * *`). Profiles soft-deleted >30 days: hard-deleted when no appointments/tips exist (FK cascades clean up the rest); **anonymised** when financial records require retention (PII scrubbed, bank details nulled, `anonymised_at` set — migration `20260610000001`); skipped while a dispute is unresolved. All actions logged to `admin_audit_log`. |
 
 ### Medium
 
 | # | Status | Issue | Location | Fix |
 |---|---|---|---|---|
-| S8 | 🔄 Code done — GCP action needed | Google Maps API key not split | `.env.local` | Code already uses `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (browser) and `GOOGLE_MAPS_API_KEY` (server) separately. **Action**: create two keys in Google Cloud Console — browser key restricted to `https://groomr.uk/*`, server key restricted by Vercel outbound IP ranges — then update Vercel env vars. |
+| S8 | ✅ Done | Google Maps API key not split | GCP Console + Vercel | Two keys now in GCP: browser key (website-referrer restricted, Maps JavaScript API only) in `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`; server key (Geocoding API only, no app restriction — Vercel has no stable outbound IPs) in `GOOGLE_MAPS_API_KEY`. Verified working in production June 2026. |
 | S9 | ✅ Done | SMS phone number not validated | [`lib/sms/send.ts`](lib/sms/send.ts) | `isValidUKPhone()` added — validates E.164 `+44` format (strips spaces) before every Twilio call; invalid numbers are skipped with a warning log |
 | S10 | ✅ Done | Contact form `senderEmail` not validated | [`app/actions/contact.ts`](app/actions/contact.ts) | `isValidEmail()` regex check added before Resend call; returns `{ ok: false, error }` on invalid format |
 | S11 | ✅ Done | Stripe webhook handler errors silent | [`app/api/webhooks/stripe/route.ts`](app/api/webhooks/stripe/route.ts) | Handler errors now inserted into `admin_audit_log` (action `stripe_webhook_error`, `target_id` = Stripe event ID, metadata = event type + error message) before returning 200 — visible in the admin Audit Log tab |
@@ -660,7 +664,7 @@ Findings from the June 2026 security audit. Update `Status` as each is resolved.
 
 | # | Status | Issue | Notes |
 |---|---|---|---|
-| S12 | 🔄 See S8 | Two identical Google Maps keys | Same key used for both env vars — resolved once S8 GCP action is completed |
+| S12 | ✅ Done | Two identical Google Maps keys | Resolved with S8 — the two env vars now hold different, separately-restricted keys |
 | S13 | ✅ Done | Admin role enforced in code only | Migration `20260610000001` (applied): added the missing `admin_all` policies (`availability_overrides`, `messages`, `portfolio_photos`, `notifications`, `client_settings`, `client_service_prices`, `recurring_series`, `contract_terms`, `contract_acceptances`, `tips`) and a `protect_is_admin` BEFORE UPDATE trigger on `profiles` that blocks `is_admin` changes from anon/authenticated connections unless the actor is already an admin |
 | S14 | ✅ Done | Cron endpoint leaks raw query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Send functions already returned `{ sent, errors }` counts (finding was stale); response now maps fields explicitly so a future return-shape change can't leak rows. `/api/cron/cleanup` follows the same counts-only rule. |
 | S15 | ✅ Done | Team member invite matched by email only | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts) | `invite_token uuid UNIQUE` added to `team_members` (migration `20260609000001`). Token generated in `inviteTeamMember`, stored in DB and passed via Clerk `publicMetadata`. Webhook does atomic `UPDATE … WHERE invite_token = ? AND invite_status = 'pending'` — closes both email-spoof and TOCTOU race |

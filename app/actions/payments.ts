@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { stripe, calcPlatformFee, calcGroomerPayout } from "@/lib/stripe";
+import { resolvePlatformFeePct } from "@/lib/fees";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // ---------------------------------------------------------------------------
@@ -94,8 +95,9 @@ export async function createBookingPaymentIntent(
   // (Phase 2: 'none' global = pay at salon, skip PaymentIntent)
 
   const isDeposit = gp.deposit_type === "percentage";
-  const platformFeePence = calcPlatformFee(chargePence);
-  const groomerPayoutPence = calcGroomerPayout(chargePence);
+  const platformFeePct = await resolvePlatformFeePct(appt.groomer_profile_id);
+  const platformFeePence = calcPlatformFee(chargePence, platformFeePct);
+  const groomerPayoutPence = calcGroomerPayout(chargePence, platformFeePct);
 
   // Check if a payment row already exists for this appointment
   const { data: existingPayment } = await supabaseAdmin
@@ -129,7 +131,7 @@ export async function createBookingPaymentIntent(
       owner_profile_id: profileId,
       groomer_profile_id: appt.groomer_profile_id,
       is_deposit: String(isDeposit),
-      platform_fee_pct: "0.08",
+      platform_fee_pct: String(platformFeePct),
     },
     description: `Groomr booking${isDeposit ? " deposit" : ""}`,
   });
@@ -154,7 +156,7 @@ export async function createBookingPaymentIntent(
           deposit_status: "none",
         }),
     platform_fee_pence: platformFeePence,
-    platform_fee_pct: 0.08,
+    platform_fee_pct: platformFeePct,
     groomer_payout_amount_pence: groomerPayoutPence,
     payout_status: "pending",
     currency: "gbp",
@@ -238,8 +240,9 @@ export async function createGroupPaymentIntent(
   }
 
   const isDeposit = gp.deposit_type === "percentage";
-  const platformFeePence = calcPlatformFee(chargePence);
-  const groomerPayoutPence = calcGroomerPayout(chargePence);
+  const platformFeePct = await resolvePlatformFeePct(first.groomer_profile_id);
+  const platformFeePence = calcPlatformFee(chargePence, platformFeePct);
+  const groomerPayoutPence = calcGroomerPayout(chargePence, platformFeePct);
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: chargePence,
@@ -252,7 +255,7 @@ export async function createGroupPaymentIntent(
       groomer_profile_id: first.groomer_profile_id,
       appointment_count: String(appts.length),
       is_deposit: String(isDeposit),
-      platform_fee_pct: "0.08",
+      platform_fee_pct: String(platformFeePct),
     },
     description: `Groomr group booking (${appts.length} pets)${isDeposit ? " deposit" : ""}`,
   });
@@ -275,7 +278,7 @@ export async function createGroupPaymentIntent(
           deposit_status: "none",
         }),
     platform_fee_pence: platformFeePence,
-    platform_fee_pct: 0.08,
+    platform_fee_pct: platformFeePct,
     groomer_payout_amount_pence: groomerPayoutPence,
     payout_status: "pending",
     currency: "gbp",

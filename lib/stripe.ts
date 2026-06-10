@@ -1,6 +1,10 @@
 import Stripe from "stripe";
 
-/** Groomr platform commission: 8% */
+/**
+ * Fallback platform commission (8%) — used only when the `platform_settings`
+ * row can't be read. The live rate comes from the DB via
+ * `resolvePlatformFeePct()` in `lib/fees.ts`.
+ */
 export const PLATFORM_FEE_PCT = 0.08;
 
 // Lazy singleton — initialised on first use, not at module import time.
@@ -31,13 +35,13 @@ export const stripe = new Proxy({} as Stripe, {
  * Calculate the platform application_fee_amount for a given total.
  * Always in pence (integer). Stripe requires integer minor units.
  */
-export function calcPlatformFee(totalPence: number): number {
-  return Math.round(totalPence * PLATFORM_FEE_PCT);
+export function calcPlatformFee(totalPence: number, feePct: number = PLATFORM_FEE_PCT): number {
+  return Math.round(totalPence * feePct);
 }
 
 /**
  * Calculate the groomer's net payout after Groomr's fee.
  */
-export function calcGroomerPayout(totalPence: number): number {
-  return totalPence - calcPlatformFee(totalPence);
+export function calcGroomerPayout(totalPence: number, feePct: number = PLATFORM_FEE_PCT): number {
+  return totalPence - calcPlatformFee(totalPence, feePct);
 }

@@ -5,6 +5,14 @@ import { Toast } from "@/components/ui/Toast";
 import { adminSavePlatformSettings } from "@/app/actions/admin";
 import type { PlatformSettings } from "@/app/actions/admin";
 
+function formatDay(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -181,6 +189,49 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
           </div>
         </div>
 
+        {/* Founding groomers — 0% period end dates */}
+        <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
+          <div>
+            <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+              Founding groomers
+            </p>
+            <p className="text-xs text-pebble-grey mt-1">
+              When each groomer&apos;s founding rate ends and standard commission kicks in.
+              Edit individual dates via Groomers → Edit → Business basics.
+            </p>
+          </div>
+          {settings.founding_groomers.length === 0 ? (
+            <p className="text-sm text-pebble-grey">No founding groomers yet.</p>
+          ) : (
+            <ul className="divide-y divide-pebble-grey/10">
+              {settings.founding_groomers.map((g) => {
+                const ends = g.founding_until ?? settings.founding_groomer_deadline;
+                const expired = !!ends && ends < new Date().toISOString().slice(0, 10);
+                return (
+                  <li key={g.id} className="flex items-center justify-between py-2 gap-3">
+                    <span className="text-sm font-bold text-deep-slate truncate">
+                      {g.business_name ?? "Unnamed groomer"}
+                    </span>
+                    <span
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                        expired
+                          ? "bg-pebble-grey/15 text-pebble-grey"
+                          : "bg-groomr-gold/25 text-deep-slate"
+                      }`}
+                    >
+                      {ends
+                        ? expired
+                          ? `Expired ${formatDay(ends)} — standard rate`
+                          : `0% until ${formatDay(ends)}`
+                        : "No end date"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
         {/* Integration health */}
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
           <div>
@@ -213,10 +264,9 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
 
         {/* Info note */}
         <p className="text-xs text-pebble-grey leading-relaxed">
-          ⚠ Changing the commission rate here updates the database only. The Stripe payment flow
-          reads <code className="bg-alabaster-cream px-1 rounded">PLATFORM_FEE_PCT</code> from{" "}
-          <code className="bg-alabaster-cream px-1 rounded">lib/stripe.ts</code> — update both to
-          keep them in sync, then redeploy.
+          Rates saved here apply to new payments immediately — the Stripe payment flow reads them
+          from the database at charge time. Founding groomers pay the founding rate until their
+          individual end date passes, then the standard rate applies automatically.
         </p>
       </div>
 

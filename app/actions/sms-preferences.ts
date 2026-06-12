@@ -45,19 +45,20 @@ export async function getSMSPreference(): Promise<boolean> {
   return data?.sms_notifications_enabled ?? true;
 }
 
-export async function getOwnerContactPrefs(): Promise<{ smsEnabled: boolean; phone: string | null }> {
+export async function getOwnerContactPrefs(): Promise<{ smsEnabled: boolean; phone: string | null; isGroomer: boolean }> {
   const { userId } = await auth();
-  if (!userId) return { smsEnabled: false, phone: null };
+  if (!userId) return { smsEnabled: false, phone: null, isGroomer: false };
 
   const { data } = await supabaseAdmin
     .from("profiles")
-    .select("sms_notifications_enabled, phone")
+    .select("sms_notifications_enabled, phone, roles")
     .eq("clerk_id", userId)
     .maybeSingle();
 
   return {
     smsEnabled: data?.sms_notifications_enabled ?? true,
     phone: data?.phone ?? null,
+    isGroomer: Array.isArray(data?.roles) && (data.roles as string[]).includes("groomer"),
   };
 }
 

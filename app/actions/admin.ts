@@ -2036,18 +2036,18 @@ export async function adminFindProfileByEmail(
 // Platform settings (Groomr Management)
 // ---------------------------------------------------------------------------
 
-export interface FoundingGroomerRow {
+export interface IncentiveUsageRow {
   id: string;
   business_name: string | null;
-  founding_until: string | null; // null = no expiry set (global deadline applies)
+  is_founding_groomer: boolean;
+  bookings_used: number; // completed, not-fully-refunded bookings
 }
 
 export interface PlatformSettings {
   id: string;
   platform_fee_pct: number;
-  founding_groomer_fee_pct: number;
-  founding_groomer_deadline: string | null;
-  founding_groomers: FoundingGroomerRow[];
+  signup_incentive_bookings: number;
+  incentive_usage: IncentiveUsageRow[];
   updated_at: string;
   updated_by_name: string | null;
   integrations: {
@@ -2064,20 +2064,43 @@ export async function adminGetPlatformSettings(): Promise<{ data: PlatformSettin
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
 
-  const [{ data, error }, { data: foundingGroomers }] = await Promise.all([
+  const [{ data, error }, { data: groomers }, { data: completedAppts }, { data: fullRefunds }] = await Promise.all([
     supabaseAdmin
       .from("platform_settings")
-      .select("id, platform_fee_pct, founding_groomer_fee_pct, founding_groomer_deadline, updated_at, updated_by")
+      .select("id, platform_fee_pct, signup_incentive_bookings, updated_at, updated_by")
       .limit(1)
       .maybeSingle(),
     supabaseAdmin
       .from("groomer_profiles")
-      .select("id, business_name, founding_until")
-      .eq("is_founding_groomer", true)
-      .order("founding_until", { ascending: true, nullsFirst: false }),
+      .select("id, business_name, is_founding_groomer")
+      .order("business_name"),
+    supabaseAdmin
+      .from("appointments")
+      .select("groomer_profile_id")
+      .eq("status", "completed"),
+    supabaseAdmin
+      .from("payments")
+      .select("appointments!inner(groomer_profile_id)")
+      .eq("refund_status", "full"),
   ]);
 
   if (error) return { error: error.message };
+
+  // Per-groomer incentive usage: completed bookings minus full refunds
+  const usedByGroomer = new Map<string, number>();
+  for (const a of completedAppts ?? []) {
+    usedByGroomer.set(a.groomer_profile_id, (usedByGroomer.get(a.groomer_profile_id) ?? 0) + 1);
+  }
+  for (const r of fullRefunds ?? []) {
+    const gid = (r as any).appointments?.groomer_profile_id;
+    if (gid && usedByGroomer.has(gid)) usedByGroomer.set(gid, Math.max(0, usedByGroomer.get(gid)! - 1));
+  }
+  const incentiveUsage: IncentiveUsageRow[] = (groomers ?? []).map((g) => ({
+    id: g.id,
+    business_name: g.business_name,
+    is_founding_groomer: g.is_founding_groomer ?? false,
+    bookings_used: usedByGroomer.get(g.id) ?? 0,
+  }));
 
   let updatedByName: string | null = null;
   if ((data as any)?.updated_by) {
@@ -2093,9 +2116,8 @@ export async function adminGetPlatformSettings(): Promise<{ data: PlatformSettin
     data: {
       id: (data as any)?.id ?? "",
       platform_fee_pct: (data as any)?.platform_fee_pct ?? 0.08,
-      founding_groomer_fee_pct: (data as any)?.founding_groomer_fee_pct ?? 0,
-      founding_groomer_deadline: (data as any)?.founding_groomer_deadline ?? null,
-      founding_groomers: (foundingGroomers ?? []) as FoundingGroomerRow[],
+      signup_incentive_bookings: (data as any)?.signup_incentive_bookings ?? 150,
+      incentive_usage: incentiveUsage,
       updated_at: (data as any)?.updated_at ?? new Date().toISOString(),
       updated_by_name: updatedByName,
       integrations: {
@@ -2114,8 +2136,7 @@ export async function adminSavePlatformSettings(
   settingsId: string,
   fields: {
     platform_fee_pct?: number;
-    founding_groomer_fee_pct?: number;
-    founding_groomer_deadline?: string | null;
+    signup_incentive_bookings?: number;
   }
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();

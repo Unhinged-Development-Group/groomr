@@ -89,8 +89,10 @@ export interface ProfileEditorInitialData {
   verificationDocs: VerificationDocs;
   portfolioCount: number;
   contractTerms: { id: string; version: number; content: string } | null;
-  /** True if admin has granted founding-groomer status (0% commission for 6 months from signup) */
+  /** Founding-groomer status badge (no fee implications — see sign-up incentive) */
   isFoundingGroomer: boolean;
-  /** ISO string: created_at + 6 months — null if not a founding groomer or profile missing */
-  foundingCommissionExpiresAt: string | null;
+  /** Sign-up incentive: completed bookings consumed so far (0% commission while under the limit) */
+  incentiveBookingsUsed: number;
+  /** Sign-up incentive allowance from platform_settings (default 150) */
+  incentiveBookingsLimit: number;
 }

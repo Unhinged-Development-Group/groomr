@@ -260,7 +260,8 @@ interface Props {
   initialTimeBlocks: TimeBlock[];
   editorData: ProfileEditorInitialData;
   isFoundingGroomer?: boolean;
-  foundingCommissionExpiresAt?: string | null;
+  incentiveBookingsUsed?: number;
+  incentiveBookingsLimit?: number;
 }
 
 export function GroomerDashboardClient({
@@ -275,7 +276,8 @@ export function GroomerDashboardClient({
   initialTimeBlocks,
   editorData,
   isFoundingGroomer = false,
-  foundingCommissionExpiresAt = null,
+  incentiveBookingsUsed = 0,
+  incentiveBookingsLimit = 150,
 }: Props) {
   const [tab, setTab] = useState<Tab>("bookings");
   const [scope, setScope] = useState<string>("all");
@@ -327,8 +329,9 @@ export function GroomerDashboardClient({
     setActiveGroom(updated);
   }
 
-  const foundingActive = isFoundingGroomer && !!foundingCommissionExpiresAt && new Date(foundingCommissionExpiresAt) > new Date();
-  const commissionRate = foundingActive ? 0 : 0.08;
+  const incentiveRemaining = Math.max(0, incentiveBookingsLimit - incentiveBookingsUsed);
+  const incentiveActive = incentiveRemaining > 0;
+  const commissionRate = incentiveActive ? 0 : 0.08;
 
   const { viewerRole, teamMemberId, team } = editorData;
   const effectiveScope = viewerRole === "team_member" ? (teamMemberId ?? "own") : scope;
@@ -432,21 +435,33 @@ export function GroomerDashboardClient({
         />
       )}
 
-      {/* Founding groomer banner */}
-      {foundingActive && foundingCommissionExpiresAt && (
+      {/* Sign-up incentive banner — first N completed bookings commission-free */}
+      {incentiveActive && (
         <div className="bg-groomr-gold border border-groomr-gold rounded-[16px] px-5 py-4 flex items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <span className="text-2xl leading-none mt-0.5">🏅</span>
             <div>
-              <p className="font-fredoka text-lg text-deep-slate leading-tight">Founding Groomer — 0% Commission</p>
+              <p className="font-fredoka text-lg text-deep-slate leading-tight">
+                {isFoundingGroomer ? "Founding Groomer — " : ""}0% Commission
+              </p>
               <p className="text-sm text-deep-slate/80 mt-0.5">
-                As a founding member of Groomr, you keep 100% of your earnings until{" "}
-                <span className="font-bold">
-                  {new Date(foundingCommissionExpiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                </span>
-                . After that, the standard 8% commission applies.
+                You keep 100% of your earnings on your first{" "}
+                <span className="font-bold">{incentiveBookingsLimit}</span> completed bookings —{" "}
+                <span className="font-bold">{incentiveRemaining} remaining</span>
+                {" "}({incentiveBookingsUsed} used). The standard commission applies afterwards.
               </p>
             </div>
+          </div>
+          <div className="hidden sm:block w-32 shrink-0">
+            <div className="h-2 rounded-full bg-deep-slate/15 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-deep-slate"
+                style={{ width: `${Math.min(100, (incentiveBookingsUsed / incentiveBookingsLimit) * 100)}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-deep-slate/70 text-right mt-1 font-bold">
+              {incentiveBookingsUsed}/{incentiveBookingsLimit}
+            </p>
           </div>
         </div>
       )}

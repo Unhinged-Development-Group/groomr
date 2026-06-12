@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Groomr** is a two-sided UK marketplace connecting dog owners with independent groomers. UK-first, Glasgow/Edinburgh launch. Pre-revenue, in active development. Business model: 8% commission on bookings (0% for founding groomers for 6 months).
+**Groomr** is a two-sided UK marketplace connecting dog owners with independent groomers. UK-first, Glasgow/Edinburgh launch. Pre-revenue, in active development. Business model: 8% commission on bookings. **Sign-up incentive:** every groomer's first 150 completed bookings are commission-free (see `public/policies/groomer-sign-up-incentive.html`). **Founding groomer** (registered within 3 months of launch) is a permanent status badge + £49 onboarding package — no special commission rate.
 
 ---
 
@@ -52,7 +52,7 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 | `lib/supabase-admin.ts` | Service-role client (`supabaseAdmin`) — server-side only, bypasses RLS |
 | `lib/supabase.ts` | Anon client — use only for Realtime subscriptions in client components |
 | `lib/stripe.ts` | Server Stripe client + `calcPlatformFee(pence, pct)` / `calcGroomerPayout(pence, pct)`. `PLATFORM_FEE_PCT = 0.08` is the **fallback only** |
-| `lib/fees.ts` | `resolvePlatformFeePct(groomerProfileId)` — live commission rate from `platform_settings`; founding groomers get `founding_groomer_fee_pct` until `founding_until` (or global deadline) passes |
+| `lib/fees.ts` | `resolvePlatformFeePct(groomerProfileId)` — 0% while the sign-up incentive lasts (first `signup_incentive_bookings` completed, not-fully-refunded bookings), then live `platform_settings.platform_fee_pct`. Also `getIncentiveUsage()` for UI |
 | `lib/stripe-client.ts` | Browser Stripe client (`getStripeClient()`) |
 | `lib/resend.ts` | Resend email client |
 | `lib/utils.ts` | `cn()` — classname merger (clsx + tailwind-merge) |
@@ -125,8 +125,8 @@ travel_radius_miles smallint | is_mobile boolean
 is_verified boolean DEFAULT false             -- legacy; superseded by verification_status
 is_listed boolean DEFAULT false
 is_accepting_bookings boolean DEFAULT false   -- controls search visibility
-is_founding_groomer boolean DEFAULT false     -- founding rate while founding_until hasn't passed
-founding_until date                           -- per-groomer founding-rate end date (migration 20260610000002); NULL = global deadline applies
+is_founding_groomer boolean DEFAULT false     -- status badge only (no fee implications since v2 incentive)
+founding_until date                           -- LEGACY (migration 20260610000002) — no longer drives fees
 verification_status verification_status DEFAULT 'not_submitted'   -- migration 20260607000001; replaces boolean is_verified
 stripe_account_id text | stripe_charges_enabled boolean | stripe_details_submitted boolean   -- synced by account.updated webhook
 average_rating numeric | total_reviews integer
@@ -342,15 +342,16 @@ created_at timestamptz (indexed DESC)
 ```
 id uuid PK
 platform_fee_pct numeric DEFAULT 0.08        -- standard commission rate
-founding_groomer_fee_pct numeric DEFAULT 0.00 -- rate for is_founding_groomer = true
-founding_groomer_deadline date               -- when founding rate expires (nullable)
+signup_incentive_bookings integer DEFAULT 150 -- commission-free bookings per groomer (migration 20260612000001)
+founding_groomer_fee_pct numeric DEFAULT 0.00 -- LEGACY — no longer drives fees
+founding_groomer_deadline date               -- LEGACY — no longer drives fees
 updated_at timestamptz | updated_by uuid → profiles
 ```
-> Singleton table (one row). Seeded by migration. Read/written via `adminGetPlatformSettings` / `adminSavePlatformSettings`. The Stripe payment flow reads rates from this table at charge time via `resolvePlatformFeePct()` in `lib/fees.ts` — admin changes apply to new payments immediately, no redeploy. `PLATFORM_FEE_PCT` in `lib/stripe.ts` is only the fallback if the row is unreadable. Each `payments` row records the pct actually charged.
+> Singleton table (one row). Seeded by migration. Read/written via `adminGetPlatformSettings` / `adminSavePlatformSettings`. The Stripe payment flow reads rates from this table at charge time via `resolvePlatformFeePct()` in `lib/fees.ts`: 0% while the groomer's completed-booking count (minus full refunds) is below `signup_incentive_bookings`, then `platform_fee_pct` — admin changes apply to new payments immediately, no redeploy. `PLATFORM_FEE_PCT` in `lib/stripe.ts` is only the fallback if the row is unreadable. Each `payments` row records the pct actually charged.
 
 ### Migrations
 
-35 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
+37 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
 
 ---
 
@@ -615,6 +616,8 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | PostHog analytics | Not built — env vars set but no code integrated |
 | Google Calendar sync (one-way) | Real — iCal subscription feed at `/api/calendar/[groomerProfileId]`. Bookings and `time_blocks` appear in Apple/Google Calendar and auto-refresh. Apple uses `webcal://` link; Google uses `https://calendar.google.com/calendar/render?cid=` with an HTTPS URL. Feed is RFC 5545-compliant (DTSTAMP, VTIMEZONE Europe/London, line folding). |
 | Google Calendar sync (two-way inbound) | Not built — blocking time in an external calendar does **not** block Groomr slots. True two-way requires: (1) **Google Calendar API** — OAuth 2.0 (`googleapis` package, scopes: `calendar.readonly` or `calendar.events`), store `google_refresh_token` on `groomer_profiles`, poll or webhook-subscribe to the groomer's primary calendar, create `time_blocks` rows for busy intervals; (2) **Apple Calendar / CalDAV** — CalDAV server (e.g. `tsdav` package) with Apple ID OAuth, significantly more complex. Groomers can manually block time via Groomr's own time blocks feature in the meantime. |
+| Sign-up incentive (150 free bookings) | Real — `resolvePlatformFeePct()` charges 0% until the groomer's completed-booking count reaches `platform_settings.signup_incentive_bookings`; groomer dashboard shows progress banner; admin Platform Settings shows per-groomer usage |
+| **Incentive threshold notification** (groomer) | Planned — policy §2 promises a notification when approaching the 150-booking threshold; wire into the booking-completion flow or daily cron (e.g. at 140 used and at 150) |
 | **Vaccination & health reminders** (owner) | Planned — store vaccine due-dates on `dogs`, send email/SMS N days before expiry via existing Resend + Twilio stack; needs a `dog_health_reminders` table or date fields on `dogs`, plus a cron job |
 | **Booking receipt download** (owner) | Planned — PDF or formatted HTML email receipt per appointment; server-side render with existing appointment + payment data, send via Resend on demand or post-completion |
 | **Groomer comparison tool** (owner) | Planned — pin 2–3 groomers from search, view side-by-side (price, distance, rating, availability preview); pure UI addition on top of existing search + groomer data |

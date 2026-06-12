@@ -159,7 +159,6 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
           tagline: profile.tagline,
           bio: profile.bio,
           is_founding_groomer: profile.is_founding_groomer,
-          founding_until: profile.founding_until,
         }),
         updateUserProfile(groomer.profile_id, { phone: profile.phone ?? undefined }),
       ]);
@@ -337,39 +336,10 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
                       </div>
                       <div className="flex items-center gap-3 pt-5">
                         <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={profile.is_founding_groomer}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              if (checked && !profile.founding_until) {
-                                // Default the founding rate to 6 months from today
-                                const d = new Date();
-                                d.setMonth(d.getMonth() + 6);
-                                updateProfile({ is_founding_groomer: true, founding_until: d.toISOString().slice(0, 10) });
-                              } else {
-                                updateProfile({ is_founding_groomer: checked });
-                              }
-                            }}
-                            className="w-4 h-4 accent-groomr-gold"
-                          />
-                          <span className="text-sm font-bold text-deep-slate">Founding groomer (0% commission)</span>
+                          <input type="checkbox" checked={profile.is_founding_groomer} onChange={(e) => updateProfile({ is_founding_groomer: e.target.checked })} className="w-4 h-4 accent-groomr-gold" />
+                          <span className="text-sm font-bold text-deep-slate">Founding groomer (status badge)</span>
                         </label>
                       </div>
-                      {profile.is_founding_groomer && (
-                        <div>
-                          <FieldLabel>Founding rate ends</FieldLabel>
-                          <input
-                            type="date"
-                            className="field w-full"
-                            value={profile.founding_until ?? ""}
-                            onChange={(e) => updateProfile({ founding_until: e.target.value || null })}
-                          />
-                          <p className="text-[11px] text-pebble-grey mt-1">
-                            Standard commission applies automatically after this date. Blank = global deadline from Platform Settings.
-                          </p>
-                        </div>
-                      )}
                     </div>
                     <div>
                       <FieldLabel>Bio</FieldLabel>

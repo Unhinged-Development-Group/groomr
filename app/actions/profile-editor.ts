@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { generateUniqueGroomerSlug } from "@/lib/slug";
+import { getIncentiveUsage } from "@/lib/fees";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -150,7 +151,8 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
       portfolioCount: 0,
       contractTerms: null,
       isFoundingGroomer: false,
-      foundingCommissionExpiresAt: null,
+      incentiveBookingsUsed: 0,
+      incentiveBookingsLimit: 150,
     };
   }
 
@@ -291,23 +293,12 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     ? { id: contractTermsRow.id as string, version: contractTermsRow.version as number, content: contractTermsRow.content as string }
     : null;
 
+  // Founding groomer is a status badge only; commission is governed by the
+  // sign-up incentive (first N completed bookings free) for every groomer.
   const isFoundingGroomer = (groomerProfile.is_founding_groomer as boolean) ?? false;
-  let foundingCommissionExpiresAt: string | null = null;
-  if (isFoundingGroomer) {
-    // founding_until is the source of truth (admin-editable); fall back to
-    // created_at + 6 months for rows predating the column
-    const foundingUntil = groomerProfile.founding_until as string | null;
-    const createdAt = groomerProfile.created_at as string | null;
-    if (foundingUntil) {
-      foundingCommissionExpiresAt = new Date(foundingUntil).toISOString();
-    } else if (createdAt) {
-      const expires = new Date(createdAt);
-      expires.setMonth(expires.getMonth() + 6);
-      foundingCommissionExpiresAt = expires.toISOString();
-    }
-  }
+  const incentive = await getIncentiveUsage(groomerProfileId);
 
-  return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0, contractTerms, isFoundingGroomer, foundingCommissionExpiresAt };
+  return { groomerProfileId, publicSlug, profile, coverPhotoUrl, profileImageUrl, services, availability, team, viewerRole, teamMemberId, averageRating, totalReviews, verificationDocs, portfolioCount: portfolioCount ?? 0, contractTerms, isFoundingGroomer, incentiveBookingsUsed: incentive.used, incentiveBookingsLimit: incentive.limit };
 }
 
 function emptyProfile(ownerName: string, email: string, phone: string): ProfileFormData {

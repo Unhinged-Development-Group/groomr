@@ -3,6 +3,7 @@ import { render, toPlainText } from "@react-email/render";
 import React from "react";
 import { DetailRow } from "./components/DetailRow";
 import { Layout, colors } from "./components/Layout";
+import { fmt, fmtTime } from "@/lib/formatters";
 
 interface Props {
   recipientName: string;
@@ -15,18 +16,7 @@ interface Props {
   appUrl: string;
 }
 
-function fmt(d: Date) {
-  return d.toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
 
-function fmtTime(d: Date) {
-  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-}
 
 export function AppointmentCancelled(p: Props) {
   const dateStr = fmt(p.scheduledAt);

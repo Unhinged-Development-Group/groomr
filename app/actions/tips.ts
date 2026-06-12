@@ -3,15 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-
-async function getProfileId(clerkId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", clerkId)
-    .maybeSingle();
-  return data?.id ?? null;
-}
+import { getProfileId } from "@/lib/auth-helpers";
 
 export async function createTipPaymentIntent(
   appointmentId: string,

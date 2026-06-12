@@ -4,19 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { stripe, calcPlatformFee, calcGroomerPayout } from "@/lib/stripe";
 import { resolvePlatformFeePct } from "@/lib/fees";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-
-// ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
-
-async function getProfileId(clerkId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", clerkId)
-    .maybeSingle();
-  return data?.id ?? null;
-}
+import { getProfileId } from "@/lib/auth-helpers";
 
 // ---------------------------------------------------------------------------
 // createBookingPaymentIntent

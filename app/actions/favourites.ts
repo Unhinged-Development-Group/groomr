@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getProfileId } from "@/lib/auth-helpers";
 
 export interface FavouriteGroomer {
   id: string;
@@ -16,16 +17,6 @@ export interface FavouriteGroomer {
     total_reviews: number | null;
     city: string | null;
   } | null;
-}
-
-async function getProfileId(clerkId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", clerkId)
-    .maybeSingle();
-  
-  return data?.id || null;
 }
 
 export async function getFavouriteGroomers(): Promise<FavouriteGroomer[]> {

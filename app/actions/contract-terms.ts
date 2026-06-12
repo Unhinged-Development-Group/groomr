@@ -2,38 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getProfileId, getGroomerContext } from "@/lib/auth-helpers";
 
-async function getGroomerContext(): Promise<{
-  profileId: string;
-  groomerProfileId: string;
-} | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", userId)
-    .maybeSingle();
-  if (!profile) return null;
-  const { data: gp } = await supabaseAdmin
-    .from("groomer_profiles")
-    .select("id")
-    .eq("user_id", profile.id)
-    .maybeSingle();
-  if (!gp) return null;
-  return { profileId: profile.id, groomerProfileId: gp.id };
-}
-
-async function getOwnerProfileId(): Promise<string | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const { data } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", userId)
-    .maybeSingle();
-  return data?.id ?? null;
-}
 
 // ---------------------------------------------------------------------------
 // saveContractTerms
@@ -131,7 +101,8 @@ export async function checkTermsAcceptance(groomerProfileId: string): Promise<{
   content: string | null;
   groomerName: string | null;
 }> {
-  const ownerId = await getOwnerProfileId();
+  const { userId } = await auth();
+  const ownerId = userId ? await getProfileId(userId) : null;
   if (!ownerId) return { needsAcceptance: false, termsId: null, content: null, groomerName: null };
 
   // Fetch current terms for this groomer
@@ -182,7 +153,8 @@ export async function checkTermsAcceptance(groomerProfileId: string): Promise<{
 export async function acceptContractTerms(
   groomerProfileId: string,
 ): Promise<{ ok: true } | { error: string }> {
-  const ownerId = await getOwnerProfileId();
+  const { userId } = await auth();
+  const ownerId = userId ? await getProfileId(userId) : null;
   if (!ownerId) return { error: "Not authenticated." };
 
   const { data: terms } = await supabaseAdmin

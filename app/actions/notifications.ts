@@ -1,8 +1,8 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getGroomerContext } from "@/lib/auth-helpers";
 
 export interface GroomerNotification {
   id: string;
@@ -21,37 +21,6 @@ export interface GroomerNotification {
   metadata: Record<string, unknown>;
   readAt: string | null;
   createdAt: string;
-}
-
-// ─── Internal helper ─────────────────────────────────────────────────────────
-
-async function getGroomerContext(): Promise<{
-  profileId: string;
-  groomerProfileId: string;
-} | null> {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) return null;
-
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("id, roles")
-    .eq("clerk_id", clerkUserId)
-    .maybeSingle();
-
-  if (!profile) return null;
-
-  const roles: string[] = profile.roles ?? [];
-  if (!roles.includes("groomer")) return null;
-
-  const { data: gp } = await supabaseAdmin
-    .from("groomer_profiles")
-    .select("id")
-    .eq("user_id", profile.id)
-    .maybeSingle();
-
-  if (!gp) return null;
-
-  return { profileId: profile.id as string, groomerProfileId: gp.id as string };
 }
 
 // ─── Nav context ─────────────────────────────────────────────────────────────

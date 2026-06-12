@@ -1,7 +1,8 @@
 "use server";
 
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { fetchClerkAvatarMap } from "@/lib/clerk-helpers";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -123,19 +124,7 @@ async function getDirectConversationThreads(
   const clerkIds = (otherProfiles ?? [])
     .map((p) => p.clerk_id as string)
     .filter(Boolean);
-  const clerkImageMap = new Map<string, string>();
-  if (clerkIds.length) {
-    try {
-      const clerk = await clerkClient();
-      const { data: clerkUsers } = await clerk.users.getUserList({
-        userId: clerkIds,
-        limit: 100,
-      });
-      for (const u of clerkUsers) clerkImageMap.set(u.id, u.imageUrl);
-    } catch {
-      // non-fatal
-    }
-  }
+  const clerkImageMap = await fetchClerkAvatarMap(clerkIds);
 
   // Also look up groomer_profiles for other parties (so we can set groomerProfileId)
   const { data: groomerProfiles } = await supabaseAdmin
@@ -314,17 +303,7 @@ export async function getGroomerMessageThreads(): Promise<{
     const clerkIds = (ownerProfiles ?? [])
       .map((p) => p.clerk_id as string)
       .filter(Boolean);
-    const clerkImageMap = new Map<string, string>();
-    if (clerkIds.length) {
-      try {
-        const clerk = await clerkClient();
-        const { data: clerkUsers } = await clerk.users.getUserList({
-          userId: clerkIds,
-          limit: 100,
-        });
-        for (const u of clerkUsers) clerkImageMap.set(u.id, u.imageUrl);
-      } catch {}
-    }
+    const clerkImageMap = await fetchClerkAvatarMap(clerkIds);
 
     const dogIds = [
       ...new Set(appointments.map((a) => a.dog_id as string).filter(Boolean)),

@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getProfileId } from "@/lib/auth-helpers";
 import { sendCancellationEmails } from "@/lib/emails/send";
 import { sendCancellationSMS } from "@/lib/sms/send";
 
@@ -40,16 +41,6 @@ export interface Appointment {
 
   reviews?: { id: string }[] | null;
   recurring_series_id?: string | null;
-}
-
-async function getProfileId(clerkId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", clerkId)
-    .maybeSingle();
-  
-  return data?.id || null;
 }
 
 export async function getOwnerAppointments(): Promise<Appointment[]> {

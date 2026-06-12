@@ -2,16 +2,51 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getProfileId } from "@/lib/auth-helpers";
 import { sendBookingConfirmationEmails } from "@/lib/emails/send";
 import { sendBookingConfirmationSMS } from "@/lib/sms/send";
 
-async function getProfileId(clerkId: string): Promise<string | null> {
+async function fetchSameDayAppointments(groomerProfileId: string, dateStr: string) {
   const { data } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", clerkId)
+    .from("appointments")
+    .select("scheduled_at, service_snapshot_duration")
+    .eq("groomer_profile_id", groomerProfileId)
+    .neq("status", "cancelled")
+    .neq("status", "no_show")
+    .gte("scheduled_at", `${dateStr}T00:00:00Z`)
+    .lte("scheduled_at", `${dateStr}T23:59:59Z`);
+  return data ?? [];
+}
+
+async function resolveEffectivePrice(
+  groomerProfileId: string,
+  ownerId: string,
+  serviceId: string,
+  basePricePence: number,
+): Promise<number> {
+  const { data: fixedOverride } = await supabaseAdmin
+    .from("client_service_prices")
+    .select("override_price_pence")
+    .eq("groomer_profile_id", groomerProfileId)
+    .eq("owner_id", ownerId)
+    .eq("service_id", serviceId)
     .maybeSingle();
-  return data?.id ?? null;
+
+  if (fixedOverride) return fixedOverride.override_price_pence;
+
+  const { data: clientSettings } = await supabaseAdmin
+    .from("client_settings")
+    .select("discount_percentage")
+    .eq("groomer_profile_id", groomerProfileId)
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+
+  if (clientSettings?.discount_percentage != null) {
+    const pct = Math.max(0, Math.min(100, clientSettings.discount_percentage));
+    return Math.round(basePricePence * (1 - pct / 100));
+  }
+
+  return basePricePence;
 }
 
 function toMinutes(timeStr: string): number {
@@ -212,16 +247,9 @@ export async function createAppointment(
   const newStart = newDt.getUTCHours() * 60 + newDt.getUTCMinutes();
   const newEnd   = newStart + (service.duration_minutes ?? 60);
 
-  const { data: sameDay } = await supabaseAdmin
-    .from("appointments")
-    .select("scheduled_at, service_snapshot_duration")
-    .eq("groomer_profile_id", input.groomerProfileId)
-    .neq("status", "cancelled")
-    .neq("status", "no_show")
-    .gte("scheduled_at", `${dateStr}T00:00:00Z`)
-    .lte("scheduled_at", `${dateStr}T23:59:59Z`);
+  const sameDay = await fetchSameDayAppointments(input.groomerProfileId, dateStr);
 
-  const hasConflict = (sameDay ?? []).some((a) => {
+  const hasConflict = sameDay.some((a) => {
     const dt     = new Date(a.scheduled_at);
     const aStart = dt.getUTCHours() * 60 + dt.getUTCMinutes();
     const aEnd   = aStart + (a.service_snapshot_duration ?? 60);
@@ -231,31 +259,12 @@ export async function createAppointment(
   if (hasConflict) return { error: "That slot was just taken — please pick another time." };
 
   // Resolve effective price — per-service fixed override takes priority over discount %
-  let effectivePricePence = service.price_pence;
-
-  const { data: fixedOverride } = await supabaseAdmin
-    .from("client_service_prices")
-    .select("override_price_pence")
-    .eq("groomer_profile_id", input.groomerProfileId)
-    .eq("owner_id", profileId)
-    .eq("service_id", input.serviceId)
-    .maybeSingle();
-
-  if (fixedOverride) {
-    effectivePricePence = fixedOverride.override_price_pence;
-  } else {
-    const { data: clientSettings } = await supabaseAdmin
-      .from("client_settings")
-      .select("discount_percentage")
-      .eq("groomer_profile_id", input.groomerProfileId)
-      .eq("owner_id", profileId)
-      .maybeSingle();
-
-    if (clientSettings?.discount_percentage != null) {
-      const pct = Math.max(0, Math.min(100, clientSettings.discount_percentage));
-      effectivePricePence = Math.round(service.price_pence * (1 - pct / 100));
-    }
-  }
+  const effectivePricePence = await resolveEffectivePrice(
+    input.groomerProfileId,
+    profileId,
+    input.serviceId,
+    service.price_pence,
+  );
 
   const { data, error } = await supabaseAdmin
     .from("appointments")
@@ -350,31 +359,12 @@ export async function createGroupAppointment(input: {
       return { error: `Service not found for one of the pets.` };
     }
 
-    let effectivePricePence = service.price_pence;
-
-    const { data: fixedOverride } = await supabaseAdmin
-      .from("client_service_prices")
-      .select("override_price_pence")
-      .eq("groomer_profile_id", input.groomerProfileId)
-      .eq("owner_id", profileId)
-      .eq("service_id", pet.serviceId)
-      .maybeSingle();
-
-    if (fixedOverride) {
-      effectivePricePence = fixedOverride.override_price_pence;
-    } else {
-      const { data: clientSettings } = await supabaseAdmin
-        .from("client_settings")
-        .select("discount_percentage")
-        .eq("groomer_profile_id", input.groomerProfileId)
-        .eq("owner_id", profileId)
-        .maybeSingle();
-
-      if (clientSettings?.discount_percentage != null) {
-        const pct = Math.max(0, Math.min(100, clientSettings.discount_percentage));
-        effectivePricePence = Math.round(service.price_pence * (1 - pct / 100));
-      }
-    }
+    const effectivePricePence = await resolveEffectivePrice(
+      input.groomerProfileId,
+      profileId,
+      pet.serviceId,
+      service.price_pence,
+    );
 
     resolved.push({
       dogId: pet.dogId,
@@ -391,16 +381,9 @@ export async function createGroupAppointment(input: {
   const groupStart = startDt.getUTCHours() * 60 + startDt.getUTCMinutes();
   const groupEnd = groupStart + resolved.reduce((sum, p) => sum + p.durationMinutes, 0);
 
-  const { data: sameDay } = await supabaseAdmin
-    .from("appointments")
-    .select("scheduled_at, service_snapshot_duration")
-    .eq("groomer_profile_id", input.groomerProfileId)
-    .neq("status", "cancelled")
-    .neq("status", "no_show")
-    .gte("scheduled_at", `${dateStr}T00:00:00Z`)
-    .lte("scheduled_at", `${dateStr}T23:59:59Z`);
+  const sameDay = await fetchSameDayAppointments(input.groomerProfileId, dateStr);
 
-  const hasConflict = (sameDay ?? []).some((a) => {
+  const hasConflict = sameDay.some((a) => {
     const dt = new Date(a.scheduled_at);
     const aStart = dt.getUTCHours() * 60 + dt.getUTCMinutes();
     const aEnd = aStart + (a.service_snapshot_duration ?? 60);

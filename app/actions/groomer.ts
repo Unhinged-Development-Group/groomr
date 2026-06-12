@@ -1,10 +1,12 @@
 "use server";
 
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Appointment } from "@/app/actions/appointments";
 import { resend, FROM_EMAIL } from "@/lib/resend";
 import { renderGroomComplete } from "@/lib/emails/groom-complete";
+import { getGroomerContext } from "@/lib/auth-helpers";
+import { fetchClerkAvatarMap } from "@/lib/clerk-helpers";
 
 export interface GroomerProfileDetails {
   id: string;
@@ -60,41 +62,6 @@ export interface Review {
     full_name: string | null;
     avatar_url: string | null;
   };
-}
-
-// Internal Helper — works for both direct groomers and accepted team members
-async function getGroomerContext() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", userId)
-    .maybeSingle();
-
-  if (!profile) return null;
-
-  // Direct groomer owner
-  const { data: groomer } = await supabaseAdmin
-    .from("groomer_profiles")
-    .select("id")
-    .eq("user_id", profile.id)
-    .maybeSingle();
-
-  if (groomer) return { profileId: profile.id, groomerProfileId: groomer.id };
-
-  // Team member — use their employer's groomer profile
-  const { data: membership } = await supabaseAdmin
-    .from("team_members")
-    .select("groomer_profile_id")
-    .eq("user_id", profile.id)
-    .eq("invite_status", "accepted")
-    .maybeSingle();
-
-  if (!membership) return null;
-
-  return { profileId: profile.id, groomerProfileId: membership.groomer_profile_id as string };
 }
 
 export async function getGroomerProfile() {
@@ -183,16 +150,7 @@ export async function getGroomerReviews() {
     .map((r) => r.profiles?.clerk_id)
     .filter(Boolean) as string[];
 
-  const clerkImageMap = new Map<string, string>();
-  if (clerkIds.length) {
-    try {
-      const clerk = await clerkClient();
-      const { data: clerkUsers } = await clerk.users.getUserList({ userId: clerkIds, limit: 100 });
-      for (const u of clerkUsers) clerkImageMap.set(u.id, u.imageUrl);
-    } catch {
-      // non-fatal — fall back to DB value
-    }
-  }
+  const clerkImageMap = await fetchClerkAvatarMap(clerkIds);
 
   return reviews.map((r) => ({
     ...r,

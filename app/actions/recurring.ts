@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getGroomerContext } from "@/lib/auth-helpers";
 
 // ---------------------------------------------------------------------------
 // Timezone helpers (UK-only app: Europe/London)
@@ -43,27 +44,6 @@ async function getOwnerContext(): Promise<{ profileId: string } | null> {
     .eq("clerk_id", userId)
     .maybeSingle();
   return data ? { profileId: data.id } : null;
-}
-
-async function getGroomerContext(): Promise<{
-  profileId: string;
-  groomerProfileId: string;
-} | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("clerk_id", userId)
-    .maybeSingle();
-  if (!profile) return null;
-  const { data: gp } = await supabaseAdmin
-    .from("groomer_profiles")
-    .select("id")
-    .eq("user_id", profile.id)
-    .maybeSingle();
-  if (!gp) return null;
-  return { profileId: profile.id, groomerProfileId: gp.id };
 }
 
 function addDays(dateStr: string, days: number): string {

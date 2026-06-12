@@ -4,12 +4,11 @@ import { DogsSection } from "./_components/DogsSection";
 import { AppointmentsSection } from "./_components/AppointmentsSection";
 import { FavouriteGroomersSection } from "./_components/FavouriteGroomersSection";
 import { AccountSection } from "./_components/AccountSection";
-import { NotificationsSection } from "./_components/NotificationsSection";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getOwnerAppointments } from "@/app/actions/appointments";
 import { getFavouriteGroomers } from "@/app/actions/favourites";
 import { getOwnerTips } from "@/app/actions/tips";
-import { getSMSPreference } from "@/app/actions/sms-preferences";
+import { getOwnerContactPrefs } from "@/app/actions/sms-preferences";
 import type { Dog } from "@/app/actions/dogs";
 import type { Metadata } from "next";
 
@@ -62,12 +61,12 @@ export default async function OwnerDashboardPage() {
 
   const firstName = user.firstName ?? "there";
   const email = user.emailAddresses?.[0]?.emailAddress ?? null;
-  const [dogs, appointments, favourites, tips, smsEnabled] = await Promise.all([
+  const [dogs, appointments, favourites, tips, contactPrefs] = await Promise.all([
     fetchDogs(user.id, user.firstName ?? null, email),
     getOwnerAppointments(),
     getFavouriteGroomers(),
     getOwnerTips(),
-    getSMSPreference(),
+    getOwnerContactPrefs(),
   ]);
 
   return (
@@ -85,8 +84,7 @@ export default async function OwnerDashboardPage() {
       <AppointmentsSection initialAppointments={appointments} tippedAppointmentIds={new Set(tips.map((t) => t.appointment_id))} />
 
       <FavouriteGroomersSection initialFavourites={favourites} />
-      <NotificationsSection initialSMSEnabled={smsEnabled} />
-      <AccountSection />
+      <AccountSection initialSMSEnabled={contactPrefs.smsEnabled} initialPhone={contactPrefs.phone} />
     </div>
   );
 }

@@ -1316,6 +1316,7 @@ export async function updateSupportRequest(
     .eq("id", id);
 
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "update_support_request", "support_requests", id, { status });
   return { ok: true };
 }
 
@@ -1379,10 +1380,12 @@ export async function contactUser(
       subject,
       text: `Hi ${toName || "there"},\n\n${body}\n\n— The Groomr Team`,
     });
-    return { ok: true };
   } catch {
     return { error: "Failed to send email." };
   }
+
+  logAdminAction(guard.profileId, "contact_user", "profiles", undefined, { to: toEmail, subject });
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -1444,6 +1447,7 @@ export async function adminAddDog(
     )
     .single();
   if (error || !data) return { error: error?.message ?? "Failed to add dog" };
+  logAdminAction(guard.profileId, "add_dog", "dogs", (data as AdminDogFull).id, { name: fields.name, owner_id: ownerProfileId });
   return { data: data as AdminDogFull };
 }
 
@@ -1458,6 +1462,7 @@ export async function adminUpdateDog(
     .update({ ...fields, updated_at: new Date().toISOString() })
     .eq("id", dogId);
   if (error) return { error: error.message };
+  logAdminAction(guard.profileId, "update_dog", "dogs", dogId);
   return { ok: true };
 }
 

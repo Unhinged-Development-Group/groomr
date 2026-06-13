@@ -5,27 +5,61 @@ import { adminGetAuditLog } from "@/app/actions/admin";
 import type { AdminAuditEntry } from "@/app/actions/admin";
 
 const ACTION_LABELS: Record<string, string> = {
+  // Account
+  update_user_profile: "Updated user profile",
+  update_groomer_profile: "Updated groomer profile",
+  delete_owner: "Deactivated owner account",
+  send_password_reset: "Sent password reset",
+  contact_user: "Contacted user",
+  // Groomer verification
   verify_groomer: "Verified groomer",
   revoke_groomer_verification: "Revoked groomer verification",
-  update_groomer_profile: "Updated groomer profile",
-  update_user_profile: "Updated user profile",
-  cancel_appointment: "Cancelled appointment",
+  update_verification_status: "Updated verification status",
+  send_verification_reminder: "Sent verification reminder",
+  update_availability: "Updated availability",
+  // Dogs & services
+  add_dog: "Added dog",
+  update_dog: "Updated dog",
   delete_dog: "Deleted dog",
+  add_service: "Added service",
+  update_service: "Updated service",
   delete_service: "Deleted service",
+  // Appointments & payments
+  cancel_appointment: "Cancelled appointment",
+  edit_appointment_notes: "Edited appointment notes",
+  mark_no_show: "Marked as no-show",
+  initiate_refund: "Initiated refund",
+  // Disputes
+  update_dispute_status: "Updated dispute status",
+  propose_resolution: "Proposed dispute resolution",
+  send_final_resolution: "Sent final resolution",
+  close_dispute: "Closed dispute",
+  // Support
   reply_support_request: "Replied to support request",
-  revoke_admin: "Revoked admin access",
+  update_support_request: "Updated support request",
+  // Admin & platform
   grant_admin: "Granted admin access",
+  revoke_admin: "Revoked admin access",
   update_platform_settings: "Updated platform settings",
+  // System
+  stripe_webhook_error: "Stripe webhook error",
 };
 
 const ACTION_TONES: Record<string, string> = {
+  // Positive / green
   verify_groomer: "text-sage-leaf",
+  grant_admin: "text-sage-leaf",
+  close_dispute: "text-sage-leaf",
+  // Destructive / red
   revoke_groomer_verification: "text-muted-terracotta",
+  delete_owner: "text-muted-terracotta",
   cancel_appointment: "text-muted-terracotta",
   delete_dog: "text-muted-terracotta",
   delete_service: "text-muted-terracotta",
   revoke_admin: "text-muted-terracotta",
-  grant_admin: "text-sage-leaf",
+  initiate_refund: "text-muted-terracotta",
+  mark_no_show: "text-muted-terracotta",
+  stripe_webhook_error: "text-muted-terracotta",
 };
 
 function formatDateTime(iso: string) {
@@ -70,7 +104,11 @@ export function AuditLogTab({ initialEntries }: Props) {
     });
   }
 
-  const actionOptions = ["all", ...Object.keys(ACTION_LABELS)];
+  const knownActions = Object.keys(ACTION_LABELS);
+  const unknownActions = [...new Set(entries.map((e) => e.action))].filter(
+    (a) => !knownActions.includes(a)
+  );
+  const actionOptions = ["all", ...knownActions, ...unknownActions];
   const filtered =
     filterAction === "all"
       ? entries
@@ -79,32 +117,30 @@ export function AuditLogTab({ initialEntries }: Props) {
   return (
     <div className="space-y-4">
       {/* Filter */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-3">
         <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider shrink-0">
           Filter:
         </span>
-        <div className="flex gap-1.5 flex-wrap">
-          {actionOptions.slice(0, 7).map((a) => (
-            <button
-              key={a}
-              onClick={() => setFilterAction(a)}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors focus-ring ${
-                filterAction === a
-                  ? "bg-deep-slate text-alabaster-cream"
-                  : "bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20"
-              }`}
-            >
-              {a === "all" ? "All" : ACTION_LABELS[a] ?? a}
-            </button>
+        <select
+          value={filterAction}
+          onChange={(e) => setFilterAction(e.target.value)}
+          className="field text-sm py-1.5 pr-8 min-w-[200px]"
+        >
+          <option value="all">All actions</option>
+          {actionOptions.slice(1).map((a) => (
+            <option key={a} value={a}>
+              {ACTION_LABELS[a] ?? a}
+            </option>
           ))}
-          {actionOptions.length > 7 && filterAction !== "all" && !actionOptions.slice(0, 7).includes(filterAction) && (
-            <button
-              className="px-3 py-1 rounded-full text-xs font-bold bg-deep-slate text-alabaster-cream"
-            >
-              {ACTION_LABELS[filterAction] ?? filterAction}
-            </button>
-          )}
-        </div>
+        </select>
+        {filterAction !== "all" && (
+          <button
+            onClick={() => setFilterAction("all")}
+            className="text-xs text-pebble-grey hover:text-deep-slate transition-colors"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Table */}

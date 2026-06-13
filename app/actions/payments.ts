@@ -285,9 +285,15 @@ export async function initiateRefund(
   appointmentId: string,
   reason?: string,
 ): Promise<{ success: true } | { error: string }> {
-  // Require admin check (simplified — production should verify is_admin)
   const { userId } = await auth();
   if (!userId) return { error: "Not authenticated." };
+
+  const { data: adminProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("id, is_admin")
+    .eq("clerk_id", userId)
+    .maybeSingle();
+  if (!adminProfile?.is_admin) return { error: "Forbidden." };
 
   const { data: payment } = await supabaseAdmin
     .from("payments")
@@ -326,6 +332,17 @@ export async function initiateRefund(
         refunded_at: new Date().toISOString(),
       })
       .eq("id", payment.id);
+
+    supabaseAdmin
+      .from("admin_audit_log")
+      .insert({
+        admin_profile_id: adminProfile.id,
+        action: "initiate_refund",
+        target_table: "payments",
+        target_id: payment.id,
+        metadata: { appointment_id: appointmentId, amount_pence: refund.amount, reason: reason ?? null },
+      })
+      .then(() => {}, () => {});
 
     return { success: true };
   } catch (err) {

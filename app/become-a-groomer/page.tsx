@@ -459,6 +459,13 @@ export default function BecomeAGroomerPage() {
           </h2>
         </div>
         <FaqAccordion faqs={FAQS} />
+
+        <div className="mt-10 flex items-center justify-center gap-2 text-sm font-nunito text-pebble-grey">
+          <span>Already signed up?</span>
+          <a href="/groomer-help" className="text-link font-bold">
+            Visit the Groomer Help Centre →
+          </a>
+        </div>
       </section>
 
     </div>

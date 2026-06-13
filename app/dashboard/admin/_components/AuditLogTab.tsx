@@ -9,6 +9,7 @@ const ACTION_LABELS: Record<string, string> = {
   update_user_profile: "Updated user profile",
   update_groomer_profile: "Updated groomer profile",
   delete_owner: "Deactivated owner account",
+  delete_groomer: "Deactivated groomer account",
   send_password_reset: "Sent password reset",
   contact_user: "Contacted user",
   // Groomer verification
@@ -53,6 +54,7 @@ const ACTION_TONES: Record<string, string> = {
   // Destructive / red
   revoke_groomer_verification: "text-muted-terracotta",
   delete_owner: "text-muted-terracotta",
+  delete_groomer: "text-muted-terracotta",
   cancel_appointment: "text-muted-terracotta",
   delete_dog: "text-muted-terracotta",
   delete_service: "text-muted-terracotta",

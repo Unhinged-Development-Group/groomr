@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { resend, FROM_EMAIL } from "@/lib/resend";
+import { sendAccountDeletionEmail } from "@/lib/account-export";
 
 // ---------------------------------------------------------------------------
 // Auth guard
@@ -337,6 +338,75 @@ export async function getAllGroomers(search?: string, page = 0): Promise<{ data:
   }
 
   return { data: rows };
+}
+
+export async function adminDeleteGroomer(
+  groomerProfileId: string
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  // Block deletion if there are upcoming confirmed/pending appointments
+  const { data: activeAppts, error: apptErr } = await supabaseAdmin
+    .from("appointments")
+    .select("id")
+    .eq("groomer_profile_id", groomerProfileId)
+    .in("status", ["pending", "confirmed"])
+    .gte("scheduled_at", new Date().toISOString())
+    .limit(1);
+
+  if (apptErr) return { error: apptErr.message };
+  if (activeAppts && activeAppts.length > 0) {
+    return { error: "Cannot delete: this groomer has upcoming appointments. Cancel them first." };
+  }
+
+  // Fetch profile id, clerk_id, and contact details before soft-deleting
+  const { data: gp } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("user_id, profiles!groomer_profiles_user_id_fkey ( clerk_id, email, full_name )")
+    .eq("id", groomerProfileId)
+    .maybeSingle();
+
+  const profileId: string | undefined = (gp as any)?.user_id;
+  const clerkId: string | undefined = (gp as any)?.profiles?.clerk_id;
+  const email: string | undefined = (gp as any)?.profiles?.email;
+  const fullName: string | undefined = (gp as any)?.profiles?.full_name;
+
+  // Unlist immediately so the groomer no longer appears in search
+  const { error: gpErr } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ is_listed: false, is_accepting_bookings: false, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId);
+
+  if (gpErr) return { error: gpErr.message };
+
+  // Soft-delete profile — 30-day cron handles hard-delete/anonymisation (UK GDPR)
+  if (profileId) {
+    const { error: profileErr } = await supabaseAdmin
+      .from("profiles")
+      .update({ is_deleted: true, deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", profileId);
+
+    if (profileErr) return { error: profileErr.message };
+
+    // Send deletion email with 30-day data export link
+    if (email) {
+      await sendAccountDeletionEmail(profileId, email, fullName ?? "there");
+    }
+  }
+
+  // Delete Clerk user so they cannot log in
+  if (clerkId) {
+    try {
+      const client = await clerkClient();
+      await client.users.deleteUser(clerkId);
+    } catch {
+      // Non-fatal — Supabase soft-delete is the source of truth
+    }
+  }
+
+  await logAdminAction(guard.profileId, "delete_groomer", "groomer_profiles", groomerProfileId);
+  return { ok: true };
 }
 
 export async function verifyGroomer(
@@ -930,30 +1000,33 @@ export async function adminDeleteOwner(
     return { error: "Cannot delete: this owner has upcoming appointments. Cancel them first." };
   }
 
-  // Fetch clerk_id before deactivating
+  // Fetch profile fields before soft-deleting
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("clerk_id")
+    .select("clerk_id, email, full_name")
     .eq("id", profileId)
     .maybeSingle();
 
-  // Soft-delete in Supabase
+  // Soft-delete — 30-day cron handles hard-delete/anonymisation (UK GDPR)
   const { error } = await supabaseAdmin
     .from("profiles")
-    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .update({ is_deleted: true, deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq("id", profileId);
 
   if (error) return { error: error.message };
 
-  // Disable in Clerk if we have their clerk_id
+  // Send deletion email with 30-day data export link
+  if ((profile as any)?.email) {
+    await sendAccountDeletionEmail(profileId, (profile as any).email, (profile as any).full_name ?? "there");
+  }
+
+  // Delete Clerk user so they cannot log in
   if ((profile as any)?.clerk_id) {
     try {
       const client = await clerkClient();
-      await client.users.updateUser((profile as any).clerk_id, {
-        publicMetadata: { groomr_deactivated: true },
-      });
+      await client.users.deleteUser((profile as any).clerk_id);
     } catch {
-      // Non-fatal — Supabase deactivation is the source of truth
+      // Non-fatal — Supabase soft-delete is the source of truth
     }
   }
 

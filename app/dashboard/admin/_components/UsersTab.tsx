@@ -312,12 +312,12 @@ export function UsersTab({ initialUsers }: { initialUsers: AdminUserRow[] }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-deep-slate/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
           <div className="relative bg-white rounded-[24px] p-6 shadow-modal max-w-sm w-full space-y-4">
-            <h3 className="font-fredoka text-xl text-deep-slate">Delete {deleteConfirm.name}?</h3>
-            <p className="text-sm text-pebble-grey">This permanently deletes the owner account and disables Clerk access. It cannot be undone.</p>
+            <h3 className="font-fredoka text-xl text-deep-slate">Close {deleteConfirm.name}'s account?</h3>
+            <p className="text-sm text-pebble-grey">This closes the account and disables login immediately. The user will receive an email with a link to download their data. Their personal information is permanently deleted after 30 days.</p>
             <p className="text-xs font-bold text-muted-terracotta">If they have confirmed or pending appointments, deletion will be blocked — cancel those first.</p>
             <div className="flex items-center justify-end gap-3 pt-2">
               <button onClick={() => setDeleteConfirm(null)} className="btn-secondary font-nunito font-bold px-5 py-2 rounded-full text-sm focus-ring">Cancel</button>
-              <button onClick={handleDelete} className="font-nunito font-bold px-5 py-2 rounded-full text-sm bg-muted-terracotta text-white hover:opacity-90 transition-opacity focus-ring">Delete account</button>
+              <button onClick={handleDelete} className="font-nunito font-bold px-5 py-2 rounded-full text-sm bg-muted-terracotta text-white hover:opacity-90 transition-opacity focus-ring">Close account</button>
             </div>
           </div>
         </div>

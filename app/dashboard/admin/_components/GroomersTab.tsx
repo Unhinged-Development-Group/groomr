@@ -4,8 +4,8 @@ import { useState, useTransition, useCallback } from "react";
 import { SearchPill } from "@/components/ui/SearchPill";
 import { Badge } from "@/components/ui/Badge";
 import { Toast } from "@/components/ui/Toast";
-import { PencilIcon } from "@/components/ui/GroomrIcons";
-import { adminSendPasswordReset, adminExportGroomers, adminExportIndividualGroomer } from "@/app/actions/admin";
+import { PencilIcon, TrashIcon } from "@/components/ui/GroomrIcons";
+import { adminSendPasswordReset, adminExportGroomers, adminExportIndividualGroomer, adminDeleteGroomer } from "@/app/actions/admin";
 import { GroomerEditModal } from "./GroomerEditModal";
 import { ContactModal } from "./ContactModal";
 import { VerificationCallout } from "./VerificationCallout";
@@ -14,6 +14,7 @@ import type { AdminGroomerRow } from "@/app/actions/admin";
 
 type ListFilter = "all" | "listed" | "unlisted" | "verified" | "awaiting" | "not_submitted";
 type ListSort = "joined" | "name" | "rating";
+interface DeleteConfirm { groomerProfileId: string; name: string; }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -72,6 +73,8 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
   const [toast, setToast] = useState<string | null>(null);
   const [exportingBulk, startBulkExport] = useTransition();
   const [resetPendingId, setResetPendingId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirm | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filtered = groomers
     .filter((g) => {
@@ -122,6 +125,20 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
       downloadBlob(`groomr-groomers-${date}.csv`, csv, "text/csv");
     });
   }, []);
+
+  async function handleDelete() {
+    if (!deleteConfirm) return;
+    setDeletingId(deleteConfirm.groomerProfileId);
+    setDeleteConfirm(null);
+    const res = await adminDeleteGroomer(deleteConfirm.groomerProfileId);
+    setDeletingId(null);
+    if ("error" in res) {
+      setToast(res.error);
+    } else {
+      setGroomers((prev) => prev.filter((g) => g.groomer_profile_id !== deleteConfirm.groomerProfileId));
+      setToast("Groomer account deactivated.");
+    }
+  }
 
   async function handleExportIndividual(groomerProfileId: string, businessName: string) {
     const res = await adminExportIndividualGroomer(groomerProfileId);
@@ -259,6 +276,14 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
                             <button onClick={() => handleExportIndividual(g.groomer_profile_id, g.business_name)} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring" title="Download JSON">
                               ↓
                             </button>
+                            <button
+                              onClick={() => setDeleteConfirm({ groomerProfileId: g.groomer_profile_id, name: g.business_name })}
+                              disabled={deletingId === g.groomer_profile_id}
+                              title="Deactivate account"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-muted-terracotta/10 text-muted-terracotta hover:bg-muted-terracotta/20 border border-muted-terracotta/30 transition-colors focus-ring disabled:opacity-50"
+                            >
+                              <TrashIcon size={12} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -291,6 +316,21 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
           toName={contactGroomer.owner_name ?? contactGroomer.business_name}
           onClose={() => setContactGroomer(null)}
         />
+      )}
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-deep-slate/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+          <div className="relative bg-white rounded-[24px] p-6 shadow-modal max-w-sm w-full space-y-4">
+            <h3 className="font-fredoka text-xl text-deep-slate">Close {deleteConfirm.name}'s account?</h3>
+            <p className="text-sm text-pebble-grey">This unlists the groomer and disables login immediately. They will receive an email with a link to download their data. Their personal information is permanently deleted after 30 days.</p>
+            <p className="text-xs font-bold text-muted-terracotta">If they have confirmed or pending appointments, deletion will be blocked — cancel those first.</p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button onClick={() => setDeleteConfirm(null)} className="btn-secondary font-nunito font-bold px-5 py-2 rounded-full text-sm focus-ring">Cancel</button>
+              <button onClick={handleDelete} className="font-nunito font-bold px-5 py-2 rounded-full text-sm bg-muted-terracotta text-white hover:opacity-90 transition-opacity focus-ring">Close account</button>
+            </div>
+          </div>
+        </div>
       )}
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendAccountDeletionEmail } from "@/lib/account-export";
 import { redirect } from "next/navigation";
 
 export async function exportAccountData(): Promise<{ data: Record<string, unknown> } | { error: string }> {
@@ -59,25 +60,26 @@ export async function closeOwnerAccount(): Promise<{ error?: string }> {
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("id")
+    .select("id, email, full_name")
     .eq("clerk_id", userId)
     .maybeSingle();
 
   if (!profile) return { error: "Profile not found" };
 
-  const profileId = profile.id;
+  const profileId = (profile as any).id as string;
 
-  // Hard-delete non-financial operational data immediately
-  await supabaseAdmin.from("favourite_groomers").delete().eq("owner_id", profileId);
-  await supabaseAdmin.from("dogs").delete().eq("owner_id", profileId);
-  // Appointments are retained: groomers need payment history for their own records.
-  // The soft-deleted profile is anonymised by the 30-day hard-delete cron.
-
-  // Soft-delete profile — retained 30 days for dispute/financial lookups (UK GDPR)
+  // Soft-delete profile — retained 30 days for dispute/financial lookups (UK GDPR).
+  // Operational data (dogs, favourites, etc.) is cleaned up by the 30-day cron so it
+  // remains available to the export link during the window.
   await supabaseAdmin
     .from("profiles")
     .update({ is_deleted: true, deleted_at: new Date().toISOString() })
     .eq("id", profileId);
+
+  // Send deletion confirmation + data export link (valid 30 days)
+  if ((profile as any).email) {
+    await sendAccountDeletionEmail(profileId, (profile as any).email, (profile as any).full_name ?? "there");
+  }
 
   // Delete Clerk user (also fires user.deleted webhook → idempotent soft-delete)
   try {
@@ -96,15 +98,17 @@ export async function closeGroomerAccount(): Promise<{ error?: string }> {
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("id")
+    .select("id, email, full_name")
     .eq("clerk_id", userId)
     .maybeSingle();
 
   if (!profile) return { error: "Profile not found" };
 
-  const profileId = profile.id;
+  const profileId = (profile as any).id as string;
 
-  // Get groomer profile
+  // Unlist the groomer immediately so they no longer appear in search.
+  // Operational data (services, availability, etc.) is cleaned up by the 30-day cron
+  // so it remains available to the export link during the window.
   const { data: groomerProfile } = await supabaseAdmin
     .from("groomer_profiles")
     .select("id")
@@ -112,21 +116,10 @@ export async function closeGroomerAccount(): Promise<{ error?: string }> {
     .maybeSingle();
 
   if (groomerProfile) {
-    const gpId = groomerProfile.id;
-
-    // Hard-delete operational data that has no retention obligation
-    await supabaseAdmin.from("services").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("availability").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("availability_overrides").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("time_blocks").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("team_members").delete().eq("groomer_profile_id", gpId);
-    await supabaseAdmin.from("favourite_groomers").delete().eq("groomer_profile_id", gpId);
-    // Appointments + payments retained: financial records (UK 7-year tax law).
-    // Deactivate the profile so the groomer no longer appears in search.
     await supabaseAdmin
       .from("groomer_profiles")
       .update({ is_listed: false, is_accepting_bookings: false })
-      .eq("id", gpId);
+      .eq("id", (groomerProfile as any).id);
   }
 
   // Soft-delete profile — retained 30 days for dispute/financial lookups (UK GDPR)
@@ -134,6 +127,11 @@ export async function closeGroomerAccount(): Promise<{ error?: string }> {
     .from("profiles")
     .update({ is_deleted: true, deleted_at: new Date().toISOString() })
     .eq("id", profileId);
+
+  // Send deletion confirmation + data export link (valid 30 days)
+  if ((profile as any).email) {
+    await sendAccountDeletionEmail(profileId, (profile as any).email, (profile as any).full_name ?? "there");
+  }
 
   // Delete Clerk user (also fires user.deleted webhook → idempotent soft-delete)
   try {

@@ -333,7 +333,7 @@ export async function initiateRefund(
       })
       .eq("id", payment.id);
 
-    supabaseAdmin
+    await supabaseAdmin
       .from("admin_audit_log")
       .insert({
         admin_profile_id: adminProfile.id,
@@ -341,8 +341,7 @@ export async function initiateRefund(
         target_table: "payments",
         target_id: payment.id,
         metadata: { appointment_id: appointmentId, amount_pence: refund.amount, reason: reason ?? null },
-      })
-      .then(() => {}, () => {});
+      });
 
     return { success: true };
   } catch (err) {

@@ -21,15 +21,14 @@ async function requireAdmin(): Promise<{ profileId: string } | { error: string }
   return { profileId: data.id };
 }
 
-// Internal — fire-and-forget audit log writer (non-blocking)
-function logAdminAction(
+async function logAdminAction(
   adminProfileId: string,
   action: string,
   targetTable?: string,
   targetId?: string,
   metadata?: Record<string, unknown>
-): void {
-  supabaseAdmin
+): Promise<void> {
+  await supabaseAdmin
     .from("admin_audit_log")
     .insert({
       admin_profile_id: adminProfileId,
@@ -37,8 +36,7 @@ function logAdminAction(
       target_table: targetTable ?? null,
       target_id: targetId ?? null,
       metadata: metadata ?? {},
-    })
-    .then(() => {}, () => {}); // fire and forget
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -380,7 +378,7 @@ export async function verifyGroomer(
     }
   }
 
-  logAdminAction(guard.profileId, verified ? "verify_groomer" : "revoke_groomer_verification", "groomer_profiles", groomerProfileId);
+  await logAdminAction(guard.profileId, verified ? "verify_groomer" : "revoke_groomer_verification", "groomer_profiles", groomerProfileId);
   return { ok: true };
 }
 
@@ -426,7 +424,7 @@ export async function adminUpdateVerificationStatus(
     }
   }
 
-  logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: oldStatus, to: status });
+  await logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: oldStatus, to: status });
   return { ok: true };
 }
 
@@ -455,7 +453,7 @@ export async function adminSendVerificationReminder(
     text: `Hi ${name},\n\nWe noticed that ${business} hasn't yet submitted verification documents on Groomr.\n\nTo appear in search results and start accepting bookings, please upload your documents in your groomer dashboard under Settings > Verification.\n\nIf you have any questions, feel free to reply to this email.\n\nThe Groomr team`,
   }).catch(() => {});
 
-  logAdminAction(guard.profileId, "send_verification_reminder", "groomer_profiles", groomerProfileId);
+  await logAdminAction(guard.profileId, "send_verification_reminder", "groomer_profiles", groomerProfileId);
   return { ok: true };
 }
 
@@ -493,7 +491,7 @@ export async function updateGroomerProfile(
     .eq("id", groomerProfileId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "update_groomer_profile", "groomer_profiles", groomerProfileId);
+  await logAdminAction(guard.profileId, "update_groomer_profile", "groomer_profiles", groomerProfileId);
   return { ok: true };
 }
 
@@ -684,7 +682,7 @@ export async function adminSaveAvailability(
     if (insErr) return { error: insErr.message };
   }
 
-  logAdminAction(guard.profileId, "update_availability", "availability", groomerProfileId);
+  await logAdminAction(guard.profileId, "update_availability", "availability", groomerProfileId);
   return { ok: true };
 }
 
@@ -908,7 +906,7 @@ export async function updateUserProfile(
     .eq("id", profileId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "update_user_profile", "profiles", profileId);
+  await logAdminAction(guard.profileId, "update_user_profile", "profiles", profileId);
   return { ok: true };
 }
 
@@ -959,7 +957,7 @@ export async function adminDeleteOwner(
     }
   }
 
-  logAdminAction(guard.profileId, "delete_owner", "profiles", profileId);
+  await logAdminAction(guard.profileId, "delete_owner", "profiles", profileId);
   return { ok: true };
 }
 
@@ -986,7 +984,7 @@ export async function adminSendPasswordReset(
     return { error: "Failed to send reset email." };
   }
 
-  logAdminAction(guard.profileId, "send_password_reset", "profiles", undefined, { email });
+  await logAdminAction(guard.profileId, "send_password_reset", "profiles", undefined, { email });
   return { ok: true };
 }
 
@@ -1162,7 +1160,7 @@ export async function updateDisputeStatus(
     .eq("id", id);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "update_dispute_status", "disputes", id, { status });
+  await logAdminAction(guard.profileId, "update_dispute_status", "disputes", id, { status });
   return { ok: true };
 }
 
@@ -1211,7 +1209,7 @@ export async function adminProposeResolution(
   if (ownerEmail) resend.emails.send({ from: FROM_EMAIL, to: ownerEmail, subject: `Groomr has proposed a resolution for your dispute`, text: emailText(ownerName) }).catch(() => {});
   if (groomerEmail) resend.emails.send({ from: FROM_EMAIL, to: groomerEmail, subject: `Groomr has proposed a resolution for your dispute`, text: emailText(groomerName) }).catch(() => {});
 
-  logAdminAction(guard.profileId, "propose_resolution", "disputes", id);
+  await logAdminAction(guard.profileId, "propose_resolution", "disputes", id);
   return { ok: true };
 }
 
@@ -1260,7 +1258,7 @@ export async function adminSendFinalResolution(
   if (ownerEmail) resend.emails.send({ from: FROM_EMAIL, to: ownerEmail, subject: `Final resolution: Groomr's decision on your dispute`, text: emailText(ownerName) }).catch(() => {});
   if (groomerEmail) resend.emails.send({ from: FROM_EMAIL, to: groomerEmail, subject: `Final resolution: Groomr's decision on your dispute`, text: emailText(groomerName) }).catch(() => {});
 
-  logAdminAction(guard.profileId, "send_final_resolution", "disputes", id);
+  await logAdminAction(guard.profileId, "send_final_resolution", "disputes", id);
   return { ok: true };
 }
 
@@ -1276,7 +1274,7 @@ export async function adminCloseDispute(
     .eq("id", id);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "close_dispute", "disputes", id);
+  await logAdminAction(guard.profileId, "close_dispute", "disputes", id);
   return { ok: true };
 }
 
@@ -1316,7 +1314,7 @@ export async function updateSupportRequest(
     .eq("id", id);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "update_support_request", "support_requests", id, { status });
+  await logAdminAction(guard.profileId, "update_support_request", "support_requests", id, { status });
   return { ok: true };
 }
 
@@ -1353,7 +1351,7 @@ export async function replyToSupportRequest(
     .eq("id", id);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "reply_support_request", "support_requests", id);
+  await logAdminAction(guard.profileId, "reply_support_request", "support_requests", id);
   return { ok: true };
 }
 
@@ -1384,7 +1382,7 @@ export async function contactUser(
     return { error: "Failed to send email." };
   }
 
-  logAdminAction(guard.profileId, "contact_user", "profiles", undefined, { to: toEmail, subject });
+  await logAdminAction(guard.profileId, "contact_user", "profiles", undefined, { to: toEmail, subject });
   return { ok: true };
 }
 
@@ -1447,7 +1445,7 @@ export async function adminAddDog(
     )
     .single();
   if (error || !data) return { error: error?.message ?? "Failed to add dog" };
-  logAdminAction(guard.profileId, "add_dog", "dogs", (data as AdminDogFull).id, { name: fields.name, owner_id: ownerProfileId });
+  await logAdminAction(guard.profileId, "add_dog", "dogs", (data as AdminDogFull).id, { name: fields.name, owner_id: ownerProfileId });
   return { data: data as AdminDogFull };
 }
 
@@ -1462,7 +1460,7 @@ export async function adminUpdateDog(
     .update({ ...fields, updated_at: new Date().toISOString() })
     .eq("id", dogId);
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "update_dog", "dogs", dogId);
+  await logAdminAction(guard.profileId, "update_dog", "dogs", dogId);
   return { ok: true };
 }
 
@@ -1473,7 +1471,7 @@ export async function adminDeleteDog(
   if ("error" in guard) return guard;
   const { error } = await supabaseAdmin.from("dogs").delete().eq("id", dogId);
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "delete_dog", "dogs", dogId);
+  await logAdminAction(guard.profileId, "delete_dog", "dogs", dogId);
   return { ok: true };
 }
 
@@ -1537,7 +1535,7 @@ export async function adminSaveService(
       .select(selectCols)
       .single();
     if (error || !data) return { error: error?.message ?? "Failed to update service" };
-    logAdminAction(guard.profileId, "update_service", "services", serviceId, { name: fields.name });
+    await logAdminAction(guard.profileId, "update_service", "services", serviceId, { name: fields.name });
     return { data: data as AdminServiceRow };
   } else {
     const { data, error } = await supabaseAdmin
@@ -1546,7 +1544,7 @@ export async function adminSaveService(
       .select(selectCols)
       .single();
     if (error || !data) return { error: error?.message ?? "Failed to add service" };
-    logAdminAction(guard.profileId, "add_service", "services", (data as any).id, { name: fields.name, groomer_profile_id: groomerProfileId });
+    await logAdminAction(guard.profileId, "add_service", "services", (data as any).id, { name: fields.name, groomer_profile_id: groomerProfileId });
     return { data: data as AdminServiceRow };
   }
 }
@@ -1558,7 +1556,7 @@ export async function adminDeleteService(
   if ("error" in guard) return guard;
   const { error } = await supabaseAdmin.from("services").delete().eq("id", serviceId);
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "delete_service", "services", serviceId);
+  await logAdminAction(guard.profileId, "delete_service", "services", serviceId);
   return { ok: true };
 }
 
@@ -1650,7 +1648,7 @@ export async function adminCancelAppointment(
     .eq("id", appointmentId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "cancel_appointment", "appointments", appointmentId, { reason });
+  await logAdminAction(guard.profileId, "cancel_appointment", "appointments", appointmentId, { reason });
   return { ok: true };
 }
 
@@ -1671,7 +1669,7 @@ export async function adminUpdateAppointmentNotes(
     .eq("id", appointmentId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "edit_appointment_notes", "appointments", appointmentId);
+  await logAdminAction(guard.profileId, "edit_appointment_notes", "appointments", appointmentId);
   return { ok: true };
 }
 
@@ -1687,7 +1685,7 @@ export async function adminMarkNoShow(
     .eq("id", appointmentId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "mark_no_show", "appointments", appointmentId);
+  await logAdminAction(guard.profileId, "mark_no_show", "appointments", appointmentId);
   return { ok: true };
 }
 
@@ -1992,7 +1990,7 @@ export async function adminRevokeAdmin(
     .eq("id", profileId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "revoke_admin", "profiles", profileId);
+  await logAdminAction(guard.profileId, "revoke_admin", "profiles", profileId);
   return { ok: true };
 }
 
@@ -2008,7 +2006,7 @@ export async function adminGrantAdmin(
     .eq("id", profileId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "grant_admin", "profiles", profileId);
+  await logAdminAction(guard.profileId, "grant_admin", "profiles", profileId);
   return { ok: true };
 }
 
@@ -2153,7 +2151,7 @@ export async function adminSavePlatformSettings(
     .eq("id", settingsId);
 
   if (error) return { error: error.message };
-  logAdminAction(guard.profileId, "update_platform_settings", "platform_settings", settingsId, fields as Record<string, unknown>);
+  await logAdminAction(guard.profileId, "update_platform_settings", "platform_settings", settingsId, fields as Record<string, unknown>);
   return { ok: true };
 }
 

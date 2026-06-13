@@ -28,6 +28,8 @@ const isPublicRoute = createRouteMatcher([
   '/expenses-policy(.*)',
   '/use-of-company-equipment-policy(.*)',
   '/groomer-sign-up-incentive(.*)',
+  '/support(.*)',
+  '/groomer-help(.*)',
 ])
 
 export default clerkMiddleware(async (auth, request) => {

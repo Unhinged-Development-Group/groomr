@@ -65,10 +65,13 @@ export async function createBillingRequest(opts: {
       method: "POST",
       body: JSON.stringify({
         billing_requests: {
+          // Open Banking (Pay by Bank / Instant Bank Pay) — no mandate needed.
+          // Each payment requires a fresh authorisation from the payer.
           payment_request: {
             amount: opts.amountPence,
             currency: "GBP",
             description: opts.description,
+            scheme: "faster_payments",
           },
           ...(opts.metadata ? { metadata: opts.metadata } : {}),
         },

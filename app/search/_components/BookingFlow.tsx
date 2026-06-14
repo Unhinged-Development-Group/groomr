@@ -519,7 +519,8 @@ export function BookingFlow({
       setPaymentMethod("gocardless");
     } catch (err) {
       console.error("[BookingFlow] handleGCChosen:", err);
-      setPaymentMethodError("Something went wrong setting up Direct Debit. Please try again.");
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setPaymentMethodError(`Pay by Bank setup failed: ${msg}`);
     } finally {
       setLoadingPaymentMethod(false);
     }
@@ -1160,8 +1161,8 @@ function PaymentMethodPicker({
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-fredoka text-lg text-deep-slate leading-tight">Pay by Direct Debit</p>
-            <p className="text-xs text-pebble-grey mt-0.5 font-nunito">Bank transfer via GoCardless — lower fees, ideal for recurring bookings</p>
+            <p className="font-fredoka text-lg text-deep-slate leading-tight">Pay by Bank</p>
+            <p className="text-xs text-pebble-grey mt-0.5 font-nunito">Instant bank transfer via Open Banking — no card details needed</p>
           </div>
           <svg className="w-4 h-4 text-pebble-grey/40 group-hover:text-deep-slate transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -1185,7 +1186,7 @@ function PaymentMethodPicker({
 }
 
 // ---------------------------------------------------------------------------
-// DirectDebitStep — shown after a GC billing request is created
+// DirectDebitStep — shown after a GC billing request is created (Open Banking)
 // ---------------------------------------------------------------------------
 
 function DirectDebitStep({
@@ -1214,11 +1215,11 @@ function DirectDebitStep({
       </div>
 
       <div className="bg-sage-leaf/8 border border-sage-leaf/20 rounded-xl p-4 space-y-2">
-        <p className="text-sm font-bold text-deep-slate font-nunito">How Direct Debit works</p>
+        <p className="text-sm font-bold text-deep-slate font-nunito">How Pay by Bank works</p>
         <ul className="text-xs text-deep-slate/70 font-nunito space-y-1.5">
-          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>You&apos;ll be taken to GoCardless to authorise your bank account — takes about 2 minutes.</li>
-          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Payment is collected directly from your bank — no card details needed.</li>
-          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Protected by the Direct Debit Guarantee — you can claim a full refund from your bank if anything goes wrong.</li>
+          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>You&apos;ll be taken to GoCardless to select your bank and approve the payment — takes about a minute.</li>
+          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Payment is sent directly from your bank account — no card details needed.</li>
+          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Uses Open Banking — your credentials are never shared with Groomr or GoCardless.</li>
         </ul>
       </div>
 
@@ -1230,11 +1231,11 @@ function DirectDebitStep({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
             d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
         </svg>
-        Set up Direct Debit
+        Pay by Bank
       </a>
 
       <p className="text-xs text-center text-pebble-grey font-nunito">
-        You&apos;ll be redirected to GoCardless to complete authorisation, then returned here.
+        You&apos;ll be redirected to GoCardless to complete the payment, then returned here.
       </p>
     </div>
   );

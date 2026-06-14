@@ -65,7 +65,7 @@ export function ManageAccountPage() {
           <div className="mb-6">
             <label className="block text-sm font-bold text-deep-slate mb-1">Mobile number</label>
             <p className="text-xs text-pebble-grey mb-2">
-              UK numbers only — e.g. +44 7700 900000
+              UK numbers only — e.g. 07700 900000
             </p>
             <div className="flex gap-2">
               <input
@@ -76,7 +76,7 @@ export function ManageAccountPage() {
                   setPhoneError(null);
                   setPhoneSaved(false);
                 }}
-                placeholder="+44 7700 900000"
+                placeholder="07700 900000"
                 className="flex-1 border border-pebble-grey/30 rounded-lg px-3 py-2 text-sm font-nunito text-deep-slate focus:outline-none focus:ring-2 focus:ring-groomr-gold"
               />
               <button

@@ -68,10 +68,15 @@ export async function updateOwnerPhone(
   const { userId } = await auth();
   if (!userId) return { ok: false, error: "Not authenticated" };
 
-  const normalized = phone.trim().replace(/\s+/g, "");
+  let normalized = phone.trim().replace(/[\s\-().]/g, "");
 
-  if (normalized && !/^\+44\d{9,10}$/.test(normalized)) {
-    return { ok: false, error: "Enter a valid UK mobile number (e.g. +44 7700 900000)" };
+  // Convert 07XXXXXXXXX → +447XXXXXXXXX
+  if (/^07\d{9}$/.test(normalized)) {
+    normalized = "+44" + normalized.slice(1);
+  }
+
+  if (normalized && !/^\+44\d{10}$/.test(normalized)) {
+    return { ok: false, error: "Enter a valid UK mobile number (e.g. 07700 900000)" };
   }
 
   const { data: profile } = await supabaseAdmin

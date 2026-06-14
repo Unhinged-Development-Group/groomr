@@ -368,7 +368,7 @@ export async function adminDeleteGroomer(
   // Fetch profile id, clerk_id, and contact details before soft-deleting
   const { data: gp } = await supabaseAdmin
     .from("groomer_profiles")
-    .select("user_id, profiles!groomer_profiles_user_id_fkey ( clerk_id, email, full_name )")
+    .select("user_id, business_name, profiles!groomer_profiles_user_id_fkey ( clerk_id, email, full_name )")
     .eq("id", groomerProfileId)
     .maybeSingle();
 
@@ -376,6 +376,7 @@ export async function adminDeleteGroomer(
   const clerkId: string | undefined = (gp as any)?.profiles?.clerk_id;
   const email: string | undefined = (gp as any)?.profiles?.email;
   const fullName: string | undefined = (gp as any)?.profiles?.full_name;
+  const businessName: string | undefined = (gp as any)?.business_name;
 
   // Unlist immediately so the groomer no longer appears in search
   const { error: gpErr } = await supabaseAdmin
@@ -410,7 +411,7 @@ export async function adminDeleteGroomer(
     }
   }
 
-  await logAdminAction(guard.profileId, "delete_groomer", "groomer_profiles", groomerProfileId);
+  await logAdminAction(guard.profileId, "delete_groomer", "groomer_profiles", groomerProfileId, { groomer: businessName ?? null, name: fullName ?? null, email: email ?? null });
   return { ok: true };
 }
 
@@ -420,6 +421,16 @@ export async function verifyGroomer(
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
+
+  const { data: gp } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("business_name, profiles!groomer_profiles_user_id_fkey ( email, full_name )")
+    .eq("id", groomerProfileId)
+    .maybeSingle();
+
+  const gpEmail = (gp as any)?.profiles?.email;
+  const gpName = (gp as any)?.profiles?.full_name ?? "there";
+  const gpBusiness = (gp as any)?.business_name ?? "your business";
 
   const { error } = await supabaseAdmin
     .from("groomer_profiles")
@@ -432,28 +443,16 @@ export async function verifyGroomer(
 
   if (error) return { error: error.message };
 
-  if (verified) {
-    const { data: gp } = await supabaseAdmin
-      .from("groomer_profiles")
-      .select("business_name, profiles!groomer_profiles_user_id_fkey ( email, full_name )")
-      .eq("id", groomerProfileId)
-      .maybeSingle();
-
-    const email = (gp as any)?.profiles?.email;
-    const name = (gp as any)?.profiles?.full_name ?? "there";
-    const business = (gp as any)?.business_name ?? "your business";
-
-    if (email) {
-      await resend.emails.send({
-        from: FROM_EMAIL,
-        to: email,
-        subject: "Your Groomr profile has been verified ✓",
-        text: `Hi ${name},\n\nGreat news — ${business} has been verified on Groomr. Your profile will now appear in search results and you can start accepting bookings.\n\nThe Groomr team`,
-      }).catch(() => {/* non-fatal */});
-    }
+  if (verified && gpEmail) {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: gpEmail,
+      subject: "Your Groomr profile has been verified ✓",
+      text: `Hi ${gpName},\n\nGreat news — ${gpBusiness} has been verified on Groomr. Your profile will now appear in search results and you can start accepting bookings.\n\nThe Groomr team`,
+    }).catch(() => {/* non-fatal */});
   }
 
-  await logAdminAction(guard.profileId, verified ? "verify_groomer" : "revoke_groomer_verification", "groomer_profiles", groomerProfileId);
+  await logAdminAction(guard.profileId, verified ? "verify_groomer" : "revoke_groomer_verification", "groomer_profiles", groomerProfileId, { groomer: gpBusiness, owner: gpName });
   return { ok: true };
 }
 
@@ -499,7 +498,7 @@ export async function adminUpdateVerificationStatus(
     }
   }
 
-  await logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: oldStatus, to: status });
+  await logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: oldStatus, to: status, groomer: (current as any)?.business_name ?? null });
   return { ok: true };
 }
 
@@ -528,7 +527,7 @@ export async function adminSendVerificationReminder(
     text: `Hi ${name},\n\nWe noticed that ${business} hasn't yet submitted verification documents on Groomr.\n\nTo appear in search results and start accepting bookings, please upload your documents in your groomer dashboard under Settings > Verification.\n\nIf you have any questions, feel free to reply to this email.\n\nThe Groomr team`,
   }).catch(() => {});
 
-  await logAdminAction(guard.profileId, "send_verification_reminder", "groomer_profiles", groomerProfileId);
+  await logAdminAction(guard.profileId, "send_verification_reminder", "groomer_profiles", groomerProfileId, { groomer: business, email });
   return { ok: true };
 }
 
@@ -566,7 +565,8 @@ export async function updateGroomerProfile(
     .eq("id", groomerProfileId);
 
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "update_groomer_profile", "groomer_profiles", groomerProfileId);
+  const { data: gpInfo } = await supabaseAdmin.from("groomer_profiles").select("business_name").eq("id", groomerProfileId).maybeSingle();
+  await logAdminAction(guard.profileId, "update_groomer_profile", "groomer_profiles", groomerProfileId, { groomer: (gpInfo as any)?.business_name ?? null });
   return { ok: true };
 }
 
@@ -981,7 +981,8 @@ export async function updateUserProfile(
     .eq("id", profileId);
 
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "update_user_profile", "profiles", profileId);
+  const { data: pfInfo } = await supabaseAdmin.from("profiles").select("full_name, email").eq("id", profileId).maybeSingle();
+  await logAdminAction(guard.profileId, "update_user_profile", "profiles", profileId, { name: (pfInfo as any)?.full_name ?? null, email: (pfInfo as any)?.email ?? null });
   return { ok: true };
 }
 
@@ -1035,7 +1036,7 @@ export async function adminDeleteOwner(
     }
   }
 
-  await logAdminAction(guard.profileId, "delete_owner", "profiles", profileId);
+  await logAdminAction(guard.profileId, "delete_owner", "profiles", profileId, { name: (profile as any)?.full_name ?? null, email: (profile as any)?.email ?? null });
   return { ok: true };
 }
 
@@ -1538,7 +1539,8 @@ export async function adminUpdateDog(
     .update({ ...fields, updated_at: new Date().toISOString() })
     .eq("id", dogId);
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "update_dog", "dogs", dogId);
+  const { data: dogInfo } = await supabaseAdmin.from("dogs").select("name").eq("id", dogId).maybeSingle();
+  await logAdminAction(guard.profileId, "update_dog", "dogs", dogId, { dog: (dogInfo as any)?.name ?? null });
   return { ok: true };
 }
 
@@ -1547,9 +1549,10 @@ export async function adminDeleteDog(
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
+  const { data: delDog } = await supabaseAdmin.from("dogs").select("name").eq("id", dogId).maybeSingle();
   const { error } = await supabaseAdmin.from("dogs").delete().eq("id", dogId);
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "delete_dog", "dogs", dogId);
+  await logAdminAction(guard.profileId, "delete_dog", "dogs", dogId, { dog: (delDog as any)?.name ?? null });
   return { ok: true };
 }
 
@@ -1632,9 +1635,10 @@ export async function adminDeleteService(
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
+  const { data: delSvc } = await supabaseAdmin.from("services").select("name, groomer_profile_id").eq("id", serviceId).maybeSingle();
   const { error } = await supabaseAdmin.from("services").delete().eq("id", serviceId);
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "delete_service", "services", serviceId);
+  await logAdminAction(guard.profileId, "delete_service", "services", serviceId, { name: (delSvc as any)?.name ?? null });
   return { ok: true };
 }
 
@@ -1731,7 +1735,22 @@ export async function adminCancelAppointment(
     .eq("id", appointmentId);
 
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "cancel_appointment", "appointments", appointmentId, { reason });
+  const { data: apptCtx } = await supabaseAdmin
+    .from("appointments")
+    .select("scheduled_at, service_snapshot_name, owner_id, groomer_profile_id")
+    .eq("id", appointmentId)
+    .maybeSingle();
+  const [{ data: apptOwner }, { data: apptGroomer }] = await Promise.all([
+    (apptCtx as any)?.owner_id ? supabaseAdmin.from("profiles").select("full_name").eq("id", (apptCtx as any).owner_id).maybeSingle() : Promise.resolve({ data: null }),
+    (apptCtx as any)?.groomer_profile_id ? supabaseAdmin.from("groomer_profiles").select("business_name").eq("id", (apptCtx as any).groomer_profile_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  await logAdminAction(guard.profileId, "cancel_appointment", "appointments", appointmentId, {
+    reason,
+    owner: (apptOwner as any)?.full_name ?? null,
+    groomer: (apptGroomer as any)?.business_name ?? null,
+    service: (apptCtx as any)?.service_snapshot_name ?? null,
+    scheduled_at: (apptCtx as any)?.scheduled_at ?? null,
+  });
   return { ok: true };
 }
 
@@ -1777,7 +1796,21 @@ export async function adminMarkNoShow(
     .eq("id", appointmentId);
 
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "mark_no_show", "appointments", appointmentId);
+  const { data: nsCtx } = await supabaseAdmin
+    .from("appointments")
+    .select("scheduled_at, service_snapshot_name, owner_id, groomer_profile_id")
+    .eq("id", appointmentId)
+    .maybeSingle();
+  const [{ data: nsOwner }, { data: nsGroomer }] = await Promise.all([
+    (nsCtx as any)?.owner_id ? supabaseAdmin.from("profiles").select("full_name").eq("id", (nsCtx as any).owner_id).maybeSingle() : Promise.resolve({ data: null }),
+    (nsCtx as any)?.groomer_profile_id ? supabaseAdmin.from("groomer_profiles").select("business_name").eq("id", (nsCtx as any).groomer_profile_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  await logAdminAction(guard.profileId, "mark_no_show", "appointments", appointmentId, {
+    owner: (nsOwner as any)?.full_name ?? null,
+    groomer: (nsGroomer as any)?.business_name ?? null,
+    service: (nsCtx as any)?.service_snapshot_name ?? null,
+    scheduled_at: (nsCtx as any)?.scheduled_at ?? null,
+  });
   return { ok: true };
 }
 
@@ -2082,7 +2115,8 @@ export async function adminRevokeAdmin(
     .eq("id", profileId);
 
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "revoke_admin", "profiles", profileId);
+  const { data: raPf } = await supabaseAdmin.from("profiles").select("full_name, email").eq("id", profileId).maybeSingle();
+  await logAdminAction(guard.profileId, "revoke_admin", "profiles", profileId, { name: (raPf as any)?.full_name ?? null, email: (raPf as any)?.email ?? null });
   return { ok: true };
 }
 
@@ -2098,7 +2132,8 @@ export async function adminGrantAdmin(
     .eq("id", profileId);
 
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "grant_admin", "profiles", profileId);
+  const { data: gaPf } = await supabaseAdmin.from("profiles").select("full_name, email").eq("id", profileId).maybeSingle();
+  await logAdminAction(guard.profileId, "grant_admin", "profiles", profileId, { name: (gaPf as any)?.full_name ?? null, email: (gaPf as any)?.email ?? null });
   return { ok: true };
 }
 

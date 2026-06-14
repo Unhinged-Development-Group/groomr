@@ -62,11 +62,28 @@ const ACTION_TONES: Record<string, string> = {
   stripe_webhook_error: "text-muted-terracotta",
 };
 
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleString("en-GB", {
+    weekday: "short", day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
 // Human-readable detail lines derived from action + metadata
 function buildDetailLines(action: string, metadata: Record<string, unknown>): string[] {
   const lines: string[] = [];
   const m = metadata as Record<string, string | number | undefined>;
 
+  // Shared entity fields logged across many actions
+  if (m.groomer) lines.push(`Groomer: ${m.groomer}`);
+  if (m.owner)   lines.push(`Owner: ${m.owner}`);
+  if (m.name && !m.groomer && !m.owner) lines.push(`Name: ${m.name}`);
+  if (m.email)   lines.push(`Email: ${m.email}`);
+  if (m.dog)     lines.push(`Dog: ${m.dog}`);
+  if (m.service) lines.push(`Service: ${m.service}`);
+  if (m.scheduled_at) lines.push(`Appointment: ${fmtDate(String(m.scheduled_at))}`);
+
+  // Action-specific fields
   switch (action) {
     case "cancel_appointment":
       if (m.reason) lines.push(`Reason: ${m.reason}`);
@@ -80,7 +97,7 @@ function buildDetailLines(action: string, metadata: Record<string, unknown>): st
       break;
     case "update_verification_status":
       if (m.from) lines.push(`From: ${m.from}`);
-      if (m.to) lines.push(`To: ${m.to}`);
+      if (m.to)   lines.push(`To: ${m.to}`);
       break;
     case "update_platform_settings":
       if (m.platform_fee_pct !== undefined)
@@ -90,23 +107,26 @@ function buildDetailLines(action: string, metadata: Record<string, unknown>): st
       break;
     case "add_dog":
     case "update_dog":
-      if (m.name) lines.push(`Dog: ${m.name}`);
+    case "delete_dog":
+      // dog name already covered above
       break;
     case "add_service":
     case "update_service":
+    case "delete_service":
       if (m.name) lines.push(`Service: ${m.name}`);
       break;
     case "send_password_reset":
-      if (m.email) lines.push(`Email: ${m.email}`);
+      // email already covered above
       break;
     case "stripe_webhook_error":
       if (m.event_type) lines.push(`Event: ${m.event_type}`);
       if (m.error) lines.push(`Error: ${m.error}`);
       break;
     default:
-      // Fall back to raw key: value pairs for unknown metadata
+      // For unknown actions, show any remaining keys not already covered
+      const covered = new Set(["groomer","owner","name","email","dog","service","scheduled_at"]);
       for (const [k, v] of Object.entries(metadata)) {
-        if (v !== null && v !== undefined && v !== "")
+        if (!covered.has(k) && v !== null && v !== undefined && v !== "")
           lines.push(`${k}: ${JSON.stringify(v)}`);
       }
   }

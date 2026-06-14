@@ -20,9 +20,10 @@ export interface ProfileFormData {
 export interface ServiceRow {
   id: string | null;      // null = not yet persisted
   name: string;
-  duration: number;       // minutes
-  price: number;          // pence — fallback for dogs with no size; auto-derived as min(sizePrices)
-  sizePrices: Record<string, number>;  // {xs,small,medium,large,xl} → pence; key presence = size available
+  duration: number;       // minutes — fallback/base when no size-specific duration
+  price: number;          // pence — fallback/min; auto-derived as min(sizePrices)
+  sizePrices: Record<string, number>;    // {xs,small,medium,large,xl} → pence; key presence = size available
+  sizeDurations: Record<string, number>; // {xs,small,medium,large,xl} → minutes; overrides base duration per size
   sortOrder: number;
 }
 

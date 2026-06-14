@@ -161,7 +161,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }, { count: portfolioCount }, { data: contractTermsRow }] = await Promise.all([
     supabaseAdmin
       .from("services")
-      .select("id, name, duration_minutes, price_pence, size_prices, sort_order")
+      .select("id, name, duration_minutes, price_pence, size_prices, size_durations, sort_order")
       .eq("groomer_profile_id", groomerProfileId)
       .eq("is_active", true)
       .order("sort_order"),
@@ -212,6 +212,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     duration: s.duration_minutes ?? 60,
     price: s.price_pence ?? 0,
     sizePrices: (s.size_prices ?? {}) as Record<string, number>,
+    sizeDurations: (s.size_durations ?? {}) as Record<string, number>,
     sortOrder: s.sort_order ?? i,
   }));
 
@@ -466,12 +467,19 @@ export async function saveServices(
       : s.price;
     const applicableSizes = Object.keys(s.sizePrices);
 
+    // Only keep size durations for sizes that are enabled in sizePrices
+    const sizeDurations: Record<string, number> = {};
+    for (const k of applicableSizes) {
+      if (s.sizeDurations[k] != null && s.sizeDurations[k] > 0) sizeDurations[k] = s.sizeDurations[k];
+    }
+
     const row = {
       groomer_profile_id: groomerProfileId,
       name: s.name,
       duration_minutes: s.duration,
       price_pence: pricePence,
       size_prices: s.sizePrices,
+      size_durations: sizeDurations,
       applicable_sizes: applicableSizes,
       is_active: true,
       sort_order: i,
@@ -483,14 +491,14 @@ export async function saveServices(
         .update(row)
         .eq("id", s.id)
         .eq("groomer_profile_id", groomerProfileId);
-      saved.push({ ...s, price: pricePence, sortOrder: i });
+      saved.push({ ...s, price: pricePence, sizeDurations, sortOrder: i });
     } else {
       const { data: inserted } = await supabaseAdmin
         .from("services")
         .insert(row)
         .select("id")
         .single();
-      saved.push({ ...s, id: inserted?.id ?? null, price: pricePence, sortOrder: i });
+      saved.push({ ...s, id: inserted?.id ?? null, price: pricePence, sizeDurations, sortOrder: i });
     }
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useRef } from "react";
+import { useMemo, useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -32,6 +32,89 @@ const SERVICE_TEMPLATES: Array<{ name: string; duration: number }> = [
   { name: "Puppy First Groom",     duration: 45  },
   { name: "Anal Gland Expression", duration: 10  },
 ];
+
+// Controlled currency input that avoids the toFixed reformatting glitch.
+// Maintains a local display string so decimal entry works smoothly.
+// Syncs from the external `pence` prop only while the field is not focused.
+function PriceInput({ pence, onChange, className }: {
+  pence: number;
+  onChange: (pence: number) => void;
+  className?: string;
+}) {
+  const [display, setDisplay] = useState(() => pence === 0 ? "" : String(pence / 100));
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) setDisplay(pence === 0 ? "" : String(pence / 100));
+  }, [pence, focused]);
+
+  return (
+    <div className="relative">
+      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-pebble-grey pointer-events-none">£</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        className={cn("field w-full pl-4 text-sm text-center", className)}
+        value={display}
+        placeholder="0"
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false);
+          const n = parseFloat(display);
+          const cleaned = isNaN(n) || n < 0 ? 0 : Math.round(n * 100);
+          setDisplay(cleaned === 0 ? "" : String(cleaned / 100));
+          onChange(cleaned);
+        }}
+        onChange={(e) => {
+          const v = e.target.value;
+          setDisplay(v);
+          const n = parseFloat(v);
+          if (!isNaN(n) && n >= 0) onChange(Math.round(n * 100));
+        }}
+      />
+    </div>
+  );
+}
+
+function DurationInput({ minutes, onChange, className }: {
+  minutes: number;
+  onChange: (minutes: number) => void;
+  className?: string;
+}) {
+  const [display, setDisplay] = useState(() => minutes > 0 ? String(minutes) : "");
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) setDisplay(minutes > 0 ? String(minutes) : "");
+  }, [minutes, focused]);
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        inputMode="numeric"
+        className={cn("field w-full pr-7 text-sm text-center", className)}
+        value={display}
+        placeholder="—"
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false);
+          const n = parseInt(display, 10);
+          const cleaned = isNaN(n) || n < 1 ? 0 : n;
+          setDisplay(cleaned > 0 ? String(cleaned) : "");
+          onChange(cleaned);
+        }}
+        onChange={(e) => {
+          const v = e.target.value.replace(/\D/g, "");
+          setDisplay(v);
+          const n = parseInt(v, 10);
+          if (!isNaN(n) && n > 0) onChange(n);
+        }}
+      />
+      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-pebble-grey pointer-events-none">min</span>
+    </div>
+  );
+}
 
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -297,7 +380,7 @@ export function ProfileEditor({
     if (services.some((s) => s.name === tpl.name)) return;
     setServices((arr) => [
       ...arr,
-      { id: null, name: tpl.name, duration: tpl.duration, price: 0, sizePrices: {}, sortOrder: arr.length },
+      { id: null, name: tpl.name, duration: tpl.duration, price: 0, sizePrices: {}, sizeDurations: {}, sortOrder: arr.length },
     ]);
   }
 
@@ -638,7 +721,7 @@ export function ProfileEditor({
                 onClick={() =>
                   setServices((s) => [
                     ...s,
-                    { id: null, name: "New service", duration: 30, price: 0, sizePrices: {}, sortOrder: s.length },
+                    { id: null, name: "New service", duration: 30, price: 0, sizePrices: {}, sizeDurations: {}, sortOrder: s.length },
                   ])
                 }
                 className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring flex items-center gap-1 shrink-0"
@@ -692,15 +775,11 @@ export function ProfileEditor({
                       placeholder="Service name"
                       onChange={(e) => updateService(i, { name: e.target.value })}
                     />
-                    <div className="relative w-20 shrink-0">
-                      <input
-                        className="field w-full pr-7"
-                        type="number"
-                        min={5}
-                        value={s.duration}
-                        onChange={(e) => updateService(i, { duration: Number(e.target.value) })}
+                    <div className="w-20 shrink-0">
+                      <DurationInput
+                        minutes={s.duration}
+                        onChange={(m) => updateService(i, { duration: m || 30 })}
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-pebble-grey pointer-events-none">min</span>
                     </div>
                     <button
                       onClick={() => setServices((arr) => arr.filter((_, j) => j !== i))}
@@ -711,13 +790,19 @@ export function ProfileEditor({
                     </button>
                   </div>
 
-                  {/* Per-size pricing */}
+                  {/* Per-size pricing & duration */}
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey mb-2">Size pricing</p>
+                    <div className="flex items-baseline justify-between mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Size pricing &amp; duration</p>
+                      {Object.keys(s.sizePrices).length > 0 && (
+                        <p className="text-[9px] font-bold text-pebble-grey/50">£ price · min duration</p>
+                      )}
+                    </div>
                     <div className="grid grid-cols-5 gap-2">
                       {DOG_SIZES.map(({ key, label }) => {
                         const enabled = key in s.sizePrices;
-                        const pence = s.sizePrices[key] ?? 0;
+                        const pence   = s.sizePrices[key] ?? 0;
+                        const mins    = s.sizeDurations[key] ?? 0;
                         return (
                           <div key={key} className="space-y-1.5">
                             <label className="flex items-center justify-center gap-1 cursor-pointer select-none">
@@ -725,41 +810,40 @@ export function ProfileEditor({
                                 type="checkbox"
                                 checked={enabled}
                                 onChange={(e) => {
-                                  const next = { ...s.sizePrices };
+                                  const nextPrices    = { ...s.sizePrices };
+                                  const nextDurations = { ...s.sizeDurations };
                                   if (e.target.checked) {
-                                    next[key] = 0;
+                                    nextPrices[key] = 0;
                                   } else {
-                                    delete next[key];
+                                    delete nextPrices[key];
+                                    delete nextDurations[key];
                                   }
-                                  updateService(i, { sizePrices: next });
+                                  updateService(i, { sizePrices: nextPrices, sizeDurations: nextDurations });
                                 }}
                                 className="rounded shrink-0"
                               />
                               <span className="text-xs font-bold text-deep-slate">{label}</span>
                             </label>
                             {enabled ? (
-                              <div className="relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-pebble-grey pointer-events-none">£</span>
-                                <input
-                                  className="field w-full pl-4 text-sm text-center"
-                                  type="number"
-                                  min={0}
-                                  step={0.5}
-                                  value={(pence / 100).toFixed(2)}
-                                  onChange={(e) =>
-                                    updateService(i, {
-                                      sizePrices: {
-                                        ...s.sizePrices,
-                                        [key]: Math.round(Number(e.target.value) * 100),
-                                      },
-                                    })
-                                  }
+                              <>
+                                <PriceInput
+                                  pence={pence}
+                                  onChange={(p) => updateService(i, { sizePrices: { ...s.sizePrices, [key]: p } })}
                                 />
-                              </div>
+                                <DurationInput
+                                  minutes={mins}
+                                  onChange={(m) => updateService(i, { sizeDurations: { ...s.sizeDurations, [key]: m } })}
+                                />
+                              </>
                             ) : (
-                              <div className="h-9 rounded-lg bg-pebble-grey/8 border border-pebble-grey/10 flex items-center justify-center">
-                                <span className="text-xs text-pebble-grey/40">—</span>
-                              </div>
+                              <>
+                                <div className="h-9 rounded-lg bg-pebble-grey/8 border border-pebble-grey/10 flex items-center justify-center">
+                                  <span className="text-xs text-pebble-grey/40">—</span>
+                                </div>
+                                <div className="h-9 rounded-lg bg-pebble-grey/8 border border-pebble-grey/10 flex items-center justify-center">
+                                  <span className="text-xs text-pebble-grey/40">—</span>
+                                </div>
+                              </>
                             )}
                           </div>
                         );
@@ -767,7 +851,7 @@ export function ProfileEditor({
                     </div>
                     {Object.keys(s.sizePrices).length === 0 && (
                       <p className="text-[10px] text-pebble-grey/70 mt-2">
-                        Tick the sizes this service is available for and set a price for each.
+                        Tick the sizes this service is available for, then set a price and duration for each.
                       </p>
                     )}
                   </div>

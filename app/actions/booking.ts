@@ -233,7 +233,7 @@ export async function createAppointment(
 
   const { data: service } = await supabaseAdmin
     .from("services")
-    .select("name, duration_minutes, price_pence, size_prices, groomer_profile_id, is_active")
+    .select("name, duration_minutes, price_pence, size_prices, size_durations, groomer_profile_id, is_active")
     .eq("id", input.serviceId)
     .maybeSingle();
 
@@ -241,11 +241,19 @@ export async function createAppointment(
     return { error: "Service not found." };
   }
 
-  // Overlap check: reject if new appointment overlaps any existing one
+  // Resolve size-specific price and duration, falling back to service-level defaults
+  const sizePrices    = (service.size_prices    ?? {}) as Record<string, number>;
+  const sizeDurations = (service.size_durations ?? {}) as Record<string, number>;
+  const dogSize = dog.size as string | null;
+
+  const basePricePence    = (dogSize && sizePrices[dogSize]    != null) ? sizePrices[dogSize]    : service.price_pence;
+  const effectiveDuration = (dogSize && sizeDurations[dogSize] != null) ? sizeDurations[dogSize] : (service.duration_minutes ?? 60);
+
+  // Overlap check using the size-specific duration
   const dateStr  = input.scheduledAt.slice(0, 10);
   const newDt    = new Date(input.scheduledAt);
   const newStart = newDt.getUTCHours() * 60 + newDt.getUTCMinutes();
-  const newEnd   = newStart + (service.duration_minutes ?? 60);
+  const newEnd   = newStart + effectiveDuration;
 
   const sameDay = await fetchSameDayAppointments(input.groomerProfileId, dateStr);
 
@@ -257,13 +265,6 @@ export async function createAppointment(
   });
 
   if (hasConflict) return { error: "That slot was just taken — please pick another time." };
-
-  // Resolve base price: use the size-specific price if the dog's size is in size_prices
-  const sizePrices = (service.size_prices ?? {}) as Record<string, number>;
-  const dogSize = dog.size as string | null;
-  const basePricePence = (dogSize && sizePrices[dogSize] != null)
-    ? sizePrices[dogSize]
-    : service.price_pence;
 
   // Apply per-client overrides (fixed price override or discount %) on top of size price
   const effectivePricePence = await resolveEffectivePrice(
@@ -281,7 +282,7 @@ export async function createAppointment(
       dog_id:                    input.dogId,
       service_id:                input.serviceId,
       service_snapshot_name:     service.name,
-      service_snapshot_duration: service.duration_minutes,
+      service_snapshot_duration: effectiveDuration,
       service_snapshot_price:    effectivePricePence,
       scheduled_at:              input.scheduledAt,
       status:                    "pending",
@@ -349,7 +350,7 @@ export async function createGroupAppointment(input: {
   for (const pet of input.pets) {
     const { data: service } = await supabaseAdmin
       .from("services")
-      .select("name, duration_minutes, price_pence, size_prices, groomer_profile_id, is_active")
+      .select("name, duration_minutes, price_pence, size_prices, size_durations, groomer_profile_id, is_active")
       .eq("id", pet.serviceId)
       .maybeSingle();
 
@@ -357,11 +358,12 @@ export async function createGroupAppointment(input: {
       return { error: `Service not found for one of the pets.` };
     }
 
-    const sizePrices = (service.size_prices ?? {}) as Record<string, number>;
+    const sizePrices    = (service.size_prices    ?? {}) as Record<string, number>;
+    const sizeDurations = (service.size_durations ?? {}) as Record<string, number>;
     const dogSize = ownedDogMap.get(pet.dogId) ?? null;
-    const basePricePence = (dogSize && sizePrices[dogSize] != null)
-      ? sizePrices[dogSize]
-      : service.price_pence;
+
+    const basePricePence    = (dogSize && sizePrices[dogSize]    != null) ? sizePrices[dogSize]    : service.price_pence;
+    const effectiveDuration = (dogSize && sizeDurations[dogSize] != null) ? sizeDurations[dogSize] : (service.duration_minutes ?? 60);
 
     const effectivePricePence = await resolveEffectivePrice(
       input.groomerProfileId,
@@ -374,7 +376,7 @@ export async function createGroupAppointment(input: {
       dogId: pet.dogId,
       serviceId: pet.serviceId,
       name: service.name,
-      durationMinutes: service.duration_minutes,
+      durationMinutes: effectiveDuration,
       effectivePricePence,
     });
   }

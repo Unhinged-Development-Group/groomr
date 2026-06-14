@@ -56,7 +56,6 @@ export function HeaderAuthButtons() {
           appearance={{
             elements: {
               avatarBox: "ring-1 ring-pebble-grey/20",
-              avatarImage: "!bg-alabaster-cream",
               userButtonTrigger: "focus:!shadow-none",
             },
           }}

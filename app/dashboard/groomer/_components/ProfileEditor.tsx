@@ -36,6 +36,13 @@ const SERVICE_TEMPLATES: Array<{ name: string; duration: number }> = [
 // Controlled currency input that avoids the toFixed reformatting glitch.
 // Maintains a local display string so decimal entry works smoothly.
 // Syncs from the external `pence` prop only while the field is not focused.
+function docViewUrl(url: string): string {
+  if (/\.pdf($|\?)/i.test(url)) {
+    return url.replace("/image/upload/", "/raw/upload/");
+  }
+  return url;
+}
+
 function PriceInput({ pence, onChange, className }: {
   pence: number;
   onChange: (pence: number) => void;
@@ -1276,7 +1283,7 @@ export function ProfileEditor({
                         <>
                           <span className="hidden sm:inline text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Uploaded</span>
                           <a
-                            href={url}
+                            href={docViewUrl(url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs font-bold text-deep-slate hover:underline focus-ring rounded px-2 py-1"

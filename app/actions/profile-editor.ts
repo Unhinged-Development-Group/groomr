@@ -161,7 +161,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }, { count: portfolioCount }, { data: contractTermsRow }] = await Promise.all([
     supabaseAdmin
       .from("services")
-      .select("id, name, duration_minutes, price_pence, size_prices, size_durations, sort_order")
+      .select("id, name, description, duration_minutes, price_pence, size_prices, size_durations, sort_order")
       .eq("groomer_profile_id", groomerProfileId)
       .eq("is_active", true)
       .order("sort_order"),

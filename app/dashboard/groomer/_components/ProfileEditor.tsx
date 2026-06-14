@@ -308,7 +308,7 @@ export function ProfileEditor({
   const [savedAvailability, setSavedAvailability] = useState(initialAvailability);
   const router = useRouter();
   const [verificationDocs, setVerificationDocs] = useState<VerificationDocs>(initialVerificationDocs);
-  const [docUploading, setDocUploading] = useState<Partial<Record<VerificationDocType, boolean>>>({});
+  const [docUploading, setDocUploading] = useState<Partial<Record<VerificationDocType, number>>>({});
   const docInputRefs = useRef<Partial<Record<VerificationDocType, HTMLInputElement | null>>>({});
   const [hasEmployeesSaving, setHasEmployeesSaving] = useState(false);
 
@@ -525,7 +525,7 @@ export function ProfileEditor({
   }
 
   async function handleDocUpload(docType: VerificationDocType, file: File) {
-    setDocUploading((d) => ({ ...d, [docType]: true }));
+    setDocUploading((d) => ({ ...d, [docType]: 0 }));
     try {
       const sig = await getVerificationDocSignature(groomerProfileId);
       const form = new FormData();
@@ -536,21 +536,34 @@ export function ProfileEditor({
       form.append("folder", sig.folder);
       form.append("allowed_formats", sig.allowedFormats);
 
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
-        { method: "POST", body: form }
-      );
-      const json = await res.json();
-      if (!json.secure_url) throw new Error(json.error?.message ?? "Upload failed");
+      const json = await new Promise<Record<string, unknown>>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.min(99, Math.round((e.loaded / e.total) * 100));
+            setDocUploading((d) => ({ ...d, [docType]: pct }));
+          }
+        };
+        xhr.onload = () => {
+          try { resolve(JSON.parse(xhr.responseText)); }
+          catch { reject(new Error("Upload failed")); }
+        };
+        xhr.onerror = () => reject(new Error("Network error during upload"));
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`);
+        xhr.send(form);
+      });
 
-      const result = await saveVerificationDoc(groomerProfileId, docType, json.secure_url);
+      if (!json.secure_url) throw new Error((json.error as any)?.message ?? "Upload failed");
+
+      setDocUploading((d) => ({ ...d, [docType]: 100 }));
+      const result = await saveVerificationDoc(groomerProfileId, docType, json.secure_url as string);
       if (result?.error) throw new Error(result.error);
-      const meta = VERIFICATION_DOC_META.find((m) => m.type === docType)!;
-      setVerificationDocs((d) => ({ ...d, [meta.stateKey]: json.secure_url }));
+      const docMeta = VERIFICATION_DOC_META.find((m) => m.type === docType)!;
+      setVerificationDocs((d) => ({ ...d, [docMeta.stateKey]: json.secure_url }));
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Document upload failed — please try again");
     } finally {
-      setDocUploading((d) => ({ ...d, [docType]: false }));
+      setDocUploading((d) => { const next = { ...d }; delete next[docType]; return next; });
     }
   }
 
@@ -1225,7 +1238,8 @@ export function ProfileEditor({
             <div className="space-y-2">
               {VERIFICATION_DOC_META.map((meta) => {
                 const url = verificationDocs[meta.stateKey] as string | null;
-                const uploading = !!docUploading[meta.type];
+                const uploadProgress = docUploading[meta.type];
+                const uploading = uploadProgress !== undefined;
                 const isRequired =
                   meta.required === true ||
                   (meta.required === "if_employees" && !!verificationDocs.hasEmployees);
@@ -1251,7 +1265,13 @@ export function ProfileEditor({
                       {docVerified ? (
                         <span className="text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Verified</span>
                       ) : uploading ? (
-                        <span className="text-[10px] font-bold text-pebble-grey bg-pebble-grey/10 border border-pebble-grey/20 px-2 py-0.5 rounded-full">Uploading…</span>
+                        <span className="relative overflow-hidden inline-flex items-center text-[10px] font-bold text-deep-slate border border-pebble-grey/30 px-2 py-0.5 rounded-full min-w-[58px] justify-center bg-pebble-grey/10">
+                          <span
+                            className="absolute left-0 top-0 bottom-0 rounded-full bg-groomr-gold/60 transition-[width] duration-150 ease-out"
+                            style={{ width: `${uploadProgress ?? 0}%` }}
+                          />
+                          <span className="relative">{(uploadProgress ?? 0) < 100 ? `${uploadProgress ?? 0}%` : "Saving…"}</span>
+                        </span>
                       ) : url ? (
                         <>
                           <span className="hidden sm:inline text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Uploaded</span>
@@ -1273,9 +1293,19 @@ export function ProfileEditor({
                             type="button"
                             disabled={uploading}
                             onClick={() => docInputRefs.current[meta.type]?.click()}
-                            className="btn-secondary font-nunito font-bold px-3 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50 whitespace-nowrap"
+                            className="relative overflow-hidden btn-secondary font-nunito font-bold px-3 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50 whitespace-nowrap"
                           >
-                            {uploading ? "Uploading…" : url ? "Replace" : "Upload"}
+                            {uploading && (
+                              <span
+                                className="absolute left-0 top-0 bottom-0 rounded-full bg-groomr-gold/40 transition-[width] duration-150 ease-out"
+                                style={{ width: `${uploadProgress ?? 0}%` }}
+                              />
+                            )}
+                            <span className="relative">
+                              {uploading
+                                ? (uploadProgress ?? 0) < 100 ? `${uploadProgress ?? 0}%` : "Saving…"
+                                : url ? "Replace" : "Upload"}
+                            </span>
                           </button>
                           <input
                             type="file"

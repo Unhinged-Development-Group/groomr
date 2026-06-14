@@ -37,6 +37,7 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 | **Resend** | ^6.12.3 | Transactional email. `lib/resend.ts`, templates in `lib/emails/`. FROM: `notifications@groomr.uk` |
 | **React Email** | @react-email/components + @react-email/render | Email templates as React components. Preview: `npx react-email dev --dir lib/emails`. Each template: named component + `render*()` async fn + default export preview wrapper with hardcoded data |
 | **Twilio** | ^6.0.2 | SMS notifications. `lib/sms/client.ts` + `lib/sms/send.ts` |
+| **GoCardless** | REST API (no SDK) | Direct Debit payments. `lib/gocardless.ts` = thin fetch client. Server actions: `app/actions/payments-gocardless.ts`. Webhook: `/api/webhooks/gocardless`. Payments land in Groomr's bank account; groomer payouts tracked in `payments.groomer_payout_amount_pence` and must be initiated out-of-band (Stripe Connect transfer without a charge, or manual bank transfer). |
 
 ### Clerk API (Next.js 16)
 - `currentUser()` — Server Components (network call)
@@ -477,6 +478,10 @@ CRON_SECRET=                        # Random secret; set in Vercel; authenticate
 
 # PostHog (future)
 NEXT_PUBLIC_POSTHOG_KEY=
+
+# GoCardless
+GOCARDLESS_ACCESS_TOKEN=             # live_* or sandbox_* access token
+GOCARDLESS_WEBHOOK_SECRET=           # Set in GoCardless dashboard → Developers → Webhooks
 ```
 
 ---

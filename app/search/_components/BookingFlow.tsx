@@ -13,6 +13,7 @@ import {
 import { getDogs } from "@/app/actions/dogs";
 import { getAvailableSlots, createAppointment, createGroupAppointment } from "@/app/actions/booking";
 import { createBookingPaymentIntent, createGroupPaymentIntent } from "@/app/actions/payments";
+import { createGCBillingRequest, createGCGroupBillingRequest } from "@/app/actions/payments-gocardless";
 import { checkTermsAcceptance, acceptContractTerms } from "@/app/actions/contract-terms";
 import type { Dog } from "@/app/actions/dogs";
 import type { AvailableSlot } from "@/app/actions/booking";
@@ -262,6 +263,12 @@ export function BookingFlow({
   // Payment state
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
   const [paymentAmountPence, setPaymentAmountPence] = useState<number>(0);
+  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
+  const [createdGroupId, setCreatedGroupId] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "gocardless" | null>(null);
+  const [gcAuthorisationUrl, setGcAuthorisationUrl] = useState<string | null>(null);
+  const [loadingPaymentMethod, setLoadingPaymentMethod] = useState(false);
+  const [paymentMethodError, setPaymentMethodError] = useState<string | null>(null);
 
   // Contract terms state
   const [termsNeedAcceptance, setTermsNeedAcceptance] = useState(false);
@@ -395,14 +402,13 @@ export function BookingFlow({
   }
 
   // Step 4 → "Confirm" button handler
-  // Creates the appointment, then either creates a PaymentIntent (→ step 5)
-  // or goes straight to success if no payment is required.
+  // Creates the appointment only. Payment method is chosen in step 5.
   async function handleConfirm() {
     if (!selectedService || !selectedDate || !selectedTime || !selectedDog) return;
     setSubmitting(true);
     setBookingError(null);
 
-    // 0. Accept contract terms if required
+    // Accept contract terms if required
     if (termsNeedAcceptance && termsChecked) {
       await acceptContractTerms(groomerProfileId);
     }
@@ -411,7 +417,6 @@ export function BookingFlow({
     const isGroup = additionalPets.length > 0;
 
     if (isGroup) {
-      // ── Multi-pet path ─────────────────────────────────────────────────────
       const pets = [
         { dogId: selectedDog.id, serviceId: selectedService.id },
         ...additionalPets.map((p) => ({ dogId: p.dog.id, serviceId: p.serviceId })),
@@ -431,29 +436,13 @@ export function BookingFlow({
         return;
       }
 
-      const piResult = await createGroupPaymentIntent(groupResult.bookingGroupId);
-
-      if ("error" in piResult) {
-        console.warn("[BookingFlow] Group PaymentIntent failed:", piResult.error);
-        setSubmitting(false);
-        setSuccess(true);
-        return;
-      }
-
-      if (!piResult.clientSecret || piResult.amountPence === 0) {
-        setSubmitting(false);
-        setSuccess(true);
-        return;
-      }
-
-      setPaymentClientSecret(piResult.clientSecret);
-      setPaymentAmountPence(piResult.amountPence);
+      setCreatedGroupId(groupResult.bookingGroupId);
       setSubmitting(false);
       setStep(5);
       return;
     }
 
-    // ── Single-pet path ───────────────────────────────────────────────────────
+    // ── Single-pet path ──────────────────────────────────────────────────────
     const apptResult = await createAppointment({
       groomerProfileId,
       serviceId: selectedService.id,
@@ -467,37 +456,64 @@ export function BookingFlow({
       return;
     }
 
-    const { appointmentId } = apptResult;
-
-    // No deposit required → done
     if (depositPolicy.type === "none") {
       setSubmitting(false);
       setSuccess(true);
       return;
     }
 
-    // Deposit / full payment required → create PaymentIntent
-    const piResult = await createBookingPaymentIntent({ appointmentId });
-
-    if ("error" in piResult) {
-      // Groomer hasn't connected Stripe yet — payment collected at appointment
-      console.warn("[BookingFlow] PaymentIntent failed:", piResult.error);
-      setSubmitting(false);
-      setSuccess(true);
-      return;
-    }
-
-    // No payment needed (trusted client with deposit override = none)
-    if (!piResult.clientSecret || piResult.amountPence === 0) {
-      setSubmitting(false);
-      setSuccess(true);
-      return;
-    }
-
-    setPaymentClientSecret(piResult.clientSecret);
-    setPaymentAmountPence(piResult.amountPence);
+    setCreatedAppointmentId(apptResult.appointmentId);
     setSubmitting(false);
     setStep(5);
+  }
+
+  // Step 5 → user chose card payment
+  async function handleStripeChosen() {
+    setLoadingPaymentMethod(true);
+    setPaymentMethodError(null);
+
+    const result = createdGroupId
+      ? await createGroupPaymentIntent(createdGroupId)
+      : await createBookingPaymentIntent({ appointmentId: createdAppointmentId! });
+
+    if ("error" in result) {
+      // Groomer not on Stripe yet — treat as pay-at-salon
+      console.warn("[BookingFlow] PaymentIntent failed:", result.error);
+      setLoadingPaymentMethod(false);
+      setSuccess(true);
+      return;
+    }
+
+    if (!result.clientSecret || result.amountPence === 0) {
+      setLoadingPaymentMethod(false);
+      setSuccess(true);
+      return;
+    }
+
+    setPaymentClientSecret(result.clientSecret);
+    setPaymentAmountPence(result.amountPence);
+    setPaymentMethod("stripe");
+    setLoadingPaymentMethod(false);
+  }
+
+  // Step 5 → user chose Direct Debit
+  async function handleGCChosen() {
+    setLoadingPaymentMethod(true);
+    setPaymentMethodError(null);
+
+    const result = createdGroupId
+      ? await createGCGroupBillingRequest(createdGroupId)
+      : await createGCBillingRequest(createdAppointmentId!);
+
+    if ("error" in result) {
+      setPaymentMethodError(result.error);
+      setLoadingPaymentMethod(false);
+      return;
+    }
+
+    setGcAuthorisationUrl(result.authorisationUrl);
+    setPaymentMethod("gocardless");
+    setLoadingPaymentMethod(false);
   }
 
   // Number of visible progress steps (hide "Payment" dot if no payment needed)
@@ -1003,15 +1019,43 @@ export function BookingFlow({
               </button>
             </div>
 
-          ) : step === 5 && paymentClientSecret ? (
+          ) : step === 5 ? (
             // ── STEP 5: PAYMENT ─────────────────────────────────────────────────
-            <PaymentStep
-              clientSecret={paymentClientSecret}
-              amountPence={paymentAmountPence}
-              depositPolicy={depositPolicy}
-              groomerName={groomerName}
-              onSuccess={() => setSuccess(true)}
-            />
+            paymentMethod === "stripe" && paymentClientSecret ? (
+              <PaymentStep
+                clientSecret={paymentClientSecret}
+                amountPence={paymentAmountPence}
+                depositPolicy={depositPolicy}
+                groomerName={groomerName}
+                onSuccess={() => setSuccess(true)}
+              />
+            ) : paymentMethod === "gocardless" && gcAuthorisationUrl ? (
+              <DirectDebitStep
+                authorisationUrl={gcAuthorisationUrl}
+                amountPence={paymentAmountPence || (() => {
+                  // Derive amount from whichever service(s) are booked
+                  const base = selectedService?.price_pence ?? 0;
+                  const extra = additionalPets.reduce((s, p) => {
+                    const svc = services.find((sv) => sv.id === p.serviceId);
+                    return s + (svc?.price_pence ?? 0);
+                  }, 0);
+                  const full = base + extra;
+                  if (depositPolicy.type === "percentage" && depositPolicy.percentage != null) {
+                    return Math.round(full * (depositPolicy.percentage / 100));
+                  }
+                  return full;
+                })()}
+                depositPolicy={depositPolicy}
+                groomerName={groomerName}
+              />
+            ) : (
+              <PaymentMethodPicker
+                loading={loadingPaymentMethod}
+                error={paymentMethodError}
+                onStripe={handleStripeChosen}
+                onGC={handleGCChosen}
+              />
+            )
 
           ) : null}
         </div>
@@ -1043,6 +1087,146 @@ function SummaryRow({ label, value, bold }: { label: string; value: string; bold
       <span className={`text-sm text-deep-slate ${bold ? "font-fredoka text-lg" : "font-bold"}`}>
         {value}
       </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PaymentMethodPicker — shown at step 5 before a method is chosen
+// ---------------------------------------------------------------------------
+
+function PaymentMethodPicker({
+  loading,
+  error,
+  onStripe,
+  onGC,
+}: {
+  loading: boolean;
+  error: string | null;
+  onStripe: () => void;
+  onGC: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-pebble-grey font-nunito">How would you like to pay?</p>
+
+      {error && (
+        <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl px-4 py-3">
+          <p className="text-sm font-bold text-muted-terracotta">{error}</p>
+        </div>
+      )}
+
+      <button
+        onClick={onStripe}
+        disabled={loading}
+        className="w-full text-left bg-white rounded-xl border-2 border-pebble-grey/15 p-5 hover:border-deep-slate hover:shadow-sm transition-all focus-ring group disabled:opacity-60"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-deep-slate/5 flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-deep-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-fredoka text-lg text-deep-slate leading-tight">Pay by card</p>
+            <p className="text-xs text-pebble-grey mt-0.5 font-nunito">Credit or debit card — instant confirmation</p>
+          </div>
+          <svg className="w-4 h-4 text-pebble-grey/40 group-hover:text-deep-slate transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </button>
+
+      <button
+        onClick={onGC}
+        disabled={loading}
+        className="w-full text-left bg-white rounded-xl border-2 border-pebble-grey/15 p-5 hover:border-deep-slate hover:shadow-sm transition-all focus-ring group disabled:opacity-60"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-sage-leaf/10 flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-sage-leaf" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-fredoka text-lg text-deep-slate leading-tight">Pay by Direct Debit</p>
+            <p className="text-xs text-pebble-grey mt-0.5 font-nunito">Bank transfer via GoCardless — lower fees, ideal for recurring bookings</p>
+          </div>
+          <svg className="w-4 h-4 text-pebble-grey/40 group-hover:text-deep-slate transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </button>
+
+      {loading && (
+        <p className="text-center text-xs text-pebble-grey font-nunito animate-pulse pt-1">Setting up payment…</p>
+      )}
+
+      <p className="text-xs text-pebble-grey font-nunito flex items-center gap-1.5 pt-1">
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        All payments are processed securely. Groomr never stores your financial details.
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DirectDebitStep — shown after a GC billing request is created
+// ---------------------------------------------------------------------------
+
+function DirectDebitStep({
+  authorisationUrl,
+  amountPence,
+  depositPolicy,
+  groomerName,
+}: {
+  authorisationUrl: string;
+  amountPence: number;
+  depositPolicy: DepositPolicy;
+  groomerName: string;
+}) {
+  const isDeposit = depositPolicy.type === "percentage";
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-pebble-grey/15">
+        <span className="text-sm font-bold text-deep-slate font-nunito">
+          {isDeposit
+            ? `${depositPolicy.percentage}% deposit to confirm with ${groomerName}`
+            : `Full payment to ${groomerName}`}
+        </span>
+        <span className="font-fredoka text-xl text-deep-slate">
+          £{(amountPence / 100).toFixed(2)}
+        </span>
+      </div>
+
+      <div className="bg-sage-leaf/8 border border-sage-leaf/20 rounded-xl p-4 space-y-2">
+        <p className="text-sm font-bold text-deep-slate font-nunito">How Direct Debit works</p>
+        <ul className="text-xs text-deep-slate/70 font-nunito space-y-1.5">
+          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>You&apos;ll be taken to GoCardless to authorise your bank account — takes about 2 minutes.</li>
+          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Payment is collected directly from your bank — no card details needed.</li>
+          <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Protected by the Direct Debit Guarantee — you can claim a full refund from your bank if anything goes wrong.</li>
+        </ul>
+      </div>
+
+      <a
+        href={authorisationUrl}
+        className="w-full btn-primary font-nunito font-bold py-4 rounded-full text-base shadow-subtle focus-ring flex items-center justify-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+        </svg>
+        Set up Direct Debit
+      </a>
+
+      <p className="text-xs text-center text-pebble-grey font-nunito">
+        You&apos;ll be redirected to GoCardless to complete authorisation, then returned here.
+      </p>
     </div>
   );
 }

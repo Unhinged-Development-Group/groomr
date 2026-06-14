@@ -142,7 +142,6 @@ export function AdminDashboardClient({
       if (tabId === "disputes") return openDisputes;
       if (tabId === "support") return openSupport;
     } else {
-      if (tabId === "financials") return pendingPayoutsCount;
       if (tabId === "analytics") return 0;
     }
     return 0;

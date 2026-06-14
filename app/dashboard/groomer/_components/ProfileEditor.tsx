@@ -380,7 +380,7 @@ export function ProfileEditor({
     if (services.some((s) => s.name === tpl.name)) return;
     setServices((arr) => [
       ...arr,
-      { id: null, name: tpl.name, duration: tpl.duration, price: 0, sizePrices: {}, sizeDurations: {}, sortOrder: arr.length },
+      { id: null, name: tpl.name, description: "", duration: tpl.duration, price: 0, sizePrices: {}, sizeDurations: {}, sortOrder: arr.length },
     ]);
   }
 
@@ -723,7 +723,7 @@ export function ProfileEditor({
                 onClick={() =>
                   setServices((s) => [
                     ...s,
-                    { id: null, name: "New service", duration: 30, price: 0, sizePrices: {}, sizeDurations: {}, sortOrder: s.length },
+                    { id: null, name: "New service", description: "", duration: 30, price: 0, sizePrices: {}, sizeDurations: {}, sortOrder: s.length },
                   ])
                 }
                 className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring flex items-center gap-1 shrink-0"
@@ -791,6 +791,16 @@ export function ProfileEditor({
                       <TrashIcon size={15} />
                     </button>
                   </div>
+
+                  {/* Short description */}
+                  <textarea
+                    className="field w-full resize-none text-sm"
+                    rows={2}
+                    value={s.description}
+                    placeholder="Short description (optional) — shown on your public profile"
+                    maxLength={200}
+                    onChange={(e) => updateService(i, { description: e.target.value })}
+                  />
 
                   {/* Per-size pricing & duration */}
                   <div>

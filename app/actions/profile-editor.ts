@@ -209,6 +209,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const services: ServiceRow[] = (serviceRows ?? []).map((s, i) => ({
     id: s.id,
     name: s.name,
+    description: s.description ?? "",
     duration: s.duration_minutes ?? 60,
     price: s.price_pence ?? 0,
     sizePrices: (s.size_prices ?? {}) as Record<string, number>,
@@ -477,6 +478,7 @@ export async function saveServices(
     const row = {
       groomer_profile_id: groomerProfileId,
       name: s.name,
+      description: s.description || null,
       duration_minutes: s.duration,
       price_pence: pricePence,
       size_prices: s.sizePrices,
@@ -492,14 +494,14 @@ export async function saveServices(
         .update(row)
         .eq("id", s.id)
         .eq("groomer_profile_id", groomerProfileId);
-      saved.push({ ...s, price: pricePence, sizeDurations, sortOrder: i });
+      saved.push({ ...s, price: pricePence, sizeDurations, sortOrder: i, description: s.description ?? "" });
     } else {
       const { data: inserted } = await supabaseAdmin
         .from("services")
         .insert(row)
         .select("id")
         .single();
-      saved.push({ ...s, id: inserted?.id ?? null, price: pricePence, sizeDurations, sortOrder: i });
+      saved.push({ ...s, id: inserted?.id ?? null, price: pricePence, sizeDurations, sortOrder: i, description: s.description ?? "" });
     }
   }
 

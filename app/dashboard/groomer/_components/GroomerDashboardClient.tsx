@@ -392,14 +392,14 @@ export function GroomerDashboardClient({
     initialAppointments.forEach((a) => {
       const ownerId = a.owner_id as string | null;
       const profile = a.profiles as { full_name?: string } | null;
-      const dog = a.dogs as { name?: string; breed?: string } | null;
+      const dog = a.dogs as { name?: string; breed?: string; size?: string } | null;
       if (!ownerId || !profile?.full_name) return;
       if (!clientMap.has(ownerId)) {
         clientMap.set(ownerId, { ownerId, name: profile.full_name, dogs: [] });
       }
       const client = clientMap.get(ownerId)!;
       if (dog?.name && !client.dogs.find((d) => d.name === dog.name)) {
-        client.dogs.push({ dogId: (a.dog_id as string | null) ?? null, name: dog.name, breed: dog.breed ?? null, photoUrl: (dog as any).profile_image_url ?? null });
+        client.dogs.push({ dogId: (a.dog_id as string | null) ?? null, name: dog.name, breed: dog.breed ?? null, size: dog.size ?? null, photoUrl: (dog as any).profile_image_url ?? null });
       }
     });
     return Array.from(clientMap.values());

@@ -106,7 +106,7 @@ export async function getGroomerAppointments() {
     .from("appointments")
     .select(`
       *,
-      dogs (name, breed, coat_type, profile_image_url),
+      dogs (name, breed, size, coat_type, profile_image_url),
       profiles!appointments_owner_id_fkey (full_name, email, phone, clerk_id)
     `)
     .eq("groomer_profile_id", ctx.groomerProfileId)
@@ -262,6 +262,9 @@ export interface ManualAppointmentInput {
   // When linking to an existing owner/dog profile
   existingOwnerId?: string;
   existingDogId?: string;
+  // Size-specific overrides (when service has per-size pricing/duration)
+  snapshotDurationMinutes?: number;
+  snapshotPricePence?: number;
 }
 
 export async function createManualAppointment(
@@ -298,8 +301,8 @@ export async function createManualAppointment(
       dog_id: input.existingDogId ?? null,
       service_id: input.serviceId,
       service_snapshot_name: service.name,
-      service_snapshot_duration: service.duration_minutes,
-      service_snapshot_price: service.price_pence,
+      service_snapshot_duration: input.snapshotDurationMinutes ?? service.duration_minutes,
+      service_snapshot_price: input.snapshotPricePence ?? service.price_pence,
       scheduled_at: scheduledAt,
       status: "confirmed",
       groomer_notes: groomerNote,

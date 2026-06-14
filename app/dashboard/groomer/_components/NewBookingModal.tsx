@@ -88,7 +88,7 @@ function BreedPicker({ value, onChange }: { value: string; onChange: (v: string)
 export interface ExistingClient {
   ownerId: string;
   name: string;
-  dogs: { dogId: string | null; name: string; breed: string | null; photoUrl: string | null }[];
+  dogs: { dogId: string | null; name: string; breed: string | null; size: string | null; photoUrl: string | null }[];
 }
 
 interface Props {
@@ -131,6 +131,9 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
+  // Size selection (used when service has per-size pricing/duration)
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+
   // New client fields
   const [clientName, setClientName] = useState("");
   const [dogName, setDogName] = useState("");
@@ -143,6 +146,18 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
   const [outsideHours, setOutsideHours] = useState(false);
 
   const selectedService = bookableServices.find((s) => s.id === serviceId);
+
+  const hasSizePricing = selectedService ? Object.keys(selectedService.sizePrices).length > 0 : false;
+  const availableSizes = selectedService ? Object.keys(selectedService.sizePrices) : [];
+  const effectivePrice = (selectedSize && selectedService?.sizePrices[selectedSize] != null)
+    ? selectedService.sizePrices[selectedSize]
+    : (selectedService?.price ?? 0);
+  const effectiveDuration = (selectedSize && selectedService?.sizeDurations[selectedSize] != null)
+    ? selectedService.sizeDurations[selectedSize]
+    : (selectedService?.duration ?? 0);
+
+  const SIZE_LABELS: Record<string, string> = { xs: "XS", small: "Small", medium: "Medium", large: "Large", xl: "XL" };
+  const SIZE_ORDER = ["xs", "small", "medium", "large", "xl"];
 
   // Debounced outside-hours check whenever date/time/service changes
   const outsideCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -158,9 +173,18 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
 
   useEffect(() => { checkHours(); }, [checkHours]);
 
+  function applyDogSize(dog: ExistingClient["dogs"][number] | undefined) {
+    if (dog?.size && availableSizes.includes(dog.size)) {
+      setSelectedSize(dog.size);
+    } else {
+      setSelectedSize(null);
+    }
+  }
+
   function pickClient(client: ExistingClient) {
     setSelectedClient(client);
     setSelectedDogIdx(0);
+    applyDogSize(client.dogs[0]);
     setStep("existing");
   }
 
@@ -188,6 +212,8 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
         scheduledTime: time,
         existingOwnerId: selectedClient.ownerId,
         existingDogId: dog?.dogId ?? undefined,
+        snapshotDurationMinutes: hasSizePricing ? effectiveDuration : undefined,
+        snapshotPricePence: hasSizePricing ? effectivePrice : undefined,
       });
       if ("error" in result) { setError(result.error); return; }
       setDoneClientName(selectedClient.name);
@@ -209,6 +235,8 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
         scheduledDate: date,
         scheduledTime: time,
         notes: notes.trim() || undefined,
+        snapshotDurationMinutes: hasSizePricing ? effectiveDuration : undefined,
+        snapshotPricePence: hasSizePricing ? effectivePrice : undefined,
       });
       if ("error" in result) { setError(result.error); return; }
       setDoneClientName(clientName.trim());
@@ -322,7 +350,7 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
                     <button
                       key={i}
                       type="button"
-                      onClick={() => setSelectedDogIdx(i)}
+                      onClick={() => { setSelectedDogIdx(i); applyDogSize(dog); }}
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-sm font-bold transition-colors focus-ring ${
                         selectedDogIdx === i
                           ? "border-deep-slate bg-deep-slate text-alabaster-cream"
@@ -343,13 +371,41 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
               {bookableServices.length === 0 ? (
                 <p className="mt-1.5 text-sm text-muted-terracotta font-bold">Add services in your Profile tab first.</p>
               ) : (
-                <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} required className="field mt-1.5 cursor-pointer">
+                <select value={serviceId} onChange={(e) => { setServiceId(e.target.value); setSelectedSize(null); }} required className="field mt-1.5 cursor-pointer">
                   {bookableServices.map((s) => (
                     <option key={s.id} value={s.id}>{s.name} — {s.duration} min — £{(s.price / 100).toFixed(0)}</option>
                   ))}
                 </select>
               )}
             </label>
+
+            {/* Size picker — only when service has per-size pricing */}
+            {hasSizePricing && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey mb-2">Dog size</p>
+                <div className="flex flex-wrap gap-2">
+                  {SIZE_ORDER.filter((s) => availableSizes.includes(s)).map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSelectedSize(selectedSize === size ? null : size)}
+                      className={`px-3 py-1.5 rounded-xl border-2 text-sm font-bold transition-colors focus-ring ${
+                        selectedSize === size
+                          ? "border-deep-slate bg-deep-slate text-alabaster-cream"
+                          : "border-pebble-grey/20 text-deep-slate hover:border-deep-slate/40"
+                      }`}
+                    >
+                      {SIZE_LABELS[size]}
+                      {selectedService?.sizePrices[size] != null && (
+                        <span className={`ml-1.5 text-xs font-normal ${selectedSize === size ? "text-alabaster-cream/70" : "text-pebble-grey"}`}>
+                          £{(selectedService.sizePrices[size] / 100).toFixed(0)}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Date + time */}
             <div className="grid grid-cols-2 gap-3">
@@ -372,7 +428,10 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
             {selectedService && (
               <div className="flex justify-between items-center bg-white border border-pebble-grey/10 rounded-xl px-4 py-3">
                 <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Total</span>
-                <span className="font-fredoka text-xl text-deep-slate">£{(selectedService.price / 100).toFixed(0)}</span>
+                <div className="text-right">
+                  <span className="font-fredoka text-xl text-deep-slate">£{(effectivePrice / 100).toFixed(0)}</span>
+                  <span className="block text-xs text-pebble-grey">{effectiveDuration} min</span>
+                </div>
               </div>
             )}
 
@@ -415,13 +474,41 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
               {bookableServices.length === 0 ? (
                 <p className="mt-1.5 text-sm text-muted-terracotta font-bold">Add services in your Profile tab first.</p>
               ) : (
-                <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} required className="field mt-1.5 cursor-pointer">
+                <select value={serviceId} onChange={(e) => { setServiceId(e.target.value); setSelectedSize(null); }} required className="field mt-1.5 cursor-pointer">
                   {bookableServices.map((s) => (
                     <option key={s.id} value={s.id}>{s.name} — {s.duration} min — £{(s.price / 100).toFixed(0)}</option>
                   ))}
                 </select>
               )}
             </label>
+
+            {/* Size picker — only when service has per-size pricing */}
+            {hasSizePricing && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey mb-2">Dog size</p>
+                <div className="flex flex-wrap gap-2">
+                  {SIZE_ORDER.filter((s) => availableSizes.includes(s)).map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSelectedSize(selectedSize === size ? null : size)}
+                      className={`px-3 py-1.5 rounded-xl border-2 text-sm font-bold transition-colors focus-ring ${
+                        selectedSize === size
+                          ? "border-deep-slate bg-deep-slate text-alabaster-cream"
+                          : "border-pebble-grey/20 text-deep-slate hover:border-deep-slate/40"
+                      }`}
+                    >
+                      {SIZE_LABELS[size]}
+                      {selectedService?.sizePrices[size] != null && (
+                        <span className={`ml-1.5 text-xs font-normal ${selectedSize === size ? "text-alabaster-cream/70" : "text-pebble-grey"}`}>
+                          £{(selectedService.sizePrices[size] / 100).toFixed(0)}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Date + time */}
             <div className="grid grid-cols-2 gap-3">
@@ -450,7 +537,10 @@ export function NewBookingModal({ services, existingClients, groomerProfileId, o
             {selectedService && (
               <div className="flex justify-between items-center bg-white border border-pebble-grey/10 rounded-xl px-4 py-3">
                 <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Total</span>
-                <span className="font-fredoka text-xl text-deep-slate">£{(selectedService.price / 100).toFixed(0)}</span>
+                <div className="text-right">
+                  <span className="font-fredoka text-xl text-deep-slate">£{(effectivePrice / 100).toFixed(0)}</span>
+                  <span className="block text-xs text-pebble-grey">{effectiveDuration} min</span>
+                </div>
               </div>
             )}
 

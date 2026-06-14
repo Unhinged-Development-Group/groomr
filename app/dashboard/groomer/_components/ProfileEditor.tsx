@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
 import { cn } from "@/lib/utils";
-import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, deleteCoverPhoto, getProfileImageSignature, saveProfileImage, deleteProfileImage, toggleAcceptingBookings, getVerificationDocSignature, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
+import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, deleteCoverPhoto, getProfileImageSignature, saveProfileImage, deleteProfileImage, toggleAcceptingBookings, getVerificationDocUploadUrl, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
 import { saveContractTerms, getClientTermsStatus } from "@/app/actions/contract-terms";
@@ -36,13 +36,6 @@ const SERVICE_TEMPLATES: Array<{ name: string; duration: number }> = [
 // Controlled currency input that avoids the toFixed reformatting glitch.
 // Maintains a local display string so decimal entry works smoothly.
 // Syncs from the external `pence` prop only while the field is not focused.
-function docViewUrl(url: string): string {
-  if (/\.pdf($|\?)/i.test(url)) {
-    return url.replace("/image/upload/", "/raw/upload/");
-  }
-  return url;
-}
-
 function PriceInput({ pence, onChange, className }: {
   pence: number;
   onChange: (pence: number) => void;
@@ -534,16 +527,12 @@ export function ProfileEditor({
   async function handleDocUpload(docType: VerificationDocType, file: File) {
     setDocUploading((d) => ({ ...d, [docType]: 0 }));
     try {
-      const sig = await getVerificationDocSignature(groomerProfileId);
-      const form = new FormData();
-      form.append("file", file);
-      form.append("api_key", sig.apiKey);
-      form.append("timestamp", String(sig.timestamp));
-      form.append("signature", sig.signature);
-      form.append("folder", sig.folder);
-      form.append("allowed_formats", sig.allowedFormats);
+      const uploadData = await getVerificationDocUploadUrl(groomerProfileId, docType, file.name);
+      if ("error" in uploadData) throw new Error(uploadData.error);
 
-      const json = await new Promise<Record<string, unknown>>((resolve, reject) => {
+      const { signedUploadUrl, path } = uploadData;
+
+      await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
@@ -552,21 +541,20 @@ export function ProfileEditor({
           }
         };
         xhr.onload = () => {
-          try { resolve(JSON.parse(xhr.responseText)); }
-          catch { reject(new Error("Upload failed")); }
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`Upload failed (${xhr.status})`));
         };
         xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.open("POST", `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`);
-        xhr.send(form);
+        xhr.open("PUT", signedUploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+        xhr.send(file);
       });
 
-      if (!json.secure_url) throw new Error((json.error as any)?.message ?? "Upload failed");
-
       setDocUploading((d) => ({ ...d, [docType]: 100 }));
-      const result = await saveVerificationDoc(groomerProfileId, docType, json.secure_url as string);
+      const result = await saveVerificationDoc(groomerProfileId, docType, path);
       if (result?.error) throw new Error(result.error);
       const docMeta = VERIFICATION_DOC_META.find((m) => m.type === docType)!;
-      setVerificationDocs((d) => ({ ...d, [docMeta.stateKey]: json.secure_url }));
+      setVerificationDocs((d) => ({ ...d, [docMeta.stateKey]: result.signedUrl ?? path }));
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Document upload failed — please try again");
     } finally {
@@ -1283,7 +1271,7 @@ export function ProfileEditor({
                         <>
                           <span className="hidden sm:inline text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Uploaded</span>
                           <a
-                            href={docViewUrl(url)}
+                            href={url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs font-bold text-deep-slate hover:underline focus-ring rounded px-2 py-1"

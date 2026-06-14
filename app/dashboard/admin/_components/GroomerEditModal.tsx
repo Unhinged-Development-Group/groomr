@@ -59,13 +59,6 @@ const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function docViewUrl(url: string): string {
-  if (/\.pdf($|\?)/i.test(url)) {
-    return url.replace("/image/upload/", "/raw/upload/");
-  }
-  return url;
-}
-
 function SectionHeader({
   title,
   open,
@@ -695,7 +688,7 @@ export function GroomerEditModal({ groomer, onClose, onSaved, initialSection }: 
                                 <p className="text-[11px] text-pebble-grey mb-2">Identity confirmed · document deleted</p>
                               ) : url ? (
                                 <a
-                                  href={docViewUrl(url)}
+                                  href={url}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-[11px] text-sage-leaf font-bold hover:opacity-70 mb-2"

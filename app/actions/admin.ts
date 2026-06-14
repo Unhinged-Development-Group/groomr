@@ -13,6 +13,27 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+async function resolveVerificationDocUrl(v: unknown): Promise<string | null> {
+  const s = v as string | null;
+  if (!s || s === "skipped") return null;
+  if (s.startsWith("https://")) return s;
+  const { data } = await supabaseAdmin.storage
+    .from("verification-docs")
+    .createSignedUrl(s, 3600);
+  return data?.signedUrl ?? null;
+}
+
+async function deleteVerificationDoc(pathOrUrl: string): Promise<void> {
+  if (pathOrUrl.startsWith("https://res.cloudinary.com")) {
+    const parsed = parseCloudinaryPublicId(pathOrUrl);
+    if (parsed) {
+      await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType }).catch(() => {});
+    }
+  } else {
+    await supabaseAdmin.storage.from("verification-docs").remove([pathOrUrl]).catch(() => {});
+  }
+}
+
 function parseCloudinaryPublicId(url: string): { publicId: string; resourceType: "image" | "video" | "raw" } | null {
   try {
     const match = url.match(/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^./]+)?$/);
@@ -545,10 +566,7 @@ export async function adminSaveGroomerDocVerified(
     const alreadyVerified = (current as any)?.photo_id_doc_verified as boolean;
 
     if (photoUrl && !alreadyVerified) {
-      const parsed = parseCloudinaryPublicId(photoUrl);
-      if (parsed) {
-        await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType }).catch(() => {});
-      }
+      await deleteVerificationDoc(photoUrl);
       updatePayload.photo_id_doc_url = null;
     }
   }
@@ -587,10 +605,7 @@ export async function adminVerifyDoc(
     const photoUrl = (current as any)?.photo_id_doc_url as string | null;
     const alreadyVerified = (current as any)?.photo_id_doc_verified as boolean;
     if (photoUrl && !alreadyVerified) {
-      const parsed = parseCloudinaryPublicId(photoUrl);
-      if (parsed) {
-        await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType }).catch(() => {});
-      }
+      await deleteVerificationDoc(photoUrl);
       updatePayload.photo_id_doc_url = null;
     }
   }
@@ -662,10 +677,7 @@ export async function adminRejectDoc(
       .single();
     const photoUrl = (current as any)?.photo_id_doc_url as string | null;
     if (photoUrl) {
-      const parsed = parseCloudinaryPublicId(photoUrl);
-      if (parsed) {
-        await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType }).catch(() => {});
-      }
+      await deleteVerificationDoc(photoUrl);
     }
   }
 
@@ -861,6 +873,17 @@ export async function adminGetGroomerFull(
   }
 
   const raw = profileResult.data as any;
+
+  const [
+    insurance_doc_url, qualification_doc_url, first_aid_doc_url, photo_id_doc_url, employers_liability_doc_url,
+  ] = await Promise.all([
+    resolveVerificationDocUrl(raw.insurance_doc_url),
+    resolveVerificationDocUrl(raw.qualification_doc_url),
+    resolveVerificationDocUrl(raw.first_aid_doc_url),
+    resolveVerificationDocUrl(raw.photo_id_doc_url),
+    resolveVerificationDocUrl(raw.employers_liability_doc_url),
+  ]);
+
   const profile: GroomerFullProfile = {
     id: raw.id,
     business_name: raw.business_name,
@@ -887,11 +910,11 @@ export async function adminGetGroomerFull(
     public_slug: raw.public_slug,
     profile_image_url: raw.profile_image_url,
     cover_photo_url: raw.cover_photo_url,
-    insurance_doc_url: raw.insurance_doc_url,
-    qualification_doc_url: raw.qualification_doc_url,
-    first_aid_doc_url: raw.first_aid_doc_url,
-    photo_id_doc_url: raw.photo_id_doc_url,
-    employers_liability_doc_url: raw.employers_liability_doc_url,
+    insurance_doc_url,
+    qualification_doc_url,
+    first_aid_doc_url,
+    photo_id_doc_url,
+    employers_liability_doc_url,
     insurance_doc_verified: raw.insurance_doc_verified ?? false,
     qualification_doc_verified: raw.qualification_doc_verified ?? false,
     first_aid_doc_verified: raw.first_aid_doc_verified ?? false,

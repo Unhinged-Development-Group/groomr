@@ -13,6 +13,16 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+async function resolveVerificationDocUrl(v: unknown): Promise<string | null> {
+  const s = v as string | null;
+  if (!s || s === "skipped") return null;
+  if (s.startsWith("https://")) return s;
+  const { data } = await supabaseAdmin.storage
+    .from("verification-docs")
+    .createSignedUrl(s, 3600);
+  return data?.signedUrl ?? null;
+}
 import type {
   ProfileEditorInitialData,
   ProfileFormData,
@@ -271,17 +281,22 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const averageRating   = (groomerProfile.average_rating    as number | null) ?? null;
   const totalReviews    = (groomerProfile.total_reviews     as number | null) ?? null;
 
-  const docUrl = (v: unknown) => {
-    const s = v as string | null;
-    return s && s !== "skipped" ? s : null;
-  };
+  const [
+    insuranceDocUrl, qualificationDocUrl, firstAidDocUrl, photoIdDocUrl, employersLiabilityDocUrl,
+  ] = await Promise.all([
+    resolveVerificationDocUrl(groomerProfile.insurance_doc_url),
+    resolveVerificationDocUrl(groomerProfile.qualification_doc_url),
+    resolveVerificationDocUrl(groomerProfile.first_aid_doc_url),
+    resolveVerificationDocUrl(groomerProfile.photo_id_doc_url),
+    resolveVerificationDocUrl(groomerProfile.employers_liability_doc_url),
+  ]);
 
   const verificationDocs: VerificationDocs = {
-    insuranceDocUrl:               docUrl(groomerProfile.insurance_doc_url),
-    qualificationDocUrl:           docUrl(groomerProfile.qualification_doc_url),
-    firstAidDocUrl:                docUrl(groomerProfile.first_aid_doc_url),
-    photoIdDocUrl:                 docUrl(groomerProfile.photo_id_doc_url),
-    employersLiabilityDocUrl:      docUrl(groomerProfile.employers_liability_doc_url),
+    insuranceDocUrl,
+    qualificationDocUrl,
+    firstAidDocUrl,
+    photoIdDocUrl,
+    employersLiabilityDocUrl,
     hasEmployees:                  (groomerProfile.has_employees                        as boolean | null) ?? null,
     insuranceVerified:             (groomerProfile.insurance_doc_verified               as boolean) ?? false,
     qualificationVerified:         (groomerProfile.qualification_doc_verified           as boolean) ?? false,
@@ -663,33 +678,27 @@ export async function getProfileImageSignature(groomerProfileId: string): Promis
   };
 }
 
-export async function getVerificationDocSignature(groomerProfileId: string): Promise<{
-  signature: string;
-  timestamp: number;
-  cloudName: string;
-  apiKey: string;
-  folder: string;
-  allowedFormats: string;
-}> {
+export async function getVerificationDocUploadUrl(
+  groomerProfileId: string,
+  docType: VerificationDocType,
+  fileName: string
+): Promise<{ signedUploadUrl: string; path: string } | { error: string }> {
   const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) throw new Error("Not authenticated");
+  if (!clerkUserId) return { error: "Not authenticated" };
 
-  const timestamp = Math.round(Date.now() / 1000);
-  const folder = `groomr/verification/${groomerProfileId}`;
-  const allowed_formats = "jpg,jpeg,png,webp,pdf";
-  const signature = cloudinary.utils.api_sign_request(
-    { folder, timestamp, allowed_formats },
-    process.env.CLOUDINARY_API_SECRET!
-  );
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "bin";
+  if (!["jpg", "jpeg", "png", "webp", "pdf"].includes(ext)) {
+    return { error: "File type not allowed. Use JPG, PNG, WEBP, or PDF." };
+  }
 
-  return {
-    signature,
-    timestamp,
-    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
-    apiKey: process.env.CLOUDINARY_API_KEY!,
-    folder,
-    allowedFormats: allowed_formats,
-  };
+  const path = `${groomerProfileId}/${docType}/${Date.now()}.${ext}`;
+
+  const { data, error } = await supabaseAdmin.storage
+    .from("verification-docs")
+    .createSignedUploadUrl(path);
+
+  if (error || !data) return { error: error?.message ?? "Could not prepare upload" };
+  return { signedUploadUrl: data.signedUrl, path };
 }
 
 const DOC_COLUMN: Record<VerificationDocType, string> = {
@@ -703,8 +712,8 @@ const DOC_COLUMN: Record<VerificationDocType, string> = {
 export async function saveVerificationDoc(
   groomerProfileId: string,
   docType: VerificationDocType,
-  url: string
-): Promise<{ error?: string }> {
+  path: string
+): Promise<{ signedUrl?: string; error?: string }> {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) return { error: "Not authenticated" };
 
@@ -718,7 +727,6 @@ export async function saveVerificationDoc(
 
   const column = DOC_COLUMN[docType];
 
-  // Fetch current verification_status so we can advance it to 'awaiting' on first upload.
   const { data: current } = await supabaseAdmin
     .from("groomer_profiles")
     .select("verification_status")
@@ -727,7 +735,7 @@ export async function saveVerificationDoc(
     .single();
 
   const updatePayload: Record<string, unknown> = {
-    [column]: url,
+    [column]: path,
     updated_at: new Date().toISOString(),
   };
   if ((current as any)?.verification_status === "not_submitted") {
@@ -741,7 +749,12 @@ export async function saveVerificationDoc(
     .eq("user_id", myProfile.id);
 
   if (error) return { error: error.message };
-  return {};
+
+  const { data: signedData } = await supabaseAdmin.storage
+    .from("verification-docs")
+    .createSignedUrl(path, 3600);
+
+  return { signedUrl: signedData?.signedUrl ?? undefined };
 }
 
 export async function saveHasEmployees(

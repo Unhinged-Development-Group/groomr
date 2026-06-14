@@ -25,6 +25,8 @@ interface BookingDetailAppointment {
   service_snapshot_price: number | null;
   groomer_notes: string | null;
   owner_notes: string | null;
+  admin_note_groomer: string | null;
+  admin_note_groomer_author: string | null;
   dog_id: string | null;
   recurring_series_id?: string | null;
   dogs?: { name: string; breed?: string; coat_type?: string; profile_image_url?: string } | null;
@@ -222,8 +224,18 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
           {/* Owner notes */}
           {appt.owner_notes && (
             <div className="bg-sage-leaf/10 border border-sage-leaf/20 rounded-2xl p-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-sage-leaf">Owner note</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-sage-leaf">Note from owner</p>
               <p className="text-sm text-deep-slate mt-1 italic">&quot;{appt.owner_notes}&quot;</p>
+            </div>
+          )}
+
+          {/* Groomr Support note */}
+          {appt.admin_note_groomer && (
+            <div className="bg-groomr-gold/10 border border-groomr-gold/30 rounded-2xl p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-deep-slate/60">
+                {appt.admin_note_groomer_author ?? "Groomr Support"} · Groomr Support
+              </p>
+              <p className="text-sm text-deep-slate mt-1 italic">&quot;{appt.admin_note_groomer}&quot;</p>
             </div>
           )}
 

@@ -21,6 +21,8 @@ export interface Appointment {
   cancellation_reason: string | null;
   groomer_notes: string | null;
   owner_notes: string | null;
+  admin_note_owner: string | null;
+  admin_note_owner_author: string | null;
   created_at: string;
   updated_at: string;
 
@@ -85,6 +87,29 @@ export async function getGroomerAvailabilityDays(groomerProfileId: string): Prom
     .eq("groomer_profile_id", groomerProfileId)
     .eq("is_active", true);
   return (data ?? []).map((r) => r.day_of_week as number);
+}
+
+export async function ownerUpdateNotes(
+  appointmentId: string,
+  notes: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, error: "Not authenticated" };
+
+  const profileId = await getProfileId(userId);
+  if (!profileId) return { ok: false, error: "Profile not found" };
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({
+      owner_notes: notes.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId)
+    .eq("owner_id", profileId);
+
+  if (error) return { ok: false, error: "Failed to save note" };
+  return { ok: true };
 }
 
 export async function rescheduleAppointment(

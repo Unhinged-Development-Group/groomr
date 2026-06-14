@@ -12,6 +12,7 @@ import {
   rescheduleAppointment,
   getGroomerAvailabilityDays,
   submitOwnerReview,
+  ownerUpdateNotes,
 } from "@/app/actions/appointments";
 import { getAvailableSlots } from "@/app/actions/booking";
 import type { AvailableSlot } from "@/app/actions/booking";
@@ -35,6 +36,9 @@ export function AppointmentsSection({
   const [showDetails, setShowDetails] = useState(false);
   const [showManage, setShowManage] = useState(false);
   const [activeAppointment, setActiveAppointment] = useState<Appointment | null>(null);
+  const [editingNote, setEditingNote] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const [manageView, setManageView] = useState<ManageView>("choice");
   const [showReview, setShowReview] = useState(false);
   const [reviewTarget, setReviewTarget] = useState<Appointment | null>(null);
@@ -186,6 +190,8 @@ export function AppointmentsSection({
                       <button
                         onClick={() => {
                           setActiveAppointment(apt);
+                          setNoteText(apt.owner_notes ?? "");
+                          setEditingNote(false);
                           setShowDetails(true);
                         }}
                         className="btn-primary font-nunito font-bold px-4 py-1.5 text-xs focus-ring"
@@ -434,25 +440,71 @@ export function AppointmentsSection({
                   </Link>
                 </div>
               </div>
-              {(activeAppointment.owner_notes || activeAppointment.groomer_notes) && (
-                <div className="border-t border-pebble-grey/20 pt-3 space-y-2">
-                  {activeAppointment.owner_notes && (
-                    <div>
-                      <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Your note <span className="normal-case font-normal text-pebble-grey/60">via Groomr</span></p>
-                      <p className="text-sm font-nunito text-deep-slate mt-1 italic">&quot;{activeAppointment.owner_notes}&quot;</p>
-                    </div>
-                  )}
-                  {activeAppointment.groomer_notes && (
-                    <div>
-                      <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Note from groomer</p>
-                      <p className="text-sm font-nunito text-deep-slate mt-1 italic">&quot;{activeAppointment.groomer_notes}&quot;</p>
-                    </div>
-                  )}
+              {/* Admin support note */}
+              {activeAppointment.admin_note_owner && (
+                <div className="border-t border-pebble-grey/20 pt-3">
+                  <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+                    {activeAppointment.admin_note_owner_author ?? "Groomr Support"} · Groomr Support
+                  </p>
+                  <p className="text-sm font-nunito text-deep-slate mt-1 italic">&quot;{activeAppointment.admin_note_owner}&quot;</p>
                 </div>
               )}
+
+              {/* Owner note (editable) */}
+              <div className="border-t border-pebble-grey/20 pt-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Your note to groomer</p>
+                  {!editingNote && (
+                    <button
+                      onClick={() => { setNoteText(activeAppointment.owner_notes ?? ""); setEditingNote(true); }}
+                      className="text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded px-2 py-0.5"
+                    >
+                      {activeAppointment.owner_notes ? "Edit" : "+ Add note"}
+                    </button>
+                  )}
+                </div>
+                {editingNote ? (
+                  <div className="space-y-2">
+                    <textarea
+                      autoFocus
+                      rows={3}
+                      value={noteText}
+                      onChange={e => setNoteText(e.target.value)}
+                      placeholder="e.g. Murphy is nervous with clippers — please go slow"
+                      className="w-full border border-pebble-grey/30 rounded-lg px-3 py-2 text-sm font-nunito text-deep-slate focus:outline-none focus:ring-2 focus:ring-groomr-gold resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        disabled={savingNote}
+                        onClick={async () => {
+                          setSavingNote(true);
+                          const result = await ownerUpdateNotes(activeAppointment.id, noteText);
+                          setSavingNote(false);
+                          if (result.ok) {
+                            setAppointments(prev => prev.map(a => a.id === activeAppointment.id ? { ...a, owner_notes: noteText.trim() || null } : a));
+                            setActiveAppointment(prev => prev ? { ...prev, owner_notes: noteText.trim() || null } : prev);
+                            setEditingNote(false);
+                          }
+                        }}
+                        className="btn-primary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring disabled:opacity-50"
+                      >
+                        {savingNote ? "Saving…" : "Save"}
+                      </button>
+                      <button onClick={() => setEditingNote(false)}
+                        className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm font-nunito text-deep-slate italic">
+                    {activeAppointment.owner_notes ? `"${activeAppointment.owner_notes}"` : <span className="text-pebble-grey not-italic text-xs">No note added yet.</span>}
+                  </p>
+                )}
+              </div>
             </div>
             <button
-              onClick={() => setShowDetails(false)}
+              onClick={() => { setShowDetails(false); setEditingNote(false); }}
               className="btn-primary font-nunito font-bold px-8 py-3 w-full focus-ring"
             >
               Close

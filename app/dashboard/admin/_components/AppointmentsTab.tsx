@@ -54,13 +54,13 @@ function AppointmentRow({
 }: {
   appt: AdminAppointmentRow;
   onCancelled: (id: string) => void;
-  onNotesUpdated: (id: string, groomerNotes: string | null, ownerNotes: string | null) => void;
+  onNotesUpdated: (id: string, groomerNote: string | null, ownerNote: string | null) => void;
   onNoShow: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [groomerNotes, setGroomerNotes] = useState(appt.groomer_notes ?? "");
-  const [ownerNotes, setOwnerNotes] = useState(appt.owner_notes ?? "");
+  const [adminNoteGroomer, setAdminNoteGroomer] = useState(appt.admin_note_groomer ?? "");
+  const [adminNoteOwner, setAdminNoteOwner] = useState(appt.admin_note_owner ?? "");
   const [toast, setToast] = useState<string | null>(null);
   const [cancelPending, startCancel] = useTransition();
   const [notesPending, startNotes] = useTransition();
@@ -82,11 +82,11 @@ function AppointmentRow({
   function handleSaveNotes() {
     startNotes(async () => {
       const res = await adminUpdateAppointmentNotes(appt.id, {
-        groomerNotes: groomerNotes || null,
-        ownerNotes: ownerNotes || null,
+        groomerNote: adminNoteGroomer || null,
+        ownerNote: adminNoteOwner || null,
       });
       if ("error" in res) { setToast(res.error); return; }
-      onNotesUpdated(appt.id, groomerNotes || null, ownerNotes || null);
+      onNotesUpdated(appt.id, adminNoteGroomer || null, adminNoteOwner || null);
       setToast("Notes saved.");
     });
   }
@@ -152,24 +152,42 @@ function AppointmentRow({
                 )}
               </div>
 
-              {/* Notes editing */}
+              {/* User notes (read-only reference) */}
+              {(appt.owner_notes || appt.groomer_notes) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-pebble-grey/10">
+                  {appt.owner_notes && (
+                    <div>
+                      <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Owner&apos;s note</p>
+                      <p className="text-xs text-deep-slate italic bg-white border border-pebble-grey/15 rounded-lg px-3 py-2">&quot;{appt.owner_notes}&quot;</p>
+                    </div>
+                  )}
+                  {appt.groomer_notes && (
+                    <div>
+                      <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Groomer&apos;s note</p>
+                      <p className="text-xs text-deep-slate italic bg-white border border-pebble-grey/15 rounded-lg px-3 py-2">&quot;{appt.groomer_notes}&quot;</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Admin support notes */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-pebble-grey/10">
                 <div>
-                  <label className="block text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Groomer notes</label>
+                  <label className="block text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Note to groomer <span className="text-groomr-gold">(Groomr Support)</span></label>
                   <textarea
                     className="field w-full text-xs min-h-[60px] resize-y"
-                    value={groomerNotes}
-                    onChange={(e) => setGroomerNotes(e.target.value)}
-                    placeholder="Notes visible to groomer…"
+                    value={adminNoteGroomer}
+                    onChange={(e) => setAdminNoteGroomer(e.target.value)}
+                    placeholder="Visible to groomer as a support message…"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Owner notes</label>
+                  <label className="block text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Note to owner <span className="text-groomr-gold">(Groomr Support)</span></label>
                   <textarea
                     className="field w-full text-xs min-h-[60px] resize-y"
-                    value={ownerNotes}
-                    onChange={(e) => setOwnerNotes(e.target.value)}
-                    placeholder="Notes visible to owner…"
+                    value={adminNoteOwner}
+                    onChange={(e) => setAdminNoteOwner(e.target.value)}
+                    placeholder="Visible to owner as a support message…"
                   />
                 </div>
               </div>
@@ -179,7 +197,7 @@ function AppointmentRow({
                   disabled={notesPending}
                   className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-sage-leaf/10 text-sage-leaf hover:bg-sage-leaf/20 border border-sage-leaf/30 transition-colors focus-ring disabled:opacity-40"
                 >
-                  {notesPending ? "Saving…" : "Save notes"}
+                  {notesPending ? "Saving…" : "Save support notes"}
                 </button>
               </div>
 
@@ -258,8 +276,8 @@ export function AppointmentsTab({ initialAppointments }: { initialAppointments: 
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: "cancelled" } : a)));
   }
 
-  function handleNotesUpdated(id: string, groomerNotes: string | null, ownerNotes: string | null) {
-    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, groomer_notes: groomerNotes, owner_notes: ownerNotes } : a)));
+  function handleNotesUpdated(id: string, groomerNote: string | null, ownerNote: string | null) {
+    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, admin_note_groomer: groomerNote, admin_note_owner: ownerNote } : a)));
   }
 
   function handleNoShow(id: string) {

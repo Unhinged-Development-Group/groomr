@@ -169,6 +169,10 @@ export interface AdminAppointmentRow {
   cancellation_reason: string | null;
   groomer_notes: string | null;
   owner_notes: string | null;
+  admin_note_groomer: string | null;
+  admin_note_groomer_author: string | null;
+  admin_note_owner: string | null;
+  admin_note_owner_author: string | null;
   booking_group_id: string | null;
   created_at: string;
 }
@@ -1651,6 +1655,7 @@ export async function adminGetAppointments(
     .from("appointments")
     .select(
       `id, scheduled_at, status, cancellation_reason, groomer_notes, owner_notes,
+       admin_note_groomer, admin_note_groomer_author, admin_note_owner, admin_note_owner_author,
        booking_group_id, created_at,
        service_snapshot_name, service_snapshot_price,
        owner:profiles!owner_id ( id, full_name, email ),
@@ -1683,6 +1688,10 @@ export async function adminGetAppointments(
     cancellation_reason: a.cancellation_reason,
     groomer_notes: a.groomer_notes,
     owner_notes: a.owner_notes,
+    admin_note_groomer: a.admin_note_groomer,
+    admin_note_groomer_author: a.admin_note_groomer_author,
+    admin_note_owner: a.admin_note_owner,
+    admin_note_owner_author: a.admin_note_owner_author,
     booking_group_id: a.booking_group_id,
     created_at: a.created_at,
   }));
@@ -1727,16 +1736,25 @@ export async function adminCancelAppointment(
 
 export async function adminUpdateAppointmentNotes(
   appointmentId: string,
-  notes: { groomerNotes?: string | null; ownerNotes?: string | null }
+  notes: { groomerNote?: string | null; ownerNote?: string | null }
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
 
+  const { data: adminProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("full_name")
+    .eq("id", guard.profileId)
+    .maybeSingle();
+  const authorName = adminProfile?.full_name ?? "Groomr Support";
+
   const { error } = await supabaseAdmin
     .from("appointments")
     .update({
-      groomer_notes: notes.groomerNotes ?? null,
-      owner_notes: notes.ownerNotes ?? null,
+      admin_note_groomer: notes.groomerNote ?? null,
+      admin_note_groomer_author: notes.groomerNote ? authorName : null,
+      admin_note_owner: notes.ownerNote ?? null,
+      admin_note_owner_author: notes.ownerNote ? authorName : null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", appointmentId);

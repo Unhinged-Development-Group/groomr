@@ -209,7 +209,9 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
               {appt.profiles.phone && (
                 <div className="bg-white border border-pebble-grey/15 rounded-2xl p-3">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Phone</p>
-                  <p className="text-sm font-bold text-deep-slate mt-1">{appt.profiles.phone}</p>
+                  <p className="text-sm font-bold text-deep-slate mt-1">
+                    {appt.profiles.phone?.replace(/^\+44/, "0")}
+                  </p>
                 </div>
               )}
               {appt.profiles.email && (
@@ -270,7 +272,10 @@ export function BookingDetailModal({ appointment, onClose, onUpdated, siblingApp
           {/* Groomer notes */}
           <div className="bg-white border border-pebble-grey/15 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <Eyebrow>Groomer notes</Eyebrow>
+              <div className="flex items-center gap-2">
+                <Eyebrow>Groomer notes</Eyebrow>
+                <span className="text-[9px] font-bold text-pebble-grey/60 uppercase tracking-wider">Not visible to owners</span>
+              </div>
               {!editingNotes && (
                 <button onClick={() => { setNotes(appt.groomer_notes ?? ""); setEditingNotes(true); }}
                   className="rounded-full p-1.5 hover:bg-alabaster-cream focus-ring" aria-label="Edit notes">

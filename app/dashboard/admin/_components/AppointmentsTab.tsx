@@ -56,12 +56,12 @@ function AppointmentRow({
   onCancelled: (id: string) => void;
   onNotesUpdated: (id: string, groomerNote: string | null, ownerNote: string | null) => void;
   onNoShow: (id: string) => void;
+  onToast: (msg: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [adminNoteGroomer, setAdminNoteGroomer] = useState(appt.admin_note_groomer ?? "");
   const [adminNoteOwner, setAdminNoteOwner] = useState(appt.admin_note_owner ?? "");
-  const [toast, setToast] = useState<string | null>(null);
   const [cancelPending, startCancel] = useTransition();
   const [notesPending, startNotes] = useTransition();
   const [noShowPending, startNoShow] = useTransition();
@@ -72,8 +72,8 @@ function AppointmentRow({
   function handleCancel() {
     startCancel(async () => {
       const res = await adminCancelAppointment(appt.id, cancelReason);
-      if ("error" in res) { setToast(res.error); return; }
-      setToast("Appointment cancelled.");
+      if ("error" in res) { onToast(res.error); return; }
+      onToast("Appointment cancelled.");
       onCancelled(appt.id);
       setExpanded(false);
     });
@@ -85,17 +85,17 @@ function AppointmentRow({
         groomerNote: adminNoteGroomer || null,
         ownerNote: adminNoteOwner || null,
       });
-      if ("error" in res) { setToast(res.error); return; }
+      if ("error" in res) { onToast(res.error); return; }
       onNotesUpdated(appt.id, adminNoteGroomer || null, adminNoteOwner || null);
-      setToast("Notes saved.");
+      onToast("Notes saved.");
     });
   }
 
   function handleNoShow() {
     startNoShow(async () => {
       const res = await adminMarkNoShow(appt.id);
-      if ("error" in res) { setToast(res.error); return; }
-      setToast("Marked as no-show.");
+      if ("error" in res) { onToast(res.error); return; }
+      onToast("Marked as no-show.");
       onNoShow(appt.id);
       setExpanded(false);
     });
@@ -239,7 +239,6 @@ function AppointmentRow({
           </td>
         </tr>
       )}
-      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
     </>
   );
 }
@@ -249,6 +248,7 @@ export function AppointmentsTab({ initialAppointments }: { initialAppointments: 
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState<SortKey>("date_desc");
   const [search, setSearch] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
 
   const filtered = appointments
     .filter((a) => filter === "all" || a.status === filter)
@@ -367,6 +367,7 @@ export function AppointmentsTab({ initialAppointments }: { initialAppointments: 
                     onCancelled={handleCancelled}
                     onNotesUpdated={handleNotesUpdated}
                     onNoShow={handleNoShow}
+                    onToast={setToast}
                   />
                 ))}
               </tbody>
@@ -374,6 +375,7 @@ export function AppointmentsTab({ initialAppointments }: { initialAppointments: 
           </div>
         )}
       </div>
+      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
     </div>
   );
 }

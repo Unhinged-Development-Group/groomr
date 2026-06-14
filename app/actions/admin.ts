@@ -339,9 +339,9 @@ export async function getAllGroomers(search?: string, page = 0): Promise<{ data:
     groomer_profile_id: g.id,
     profile_id: g.profiles?.id ?? "",
     business_name: g.business_name,
-    owner_name: g.profiles?.full_name ?? null,
-    email: g.profiles?.email ?? null,
-    phone: g.profiles?.phone ?? null,
+    owner_name: g.profiles?.full_name?.trim() || g.profiles?.email || null,
+    email: g.profiles?.email || null,
+    phone: g.profiles?.phone || null,
     city: g.city ?? null,
     is_listed: g.is_listed,
     is_verified: g.is_verified,
@@ -560,6 +560,122 @@ export async function adminSaveGroomerDocVerified(
 
   if (error) return { error: error.message };
   await logAdminAction(guard.profileId, "update_doc_verified", "groomer_profiles", groomerProfileId, docVerified as Record<string, unknown>);
+  return { ok: true };
+}
+
+export type DocVerifyKey = "insurance" | "qualification" | "first_aid" | "photo_id" | "employers_liability";
+
+export async function adminVerifyDoc(
+  groomerProfileId: string,
+  docType: DocVerifyKey
+): Promise<{ ok: boolean; autoVerified?: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const verifiedKey = `${docType}_doc_verified`;
+  const updatePayload: Record<string, unknown> = {
+    [verifiedKey]: true,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (docType === "photo_id") {
+    const { data: current } = await supabaseAdmin
+      .from("groomer_profiles")
+      .select("photo_id_doc_url, photo_id_doc_verified")
+      .eq("id", groomerProfileId)
+      .single();
+    const photoUrl = (current as any)?.photo_id_doc_url as string | null;
+    const alreadyVerified = (current as any)?.photo_id_doc_verified as boolean;
+    if (photoUrl && !alreadyVerified) {
+      const parsed = parseCloudinaryPublicId(photoUrl);
+      if (parsed) {
+        await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType }).catch(() => {});
+      }
+      updatePayload.photo_id_doc_url = null;
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update(updatePayload)
+    .eq("id", groomerProfileId);
+
+  if (error) return { error: error.message };
+
+  // Check if all required docs are now verified → auto-upgrade status
+  const { data: fresh } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("insurance_doc_verified, photo_id_doc_verified, employers_liability_doc_verified, has_employees, verification_status, business_name, profiles!groomer_profiles_user_id_fkey ( email, full_name )")
+    .eq("id", groomerProfileId)
+    .single();
+
+  let autoVerified = false;
+  if (fresh) {
+    const raw = fresh as any;
+    const requiredVerified =
+      raw.insurance_doc_verified &&
+      raw.photo_id_doc_verified &&
+      (!raw.has_employees || raw.employers_liability_doc_verified);
+
+    if (requiredVerified && raw.verification_status !== "verified") {
+      await supabaseAdmin
+        .from("groomer_profiles")
+        .update({ verification_status: "verified", is_verified: true, updated_at: new Date().toISOString() })
+        .eq("id", groomerProfileId);
+
+      const email = raw.profiles?.email;
+      const name = raw.profiles?.full_name ?? "there";
+      const business = raw.business_name ?? "your business";
+      if (email) {
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: email,
+          subject: "Your Groomr profile has been verified ✓",
+          text: `Hi ${name},\n\nGreat news — ${business} has been verified on Groomr. Your profile will now appear in search results and you can start accepting bookings.\n\nThe Groomr team`,
+        }).catch(() => {});
+      }
+
+      await logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: raw.verification_status, to: "verified", trigger: "auto_doc_verification" });
+      autoVerified = true;
+    }
+  }
+
+  await logAdminAction(guard.profileId, "verify_doc", "groomer_profiles", groomerProfileId, { doc: docType });
+  return { ok: true, autoVerified };
+}
+
+export async function adminRejectDoc(
+  groomerProfileId: string,
+  docType: DocVerifyKey
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const urlKey = `${docType}_doc_url`;
+  const verifiedKey = `${docType}_doc_verified`;
+
+  if (docType === "photo_id") {
+    const { data: current } = await supabaseAdmin
+      .from("groomer_profiles")
+      .select("photo_id_doc_url")
+      .eq("id", groomerProfileId)
+      .single();
+    const photoUrl = (current as any)?.photo_id_doc_url as string | null;
+    if (photoUrl) {
+      const parsed = parseCloudinaryPublicId(photoUrl);
+      if (parsed) {
+        await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType }).catch(() => {});
+      }
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update({ [urlKey]: null, [verifiedKey]: false, updated_at: new Date().toISOString() })
+    .eq("id", groomerProfileId);
+
+  if (error) return { error: error.message };
+  await logAdminAction(guard.profileId, "reject_doc", "groomer_profiles", groomerProfileId, { doc: docType });
   return { ok: true };
 }
 

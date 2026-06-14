@@ -10,6 +10,8 @@ import {
   updateUserProfile,
   adminUpdateVerificationStatus,
   adminSaveGroomerDocVerified,
+  adminVerifyDoc,
+  adminRejectDoc,
   adminSaveAvailability,
   adminSaveService,
   adminDeleteService,
@@ -20,6 +22,7 @@ import type {
   AdminAvailabilityRow,
   AdminServiceRow,
   AdminGroomerTeamMember,
+  DocVerifyKey,
 } from "@/app/actions/admin";
 
 interface Props {
@@ -126,6 +129,7 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
   const [settingsPending, startSettings] = useTransition();
   const [availPending, startAvail] = useTransition();
   const [verifyPending, startVerify] = useTransition();
+  const [docPending, setDocPending] = useState<Partial<Record<DocVerifyKey, "verifying" | "rejecting">>>({});
 
   useEffect(() => {
     adminGetGroomerFull(groomer.groomer_profile_id).then((res) => {
@@ -252,6 +256,40 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
       onSaved({ is_verified: status === "verified", verification_status: status });
       setToast("Verification status updated.");
     });
+  }
+
+  // ── Per-doc verify / reject ──
+
+  async function handleVerifyDoc(docType: DocVerifyKey) {
+    if (!profile) return;
+    setDocPending((p) => ({ ...p, [docType]: "verifying" }));
+    const res = await adminVerifyDoc(profile.id, docType);
+    setDocPending((p) => { const next = { ...p }; delete next[docType]; return next; });
+    if ("error" in res) { setToast(res.error); return; }
+    // Reflect verified state locally
+    const verifiedKey = `${docType}_doc_verified` as keyof GroomerFullProfile;
+    const updates: Partial<GroomerFullProfile> = { [verifiedKey]: true };
+    if (docType === "photo_id") updates.photo_id_doc_url = null;
+    if (res.autoVerified) {
+      updates.verification_status = "verified";
+      onSaved({ is_verified: true, verification_status: "verified" });
+      setToast("All required docs verified — profile automatically marked as Verified.");
+    } else {
+      setToast("Document verified.");
+    }
+    updateProfile(updates);
+  }
+
+  async function handleRejectDoc(docType: DocVerifyKey) {
+    if (!profile) return;
+    setDocPending((p) => ({ ...p, [docType]: "rejecting" }));
+    const res = await adminRejectDoc(profile.id, docType);
+    setDocPending((p) => { const next = { ...p }; delete next[docType]; return next; });
+    if ("error" in res) { setToast(res.error); return; }
+    const urlKey = `${docType}_doc_url` as keyof GroomerFullProfile;
+    const verifiedKey = `${docType}_doc_verified` as keyof GroomerFullProfile;
+    updateProfile({ [urlKey]: null, [verifiedKey]: false } as Partial<GroomerFullProfile>);
+    setToast("Document rejected — groomer must resubmit.");
   }
 
   // ── Availability helpers ──
@@ -552,47 +590,142 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
               {/* ── Verification ── */}
               <div>
                 <SectionHeader title="Verification" open={openSection === "verification"} onToggle={() => toggleSection("verification")} />
-                {openSection === "verification" && (
-                  <div className="pb-4 space-y-4">
-                    <div>
-                      <FieldLabel>Verification status</FieldLabel>
-                      <select className="field w-full" value={profile.verification_status} onChange={(e) => updateProfile({ verification_status: e.target.value })}>
-                        {VERIFICATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
+                {openSection === "verification" && (() => {
+                  const docs: { type: DocVerifyKey; label: string; required: boolean | "if_employees" }[] = [
+                    { type: "insurance",            label: "Public liability insurance", required: true },
+                    { type: "photo_id",             label: "Photo ID",                  required: true },
+                    { type: "employers_liability",  label: "Employers' liability",       required: "if_employees" },
+                    { type: "qualification",        label: "Qualifications",             required: false },
+                    { type: "first_aid",            label: "Pet first aid certificate",  required: false },
+                  ];
+
+                  const requiredDocs = docs.filter((d) =>
+                    d.required === true || (d.required === "if_employees" && profile.has_employees)
+                  );
+                  const verifiedCount = requiredDocs.filter((d) => (profile as any)[`${d.type}_doc_verified`]).length;
+                  const allRequiredVerified = verifiedCount === requiredDocs.length;
+
+                  return (
+                    <div className="pb-4 space-y-4">
+                      {/* Status override */}
+                      <div>
+                        <FieldLabel>Status override</FieldLabel>
+                        <div className="flex gap-2">
+                          <select className="field flex-1" value={profile.verification_status} onChange={(e) => updateProfile({ verification_status: e.target.value })}>
+                            {VERIFICATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={saveVerification}
+                            disabled={verifyPending}
+                            className="btn-primary font-nunito font-bold px-4 py-2 rounded-full text-sm focus-ring disabled:opacity-40 shrink-0"
+                          >
+                            {verifyPending ? "Saving…" : "Save"}
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-pebble-grey mt-1">Use to revoke or manually override. Verified status is set automatically when all required docs pass.</p>
+                      </div>
+
+                      {/* Required docs progress */}
+                      <div className="flex items-center gap-3 py-2.5 px-3 rounded-xl border border-pebble-grey/20 bg-alabaster-cream/60">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${allRequiredVerified ? "bg-sage-leaf text-white" : "bg-pebble-grey/20 text-deep-slate"}`}>
+                          {allRequiredVerified ? "✓" : `${verifiedCount}/${requiredDocs.length}`}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-deep-slate">
+                            {allRequiredVerified ? "All required documents verified" : "Required documents"}
+                          </p>
+                          <p className="text-[11px] text-pebble-grey">
+                            {allRequiredVerified
+                              ? "Profile will auto-upgrade to Verified on next doc approval."
+                              : `${requiredDocs.length - verifiedCount} remaining before profile can be verified.`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Doc cards */}
+                      <div className="space-y-2 pt-1 border-t border-pebble-grey/10">
+                        {docs.map(({ type, label, required }) => {
+                          const url = (profile as any)[`${type}_doc_url`] as string | null;
+                          const verified = (profile as any)[`${type}_doc_verified`] as boolean;
+                          const isRequired = required === true || (required === "if_employees" && profile.has_employees);
+                          const pending = docPending[type];
+                          const isPhotoIdVerified = type === "photo_id" && verified;
+
+                          return (
+                            <div
+                              key={type}
+                              className={`rounded-xl p-3 border transition-colors ${
+                                verified
+                                  ? "bg-sage-leaf/5 border-sage-leaf/20"
+                                  : url
+                                  ? "bg-groomr-gold/5 border-groomr-gold/30"
+                                  : "bg-alabaster-cream/60 border-pebble-grey/15"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-bold text-deep-slate">{label}</span>
+                                  {isRequired ? (
+                                    <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-muted-terracotta/10 text-muted-terracotta uppercase tracking-wide">Required</span>
+                                  ) : (
+                                    <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-pebble-grey/10 text-pebble-grey uppercase tracking-wide">Optional</span>
+                                  )}
+                                </div>
+                                {/* Status chip */}
+                                {verified ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sage-leaf/15 text-sage-leaf border border-sage-leaf/25 shrink-0">✓ Verified</span>
+                                ) : url ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-groomr-gold/20 text-deep-slate border border-groomr-gold/40 shrink-0">Pending review</span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-pebble-grey/10 text-pebble-grey border border-pebble-grey/20 shrink-0">Not submitted</span>
+                                )}
+                              </div>
+
+                              {/* View link */}
+                              {isPhotoIdVerified ? (
+                                <p className="text-[11px] text-pebble-grey mb-2">Identity confirmed · document deleted</p>
+                              ) : url ? (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] text-sage-leaf font-bold hover:opacity-70 mb-2"
+                                >
+                                  View document ↗
+                                </a>
+                              ) : (
+                                <p className="text-[11px] text-pebble-grey mb-2">No document uploaded</p>
+                              )}
+
+                              {/* Actions — only when doc is uploaded and not yet verified */}
+                              {url && !verified && (
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleVerifyDoc(type)}
+                                    disabled={!!pending}
+                                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-sage-leaf text-white hover:opacity-80 disabled:opacity-40 transition-opacity"
+                                  >
+                                    {pending === "verifying" ? "Verifying…" : "✓ Verify"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRejectDoc(type)}
+                                    disabled={!!pending}
+                                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-muted-terracotta/10 text-muted-terracotta border border-muted-terracotta/30 hover:bg-muted-terracotta/20 disabled:opacity-40 transition-colors"
+                                  >
+                                    {pending === "rejecting" ? "Rejecting…" : "✗ Reject"}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-pebble-grey/10">
-                      {[
-                        { key: "insurance_doc_url", verifiedKey: "insurance_doc_verified", label: "Public liability insurance" },
-                        { key: "qualification_doc_url", verifiedKey: "qualification_doc_verified", label: "Qualifications" },
-                        { key: "first_aid_doc_url", verifiedKey: "first_aid_doc_verified", label: "Pet first aid certificate" },
-                        { key: "photo_id_doc_url", verifiedKey: "photo_id_doc_verified", label: "Photo ID" },
-                        { key: "employers_liability_doc_url", verifiedKey: "employers_liability_doc_verified", label: "Employers' liability" },
-                      ].map(({ key, verifiedKey, label }) => {
-                        const url = (profile as any)[key] as string | null;
-                        const verified = (profile as any)[verifiedKey] as boolean;
-                        return (
-                          <div key={key} className="bg-alabaster-cream/60 rounded-xl p-3">
-                            <p className="text-xs font-bold text-pebble-grey mb-1.5">{label}</p>
-                            {url ? (
-                              <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-sage-leaf font-bold underline underline-offset-2 hover:opacity-70 block truncate">
-                                View document ↗
-                              </a>
-                            ) : (
-                              <p className="text-xs text-pebble-grey">Not uploaded</p>
-                            )}
-                            {url && (
-                              <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                                <input type="checkbox" checked={verified} onChange={(e) => updateProfile({ [verifiedKey]: e.target.checked } as any)} className="w-3.5 h-3.5 accent-groomr-gold" />
-                                <span className="text-xs font-bold text-deep-slate">Verified</span>
-                              </label>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <SaveRow onSave={saveVerification} pending={verifyPending} />
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* ── Account Settings ── */}

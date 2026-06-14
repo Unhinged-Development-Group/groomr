@@ -522,23 +522,39 @@ function ServiceCard({
             {service.description}
           </p>
         )}
-        {service.applicable_sizes && service.applicable_sizes.length > 0 && (
+        {/* Per-size pricing grid (when configured) */}
+        {service.size_prices && Object.keys(service.size_prices).length > 0 ? (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+            {(["xs","small","medium","large","xl"] as const).map((key) => {
+              const pence = service.size_prices![key];
+              if (pence == null) return null;
+              return (
+                <span key={key} className="text-xs font-bold text-deep-slate/70">
+                  <span className="text-sage-leaf">{SIZE_LABELS[key]}</span> {formatPrice(pence)}
+                </span>
+              );
+            })}
+          </div>
+        ) : service.applicable_sizes && service.applicable_sizes.length > 0 ? (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {service.applicable_sizes.map((size) => (
-              <span
-                key={size}
-                className="text-xs font-bold bg-sage-leaf/10 text-sage-leaf px-2.5 py-0.5 rounded-full border border-sage-leaf/20"
-              >
+              <span key={size} className="text-xs font-bold bg-sage-leaf/10 text-sage-leaf px-2.5 py-0.5 rounded-full border border-sage-leaf/20">
                 {SIZE_LABELS[size] ?? size}
               </span>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
       <div className="text-right shrink-0">
-        <span className="font-fredoka text-2xl text-deep-slate">
-          {formatPrice(service.price_pence)}
-        </span>
+        {service.size_prices && Object.keys(service.size_prices).length > 0 ? (
+          <span className="text-xs font-bold text-pebble-grey">
+            from {formatPrice(Math.min(...Object.values(service.size_prices)))}
+          </span>
+        ) : (
+          <span className="font-fredoka text-2xl text-deep-slate">
+            {formatPrice(service.price_pence)}
+          </span>
+        )}
         {depositDisplay && (
           <p className="text-xs text-pebble-grey mt-0.5">{depositDisplay}</p>
         )}

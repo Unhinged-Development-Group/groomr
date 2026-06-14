@@ -17,6 +17,7 @@ interface Service {
   price_pence: number;
   deposit_pence: number | null;
   applicable_sizes: string[] | null;
+  size_prices: Record<string, number> | null;
   sort_order: number | null;
 }
 
@@ -36,9 +37,11 @@ interface Review {
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const SIZE_LABELS: Record<string, string> = {
-  small: "Small",
-  medium: "Medium",
-  large: "Large",
+  xs:     "XS",
+  small:  "S",
+  medium: "M",
+  large:  "L",
+  xl:     "XL",
   giant: "Giant",
 };
 
@@ -75,7 +78,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
         const [svcRes, availRes, revRes, portfolioRes] = await Promise.all([
           supabase
             .from("services")
-            .select("id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, sort_order")
+            .select("id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, size_prices, sort_order")
             .eq("groomer_profile_id", groomer.id)
             .eq("is_active", true)
             .order("sort_order", { ascending: true, nullsFirst: false }),
@@ -483,23 +486,38 @@ function ServiceCard({
         {service.description && (
           <p className="text-xs text-pebble-grey mt-1 leading-relaxed">{service.description}</p>
         )}
-        {service.applicable_sizes && service.applicable_sizes.length > 0 && (
+        {service.size_prices && Object.keys(service.size_prices).length > 0 ? (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+            {(["xs","small","medium","large","xl"] as const).map((key) => {
+              const pence = service.size_prices![key];
+              if (pence == null) return null;
+              return (
+                <span key={key} className="text-xs font-bold text-deep-slate/70">
+                  <span className="text-sage-leaf">{SIZE_LABELS[key]}</span> £{(pence / 100).toFixed(0)}
+                </span>
+              );
+            })}
+          </div>
+        ) : service.applicable_sizes && service.applicable_sizes.length > 0 ? (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {service.applicable_sizes.map((size) => (
-              <span
-                key={size}
-                className="text-xs font-bold bg-sage-leaf/10 text-sage-leaf px-2.5 py-0.5 rounded-full border border-sage-leaf/20"
-              >
+              <span key={size} className="text-xs font-bold bg-sage-leaf/10 text-sage-leaf px-2.5 py-0.5 rounded-full border border-sage-leaf/20">
                 {SIZE_LABELS[size] ?? size}
               </span>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
       <div className="text-right shrink-0">
-        <span className="font-fredoka text-2xl text-deep-slate">
-          £{(service.price_pence / 100).toFixed(0)}
-        </span>
+        {service.size_prices && Object.keys(service.size_prices).length > 0 ? (
+          <span className="text-xs font-bold text-pebble-grey">
+            from £{(Math.min(...Object.values(service.size_prices)) / 100).toFixed(0)}
+          </span>
+        ) : (
+          <span className="font-fredoka text-2xl text-deep-slate">
+            £{(service.price_pence / 100).toFixed(0)}
+          </span>
+        )}
         {depositDisplay && (
           <p className="text-xs text-pebble-grey mt-0.5">{depositDisplay}</p>
         )}

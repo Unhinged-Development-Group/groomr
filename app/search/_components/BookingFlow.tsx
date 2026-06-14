@@ -11,7 +11,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { getDogs } from "@/app/actions/dogs";
-import { getAvailableSlots, createAppointment, createGroupAppointment } from "@/app/actions/booking";
+import { getAvailableSlots, createAppointment, createGroupAppointment, confirmBooking } from "@/app/actions/booking";
 import { createBookingPaymentIntent, createGroupPaymentIntent } from "@/app/actions/payments";
 import { createGCBillingRequest, createGCGroupBillingRequest } from "@/app/actions/payments-gocardless";
 import { checkTermsAcceptance, acceptContractTerms } from "@/app/actions/contract-terms";
@@ -68,6 +68,7 @@ interface Service {
   duration_minutes: number | null;
   price_pence: number;
   deposit_pence: number | null;
+  applicable_sizes: string[] | null;
 }
 
 interface AvailabilityRow {
@@ -265,6 +266,7 @@ export function BookingFlow({
   const [paymentAmountPence, setPaymentAmountPence] = useState<number>(0);
   const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
   const [createdGroupId, setCreatedGroupId] = useState<string | null>(null);
+  const [createdGroupFirstApptId, setCreatedGroupFirstApptId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "gocardless" | null>(null);
   const [gcAuthorisationUrl, setGcAuthorisationUrl] = useState<string | null>(null);
   const [loadingPaymentMethod, setLoadingPaymentMethod] = useState(false);
@@ -431,12 +433,14 @@ export function BookingFlow({
       }
 
       if (depositPolicy.type === "none") {
+        await confirmBooking(groupResult.appointmentIds[0]);
         setSubmitting(false);
         setSuccess(true);
         return;
       }
 
       setCreatedGroupId(groupResult.bookingGroupId);
+      setCreatedGroupFirstApptId(groupResult.appointmentIds[0]);
       setSubmitting(false);
       setStep(5);
       return;
@@ -457,6 +461,7 @@ export function BookingFlow({
     }
 
     if (depositPolicy.type === "none") {
+      await confirmBooking(apptResult.appointmentId);
       setSubmitting(false);
       setSuccess(true);
       return;
@@ -465,6 +470,17 @@ export function BookingFlow({
     setCreatedAppointmentId(apptResult.appointmentId);
     setSubmitting(false);
     setStep(5);
+  }
+
+  // Step 5 → Stripe payment succeeded — confirm the appointment then show success
+  async function handleStripeSuccess() {
+    const apptId = createdAppointmentId ?? createdGroupFirstApptId;
+    if (apptId) {
+      await confirmBooking(apptId).catch((e) =>
+        console.error("[BookingFlow] confirmBooking error:", e),
+      );
+    }
+    setSuccess(true);
   }
 
   // Step 5 → user chose card payment
@@ -773,9 +789,13 @@ export function BookingFlow({
                     // ── Single-pet mode (default) ──────────────────────────────
                     <>
                       <p className="text-sm text-pebble-grey font-nunito">Which dog is this booking for?</p>
-                      {dogs.map((dog) => (
+                      {dogs.map((dog) => {
+                        const sizes = selectedService?.applicable_sizes;
+                        const incompatible = sizes && sizes.length > 0 && dog.size != null && !sizes.includes(dog.size);
+                        return (
                         <button
                           key={dog.id}
+                          disabled={!!incompatible}
                           onClick={async () => {
                             setSelectedDog(dog);
                             setAdditionalPets([]);
@@ -788,7 +808,7 @@ export function BookingFlow({
                               setTermsChecked(false);
                             }
                           }}
-                          className="w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-4 hover:border-deep-slate hover:shadow-sm transition-all focus-ring flex items-center gap-4"
+                          className={`w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-4 transition-all focus-ring flex items-center gap-4 ${incompatible ? "opacity-40 cursor-not-allowed" : "hover:border-deep-slate hover:shadow-sm"}`}
                         >
                           {dog.profile_image_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -796,14 +816,20 @@ export function BookingFlow({
                           ) : (
                             <div className="w-12 h-12 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0 text-xl">🐾</div>
                           )}
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="font-fredoka text-lg text-deep-slate leading-tight">{dog.name}</p>
                             <p className="text-xs text-pebble-grey mt-0.5">
                               {[dog.breed, dog.size].filter(Boolean).join(" · ") || "Dog"}
                             </p>
+                            {incompatible && (
+                              <p className="text-xs text-muted-terracotta mt-1 font-bold">
+                                Not eligible for {selectedService?.name} (size mismatch)
+                              </p>
+                            )}
                           </div>
                         </button>
-                      ))}
+                        );
+                      })}
                       {dogs.length > 1 && (
                         <button
                           onClick={() => { setMultiPetMode(true); setSelectedDog(null); setAdditionalPets([]); }}
@@ -874,7 +900,13 @@ export function BookingFlow({
                                   }}
                                   className="field w-full text-sm"
                                 >
-                                  {services.filter(s => s.id).map((s) => (
+                                  {services.filter((s) => {
+                                    if (!s.id) return false;
+                                    const sizes = s.applicable_sizes;
+                                    if (!sizes || sizes.length === 0) return true;
+                                    if (!dog.size) return true;
+                                    return sizes.includes(dog.size);
+                                  }).map((s) => (
                                     <option key={s.id} value={s.id!}>{s.name} — £{(s.price_pence / 100).toFixed(0)}</option>
                                   ))}
                                 </select>
@@ -1037,7 +1069,7 @@ export function BookingFlow({
                 amountPence={paymentAmountPence}
                 depositPolicy={depositPolicy}
                 groomerName={groomerName}
-                onSuccess={() => setSuccess(true)}
+                onSuccess={handleStripeSuccess}
               />
             ) : paymentMethod === "gocardless" && gcAuthorisationUrl ? (
               <DirectDebitStep

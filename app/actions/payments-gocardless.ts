@@ -11,6 +11,7 @@ import {
   getBillingRequest,
   getGCPayment,
 } from "@/lib/gocardless";
+import { confirmBooking } from "@/app/actions/booking";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -249,7 +250,7 @@ export async function syncGCPayment(
 
   const { data: payment } = await supabaseAdmin
     .from("payments")
-    .select("id")
+    .select("id, appointment_id")
     .eq("gc_billing_request_id", billingRequestId)
     .maybeSingle();
 
@@ -260,17 +261,23 @@ export async function syncGCPayment(
     const updates: Record<string, unknown> = {};
 
     if (brq.links?.mandate) updates.gc_mandate_id = brq.links.mandate;
+    let paymentConfirmed = false;
     if (brq.links?.payment) {
       updates.gc_payment_id = brq.links.payment;
       const gcPayment = await getGCPayment(brq.links.payment);
       if (gcPayment.status === "confirmed" || gcPayment.status === "paid_out") {
         updates.deposit_status = "paid";
         updates.deposit_paid_at = new Date().toISOString();
+        paymentConfirmed = true;
       }
     }
 
     if (Object.keys(updates).length > 0) {
       await supabaseAdmin.from("payments").update(updates).eq("id", payment.id);
+    }
+
+    if (paymentConfirmed && payment.appointment_id) {
+      await confirmBooking(payment.appointment_id);
     }
 
     return { status: brq.status };

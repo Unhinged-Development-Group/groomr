@@ -18,6 +18,7 @@ interface Service {
   duration_minutes: number | null;
   price_pence: number;
   deposit_pence: number | null;
+  applicable_sizes: string[] | null;
 }
 
 interface AvailabilityRow {

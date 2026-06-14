@@ -225,7 +225,7 @@ export async function createAppointment(
 
   const { data: dog } = await supabaseAdmin
     .from("dogs")
-    .select("id")
+    .select("id, size")
     .eq("id", input.dogId)
     .eq("owner_id", profileId)
     .maybeSingle();
@@ -233,7 +233,7 @@ export async function createAppointment(
 
   const { data: service } = await supabaseAdmin
     .from("services")
-    .select("name, duration_minutes, price_pence, groomer_profile_id, is_active")
+    .select("name, duration_minutes, price_pence, size_prices, groomer_profile_id, is_active")
     .eq("id", input.serviceId)
     .maybeSingle();
 
@@ -258,12 +258,19 @@ export async function createAppointment(
 
   if (hasConflict) return { error: "That slot was just taken — please pick another time." };
 
-  // Resolve effective price — per-service fixed override takes priority over discount %
+  // Resolve base price: use the size-specific price if the dog's size is in size_prices
+  const sizePrices = (service.size_prices ?? {}) as Record<string, number>;
+  const dogSize = dog.size as string | null;
+  const basePricePence = (dogSize && sizePrices[dogSize] != null)
+    ? sizePrices[dogSize]
+    : service.price_pence;
+
+  // Apply per-client overrides (fixed price override or discount %) on top of size price
   const effectivePricePence = await resolveEffectivePrice(
     input.groomerProfileId,
     profileId,
     input.serviceId,
-    service.price_pence,
+    basePricePence,
   );
 
   const { data, error } = await supabaseAdmin
@@ -277,7 +284,7 @@ export async function createAppointment(
       service_snapshot_duration: service.duration_minutes,
       service_snapshot_price:    effectivePricePence,
       scheduled_at:              input.scheduledAt,
-      status:                    "confirmed",
+      status:                    "pending",
     })
     .select("id")
     .single();
@@ -286,15 +293,6 @@ export async function createAppointment(
     console.error("createAppointment error:", error);
     return { error: "Failed to create appointment. Please try again." };
   }
-
-  console.log("[createAppointment] created id:", data.id, "groomer:", input.groomerProfileId);
-
-  await sendBookingConfirmationEmails(data.id).catch((e) =>
-    console.error("[createAppointment] email error:", e),
-  );
-  sendBookingConfirmationSMS(data.id).catch((e) =>
-    console.error("[createAppointment] sms error:", e),
-  );
 
   return { appointmentId: data.id };
 }
@@ -325,16 +323,16 @@ export async function createGroupAppointment(input: {
   const profileId = await getProfileId(userId);
   if (!profileId) return { error: "Profile not found." };
 
-  // Validate all dogs belong to this owner
+  // Validate all dogs belong to this owner and fetch their sizes
   const dogIds = input.pets.map((p) => p.dogId);
   const { data: ownedDogs } = await supabaseAdmin
     .from("dogs")
-    .select("id")
+    .select("id, size")
     .eq("owner_id", profileId)
     .in("id", dogIds);
 
-  const ownedIds = new Set((ownedDogs ?? []).map((d) => d.id));
-  if (dogIds.some((id) => !ownedIds.has(id))) {
+  const ownedDogMap = new Map((ownedDogs ?? []).map((d) => [d.id as string, d.size as string | null]));
+  if (dogIds.some((id) => !ownedDogMap.has(id))) {
     return { error: "One or more dogs don't belong to your account." };
   }
 
@@ -351,7 +349,7 @@ export async function createGroupAppointment(input: {
   for (const pet of input.pets) {
     const { data: service } = await supabaseAdmin
       .from("services")
-      .select("name, duration_minutes, price_pence, groomer_profile_id, is_active")
+      .select("name, duration_minutes, price_pence, size_prices, groomer_profile_id, is_active")
       .eq("id", pet.serviceId)
       .maybeSingle();
 
@@ -359,11 +357,17 @@ export async function createGroupAppointment(input: {
       return { error: `Service not found for one of the pets.` };
     }
 
+    const sizePrices = (service.size_prices ?? {}) as Record<string, number>;
+    const dogSize = ownedDogMap.get(pet.dogId) ?? null;
+    const basePricePence = (dogSize && sizePrices[dogSize] != null)
+      ? sizePrices[dogSize]
+      : service.price_pence;
+
     const effectivePricePence = await resolveEffectivePrice(
       input.groomerProfileId,
       profileId,
       pet.serviceId,
-      service.price_pence,
+      basePricePence,
     );
 
     resolved.push({
@@ -426,7 +430,7 @@ export async function createGroupAppointment(input: {
       service_snapshot_duration: pet.durationMinutes,
       service_snapshot_price:    pet.effectivePricePence,
       scheduled_at:              scheduledAt,
-      status:                    "confirmed",
+      status:                    "pending",
       booking_group_id:          bookingGroupId,
     };
   });
@@ -443,4 +447,42 @@ export async function createGroupAppointment(input: {
 
   const appointmentIds = inserted.map((r) => r.id);
   return { appointmentIds, bookingGroupId };
+}
+
+// ---------------------------------------------------------------------------
+// confirmBooking
+//
+// Moves an appointment (and all group siblings if applicable) from "pending"
+// to "confirmed" and fires confirmation emails + SMS. Idempotent — if the
+// appointment is already confirmed the function is a no-op and no emails fire.
+// ---------------------------------------------------------------------------
+
+export async function confirmBooking(appointmentId: string): Promise<void> {
+  const { data: appt } = await supabaseAdmin
+    .from("appointments")
+    .select("id, status, booking_group_id")
+    .eq("id", appointmentId)
+    .maybeSingle();
+
+  if (!appt || appt.status !== "pending") return;
+
+  if (appt.booking_group_id) {
+    await supabaseAdmin
+      .from("appointments")
+      .update({ status: "confirmed" })
+      .eq("booking_group_id", appt.booking_group_id)
+      .neq("status", "cancelled");
+  } else {
+    await supabaseAdmin
+      .from("appointments")
+      .update({ status: "confirmed" })
+      .eq("id", appointmentId);
+  }
+
+  await sendBookingConfirmationEmails(appointmentId).catch((e) =>
+    console.error("[confirmBooking] email error:", e),
+  );
+  sendBookingConfirmationSMS(appointmentId).catch((e) =>
+    console.error("[confirmBooking] sms error:", e),
+  );
 }

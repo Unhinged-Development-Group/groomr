@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { confirmBooking } from "@/app/actions/booking";
 
 function verifySignature(rawBody: string, signature: string): boolean {
   const secret = process.env.GOCARDLESS_WEBHOOK_SECRET;
@@ -54,6 +55,12 @@ export async function POST(request: NextRequest) {
         if (!gcPaymentId) continue;
 
         if (event.action === "confirmed" || event.action === "paid_out") {
+          const { data: paymentRow } = await supabaseAdmin
+            .from("payments")
+            .select("appointment_id")
+            .eq("gc_payment_id", gcPaymentId)
+            .maybeSingle();
+
           await supabaseAdmin
             .from("payments")
             .update({
@@ -61,6 +68,10 @@ export async function POST(request: NextRequest) {
               deposit_paid_at: new Date().toISOString(),
             })
             .eq("gc_payment_id", gcPaymentId);
+
+          if (paymentRow?.appointment_id) {
+            await confirmBooking(paymentRow.appointment_id);
+          }
         } else if (event.action === "failed" || event.action === "charged_back") {
           await supabaseAdmin
             .from("payments")

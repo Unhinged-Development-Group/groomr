@@ -161,7 +161,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
   const [{ data: serviceRows }, { data: availabilityRows }, { data: teamRows }, { count: portfolioCount }, { data: contractTermsRow }] = await Promise.all([
     supabaseAdmin
       .from("services")
-      .select("id, name, duration_minutes, price_pence, sort_order")
+      .select("id, name, duration_minutes, price_pence, size_prices, sort_order")
       .eq("groomer_profile_id", groomerProfileId)
       .eq("is_active", true)
       .order("sort_order"),
@@ -211,6 +211,7 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     name: s.name,
     duration: s.duration_minutes ?? 60,
     price: s.price_pence ?? 0,
+    sizePrices: (s.size_prices ?? {}) as Record<string, number>,
     sortOrder: s.sort_order ?? i,
   }));
 
@@ -442,35 +443,56 @@ export async function saveServices(
 
   if (!gp) return { error: "Not authorised" };
 
-  const payload = rows.map((s, i) => ({
-    name: s.name,
-    duration_minutes: s.duration,
-    price_pence: s.price,
-    sort_order: i,
-  }));
+  // Fetch existing service IDs so we can delete any that were removed
+  const { data: existing } = await supabaseAdmin
+    .from("services")
+    .select("id")
+    .eq("groomer_profile_id", groomerProfileId);
 
-  const { data: result, error } = await supabaseAdmin.rpc("replace_services", {
-    p_groomer_profile_id: groomerProfileId,
-    p_services: payload,
-  });
+  const existingIds = new Set((existing ?? []).map((s) => s.id as string));
+  const keptIds = new Set(rows.filter((r) => r.id).map((r) => r.id as string));
+  const toDelete = [...existingIds].filter((id) => !keptIds.has(id));
+  if (toDelete.length > 0) {
+    await supabaseAdmin.from("services").delete().in("id", toDelete);
+  }
 
-  if (error) return { error: error.message };
+  const saved: ServiceRow[] = [];
 
-  const inserted = (result ?? []) as Array<{
-    id: string;
-    name: string;
-    duration_minutes: number;
-    price_pence: number;
-    sort_order: number;
-  }>;
+  for (let i = 0; i < rows.length; i++) {
+    const s = rows[i];
+    const enabledPrices = Object.values(s.sizePrices);
+    const pricePence = enabledPrices.length > 0
+      ? Math.min(...enabledPrices)
+      : s.price;
+    const applicableSizes = Object.keys(s.sizePrices);
 
-  const saved: ServiceRow[] = inserted.map((s, i) => ({
-    id: s.id,
-    name: s.name,
-    duration: s.duration_minutes ?? 60,
-    price: s.price_pence ?? 0,
-    sortOrder: s.sort_order ?? i,
-  }));
+    const row = {
+      groomer_profile_id: groomerProfileId,
+      name: s.name,
+      duration_minutes: s.duration,
+      price_pence: pricePence,
+      size_prices: s.sizePrices,
+      applicable_sizes: applicableSizes,
+      is_active: true,
+      sort_order: i,
+    };
+
+    if (s.id) {
+      await supabaseAdmin
+        .from("services")
+        .update(row)
+        .eq("id", s.id)
+        .eq("groomer_profile_id", groomerProfileId);
+      saved.push({ ...s, price: pricePence, sortOrder: i });
+    } else {
+      const { data: inserted } = await supabaseAdmin
+        .from("services")
+        .insert(row)
+        .select("id")
+        .single();
+      saved.push({ ...s, id: inserted?.id ?? null, price: pricePence, sortOrder: i });
+    }
+  }
 
   revalidatePath(`/groomers/${groomerProfileId}`);
   return { services: saved };

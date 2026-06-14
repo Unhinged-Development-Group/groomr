@@ -13,16 +13,24 @@ import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
 import { saveContractTerms, getClientTermsStatus } from "@/app/actions/contract-terms";
 import type { ProfileFormData, ServiceRow, AvailabilityRow, BreakSlot, TeamMemberRow, VerificationDocs, VerificationDocType } from "@/types/groomer-dashboard";
 
-const SERVICE_TEMPLATES: Array<{ name: string; duration: number; price: number }> = [
-  { name: "Bath & Brush",          duration: 45,  price: 3800 },
-  { name: "Full Groom",            duration: 90,  price: 5800 },
-  { name: "Hand Strip",            duration: 120, price: 8000 },
-  { name: "Nail Clip",             duration: 15,  price: 1500 },
-  { name: "Teeth Brushing",        duration: 15,  price: 1000 },
-  { name: "Ear Clean",             duration: 10,  price:  800 },
-  { name: "Dematting",             duration: 60,  price: 4000 },
-  { name: "Puppy First Groom",     duration: 45,  price: 3500 },
-  { name: "Anal Gland Expression", duration: 10,  price: 1200 },
+const DOG_SIZES = [
+  { key: "xs",     label: "XS" },
+  { key: "small",  label: "S"  },
+  { key: "medium", label: "M"  },
+  { key: "large",  label: "L"  },
+  { key: "xl",     label: "XL" },
+] as const;
+
+const SERVICE_TEMPLATES: Array<{ name: string; duration: number }> = [
+  { name: "Bath & Brush",          duration: 45  },
+  { name: "Full Groom",            duration: 90  },
+  { name: "Hand Strip",            duration: 120 },
+  { name: "Nail Clip",             duration: 15  },
+  { name: "Teeth Brushing",        duration: 15  },
+  { name: "Ear Clean",             duration: 10  },
+  { name: "Dematting",             duration: 60  },
+  { name: "Puppy First Groom",     duration: 45  },
+  { name: "Anal Gland Expression", duration: 10  },
 ];
 
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
@@ -289,7 +297,7 @@ export function ProfileEditor({
     if (services.some((s) => s.name === tpl.name)) return;
     setServices((arr) => [
       ...arr,
-      { id: null, name: tpl.name, duration: tpl.duration, price: tpl.price, sortOrder: arr.length },
+      { id: null, name: tpl.name, duration: tpl.duration, price: 0, sizePrices: {}, sortOrder: arr.length },
     ]);
   }
 
@@ -630,7 +638,7 @@ export function ProfileEditor({
                 onClick={() =>
                   setServices((s) => [
                     ...s,
-                    { id: null, name: "New service", duration: 30, price: 2000, sortOrder: s.length },
+                    { id: null, name: "New service", duration: 30, price: 0, sizePrices: {}, sortOrder: s.length },
                   ])
                 }
                 className="btn-secondary font-nunito font-bold px-4 py-1.5 rounded-full text-xs focus-ring flex items-center gap-1 shrink-0"
@@ -673,43 +681,96 @@ export function ProfileEditor({
               )}
             </div>
 
-            <div className="space-y-2">
-              <div className="hidden sm:grid grid-cols-[1fr_100px_100px_40px] gap-3 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-pebble-grey">
-                <span>Service</span><span>Duration</span><span>Price</span><span />
-              </div>
+            <div className="space-y-3">
               {services.map((s, i) => (
-                <div key={i} className="grid grid-cols-[1fr_76px_76px_36px] sm:grid-cols-[1fr_100px_100px_40px] gap-2 sm:gap-3 items-center">
-                  <input
-                    className="field"
-                    value={s.name}
-                    onChange={(e) => updateService(i, { name: e.target.value })}
-                  />
-                  <div className="relative">
+                <div key={i} className="bg-alabaster-cream border border-pebble-grey/20 rounded-2xl p-4 space-y-4">
+                  {/* Service name + duration + delete */}
+                  <div className="flex items-center gap-2">
                     <input
-                      className="field w-full pr-8 sm:pr-10"
-                      type="number"
-                      value={s.duration}
-                      onChange={(e) => updateService(i, { duration: Number(e.target.value) })}
+                      className="field flex-1 min-w-0"
+                      value={s.name}
+                      placeholder="Service name"
+                      onChange={(e) => updateService(i, { name: e.target.value })}
                     />
-                    <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-pebble-grey">min</span>
+                    <div className="relative w-20 shrink-0">
+                      <input
+                        className="field w-full pr-7"
+                        type="number"
+                        min={5}
+                        value={s.duration}
+                        onChange={(e) => updateService(i, { duration: Number(e.target.value) })}
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-pebble-grey pointer-events-none">min</span>
+                    </div>
+                    <button
+                      onClick={() => setServices((arr) => arr.filter((_, j) => j !== i))}
+                      className="shrink-0 rounded-full p-1.5 text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors focus-ring"
+                      aria-label="Remove service"
+                    >
+                      <TrashIcon size={15} />
+                    </button>
                   </div>
-                  <div className="relative">
-                    <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-pebble-grey">£</span>
-                    <input
-                      className="field w-full pl-5 sm:pl-7"
-                      type="number"
-                      step="0.01"
-                      value={(s.price / 100).toFixed(2)}
-                      onChange={(e) => updateService(i, { price: Math.round(Number(e.target.value) * 100) })}
-                    />
+
+                  {/* Per-size pricing */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey mb-2">Size pricing</p>
+                    <div className="grid grid-cols-5 gap-2">
+                      {DOG_SIZES.map(({ key, label }) => {
+                        const enabled = key in s.sizePrices;
+                        const pence = s.sizePrices[key] ?? 0;
+                        return (
+                          <div key={key} className="space-y-1.5">
+                            <label className="flex items-center justify-center gap-1 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={enabled}
+                                onChange={(e) => {
+                                  const next = { ...s.sizePrices };
+                                  if (e.target.checked) {
+                                    next[key] = 0;
+                                  } else {
+                                    delete next[key];
+                                  }
+                                  updateService(i, { sizePrices: next });
+                                }}
+                                className="rounded shrink-0"
+                              />
+                              <span className="text-xs font-bold text-deep-slate">{label}</span>
+                            </label>
+                            {enabled ? (
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-pebble-grey pointer-events-none">£</span>
+                                <input
+                                  className="field w-full pl-4 text-sm text-center"
+                                  type="number"
+                                  min={0}
+                                  step={0.5}
+                                  value={(pence / 100).toFixed(2)}
+                                  onChange={(e) =>
+                                    updateService(i, {
+                                      sizePrices: {
+                                        ...s.sizePrices,
+                                        [key]: Math.round(Number(e.target.value) * 100),
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            ) : (
+                              <div className="h-9 rounded-lg bg-pebble-grey/8 border border-pebble-grey/10 flex items-center justify-center">
+                                <span className="text-xs text-pebble-grey/40">—</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {Object.keys(s.sizePrices).length === 0 && (
+                      <p className="text-[10px] text-pebble-grey/70 mt-2">
+                        Tick the sizes this service is available for and set a price for each.
+                      </p>
+                    )}
                   </div>
-                  <button
-                    onClick={() => setServices((arr) => arr.filter((_, j) => j !== i))}
-                    className="rounded-full p-1.5 sm:p-2 text-muted-terracotta hover:bg-muted-terracotta/10 transition-colors focus-ring justify-self-center"
-                    aria-label="Remove"
-                  >
-                    <TrashIcon size={15} />
-                  </button>
                 </div>
               ))}
             </div>

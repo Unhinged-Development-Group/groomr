@@ -18,7 +18,8 @@ interface Client {
   breed: string;
   owner: string;
   visits: number;
-  last: string;
+  last: string;    // most recent past appointment date (display string)
+  next: string;    // earliest upcoming appointment date (display string)
   spend: number;
   regular: boolean;
   note: string;
@@ -75,7 +76,7 @@ function ContactRow({ label, value }: { label: string; value: string }) {
 
 function ClientModal({ client, visits, services, onClose }: {
   client: Client | null;
-  visits: Array<{ date: string; service: string; price: number }>;
+  visits: Array<{ date: string; service: string; price: number; scheduledAt: string }>;
   services: ServiceRow[];
   onClose: () => void;
 }) {
@@ -106,6 +107,13 @@ function ClientModal({ client, visits, services, onClose }: {
 
   if (!client) return null;
 
+  const now = new Date();
+  const pastVisits = visits.filter(v => new Date(v.scheduledAt) <= now);
+  const upcomingVisits = visits.filter(v => new Date(v.scheduledAt) > now).reverse();
+
+  const dateCardValue = client.next || client.last || "—";
+  const dateCardLabel = client.next ? "Next visit" : "Last visit";
+
   return (
     <Modal open={!!client} onClose={onClose} size="lg">
       <div className="space-y-5">
@@ -127,8 +135,8 @@ function ClientModal({ client, visits, services, onClose }: {
             <p className="text-xs font-bold text-pebble-grey mt-1">Visits</p>
           </div>
           <div className="bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4 text-center">
-            <p className="font-fredoka text-2xl text-deep-slate">{client.last}</p>
-            <p className="text-xs font-bold text-pebble-grey mt-1">Last visit</p>
+            <p className="font-fredoka text-2xl text-deep-slate">{dateCardValue}</p>
+            <p className="text-xs font-bold text-pebble-grey mt-1">{dateCardLabel}</p>
           </div>
           <div className="bg-alabaster-cream border border-pebble-grey/15 rounded-2xl p-4 text-center">
             <p className="font-fredoka text-2xl text-deep-slate">£{client.spend}</p>
@@ -181,13 +189,36 @@ function ClientModal({ client, visits, services, onClose }: {
           {visits.length === 0 ? (
             <p className="px-4 py-4 text-sm text-pebble-grey font-bold">No visits recorded yet.</p>
           ) : (
-            visits.map((v, i) => (
-              <div key={i} className={`grid grid-cols-[90px_1fr_auto] gap-3 px-4 py-3 items-center ${i ? "border-t border-pebble-grey/10" : ""}`}>
-                <span className="font-bold text-sm text-deep-slate">{v.date}</span>
-                <span className="text-sm text-deep-slate">{v.service || "—"}</span>
-                <span className="font-fredoka text-deep-slate">£{v.price.toFixed(2)}</span>
-              </div>
-            ))
+            <>
+              {upcomingVisits.length > 0 && (
+                <>
+                  <div className="px-4 py-2 bg-alabaster-cream border-b border-pebble-grey/10">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Upcoming</p>
+                  </div>
+                  {upcomingVisits.map((v, i) => (
+                    <div key={`up-${i}`} className={`grid grid-cols-[90px_1fr_auto] gap-3 px-4 py-3 items-center ${i ? "border-t border-pebble-grey/10" : ""}`}>
+                      <span className="font-bold text-sm text-deep-slate">{v.date}</span>
+                      <span className="text-sm text-deep-slate">{v.service || "—"}</span>
+                      <span className="font-fredoka text-deep-slate">£{v.price.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+              {pastVisits.length > 0 && (
+                <>
+                  <div className={`px-4 py-2 bg-alabaster-cream border-b border-pebble-grey/10 ${upcomingVisits.length > 0 ? "border-t border-pebble-grey/10" : ""}`}>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-pebble-grey">Past</p>
+                  </div>
+                  {pastVisits.map((v, i) => (
+                    <div key={`past-${i}`} className={`grid grid-cols-[90px_1fr_auto] gap-3 px-4 py-3 items-center ${i ? "border-t border-pebble-grey/10" : ""}`}>
+                      <span className="font-bold text-sm text-deep-slate">{v.date}</span>
+                      <span className="text-sm text-deep-slate">{v.service || "—"}</span>
+                      <span className="font-fredoka text-deep-slate">£{v.price.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </>
           )}
         </div>
 
@@ -209,7 +240,7 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "last", dir: "desc" });
   const [openClient, setOpenClient] = useState<Client | null>(null);
-  const [openClientVisits, setOpenClientVisits] = useState<Array<{ date: string; service: string; price: number }>>([]);
+  const [openClientVisits, setOpenClientVisits] = useState<Array<{ date: string; service: string; price: number; scheduledAt: string }>>([]);
 
   function sortBy(key: SortKey) {
     setSort(s => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
@@ -217,12 +248,13 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
 
   // Calculate clients from appointments
   const clientsMap = new Map<string, Client>();
-  
+  const now = new Date();
+
   appointments.forEach(a => {
     if (a.status === 'cancelled') return;
     const clientId = a.owner_id + "-" + a.dog_id;
     const d = new Date(a.scheduled_at);
-    
+
     if (!clientsMap.has(clientId)) {
       const ownerName = a.profiles?.full_name
         || (a.profiles?.first_name || a.profiles?.last_name
@@ -236,6 +268,7 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
         owner: ownerName,
         visits: 0,
         last: "",
+        next: "",
         spend: 0,
         regular: false,
         note: a.owner_notes || "",
@@ -246,14 +279,23 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
         photoUrl: a.dogs?.profile_image_url || null,
       });
     }
-    
+
     const c = clientsMap.get(clientId)!;
     c.visits += 1;
     c.spend += (a.service_snapshot_price || 0) / 100;
 
-    const lastDate = c.last ? new Date(c.last) : new Date(0);
-    if (d > lastDate) {
-      c.last = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (d <= now) {
+      // Past: track most recent
+      const lastDate = c.last ? new Date(c.last) : new Date(0);
+      if (d > lastDate) {
+        c.last = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    } else {
+      // Future: track earliest upcoming
+      const nextDate = c.next ? new Date(c.next) : new Date(8640000000000000);
+      if (d < nextDate) {
+        c.next = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
     }
 
     if (c.visits >= 3) {
@@ -273,7 +315,7 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
     if (sort.key === "dog")    { av = a.dog.toLowerCase();   bv = b.dog.toLowerCase(); }
     if (sort.key === "owner")  { av = a.owner.toLowerCase(); bv = b.owner.toLowerCase(); }
     if (sort.key === "visits") { av = a.visits;              bv = b.visits; }
-    if (sort.key === "last")   { av = a.last === "—" ? 0 : new Date(a.last).getTime(); bv = b.last === "—" ? 0 : new Date(b.last).getTime(); }
+    if (sort.key === "last")   { av = (a.next || a.last) === "—" ? 0 : new Date(a.next || a.last).getTime(); bv = (b.next || b.last) === "—" ? 0 : new Date(b.next || b.last).getTime(); }
     if (sort.key === "spend")  { av = a.spend;               bv = b.spend; }
     if (av < bv) return sort.dir === "asc" ? -1 : 1;
     if (av > bv) return sort.dir === "asc" ?  1 : -1;
@@ -336,6 +378,7 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
                 date: new Date(a.scheduled_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
                 service: a.service_snapshot_name || "—",
                 price: (a.service_snapshot_price || 0) / 100,
+                scheduledAt: a.scheduled_at,
               }));
             setOpenClientVisits(clientVisits);
             setOpenClient(c);
@@ -353,7 +396,7 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
               </div>
             </div>
             <span className="text-right font-fredoka text-deep-slate">{c.visits}</span>
-            <span className="text-right text-sm text-pebble-grey font-bold">{c.last}</span>
+            <span className="text-right text-sm text-pebble-grey font-bold">{c.next ? c.next : c.last}</span>
             <span className="text-right font-fredoka text-deep-slate">£{c.spend}</span>
             <span className="justify-self-end rounded-full p-2 bg-alabaster-cream border border-pebble-grey/20 text-deep-slate">
               <ChevronRightIcon size={16} />
@@ -379,6 +422,7 @@ export function ClientsView({ appointments, services }: { appointments: any[]; s
                 date: new Date(a.scheduled_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
                 service: a.service_snapshot_name || "—",
                 price: (a.service_snapshot_price || 0) / 100,
+                scheduledAt: a.scheduled_at,
               }));
             setOpenClientVisits(clientVisits);
             setOpenClient(c);

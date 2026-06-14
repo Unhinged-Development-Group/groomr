@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getFavouriteGroomers } from "@/app/actions/favourites";
@@ -11,8 +10,7 @@ import { ActionBar } from "./_components/ActionBar";
 import { GalleryGrid } from "./_components/GalleryGrid";
 import { ReviewsSection } from "./_components/ReviewsSection";
 import { ReportButton } from "./_components/ReportButton";
-
-const LocationMap = dynamic(() => import("./_components/LocationMap"), { ssr: false });
+import LocationMapWrapper from "./_components/LocationMapWrapper";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -104,7 +102,7 @@ export default async function GroomerProfilePage({
   // Resolve the actual UUID so all child queries use the right ID
   const resolvedId: string = groomerRes.data?.id ?? id;
 
-  const addressQuery = [groomer.city, groomer.postcode].filter(Boolean).join(" ");
+  const addressQuery = [groomerRes.data?.city, groomerRes.data?.postcode].filter(Boolean).join(" ");
 
   const [servicesRes, availabilityRes, reviewsRes, teamRes, favourites, portfolioRes, geocoded] =
     await Promise.all([
@@ -477,7 +475,7 @@ export default async function GroomerProfilePage({
               </div>
               {geocoded && (
                 <div className="h-40 rounded-xl overflow-hidden border border-pebble-grey/10 mt-1">
-                  <LocationMap lat={geocoded.lat} lng={geocoded.lng} />
+                  <LocationMapWrapper lat={geocoded.lat} lng={geocoded.lng} />
                 </div>
               )}
             </div>

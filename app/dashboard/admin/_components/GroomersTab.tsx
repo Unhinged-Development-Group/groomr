@@ -69,6 +69,7 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
   const [listFilter, setListFilter] = useState<ListFilter>("all");
   const [listSort, setListSort] = useState<ListSort>("joined");
   const [editGroomer, setEditGroomer] = useState<AdminGroomerRow | null>(null);
+  const [editInitialSection, setEditInitialSection] = useState<string | undefined>(undefined);
   const [contactGroomer, setContactGroomer] = useState<AdminGroomerRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [exportingBulk, startBulkExport] = useTransition();
@@ -158,7 +159,11 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
         <GroomerStatsBar groomers={groomers} />
 
         {/* Verification callout */}
-        <VerificationCallout groomers={groomers} onStatusChanged={handleStatusChanged} />
+        <VerificationCallout
+          groomers={groomers}
+          onStatusChanged={handleStatusChanged}
+          onEdit={(g) => { setEditGroomer(g); setEditInitialSection("verification"); }}
+        />
 
         {/* List controls: filter pills + sort pills | search + export */}
         <div className="flex items-center gap-2 flex-wrap justify-between">
@@ -299,7 +304,8 @@ export function GroomersTab({ initialGroomers }: { initialGroomers: AdminGroomer
       {editGroomer && (
         <GroomerEditModal
           groomer={editGroomer}
-          onClose={() => setEditGroomer(null)}
+          initialSection={editInitialSection}
+          onClose={() => { setEditGroomer(null); setEditInitialSection(undefined); }}
           onSaved={(updated) => {
             setGroomers((prev) =>
               prev.map((g) =>

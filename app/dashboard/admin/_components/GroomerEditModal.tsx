@@ -29,6 +29,7 @@ interface Props {
   groomer: AdminGroomerRow;
   onClose: () => void;
   onSaved: (updated: Partial<AdminGroomerRow>) => void;
+  initialSection?: string;
 }
 
 const DEPOSIT_TYPES = [
@@ -112,10 +113,10 @@ function SaveRow({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
+export function GroomerEditModal({ groomer, onClose, onSaved, initialSection }: Props) {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
-  const [openSection, setOpenSection] = useState<string | null>("basics");
+  const [openSection, setOpenSection] = useState<string | null>(initialSection ?? "basics");
 
   // Data state
   const [profile, setProfile] = useState<GroomerFullProfile | null>(null);

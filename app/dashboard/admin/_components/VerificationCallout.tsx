@@ -11,15 +11,16 @@ type VerificationStatus = "not_submitted" | "awaiting" | "verified" | "revoked_t
 function GroomerVerificationRow({
   groomer,
   onStatusChanged,
+  onEdit,
 }: {
   groomer: AdminGroomerRow;
   onStatusChanged: (id: string, status: string) => void;
+  onEdit: (groomer: AdminGroomerRow) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
 
   const status = groomer.verification_status as VerificationStatus;
-  const isAwaiting = status === "awaiting";
   const isNotSubmitted = status === "not_submitted";
 
   function setStatus(next: VerificationStatus, label: string) {
@@ -57,24 +58,12 @@ function GroomerVerificationRow({
                 Send reminder
               </button>
             )}
-            {isAwaiting && (
-              <>
-                <button
-                  onClick={() => setStatus("verified", "Verified")}
-                  disabled={pending}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sage-leaf/10 text-sage-leaf hover:bg-sage-leaf/20 border border-sage-leaf/30 transition-colors focus-ring disabled:opacity-50"
-                >
-                  Verify ✓
-                </button>
-                <button
-                  onClick={() => setStatus("not_submitted", "Denied — returned to not submitted")}
-                  disabled={pending}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-pebble-grey/10 text-pebble-grey hover:bg-pebble-grey/20 border border-pebble-grey/20 transition-colors focus-ring disabled:opacity-50"
-                >
-                  Deny
-                </button>
-              </>
-            )}
+            <button
+              onClick={() => onEdit(groomer)}
+              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sage-leaf/10 text-sage-leaf hover:bg-sage-leaf/20 border border-sage-leaf/30 transition-colors focus-ring"
+            >
+              Review docs →
+            </button>
             <button
               onClick={() => setStatus("revoked_temp", "Revoked (temporary)")}
               disabled={pending}
@@ -93,9 +82,10 @@ function GroomerVerificationRow({
 interface Props {
   groomers: AdminGroomerRow[];
   onStatusChanged: (id: string, status: string) => void;
+  onEdit: (groomer: AdminGroomerRow) => void;
 }
 
-export function VerificationCallout({ groomers, onStatusChanged }: Props) {
+export function VerificationCallout({ groomers, onStatusChanged, onEdit }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const awaiting = groomers.filter((g) => g.verification_status === "awaiting");
@@ -137,7 +127,7 @@ export function VerificationCallout({ groomers, onStatusChanged }: Props) {
             <div>
               <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Awaiting your review — docs submitted</p>
               {awaiting.map((g) => (
-                <GroomerVerificationRow key={g.groomer_profile_id} groomer={g} onStatusChanged={onStatusChanged} />
+                <GroomerVerificationRow key={g.groomer_profile_id} groomer={g} onStatusChanged={onStatusChanged} onEdit={onEdit} />
               ))}
             </div>
           )}
@@ -145,7 +135,7 @@ export function VerificationCallout({ groomers, onStatusChanged }: Props) {
             <div>
               <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider mb-1">Documents not yet submitted</p>
               {notSubmitted.map((g) => (
-                <GroomerVerificationRow key={g.groomer_profile_id} groomer={g} onStatusChanged={onStatusChanged} />
+                <GroomerVerificationRow key={g.groomer_profile_id} groomer={g} onStatusChanged={onStatusChanged} onEdit={onEdit} />
               ))}
             </div>
           )}

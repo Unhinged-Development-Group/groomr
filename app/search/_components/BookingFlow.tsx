@@ -1141,12 +1141,13 @@ export function BookingFlow({
         </div>
 
         {/* Back button — not shown on payment step (can't undo appointment creation) */}
-        {!success && step > 1 && step < 5 && (
+        {!success && step < 5 && (
           <div className="px-7 py-4 border-t border-pebble-grey/10 shrink-0">
             <button
               onClick={() => {
-                // Multi-pet skips step 2 (service) — back from date/time returns to dog picker
-                if (step === 3 && multiPetMode) {
+                if (step === 1) {
+                  onClose();
+                } else if (step === 3 && multiPetMode) {
                   setStep(1);
                 } else {
                   setStep((s) => (s - 1) as Step);

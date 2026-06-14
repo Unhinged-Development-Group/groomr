@@ -1140,8 +1140,8 @@ export function BookingFlow({
           ) : null}
         </div>
 
-        {/* Back button — not shown on payment step (can't undo appointment creation) */}
-        {!success && step < 5 && (
+        {/* Back button */}
+        {!success && (
           <div className="px-7 py-4 border-t border-pebble-grey/10 shrink-0">
             <button
               onClick={() => {
@@ -1149,6 +1149,16 @@ export function BookingFlow({
                   onClose();
                 } else if (step === 3 && multiPetMode) {
                   setStep(1);
+                } else if (step === 5) {
+                  // Within payment step: reset chosen method to go back to method picker,
+                  // or go back to confirm if no method was chosen yet
+                  if (paymentMethod) {
+                    setPaymentMethod(null);
+                    setPaymentClientSecret(null);
+                    setGcAuthorisationUrl(null);
+                  } else {
+                    setStep(4);
+                  }
                 } else {
                   setStep((s) => (s - 1) as Step);
                 }

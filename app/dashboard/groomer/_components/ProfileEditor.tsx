@@ -413,13 +413,44 @@ export function ProfileEditor({
     }
   }
 
+  function resizeToSquare(file: File, size = 500): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(file); return; }
+        // Centre-crop to square
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { resolve(file); return; }
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          0.9
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
+      img.src = objectUrl;
+    });
+  }
+
   async function handleProfileImageUpload(file: File) {
     setProfileImageUploading(true);
     setProfileImageError(null);
     try {
+      const resized = await resizeToSquare(file);
       const sig = await getProfileImageSignature(groomerProfileId);
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", resized);
       form.append("api_key", sig.apiKey);
       form.append("timestamp", String(sig.timestamp));
       form.append("signature", sig.signature);

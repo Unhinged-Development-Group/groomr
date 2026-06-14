@@ -206,22 +206,65 @@ function PaymentStep({
   depositPolicy,
   groomerName,
   onSuccess,
+  onGCChosen,
+  gcLoading,
+  gcError,
 }: {
   clientSecret: string;
   amountPence: number;
   depositPolicy: DepositPolicy;
   groomerName: string;
   onSuccess: () => void;
+  onGCChosen: () => void;
+  gcLoading: boolean;
+  gcError: string | null;
 }) {
   const [payError, setPayError] = useState<string | null>(null);
 
   return (
     <div className="space-y-4">
-      {payError && (
+      {(payError || gcError) && (
         <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl px-4 py-3">
-          <p className="text-sm font-bold text-muted-terracotta">{payError}</p>
+          <p className="text-sm font-bold text-muted-terracotta">{payError ?? gcError}</p>
         </div>
       )}
+
+      {/* Pay by Bank option */}
+      <button
+        onClick={onGCChosen}
+        disabled={gcLoading}
+        className="w-full text-left bg-white rounded-xl border-2 border-pebble-grey/15 p-4 hover:border-deep-slate hover:shadow-sm transition-all focus-ring group disabled:opacity-60"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-sage-leaf/10 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-sage-leaf" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-deep-slate leading-tight">Pay by Bank</p>
+            <p className="text-xs text-pebble-grey font-nunito">Instant transfer via Open Banking — no card needed</p>
+          </div>
+          {gcLoading ? (
+            <svg className="w-4 h-4 text-pebble-grey animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-pebble-grey/40 group-hover:text-deep-slate transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          )}
+        </div>
+      </button>
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-pebble-grey/15" />
+        <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">or pay by card</span>
+        <div className="flex-1 h-px bg-pebble-grey/15" />
+      </div>
+
       <Elements
         stripe={stripePromise}
         options={{ clientSecret, appearance: STRIPE_APPEARANCE }}
@@ -350,6 +393,14 @@ export function BookingFlow({
       });
     }
   }, [isLoaded, user, dogsFetched]);
+
+  // Auto-create Stripe PaymentIntent when entering payment step
+  useEffect(() => {
+    if (step === 5 && !paymentMethod && !loadingPaymentMethod && !paymentClientSecret) {
+      handleStripeChosen();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const availableDaySet = new Set(availability.map((a) => a.day_of_week));
 
@@ -1101,19 +1152,10 @@ export function BookingFlow({
 
           ) : step === 5 ? (
             // ── STEP 5: PAYMENT ─────────────────────────────────────────────────
-            paymentMethod === "stripe" && paymentClientSecret ? (
-              <PaymentStep
-                clientSecret={paymentClientSecret}
-                amountPence={paymentAmountPence}
-                depositPolicy={depositPolicy}
-                groomerName={groomerName}
-                onSuccess={handleStripeSuccess}
-              />
-            ) : paymentMethod === "gocardless" && gcAuthorisationUrl ? (
+            paymentMethod === "gocardless" && gcAuthorisationUrl ? (
               <DirectDebitStep
                 authorisationUrl={gcAuthorisationUrl}
                 amountPence={paymentAmountPence || (() => {
-                  // Derive amount from whichever service(s) are booked
                   const base = selectedService?.price_pence ?? 0;
                   const extra = additionalPets.reduce((s, p) => {
                     const svc = services.find((sv) => sv.id === p.serviceId);
@@ -1128,13 +1170,34 @@ export function BookingFlow({
                 depositPolicy={depositPolicy}
                 groomerName={groomerName}
               />
-            ) : (
-              <PaymentMethodPicker
-                loading={loadingPaymentMethod}
-                error={paymentMethodError}
-                onStripe={handleStripeChosen}
-                onGC={handleGCChosen}
+            ) : paymentClientSecret ? (
+              <PaymentStep
+                clientSecret={paymentClientSecret}
+                amountPence={paymentAmountPence}
+                depositPolicy={depositPolicy}
+                groomerName={groomerName}
+                onSuccess={handleStripeSuccess}
+                onGCChosen={handleGCChosen}
+                gcLoading={loadingPaymentMethod}
+                gcError={paymentMethodError}
               />
+            ) : (
+              <div className="space-y-3 py-2">
+                {paymentMethodError ? (
+                  <>
+                    <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl px-4 py-3">
+                      <p className="text-sm font-bold text-muted-terracotta">{paymentMethodError}</p>
+                    </div>
+                    <button onClick={handleStripeChosen} className="w-full btn-primary font-nunito font-bold py-3 rounded-full text-sm focus-ring">
+                      Try again
+                    </button>
+                  </>
+                ) : (
+                  [56, 72, 56].map((h, i) => (
+                    <div key={i} className="bg-pebble-grey/15 rounded-xl animate-pulse" style={{ height: h }} />
+                  ))
+                )}
+              </div>
             )
 
           ) : null}

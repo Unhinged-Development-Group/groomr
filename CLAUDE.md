@@ -149,17 +149,22 @@ vaccination_doc_url text | profile_image_url text
 #### `services`
 ```
 id uuid PK | groomer_profile_id uuid → groomer_profiles
-name text NOT NULL | description text | duration_minutes smallint
-price_pence integer NOT NULL     -- always ÷ 100 for display; pass integer to Stripe
-deposit_pence integer | applicable_sizes dog_size[] | is_active boolean | sort_order smallint
+name text NOT NULL | description text               -- optional short description shown on public profile
+duration_minutes smallint NOT NULL
+price_pence integer NOT NULL     -- always ÷ 100 for display; pass integer to Stripe; auto-derived as MIN(size_prices) when sizes configured
+deposit_pence integer | applicable_sizes dog_size[] | is_active boolean DEFAULT true | sort_order smallint DEFAULT 0
+size_prices jsonb NOT NULL DEFAULT '{}'      -- migration 20260614000003: {xs,small,medium,large,xl} → pence; key presence = size enabled
+size_durations jsonb NOT NULL DEFAULT '{}'   -- migration 20260614000004: {xs,small,medium,large,xl} → minutes; overrides duration_minutes per size
+created_at timestamptz DEFAULT now() | updated_at timestamptz DEFAULT now()
 ```
+> Duration display on public profile: if `size_durations` has entries, show `up to {MAX(size_durations)} min`; otherwise show `duration_minutes` as flat badge. Logic in `app/groomers/[id]/page.tsx` `ServiceCard` and `app/search/_components/GroomerProfileModal.tsx`.
 
 #### `availability`
 ```
 id uuid PK | groomer_profile_id uuid → groomer_profiles
 day_of_week smallint NOT NULL    -- 0=Sunday … 6=Saturday
 start_time time | end_time time
-break_start_time time | break_end_time time    -- break windows; stored as JSON array in break_start_time (getAvailableSlots parses JSON + legacy plain-string)
+break_start_time text | break_end_time text    -- changed time → text (migration 20260614000005); stores JSON array of breaks or legacy plain "HH:MM" string
 is_active boolean DEFAULT true
 ```
 
@@ -182,6 +187,8 @@ groomer_notes text | owner_notes text
 assigned_to_team_member_id uuid → team_members ON DELETE SET NULL
 recurring_series_id uuid → recurring_series ON DELETE SET NULL
 booking_group_id uuid    -- shared by all appointments in a group booking
+admin_note_groomer text | admin_note_groomer_author text    -- admin-only notes visible to groomer (migration 20260614000007)
+admin_note_owner text | admin_note_owner_author text        -- admin-only notes visible to owner (migration 20260614000007)
 ```
 
 #### `payments`
@@ -194,6 +201,10 @@ stripe_transfer_id text | payout_status payout_status | payout_initiated_at time
 refund_status refund_status | refund_amount_pence integer | stripe_refund_id text | refunded_at timestamptz
 stripe_fee_pence integer DEFAULT 0    -- Stripe's own processing fee (migration 20260607000002)
 currency char(3) DEFAULT 'gbp'
+payment_method text DEFAULT 'stripe'  -- 'stripe' | 'gocardless' (migration 20260614000002)
+gc_billing_request_id text            -- GoCardless billing request ID (migration 20260614000002)
+gc_mandate_id text                    -- GoCardless mandate ID (migration 20260614000002)
+gc_payment_id text                    -- GoCardless payment ID (migration 20260614000002)
 ```
 
 #### `reviews`
@@ -350,9 +361,17 @@ updated_at timestamptz | updated_by uuid → profiles
 ```
 > Singleton table (one row). Seeded by migration. Read/written via `adminGetPlatformSettings` / `adminSavePlatformSettings`. The Stripe payment flow reads rates from this table at charge time via `resolvePlatformFeePct()` in `lib/fees.ts`: 0% while the groomer's completed-booking count (minus full refunds) is below `signup_incentive_bookings`, then `platform_fee_pct` — admin changes apply to new payments immediately, no redeploy. `PLATFORM_FEE_PCT` in `lib/stripe.ts` is only the fallback if the row is unreadable. Each `payments` row records the pct actually charged.
 
+#### `account_export_tokens`
+```
+id uuid PK | profile_id uuid → profiles ON DELETE CASCADE
+token uuid UNIQUE NOT NULL DEFAULT gen_random_uuid()
+expires_at timestamptz NOT NULL | created_at timestamptz DEFAULT now()
+```
+> Short-lived tokens for the account data export flow (migration `20260614000001`). Only accessed via `supabaseAdmin` (service role) — no user-facing RLS policies.
+
 ### Migrations
 
-37 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
+44 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
 
 ---
 
@@ -392,6 +411,7 @@ $$;
 | `time_blocks` | Own groomer | Own groomer | Own groomer | Own groomer |
 | `admin_audit_log` | Admin only | supabaseAdmin (via `logAdminAction`) | — | — |
 | `platform_settings` | Admin only | — | Admin only | — |
+| `account_export_tokens` | supabaseAdmin only | supabaseAdmin only | — | — |
 
 Every table has an `admin_all` policy for `is_admin = true`.
 
@@ -421,7 +441,7 @@ All in `app/actions/`. Pattern: `"use server"`, return `{ data } | { error: stri
 | `notifications.ts` | `getNotificationsNavContext`, `getGroomerNotifications`, `markNotificationRead`, `markAllNotificationsRead` |
 | `payments.ts` | `createBookingPaymentIntent`, `getConnectAccountStatus`, `initiateRefund` |
 | `portfolio.ts` | `getPortfolioPhotos`, `getPortfolioUploadSignature`, `addPortfolioPhoto`, `deletePortfolioPhoto`, `updatePortfolioCaption` |
-| `profile-editor.ts` | `loadProfileEditorData`, `saveProfile`, `saveAvailability`, `saveServices`, `saveProfileImage`, `saveCoverPhoto`, etc. |
+| `profile-editor.ts` | `loadProfileEditorData`, `saveProfile`, `saveAvailability`, `saveServices`, `saveProfileImage`, `saveCoverPhoto`, etc. `ServiceRow` (from `types/groomer-dashboard.ts`) carries `{ id, name, description, duration, price, sizePrices, sizeDurations, sortOrder }` |
 | `recurring.ts` | `requestRecurringSeries`, `createGroomerRecurringSeries`, `approveRecurringSeries`, `declineRecurringSeries`, `generateRecurringAppointments`, `rollActiveRecurringSeries`, `getSeriesStatus`, `ownerCancelRecurringSeries` |
 | `sms-preferences.ts` | `getSMSPreference`, `updateSMSPreference` |
 | `stripe-connect.ts` | `createConnectOnboardingLink`, `createConnectDashboardLink` |
@@ -506,12 +526,13 @@ GOCARDLESS_WEBHOOK_SECRET=           # Set in GoCardless dashboard → Developer
 | Clerk `SignInButton`/`SignUpButton` | Take exactly one child element |
 | Cloudinary in Next.js | `res.cloudinary.com` must be in `remotePatterns` in `next.config.ts` (already configured) |
 | `time_blocks` now in booking | `getAvailableSlots` checks `time_blocks` — all-day blocks return `[]`; partial-day blocks are booked intervals |
-| `break_start/end_time` now in booking | `getAvailableSlots` subtracts break windows. Breaks are stored as a JSON array in `break_start_time`; both JSON and legacy plain-string formats are parsed |
+| `break_start/end_time` now `text`, not `time` | Migration `20260614000005` changed both columns from `time` to `text` to support JSON array format alongside legacy plain `"HH:MM"` strings. `getAvailableSlots` subtracts break windows; both JSON and legacy plain-string formats are parsed. |
 | Admin UI uses anon client | `supabaseAdmin` bypasses `admin_all` RLS policies — admin pages must use the anon client to trigger those policies correctly |
 | Clerk CSP domain | Clerk's FAPI is at `*.accounts.dev` (not `*.clerk.dev`) — both `script-src` and `connect-src` must include `https://*.accounts.dev` or `useUser()` never resolves and auth buttons vanish |
 | `dangerouslyAllowSVG` removed | `next.config.ts` no longer allows SVG via Next.js Image — do not re-add for user-uploaded content |
 | `NEXT_PUBLIC_*` env vars baked at build | Changing them in Vercel does nothing until a redeploy — they're compiled into the JS bundle. Same applies to CSP/headers in `next.config.ts` (written into the build's routes manifest) |
 | `is_admin` protected by trigger | `protect_is_admin` BEFORE UPDATE trigger on `profiles` (migration `20260610000001`) blocks `is_admin` changes from anon/authenticated connections unless the actor is already an admin. Service role and dashboard are unaffected |
+| Supabase select query narrows TS type | Supabase JS infers the return type from the column list in `.select("col1, col2, ...")`. If you add a field to the mapped object but forget to add it to the select string, TypeScript compiles locally but **fails the Vercel build** with "Property X does not exist". Always keep select strings in sync with what you map. |
 
 ---
 
@@ -576,6 +597,7 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 |---|---|
 | `/api/webhooks/clerk` | Clerk → Supabase user sync |
 | `/api/webhooks/stripe` | Stripe payment + account events |
+| `/api/webhooks/gocardless` | GoCardless Direct Debit payment events |
 | `/api/calendar/[groomerProfileId]` | Calendar availability endpoint |
 | `/api/cron/notifications` | Daily cron (`vercel.json`: `"0 8 * * *"`): booking reminders + review requests + SMS reminders |
 | `/api/cron/cleanup` | Daily cron (`vercel.json`: `"30 3 * * *"`): GDPR sweep of profiles soft-deleted >30 days — hard-delete (no financial records), anonymise (PII scrub, retention applies), or skip (open dispute). Logs to `admin_audit_log` |
@@ -622,6 +644,12 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 | Google Calendar sync (one-way) | Real — iCal subscription feed at `/api/calendar/[groomerProfileId]`. Bookings and `time_blocks` appear in Apple/Google Calendar and auto-refresh. Apple uses `webcal://` link; Google uses `https://calendar.google.com/calendar/render?cid=` with an HTTPS URL. Feed is RFC 5545-compliant (DTSTAMP, VTIMEZONE Europe/London, line folding). |
 | Google Calendar sync (two-way inbound) | Not built — blocking time in an external calendar does **not** block Groomr slots. True two-way requires: (1) **Google Calendar API** — OAuth 2.0 (`googleapis` package, scopes: `calendar.readonly` or `calendar.events`), store `google_refresh_token` on `groomer_profiles`, poll or webhook-subscribe to the groomer's primary calendar, create `time_blocks` rows for busy intervals; (2) **Apple Calendar / CalDAV** — CalDAV server (e.g. `tsdav` package) with Apple ID OAuth, significantly more complex. Groomers can manually block time via Groomr's own time blocks feature in the meantime. |
 | Sign-up incentive (150 free bookings) | Real — `resolvePlatformFeePct()` charges 0% until the groomer's completed-booking count reaches `platform_settings.signup_incentive_bookings`; groomer dashboard shows progress banner; admin Platform Settings shows per-groomer usage |
+| Per-size service pricing | Real — `services.size_prices jsonb` (migration `20260614000003`): groomers set per-size prices (XS/S/M/L/XL); public profile shows inline price grid + "from £X" minimum. `ServiceRow.sizePrices` in `types/groomer-dashboard.ts` |
+| Per-size service durations | Real — `services.size_durations jsonb` (migration `20260614000004`): groomers set per-size durations; public profile and search modal show `up to {max} min` badge when sizes configured, falls back to flat `duration_minutes` badge. `ServiceRow.sizeDurations` |
+| Service descriptions | Real — `services.description text` (column already existed in DB); groomers can now enter a short description (max 200 chars) in the profile editor; displayed on public groomer profile and search modal |
+| GoCardless Direct Debit | Real — `lib/gocardless.ts` thin fetch client; `app/actions/payments-gocardless.ts` server actions; `/api/webhooks/gocardless` webhook handler. `payments` table extended with `payment_method`, `gc_billing_request_id`, `gc_mandate_id`, `gc_payment_id` (migration `20260614000002`). Payments land in Groomr's bank account; groomer payouts tracked in `payments.groomer_payout_amount_pence` and initiated out-of-band |
+| Admin appointment notes | Real — `appointments.admin_note_groomer/owner` + `*_author` columns (migration `20260614000007`); admin can leave separate notes visible to groomer vs. owner, each tagged with the author |
+| Account data export | Real — `account_export_tokens` table (migration `20260614000001`); short-lived tokens generated by `exportAccountData` in `app/actions/close-account.ts`, accessed via service role only |
 | **Incentive threshold notification** (groomer) | Planned — policy §2 promises a notification when approaching the 150-booking threshold; wire into the booking-completion flow or daily cron (e.g. at 140 used and at 150) |
 | **Vaccination & health reminders** (owner) | Planned — store vaccine due-dates on `dogs`, send email/SMS N days before expiry via existing Resend + Twilio stack; needs a `dog_health_reminders` table or date fields on `dogs`, plus a cron job |
 | **Booking receipt download** (owner) | Planned — PDF or formatted HTML email receipt per appointment; server-side render with existing appointment + payment data, send via Resend on demand or post-completion |

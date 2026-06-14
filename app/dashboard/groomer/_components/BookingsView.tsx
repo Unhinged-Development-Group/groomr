@@ -102,7 +102,8 @@ function TodayView({ appointments, refDate, availability, timeBlocks = [], onBeg
       svc: a.service_snapshot_name || "Service",
       price: a.service_snapshot_price ? (a.service_snapshot_price / 100).toFixed(0) : "0",
       status: a.status,
-      note: a.owner_notes || (isManual ? manual?.extraNote : a.groomer_notes) || null,
+      note: isManual ? manual?.extraNote : (a.groomer_notes || null),
+      ownerNote: a.owner_notes || null,
       bookingGroupId: a.booking_group_id ?? null,
     };
   });
@@ -279,7 +280,7 @@ function TodayView({ appointments, refDate, availability, timeBlocks = [], onBeg
                           {tall && b.isGroup && (
                             <p className="text-xs text-pebble-grey font-bold truncate">{b.owner} · {b.duration} min total</p>
                           )}
-                          {b.note && tall && !b.isGroup && <p className="text-[10px] text-sage-leaf font-bold italic truncate mt-0.5">&quot;{b.note}&quot;</p>}
+                          {b.ownerNote && tall && !b.isGroup && <p className="text-[10px] text-pebble-grey italic truncate mt-0.5"><span className="font-bold not-italic">Owner:</span> &quot;{b.ownerNote}&quot;</p>}
                         </div>
                         <div className="shrink-0 flex flex-col items-end gap-1">
                           <span className="font-fredoka text-sm text-deep-slate">£{b.price}</span>
@@ -368,11 +369,24 @@ function TodayView({ appointments, refDate, availability, timeBlocks = [], onBeg
 
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5">
           <Eyebrow>Notes</Eyebrow>
-          <ul className="space-y-2.5 text-sm text-deep-slate mt-3">
-            {todayBookings.filter(b => b.note).length === 0
+          <ul className="space-y-3 text-sm text-deep-slate mt-3">
+            {todayBookings.filter(b => b.ownerNote || b.note).length === 0
               ? <li className="text-pebble-grey font-bold">No notes for today.</li>
-              : todayBookings.filter(b => b.note).map(b => (
-                  <li key={b.id} className="flex gap-2"><span className="text-sage-leaf font-bold">•</span>{b.dog}: {b.note}</li>
+              : todayBookings.filter(b => b.ownerNote || b.note).map(b => (
+                  <li key={b.id} className="space-y-1.5">
+                    {b.ownerNote && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-sage-leaf font-bold shrink-0">•</span>
+                        <span><span className="font-bold">{b.owner}</span> <span className="text-pebble-grey text-xs">(via Groomr)</span>: {b.ownerNote}</span>
+                      </div>
+                    )}
+                    {b.note && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-pebble-grey shrink-0">–</span>
+                        <span className="text-pebble-grey italic">{b.dog}: {b.note}</span>
+                      </div>
+                    )}
+                  </li>
                 ))}
           </ul>
         </div>

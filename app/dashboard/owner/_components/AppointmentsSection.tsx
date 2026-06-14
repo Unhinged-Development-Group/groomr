@@ -419,7 +419,7 @@ export function AppointmentsSection({
                     When
                   </p>
                   <p className="text-sm font-nunito text-deep-slate mt-1">
-                    {new Date(activeAppointment.scheduled_at).toLocaleString()}
+                    {new Date(activeAppointment.scheduled_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
                   </p>
                 </div>
                 <div>
@@ -434,6 +434,22 @@ export function AppointmentsSection({
                   </Link>
                 </div>
               </div>
+              {(activeAppointment.owner_notes || activeAppointment.groomer_notes) && (
+                <div className="border-t border-pebble-grey/20 pt-3 space-y-2">
+                  {activeAppointment.owner_notes && (
+                    <div>
+                      <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Your note <span className="normal-case font-normal text-pebble-grey/60">via Groomr</span></p>
+                      <p className="text-sm font-nunito text-deep-slate mt-1 italic">&quot;{activeAppointment.owner_notes}&quot;</p>
+                    </div>
+                  )}
+                  {activeAppointment.groomer_notes && (
+                    <div>
+                      <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">Note from groomer</p>
+                      <p className="text-sm font-nunito text-deep-slate mt-1 italic">&quot;{activeAppointment.groomer_notes}&quot;</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <button
               onClick={() => setShowDetails(false)}

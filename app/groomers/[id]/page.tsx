@@ -15,10 +15,11 @@ import { ReportButton } from "./_components/ReportButton";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const UK_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const SIZE_LABELS: Record<string, string> = {
-  small: "Small",
-  medium: "Medium",
-  large: "Large",
-  giant: "Giant",
+  xs:     "XS",
+  small:  "S",
+  medium: "M",
+  large:  "L",
+  xl:     "XL",
 };
 
 function formatTime(t: string): string {

@@ -1,4 +1,3 @@
-const GC_BASE_URL = "https://api.gocardless.com";
 const GC_VERSION = "2015-07-06";
 
 function getToken(): string {
@@ -7,11 +6,19 @@ function getToken(): string {
   return token;
 }
 
+// sandbox_ tokens must hit api-sandbox; live_ tokens hit api.
+function getBaseUrl(token: string): string {
+  return token.startsWith("sandbox_")
+    ? "https://api-sandbox.gocardless.com"
+    : "https://api.gocardless.com";
+}
+
 async function gcRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${GC_BASE_URL}${path}`, {
+  const token = getToken();
+  const res = await fetch(`${getBaseUrl(token)}${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${getToken()}`,
+      Authorization: `Bearer ${token}`,
       "GoCardless-Version": GC_VERSION,
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),

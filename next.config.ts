@@ -16,7 +16,7 @@ const CSP = [
   "font-src 'self'",
   // Stripe PaymentElement renders inside an iframe served from js.stripe.com
   "frame-src https://js.stripe.com https://full-jaguar-15.clerk.accounts.dev",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.clerk.com https://*.clerk.dev https://full-jaguar-15.clerk.accounts.dev https://clerk-telemetry.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.cloudinary.com https://maps.googleapis.com https://maps.gstatic.com https://*.clerk.com https://*.clerk.dev https://full-jaguar-15.clerk.accounts.dev https://clerk-telemetry.com",
   "object-src 'none'",
   "base-uri 'self'",
 ].join("; ");

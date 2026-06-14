@@ -14,6 +14,7 @@ interface Service {
   name: string;
   description: string | null;
   duration_minutes: number | null;
+  size_durations: Record<string, number> | null;
   price_pence: number;
   deposit_pence: number | null;
   applicable_sizes: string[] | null;
@@ -78,7 +79,7 @@ export function GroomerProfileModal({ groomer, onClose }: GroomerProfileModalPro
         const [svcRes, availRes, revRes, portfolioRes] = await Promise.all([
           supabase
             .from("services")
-            .select("id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, size_prices, sort_order")
+            .select("id, name, description, duration_minutes, size_durations, price_pence, deposit_pence, applicable_sizes, size_prices, sort_order")
             .eq("groomer_profile_id", groomer.id)
             .eq("is_active", true)
             .order("sort_order", { ascending: true, nullsFirst: false }),
@@ -477,11 +478,20 @@ function ServiceCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-fredoka text-lg text-deep-slate">{service.name}</p>
-          {service.duration_minutes && (
-            <span className="text-xs font-bold text-pebble-grey bg-pebble-grey/10 px-2 py-0.5 rounded-full">
-              {service.duration_minutes} min
-            </span>
-          )}
+          {(() => {
+            const sizeDurations = service.size_durations && Object.keys(service.size_durations).length > 0
+              ? service.size_durations
+              : null;
+            const maxDuration = sizeDurations
+              ? Math.max(...Object.values(sizeDurations))
+              : service.duration_minutes;
+            const label = sizeDurations ? `up to ${maxDuration} min` : maxDuration ? `${maxDuration} min` : null;
+            return label ? (
+              <span className="text-xs font-bold text-pebble-grey bg-pebble-grey/10 px-2 py-0.5 rounded-full">
+                {label}
+              </span>
+            ) : null;
+          })()}
         </div>
         {service.description && (
           <p className="text-xs text-pebble-grey mt-1 leading-relaxed">{service.description}</p>

@@ -51,6 +51,7 @@ function AppointmentRow({
   onCancelled,
   onNotesUpdated,
   onNoShow,
+  onToast,
 }: {
   appt: AdminAppointmentRow;
   onCancelled: (id: string) => void;

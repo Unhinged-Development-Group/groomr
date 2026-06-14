@@ -2148,7 +2148,9 @@ export interface PlatformSettings {
     stripe: boolean;
     resend: boolean;
     twilio: boolean;
+    gocardless: boolean;
     googleMaps: boolean;
+    cloudinary: boolean;
     clerk: boolean;
     supabase: boolean;
   };
@@ -2218,7 +2220,9 @@ export async function adminGetPlatformSettings(): Promise<{ data: PlatformSettin
         stripe: !!process.env.STRIPE_SECRET_KEY,
         resend: !!process.env.RESEND_API_KEY,
         twilio: !!process.env.TWILIO_ACCOUNT_SID,
+        gocardless: !!process.env.GOCARDLESS_ACCESS_TOKEN,
         googleMaps: !!process.env.GOOGLE_MAPS_API_KEY,
+        cloudinary: !!process.env.CLOUDINARY_API_SECRET || !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
         clerk: !!process.env.CLERK_SECRET_KEY,
         supabase: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       },

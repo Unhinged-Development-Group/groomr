@@ -24,8 +24,8 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
   const [toast, setToast] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [dirty, setDirty] = useState(false);
+  const [search, setSearch] = useState("");
 
-  // Form state (percentage display: 0.08 → "8.0")
   const [feePercent, setFeePercent] = useState(
     settings ? (settings.platform_fee_pct * 100).toFixed(1) : "8.0"
   );
@@ -70,21 +70,33 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
         setToast(result.error);
       } else {
         setDirty(false);
-        setToast("Platform settings saved.");
+        setToast("Settings saved.");
       }
     });
   }
 
   const { integrations } = settings;
 
+  // Derive label for groomers who have exhausted their incentive
+  const parsedFee = parseFloat(feePercent);
+  const standardFeeLabel = isNaN(parsedFee) ? "standard rate" : `${parsedFee.toFixed(1)}%`;
+
   const INTEGRATIONS: { key: keyof typeof integrations; label: string }[] = [
     { key: "stripe", label: "Stripe" },
     { key: "resend", label: "Resend" },
     { key: "twilio", label: "Twilio" },
+    { key: "gocardless", label: "GoCardless" },
     { key: "googleMaps", label: "Google Maps" },
+    { key: "cloudinary", label: "Cloudinary" },
     { key: "clerk", label: "Clerk" },
     { key: "supabase", label: "Supabase" },
   ];
+
+  const filteredUsage = settings.incentive_usage.filter((g) =>
+    (g.business_name ?? "Unnamed groomer")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
     <>
@@ -95,64 +107,54 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
             Commission rates
           </p>
 
-          <div className="space-y-1">
-            <label className="text-sm font-bold text-deep-slate" htmlFor="platform-fee">
-              Standard platform fee
-            </label>
-            <p className="text-xs text-pebble-grey">
-              Applied to all bookings. Currently stored in Stripe Connect as the application fee.
-            </p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <input
-                id="platform-fee"
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={feePercent}
-                onChange={(e) => { setFeePercent(e.target.value); setDirty(true); }}
-                className="field w-28 text-right"
-              />
-              <span className="text-deep-slate font-bold">%</span>
-              <span className="text-xs text-pebble-grey ml-2">
-                (currently{" "}
-                <strong>
-                  {(settings.platform_fee_pct * 100).toFixed(1)}%
-                </strong>{" "}
-                in DB)
-              </span>
+          <div className="flex gap-6 flex-wrap">
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-deep-slate" htmlFor="platform-fee">
+                Standard platform fee
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="platform-fee"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={feePercent}
+                  onChange={(e) => { setFeePercent(e.target.value); setDirty(true); }}
+                  className="field w-24 text-right"
+                />
+                <span className="text-deep-slate font-bold">%</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-deep-slate" htmlFor="incentive-bookings">
+                Commission-free allowance
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="incentive-bookings"
+                  type="number"
+                  min="0"
+                  max="10000"
+                  step="1"
+                  value={incentiveBookings}
+                  onChange={(e) => { setIncentiveBookings(e.target.value); setDirty(true); }}
+                  className="field w-24 text-right"
+                />
+                <span className="text-deep-slate font-bold">bookings</span>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-bold text-deep-slate" htmlFor="incentive-bookings">
-              Sign-up incentive — commission-free bookings
-            </label>
-            <p className="text-xs text-pebble-grey">
-              Every groomer&apos;s first N completed bookings carry 0% commission. Cancellations,
-              no-shows and full refunds don&apos;t count. Applies to all groomers from their own launch.
-            </p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <input
-                id="incentive-bookings"
-                type="number"
-                min="0"
-                max="10000"
-                step="1"
-                value={incentiveBookings}
-                onChange={(e) => { setIncentiveBookings(e.target.value); setDirty(true); }}
-                className="field w-28 text-right"
-              />
-              <span className="text-deep-slate font-bold">bookings</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1 flex-wrap gap-3">
-            {settings.updated_by_name && (
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            {settings.updated_by_name ? (
               <p className="text-xs text-pebble-grey">
                 Last saved by <strong>{settings.updated_by_name}</strong> on{" "}
                 {formatDate(settings.updated_at)}
               </p>
+            ) : (
+              <span />
             )}
             <button
               onClick={handleSave}
@@ -164,27 +166,40 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
           </div>
         </div>
 
-        {/* Sign-up incentive usage — how far each groomer is through their free allowance */}
+        {/* Incentive usage */}
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
-          <div>
+          <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
               Incentive usage
             </p>
-            <p className="text-xs text-pebble-grey mt-1">
-              Completed bookings used out of each groomer&apos;s {settings.signup_incentive_bookings} commission-free
-              allowance. Standard rate applies automatically once the allowance is used.
-            </p>
+            <span className="text-xs text-pebble-grey">
+              {settings.incentive_usage.length} groomer{settings.incentive_usage.length !== 1 ? "s" : ""}
+            </span>
           </div>
+
+          {settings.incentive_usage.length > 4 && (
+            <input
+              type="text"
+              placeholder="Search groomers…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="field w-full text-sm"
+            />
+          )}
+
           {settings.incentive_usage.length === 0 ? (
             <p className="text-sm text-pebble-grey">No groomers registered yet.</p>
+          ) : filteredUsage.length === 0 ? (
+            <p className="text-sm text-pebble-grey">No groomers match &quot;{search}&quot;.</p>
           ) : (
-            <ul className="divide-y divide-pebble-grey/10">
-              {settings.incentive_usage.map((g) => {
+            <ul className="divide-y divide-pebble-grey/10 overflow-y-auto max-h-72 -mx-1 px-1 scrollbar-thin">
+              {filteredUsage.map((g) => {
                 const limit = settings.signup_incentive_bookings;
                 const done = g.bookings_used >= limit;
                 const pct = limit > 0 ? Math.min(100, (g.bookings_used / limit) * 100) : 100;
+                const nearLimit = !done && pct >= 80;
                 return (
-                  <li key={g.id} className="flex items-center justify-between py-2 gap-3">
+                  <li key={g.id} className="flex items-center justify-between py-2.5 gap-3">
                     <span className="text-sm font-bold text-deep-slate truncate">
                       {g.business_name ?? "Unnamed groomer"}
                       {g.is_founding_groomer && (
@@ -196,16 +211,28 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
                     <span className="flex items-center gap-2 shrink-0">
                       <span className="w-20 h-1.5 rounded-full bg-pebble-grey/15 overflow-hidden hidden sm:block">
                         <span
-                          className={`block h-full rounded-full ${done ? "bg-pebble-grey" : "bg-groomr-gold"}`}
+                          className={`block h-full rounded-full transition-all ${
+                            done
+                              ? "bg-pebble-grey"
+                              : nearLimit
+                              ? "bg-muted-terracotta"
+                              : "bg-groomr-gold"
+                          }`}
                           style={{ width: `${pct}%` }}
                         />
                       </span>
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
-                          done ? "bg-pebble-grey/15 text-pebble-grey" : "bg-groomr-gold/25 text-deep-slate"
+                          done
+                            ? "bg-pebble-grey/15 text-pebble-grey"
+                            : nearLimit
+                            ? "bg-muted-terracotta/15 text-muted-terracotta"
+                            : "bg-groomr-gold/25 text-deep-slate"
                         }`}
                       >
-                        {done ? `${limit}/${limit} — standard rate` : `${g.bookings_used}/${limit} at 0%`}
+                        {done
+                          ? `${limit}/${limit} at ${standardFeeLabel}`
+                          : `${g.bookings_used}/${limit} at 0%`}
                       </span>
                     </span>
                   </li>
@@ -217,15 +244,10 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
 
         {/* Integration health */}
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
-          <div>
-            <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
-              Integration health
-            </p>
-            <p className="text-xs text-pebble-grey mt-1">
-              Based on whether environment variables are set in this process. Update via Vercel Dashboard → Settings → Environment Variables.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+            Integration health
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {INTEGRATIONS.map(({ key, label }) => (
               <div
                 key={key}
@@ -234,9 +256,11 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
                 <span className="text-sm font-bold text-deep-slate">{label}</span>
                 <span
                   className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border"
-                  style={integrations[key]
-                    ? { background: "#dcfce7", color: "#15803d", borderColor: "#bbf7d0" }
-                    : { background: "#fee2e2", color: "#b91c1c", borderColor: "#fecaca" }}
+                  style={
+                    integrations[key]
+                      ? { background: "#dcfce7", color: "#15803d", borderColor: "#bbf7d0" }
+                      : { background: "#fee2e2", color: "#b91c1c", borderColor: "#fecaca" }
+                  }
                 >
                   {integrations[key] ? "OK" : "Missing"}
                 </span>
@@ -244,15 +268,6 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
             ))}
           </div>
         </div>
-
-        {/* Info note */}
-        <p className="text-xs text-pebble-grey leading-relaxed">
-          Rates saved here apply to new payments immediately — the Stripe payment flow reads them
-          from the database at charge time. Every groomer&apos;s first{" "}
-          {settings.signup_incentive_bookings} completed bookings are charged 0% commission; the
-          standard rate applies automatically afterwards. Founding groomer is a status badge with
-          no fee implications.
-        </p>
       </div>
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

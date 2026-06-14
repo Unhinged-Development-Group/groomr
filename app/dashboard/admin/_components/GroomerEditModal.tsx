@@ -9,6 +9,7 @@ import {
   updateGroomerProfile,
   updateUserProfile,
   adminUpdateVerificationStatus,
+  adminSaveGroomerDocVerified,
   adminSaveAvailability,
   adminSaveService,
   adminDeleteService,
@@ -232,8 +233,22 @@ export function GroomerEditModal({ groomer, onClose, onSaved }: Props) {
     if (!profile) return;
     startVerify(async () => {
       const status = profile.verification_status as "not_submitted" | "awaiting" | "verified" | "revoked_temp" | "revoked_perm";
-      const res = await adminUpdateVerificationStatus(groomer.groomer_profile_id, status);
-      if ("error" in res) { setToast(res.error); return; }
+      const [statusRes, docsRes] = await Promise.all([
+        adminUpdateVerificationStatus(groomer.groomer_profile_id, status),
+        adminSaveGroomerDocVerified(groomer.groomer_profile_id, {
+          insurance_doc_verified: profile.insurance_doc_verified,
+          qualification_doc_verified: profile.qualification_doc_verified,
+          first_aid_doc_verified: profile.first_aid_doc_verified,
+          photo_id_doc_verified: profile.photo_id_doc_verified,
+          employers_liability_doc_verified: profile.employers_liability_doc_verified,
+        }),
+      ]);
+      if ("error" in statusRes) { setToast(statusRes.error); return; }
+      if ("error" in docsRes) { setToast(docsRes.error); return; }
+      // Photo ID is deleted server-side after verification — clear from local state too
+      if (profile.photo_id_doc_verified) {
+        updateProfile({ photo_id_doc_url: null });
+      }
       onSaved({ is_verified: status === "verified", verification_status: status });
       setToast("Verification status updated.");
     });

@@ -9,7 +9,7 @@ import { getIncentiveUsage } from "@/lib/fees";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -717,9 +717,26 @@ export async function saveVerificationDoc(
   if (!myProfile) return { error: "Profile not found" };
 
   const column = DOC_COLUMN[docType];
+
+  // Fetch current verification_status so we can advance it to 'awaiting' on first upload.
+  const { data: current } = await supabaseAdmin
+    .from("groomer_profiles")
+    .select("verification_status")
+    .eq("id", groomerProfileId)
+    .eq("user_id", myProfile.id)
+    .single();
+
+  const updatePayload: Record<string, unknown> = {
+    [column]: url,
+    updated_at: new Date().toISOString(),
+  };
+  if ((current as any)?.verification_status === "not_submitted") {
+    updatePayload.verification_status = "awaiting";
+  }
+
   const { error } = await supabaseAdmin
     .from("groomer_profiles")
-    .update({ [column]: url, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq("id", groomerProfileId)
     .eq("user_id", myProfile.id);
 

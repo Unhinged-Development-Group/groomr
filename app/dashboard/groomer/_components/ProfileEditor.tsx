@@ -414,6 +414,7 @@ export function ProfileEditor({
 
   async function handleProfileImageUpload(file: File) {
     setProfileImageUploading(true);
+    setSaveError(null);
     try {
       const sig = await getProfileImageSignature(groomerProfileId);
       const form = new FormData();
@@ -429,12 +430,13 @@ export function ProfileEditor({
         { method: "POST", body: form }
       );
       const json = await res.json();
-      if (!json.secure_url) throw new Error("Upload failed");
+      if (!json.secure_url) throw new Error(json.error?.message ?? "Photo upload failed");
 
-      await saveProfileImage(groomerProfileId, json.secure_url);
+      const result = await saveProfileImage(groomerProfileId, json.secure_url);
+      if (result?.error) throw new Error(result.error);
       setProfileImageUrl(json.secure_url);
-    } catch {
-      // silently ignore — user can retry
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Photo upload failed — please try again");
     } finally {
       setProfileImageUploading(false);
     }
@@ -500,19 +502,21 @@ export function ProfileEditor({
       form.append("timestamp", String(sig.timestamp));
       form.append("signature", sig.signature);
       form.append("folder", sig.folder);
+      form.append("allowed_formats", sig.allowedFormats);
 
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
         { method: "POST", body: form }
       );
       const json = await res.json();
-      if (!json.secure_url) throw new Error("Upload failed");
+      if (!json.secure_url) throw new Error(json.error?.message ?? "Upload failed");
 
-      await saveVerificationDoc(groomerProfileId, docType, json.secure_url);
+      const result = await saveVerificationDoc(groomerProfileId, docType, json.secure_url);
+      if (result?.error) throw new Error(result.error);
       const meta = VERIFICATION_DOC_META.find((m) => m.type === docType)!;
       setVerificationDocs((d) => ({ ...d, [meta.stateKey]: json.secure_url }));
-    } catch {
-      // user can retry
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Document upload failed — please try again");
     } finally {
       setDocUploading((d) => ({ ...d, [docType]: false }));
     }

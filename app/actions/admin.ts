@@ -5,6 +5,21 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { resend, FROM_EMAIL } from "@/lib/resend";
 import { sendAccountDeletionEmail } from "@/lib/account-export";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+function parseCloudinaryPublicId(url: string): { publicId: string; resourceType: "image" | "video" | "raw" } | null {
+  try {
+    const match = url.match(/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^./]+)?$/);
+    if (!match) return null;
+    return { resourceType: match[1] as "image" | "video" | "raw", publicId: match[2] };
+  } catch { return null; }
+}
 
 // ---------------------------------------------------------------------------
 // Auth guard
@@ -499,6 +514,52 @@ export async function adminUpdateVerificationStatus(
   }
 
   await logAdminAction(guard.profileId, "update_verification_status", "groomer_profiles", groomerProfileId, { from: oldStatus, to: status, groomer: (current as any)?.business_name ?? null });
+  return { ok: true };
+}
+
+export async function adminSaveGroomerDocVerified(
+  groomerProfileId: string,
+  docVerified: {
+    insurance_doc_verified?: boolean;
+    qualification_doc_verified?: boolean;
+    first_aid_doc_verified?: boolean;
+    photo_id_doc_verified?: boolean;
+    employers_liability_doc_verified?: boolean;
+  }
+): Promise<{ ok: boolean } | { error: string }> {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard;
+
+  const updatePayload: Record<string, unknown> = { ...docVerified, updated_at: new Date().toISOString() };
+
+  // When photo_id_doc_verified is being set to true, delete the photo from Cloudinary
+  // and clear the URL — the file is not needed once identity is confirmed.
+  if (docVerified.photo_id_doc_verified === true) {
+    const { data: current } = await supabaseAdmin
+      .from("groomer_profiles")
+      .select("photo_id_doc_url, photo_id_doc_verified")
+      .eq("id", groomerProfileId)
+      .single();
+
+    const photoUrl = (current as any)?.photo_id_doc_url as string | null;
+    const alreadyVerified = (current as any)?.photo_id_doc_verified as boolean;
+
+    if (photoUrl && !alreadyVerified) {
+      const parsed = parseCloudinaryPublicId(photoUrl);
+      if (parsed) {
+        await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType }).catch(() => {});
+      }
+      updatePayload.photo_id_doc_url = null;
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from("groomer_profiles")
+    .update(updatePayload)
+    .eq("id", groomerProfileId);
+
+  if (error) return { error: error.message };
+  await logAdminAction(guard.profileId, "update_doc_verified", "groomer_profiles", groomerProfileId, docVerified as Record<string, unknown>);
   return { ok: true };
 }
 

@@ -394,6 +394,7 @@ export function ProfileEditor({
       form.append("timestamp", String(sig.timestamp));
       form.append("signature", sig.signature);
       form.append("folder", sig.folder);
+      form.append("allowed_formats", sig.allowedFormats);
 
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
@@ -421,6 +422,7 @@ export function ProfileEditor({
       form.append("timestamp", String(sig.timestamp));
       form.append("signature", sig.signature);
       form.append("folder", sig.folder);
+      form.append("allowed_formats", sig.allowedFormats);
 
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,

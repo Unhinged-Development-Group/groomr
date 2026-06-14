@@ -1,14 +1,18 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getFavouriteGroomers } from "@/app/actions/favourites";
+import { geocodeQuery } from "@/lib/search";
 import { StarRow } from "@/components/ui/StarRow";
 import { LocationPinIcon } from "@/components/ui/GroomrIcons";
 import { ActionBar } from "./_components/ActionBar";
 import { GalleryGrid } from "./_components/GalleryGrid";
 import { ReviewsSection } from "./_components/ReviewsSection";
 import { ReportButton } from "./_components/ReportButton";
+
+const LocationMap = dynamic(() => import("./_components/LocationMap"), { ssr: false });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -100,7 +104,9 @@ export default async function GroomerProfilePage({
   // Resolve the actual UUID so all child queries use the right ID
   const resolvedId: string = groomerRes.data?.id ?? id;
 
-  const [servicesRes, availabilityRes, reviewsRes, teamRes, favourites, portfolioRes] =
+  const addressQuery = [groomer.city, groomer.postcode].filter(Boolean).join(" ");
+
+  const [servicesRes, availabilityRes, reviewsRes, teamRes, favourites, portfolioRes, geocoded] =
     await Promise.all([
 
       supabaseAdmin
@@ -139,6 +145,8 @@ export default async function GroomerProfilePage({
         .select("url")
         .eq("groomer_profile_id", resolvedId)
         .order("sort_order", { ascending: true }),
+
+      addressQuery ? geocodeQuery(addressQuery) : Promise.resolve(null),
     ]);
 
   if (groomerRes.error || !groomerRes.data) notFound();
@@ -467,6 +475,11 @@ export default async function GroomerProfilePage({
                   </>
                 )}
               </div>
+              {geocoded && (
+                <div className="h-40 rounded-xl overflow-hidden border border-pebble-grey/10 mt-1">
+                  <LocationMap lat={geocoded.lat} lng={geocoded.lng} />
+                </div>
+              )}
             </div>
 
             {/* Deposit Policy */}
@@ -547,9 +560,12 @@ function ServiceCard({
       </div>
       <div className="text-right shrink-0">
         {service.size_prices && Object.keys(service.size_prices).length > 0 ? (
-          <span className="text-xs font-bold text-pebble-grey">
-            from {formatPrice(Math.min(...Object.values(service.size_prices)))}
-          </span>
+          <div>
+            <p className="text-xs font-bold text-pebble-grey leading-none mb-0.5">from</p>
+            <span className="font-fredoka text-2xl text-deep-slate">
+              {formatPrice(Math.min(...Object.values(service.size_prices)))}
+            </span>
+          </div>
         ) : (
           <span className="font-fredoka text-2xl text-deep-slate">
             {formatPrice(service.price_pence)}

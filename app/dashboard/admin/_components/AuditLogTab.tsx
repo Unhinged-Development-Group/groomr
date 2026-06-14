@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import React, { useState, useTransition, useEffect, useCallback } from "react";
 import { adminGetAuditLog } from "@/app/actions/admin";
 import type { AdminAuditEntry } from "@/app/actions/admin";
 
@@ -291,9 +291,8 @@ export function AuditLogTab({ initialEntries, loadError }: Props) {
                   const detailLines = buildDetailLines(entry.action, entry.metadata);
 
                   return (
-                    <>
+                    <React.Fragment key={entry.id}>
                       <tr
-                        key={entry.id}
                         onClick={() => setExpanded(isExpanded ? null : entry.id)}
                         className="hover:bg-alabaster-cream/50 transition-colors cursor-pointer select-none"
                       >
@@ -339,7 +338,7 @@ export function AuditLogTab({ initialEntries, loadError }: Props) {
                       </tr>
 
                       {isExpanded && (
-                        <tr key={`${entry.id}-detail`} className="bg-alabaster-cream/60">
+                        <tr className="bg-alabaster-cream/60">
                           <td colSpan={4} className="px-6 py-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3 text-sm">
                               <div>
@@ -379,7 +378,7 @@ export function AuditLogTab({ initialEntries, loadError }: Props) {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </tbody>

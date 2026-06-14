@@ -52,7 +52,15 @@ export function HeaderAuthButtons() {
         </Link>
         <MessagesNavButton />
         <NotificationsNavButton />
-        <UserButton>
+        <UserButton
+          appearance={{
+            elements: {
+              avatarBox: "ring-1 ring-pebble-grey/20",
+              avatarImage: "!bg-alabaster-cream",
+              userButtonTrigger: "focus:!shadow-none",
+            },
+          }}
+        >
           <UserButton.UserProfilePage
             label="Manage Account"
             url="manage-account"

@@ -452,9 +452,10 @@ export async function saveServices(
 
   const existingIds = new Set((existing ?? []).map((s) => s.id as string));
   const keptIds = new Set(rows.filter((r) => r.id).map((r) => r.id as string));
-  const toDelete = [...existingIds].filter((id) => !keptIds.has(id));
-  if (toDelete.length > 0) {
-    await supabaseAdmin.from("services").delete().in("id", toDelete);
+  // Soft-delete removed services so FK refs from appointments are preserved
+  const toDeactivate = [...existingIds].filter((id) => !keptIds.has(id));
+  if (toDeactivate.length > 0) {
+    await supabaseAdmin.from("services").update({ is_active: false }).in("id", toDeactivate);
   }
 
   const saved: ServiceRow[] = [];

@@ -149,18 +149,6 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Amount chip */}
-      <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-pebble-grey/15">
-        <span className="text-sm font-bold text-deep-slate font-nunito">
-          {isDeposit
-            ? `${depositPolicy.percentage}% deposit to confirm with ${groomerName}`
-            : `Full payment to ${groomerName}`}
-        </span>
-        <span className="font-fredoka text-xl text-deep-slate">
-          £{(amountPence / 100).toFixed(2)}
-        </span>
-      </div>
-
       {/* Stripe PaymentElement */}
       <div className={`transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}>
         <PaymentElement
@@ -209,6 +197,7 @@ function PaymentStep({
   onGCChosen,
   gcLoading,
   gcError,
+  gcAuthorisationUrl,
 }: {
   clientSecret: string;
   amountPence: number;
@@ -218,24 +207,36 @@ function PaymentStep({
   onGCChosen: () => void;
   gcLoading: boolean;
   gcError: string | null;
+  gcAuthorisationUrl: string | null;
 }) {
+  const [expanded, setExpanded] = useState<"card" | "bank">("card");
   const [payError, setPayError] = useState<string | null>(null);
+  const isDeposit = depositPolicy.type === "percentage";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      {/* Amount — always visible */}
+      <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-pebble-grey/15">
+        <span className="text-sm font-bold text-deep-slate font-nunito">
+          {isDeposit ? `${depositPolicy.percentage}% deposit to confirm with ${groomerName}` : `Full payment to ${groomerName}`}
+        </span>
+        <span className="font-fredoka text-xl text-deep-slate">
+          £{(amountPence / 100).toFixed(2)}
+        </span>
+      </div>
+
       {(payError || gcError) && (
         <div className="bg-muted-terracotta/10 border border-muted-terracotta/20 rounded-xl px-4 py-3">
           <p className="text-sm font-bold text-muted-terracotta">{payError ?? gcError}</p>
         </div>
       )}
 
-      {/* Pay by Bank option */}
-      <button
-        onClick={onGCChosen}
-        disabled={gcLoading}
-        className="w-full text-left bg-white rounded-xl border-2 border-pebble-grey/15 p-4 hover:border-deep-slate hover:shadow-sm transition-all focus-ring group disabled:opacity-60"
-      >
-        <div className="flex items-center gap-3">
+      {/* Pay by Bank accordion */}
+      <div className={`bg-white rounded-xl border-2 overflow-hidden transition-all ${expanded === "bank" ? "border-deep-slate" : "border-pebble-grey/15"}`}>
+        <button
+          onClick={() => setExpanded("bank")}
+          className="w-full text-left p-4 flex items-center gap-3 focus-ring"
+        >
           <div className="w-9 h-9 rounded-lg bg-sage-leaf/10 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-sage-leaf" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -244,39 +245,88 @@ function PaymentStep({
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm text-deep-slate leading-tight">Pay by Bank</p>
-            <p className="text-xs text-pebble-grey font-nunito">Instant transfer via Open Banking — no card needed</p>
+            <p className="text-xs text-pebble-grey font-nunito">Open Banking — no card needed</p>
           </div>
-          {gcLoading ? (
-            <svg className="w-4 h-4 text-pebble-grey animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4 text-pebble-grey/40 group-hover:text-deep-slate transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-            </svg>
-          )}
-        </div>
-      </button>
-
-      <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-pebble-grey/15" />
-        <span className="text-xs font-bold text-pebble-grey uppercase tracking-wider">or pay by card</span>
-        <div className="flex-1 h-px bg-pebble-grey/15" />
+          <svg className={`w-4 h-4 text-pebble-grey/60 shrink-0 transition-transform ${expanded === "bank" ? "rotate-90" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        {expanded === "bank" && (
+          <div className="px-4 pb-4 border-t border-pebble-grey/10 pt-3 space-y-3">
+            {gcAuthorisationUrl ? (
+              <a
+                href={gcAuthorisationUrl}
+                className="w-full btn-primary font-nunito font-bold py-3 rounded-full text-sm shadow-subtle focus-ring flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                </svg>
+                Continue to your bank →
+              </a>
+            ) : (
+              <>
+                <ul className="text-xs text-deep-slate/70 font-nunito space-y-1.5">
+                  <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Select your bank and approve the payment — takes about a minute.</li>
+                  <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Sent directly from your bank account — no card details needed.</li>
+                  <li className="flex gap-2"><span className="text-sage-leaf shrink-0">✓</span>Open Banking — your credentials are never shared with Groomr.</li>
+                </ul>
+                <button
+                  onClick={onGCChosen}
+                  disabled={gcLoading}
+                  className="w-full btn-primary font-nunito font-bold py-3 rounded-full text-sm shadow-subtle focus-ring disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {gcLoading ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Setting up…
+                    </>
+                  ) : "Pay by Bank"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      <Elements
-        stripe={stripePromise}
-        options={{ clientSecret, appearance: STRIPE_APPEARANCE }}
-      >
-        <CheckoutForm
-          amountPence={amountPence}
-          depositPolicy={depositPolicy}
-          groomerName={groomerName}
-          onSuccess={onSuccess}
-          onError={setPayError}
-        />
-      </Elements>
+      {/* Pay by card accordion */}
+      <div className={`bg-white rounded-xl border-2 overflow-hidden transition-all ${expanded === "card" ? "border-deep-slate" : "border-pebble-grey/15"}`}>
+        <button
+          onClick={() => setExpanded("card")}
+          className="w-full text-left p-4 flex items-center gap-3 focus-ring"
+        >
+          <div className="w-9 h-9 rounded-lg bg-deep-slate/5 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-deep-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-deep-slate leading-tight">Pay by card</p>
+            <p className="text-xs text-pebble-grey font-nunito">Credit or debit · Klarna · Apple Pay</p>
+          </div>
+          <svg className={`w-4 h-4 text-pebble-grey/60 shrink-0 transition-transform ${expanded === "card" ? "rotate-90" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        {/* Always mounted — Stripe Elements must stay in DOM once initialised */}
+        <div className={expanded === "card" ? "block" : "hidden"}>
+          <div className="px-4 pb-4 border-t border-pebble-grey/10 pt-3">
+            <Elements stripe={stripePromise} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
+              <CheckoutForm
+                amountPence={amountPence}
+                depositPolicy={depositPolicy}
+                groomerName={groomerName}
+                onSuccess={onSuccess}
+                onError={setPayError}
+              />
+            </Elements>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -459,14 +509,18 @@ export function BookingFlow({
     setLoadingSlots(false);
   }
 
-  function depositDisplay(svc: Service): string | null {
+  function depositDisplay(effectivePricePence: number): string | null {
     if (depositPolicy.type === "percentage" && depositPolicy.percentage != null) {
-      const amt = Math.round((svc.price_pence * depositPolicy.percentage) / 100);
+      const amt = Math.round((effectivePricePence * depositPolicy.percentage) / 100);
       const display = Number.isInteger(amt / 100) ? `£${amt / 100}` : `£${(amt / 100).toFixed(2)}`;
       return `${depositPolicy.percentage}% deposit (${display}) due today`;
     }
     if (depositPolicy.type === "full") return "Full payment due today";
     return null;
+  }
+
+  function effectivePriceForDog(svc: Service, dogSize: string | null | undefined): number {
+    return (dogSize && svc.size_prices?.[dogSize]) || svc.price_pence;
   }
 
   // Step 4 → "Confirm" button handler
@@ -598,7 +652,7 @@ export function BookingFlow({
       }
 
       setGcAuthorisationUrl(result.authorisationUrl);
-      setPaymentMethod("gocardless");
+      // Stays in unified accordion view — no mode switch needed
     } catch (err) {
       console.error("[BookingFlow] handleGCChosen:", err);
       const msg = err instanceof Error ? err.message : "Unknown error";
@@ -1092,13 +1146,15 @@ export function BookingFlow({
                     />
                   </>
                 )}
-                {additionalPets.length === 0 && selectedService && depositDisplay(selectedService) && (
-                  <div className="px-5 py-3 bg-groomr-gold/10">
-                    <p className="text-xs font-bold text-deep-slate">
-                      💳 {depositDisplay(selectedService)}
-                    </p>
-                  </div>
-                )}
+                {additionalPets.length === 0 && selectedService && (() => {
+                  const effPrice = effectivePriceForDog(selectedService, selectedDog?.size);
+                  const dep = depositDisplay(effPrice);
+                  return dep && (
+                    <div className="px-5 py-3 bg-groomr-gold/10">
+                      <p className="text-xs font-bold text-deep-slate">💳 {dep}</p>
+                    </div>
+                  );
+                })()}
               </div>
 
               {depositPolicy.type === "none" && (
@@ -1152,25 +1208,7 @@ export function BookingFlow({
 
           ) : step === 5 ? (
             // ── STEP 5: PAYMENT ─────────────────────────────────────────────────
-            paymentMethod === "gocardless" && gcAuthorisationUrl ? (
-              <DirectDebitStep
-                authorisationUrl={gcAuthorisationUrl}
-                amountPence={paymentAmountPence || (() => {
-                  const base = selectedService?.price_pence ?? 0;
-                  const extra = additionalPets.reduce((s, p) => {
-                    const svc = services.find((sv) => sv.id === p.serviceId);
-                    return s + (svc?.price_pence ?? 0);
-                  }, 0);
-                  const full = base + extra;
-                  if (depositPolicy.type === "percentage" && depositPolicy.percentage != null) {
-                    return Math.round(full * (depositPolicy.percentage / 100));
-                  }
-                  return full;
-                })()}
-                depositPolicy={depositPolicy}
-                groomerName={groomerName}
-              />
-            ) : paymentClientSecret ? (
+            paymentClientSecret ? (
               <PaymentStep
                 clientSecret={paymentClientSecret}
                 amountPence={paymentAmountPence}
@@ -1180,6 +1218,7 @@ export function BookingFlow({
                 onGCChosen={handleGCChosen}
                 gcLoading={loadingPaymentMethod}
                 gcError={paymentMethodError}
+                gcAuthorisationUrl={gcAuthorisationUrl}
               />
             ) : (
               <div className="space-y-3 py-2">
@@ -1213,15 +1252,7 @@ export function BookingFlow({
                 } else if (step === 3 && multiPetMode) {
                   setStep(1);
                 } else if (step === 5) {
-                  // Within payment step: reset chosen method to go back to method picker,
-                  // or go back to confirm if no method was chosen yet
-                  if (paymentMethod) {
-                    setPaymentMethod(null);
-                    setPaymentClientSecret(null);
-                    setGcAuthorisationUrl(null);
-                  } else {
-                    setStep(4);
-                  }
+                  setStep(4);
                 } else {
                   setStep((s) => (s - 1) as Step);
                 }

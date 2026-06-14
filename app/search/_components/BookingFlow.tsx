@@ -472,28 +472,32 @@ export function BookingFlow({
     setLoadingPaymentMethod(true);
     setPaymentMethodError(null);
 
-    const result = createdGroupId
-      ? await createGroupPaymentIntent(createdGroupId)
-      : await createBookingPaymentIntent({ appointmentId: createdAppointmentId! });
+    try {
+      const result = createdGroupId
+        ? await createGroupPaymentIntent(createdGroupId)
+        : await createBookingPaymentIntent({ appointmentId: createdAppointmentId! });
 
-    if ("error" in result) {
-      // Groomer not on Stripe yet — treat as pay-at-salon
-      console.warn("[BookingFlow] PaymentIntent failed:", result.error);
+      if ("error" in result) {
+        // Groomer not on Stripe yet — treat as pay-at-salon
+        console.warn("[BookingFlow] PaymentIntent failed:", result.error);
+        setSuccess(true);
+        return;
+      }
+
+      if (!result.clientSecret || result.amountPence === 0) {
+        setSuccess(true);
+        return;
+      }
+
+      setPaymentClientSecret(result.clientSecret);
+      setPaymentAmountPence(result.amountPence);
+      setPaymentMethod("stripe");
+    } catch (err) {
+      console.error("[BookingFlow] handleStripeChosen:", err);
+      setPaymentMethodError("Something went wrong setting up card payment. Please try again.");
+    } finally {
       setLoadingPaymentMethod(false);
-      setSuccess(true);
-      return;
     }
-
-    if (!result.clientSecret || result.amountPence === 0) {
-      setLoadingPaymentMethod(false);
-      setSuccess(true);
-      return;
-    }
-
-    setPaymentClientSecret(result.clientSecret);
-    setPaymentAmountPence(result.amountPence);
-    setPaymentMethod("stripe");
-    setLoadingPaymentMethod(false);
   }
 
   // Step 5 → user chose Direct Debit
@@ -501,19 +505,24 @@ export function BookingFlow({
     setLoadingPaymentMethod(true);
     setPaymentMethodError(null);
 
-    const result = createdGroupId
-      ? await createGCGroupBillingRequest(createdGroupId)
-      : await createGCBillingRequest(createdAppointmentId!);
+    try {
+      const result = createdGroupId
+        ? await createGCGroupBillingRequest(createdGroupId)
+        : await createGCBillingRequest(createdAppointmentId!);
 
-    if ("error" in result) {
-      setPaymentMethodError(result.error);
+      if ("error" in result) {
+        setPaymentMethodError(result.error);
+        return;
+      }
+
+      setGcAuthorisationUrl(result.authorisationUrl);
+      setPaymentMethod("gocardless");
+    } catch (err) {
+      console.error("[BookingFlow] handleGCChosen:", err);
+      setPaymentMethodError("Something went wrong setting up Direct Debit. Please try again.");
+    } finally {
       setLoadingPaymentMethod(false);
-      return;
     }
-
-    setGcAuthorisationUrl(result.authorisationUrl);
-    setPaymentMethod("gocardless");
-    setLoadingPaymentMethod(false);
   }
 
   // Number of visible progress steps (hide "Payment" dot if no payment needed)

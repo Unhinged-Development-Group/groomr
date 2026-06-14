@@ -103,11 +103,11 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
       <div className="space-y-6 max-w-xl">
         {/* Commission rates */}
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-5">
-          <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+          <p className="text-[13px] font-bold text-deep-slate/60 uppercase tracking-wider">
             Commission rates
           </p>
 
-          <div className="flex gap-6 flex-wrap">
+          <div className="flex gap-10 flex-wrap">
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-deep-slate" htmlFor="platform-fee">
                 Standard platform fee
@@ -159,7 +159,7 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
             <button
               onClick={handleSave}
               disabled={isPending || !dirty}
-              className="btn-primary text-sm disabled:opacity-50"
+              className="btn-primary px-5 py-2 rounded-full text-sm focus-ring disabled:opacity-50"
             >
               {isPending ? "Saving…" : "Save settings"}
             </button>
@@ -169,7 +169,7 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
         {/* Incentive usage */}
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+            <p className="text-[13px] font-bold text-deep-slate/60 uppercase tracking-wider">
               Incentive usage
             </p>
             <span className="text-xs text-pebble-grey">
@@ -231,8 +231,8 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
                         }`}
                       >
                         {done
-                          ? `${limit}/${limit} at ${standardFeeLabel}`
-                          : `${g.bookings_used}/${limit} at 0%`}
+                          ? `${limit}/${limit} — at ${standardFeeLabel}`
+                          : `${g.bookings_used}/${limit} — free`}
                       </span>
                     </span>
                   </li>
@@ -244,7 +244,7 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
 
         {/* Integration health */}
         <div className="bg-white border border-pebble-grey/20 rounded-[20px] p-5 space-y-4">
-          <p className="text-xs font-bold text-pebble-grey uppercase tracking-wider">
+          <p className="text-[13px] font-bold text-deep-slate/60 uppercase tracking-wider">
             Integration health
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -253,9 +253,9 @@ export function PlatformSettingsTab({ settings, loadError }: Props) {
                 key={key}
                 className="flex items-center justify-between px-3 py-2.5 rounded-[12px] bg-alabaster-cream border border-pebble-grey/10"
               >
-                <span className="text-sm font-bold text-deep-slate">{label}</span>
+                <span className="text-sm font-bold text-deep-slate truncate">{label}</span>
                 <span
-                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border"
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border shrink-0 ml-2"
                   style={
                     integrations[key]
                       ? { background: "#dcfce7", color: "#15803d", borderColor: "#bbf7d0" }

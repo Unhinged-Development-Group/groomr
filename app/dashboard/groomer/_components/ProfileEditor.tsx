@@ -282,6 +282,7 @@ export function ProfileEditor({
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(initialProfileImageUrl);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [profileImageDeleting, setProfileImageDeleting] = useState(false);
+  const [profileImageError, setProfileImageError] = useState<string | null>(null);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [services, setServices] = useState<ServiceRow[]>(initialServices);
   const [savedServices, setSavedServices] = useState<ServiceRow[]>(initialServices);
@@ -414,7 +415,7 @@ export function ProfileEditor({
 
   async function handleProfileImageUpload(file: File) {
     setProfileImageUploading(true);
-    setSaveError(null);
+    setProfileImageError(null);
     try {
       const sig = await getProfileImageSignature(groomerProfileId);
       const form = new FormData();
@@ -436,7 +437,7 @@ export function ProfileEditor({
       if (result?.error) throw new Error(result.error);
       setProfileImageUrl(json.secure_url);
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Photo upload failed — please try again");
+      setProfileImageError(e instanceof Error ? e.message : "Photo upload failed — please try again");
     } finally {
       setProfileImageUploading(false);
     }
@@ -1350,6 +1351,9 @@ export function ProfileEditor({
               <p className="text-[10px] font-bold text-pebble-grey">JPG or PNG · max 5 MB</p>
             </div>
           </div>
+          {profileImageError && (
+            <p className="mt-2 text-[11px] font-bold text-muted-terracotta">{profileImageError}</p>
+          )}
           <input
             ref={profileImageInputRef}
             type="file"

@@ -784,13 +784,15 @@ export async function saveProfileImage(
 
   if (!myProfile) return { error: "Profile not found" };
 
-  const { error } = await supabaseAdmin
+  const { data: updated, error } = await supabaseAdmin
     .from("groomer_profiles")
     .update({ profile_image_url: url, updated_at: new Date().toISOString() })
     .eq("id", groomerProfileId)
-    .eq("user_id", myProfile.id);
+    .eq("user_id", myProfile.id)
+    .select("id");
 
   if (error) return { error: error.message };
+  if (!updated || updated.length === 0) return { error: "Profile not found — please refresh and try again" };
 
   // Sync to Clerk profile picture (upload)
   try {

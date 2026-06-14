@@ -19,6 +19,7 @@ interface Service {
   price_pence: number;
   deposit_pence: number | null;
   applicable_sizes: string[] | null;
+  size_prices: Record<string, number> | null;
 }
 
 interface AvailabilityRow {

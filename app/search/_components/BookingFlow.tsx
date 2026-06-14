@@ -69,6 +69,7 @@ interface Service {
   price_pence: number;
   deposit_pence: number | null;
   applicable_sizes: string[] | null;
+  size_prices: Record<string, number> | null;
 }
 
 interface AvailabilityRow {
@@ -93,7 +94,7 @@ interface BookingFlowProps {
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-const STEP_LABELS = ["Service", "Date & Time", "Your Dog", "Confirm", "Payment"];
+const STEP_LABELS = ["Your Dog", "Service", "Date & Time", "Confirm", "Payment"];
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // ---------------------------------------------------------------------------
@@ -292,7 +293,8 @@ export function BookingFlow({
     if (!raw) return;
     sessionStorage.removeItem(SESSION_KEY);
     try {
-      const { serviceId, date, time, timeLabel } = JSON.parse(raw) as {
+      const { dogId, serviceId, date, time, timeLabel } = JSON.parse(raw) as {
+        dogId?: string;
         serviceId: string;
         date: string;
         time: string;
@@ -303,7 +305,20 @@ export function BookingFlow({
       if (date) setSelectedDate(date);
       if (time) setSelectedTime(time);
       if (timeLabel) setSelectedTimeLabel(timeLabel);
-      if (svc && date && time) setStep(3);
+      // After sign-in redirect, dogs will be fetched; if we have dogId it will be
+      // set once dogs load. Jump to confirm if everything is present.
+      if (dogId) {
+        getDogs().then((data) => {
+          setDogs(data);
+          setDogsFetched(true);
+          const dog = data.find((d) => d.id === dogId) ?? null;
+          if (dog) setSelectedDog(dog);
+          if (svc && dog && date && time) setStep(4);
+          else if (svc && date && time) setStep(3);
+        });
+      } else if (svc && date && time) {
+        setStep(3);
+      }
     } catch {
       // ignore malformed data
     }
@@ -326,7 +341,7 @@ export function BookingFlow({
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (step === 3 && user && !dogsFetched) {
+    if (isLoaded && user && !dogsFetched) {
       setDogsLoading(true);
       getDogs().then((data) => {
         setDogs(data);
@@ -334,7 +349,7 @@ export function BookingFlow({
         setDogsFetched(true);
       });
     }
-  }, [step, user, dogsFetched]);
+  }, [isLoaded, user, dogsFetched]);
 
   const availableDaySet = new Set(availability.map((a) => a.day_of_week));
 
@@ -600,46 +615,298 @@ export function BookingFlow({
             <SuccessState groomerName={groomerName} onClose={onClose} />
 
           ) : step === 1 ? (
-            // ── STEP 1: SERVICE ─────────────────────────────────────────────────
-            <div className="space-y-3">
-              {services.length === 0 ? (
-                <p className="text-pebble-grey text-sm font-nunito py-6 text-center">
-                  No services available for booking yet.
-                </p>
-              ) : (
-                services.map((svc) => (
+            // ── STEP 1: YOUR DOG ─────────────────────────────────────────────────
+            <div className="space-y-4">
+              {!isLoaded ? (
+                <div className="py-8 text-center">
+                  <p className="text-pebble-grey text-sm font-nunito">Loading…</p>
+                </div>
+              ) : !user ? (
+                <div className="text-center py-10 space-y-4">
+                  <div className="text-4xl">🐾</div>
+                  <p className="font-fredoka text-xl text-deep-slate">Sign in to book</p>
+                  <p className="text-pebble-grey text-sm font-nunito">
+                    You need a Groomr account to request appointments.
+                  </p>
                   <button
-                    key={svc.id}
-                    onClick={() => { setSelectedService(svc); setStep(2); }}
-                    className="w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-5 hover:border-deep-slate hover:shadow-sm transition-all focus-ring group"
+                    onClick={() => {
+                      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ serviceId: "", date: "", time: "", timeLabel: "" }));
+                      openSignIn({ forceRedirectUrl: window.location.href });
+                    }}
+                    className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring"
                   >
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-fredoka text-lg text-deep-slate">{svc.name}</p>
-                        {svc.description && (
-                          <p className="text-xs text-pebble-grey mt-1 leading-relaxed">{svc.description}</p>
-                        )}
-                        {svc.duration_minutes && (
-                          <p className="text-xs font-bold text-sage-leaf mt-2">{svc.duration_minutes} min</p>
-                        )}
-                      </div>
-                      <span className="font-fredoka text-2xl text-deep-slate shrink-0">
-                        £{(svc.price_pence / 100).toFixed(0)}
-                      </span>
-                    </div>
+                    Sign In
                   </button>
-                ))
+                </div>
+              ) : dogsLoading ? (
+                <div className="space-y-3">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="h-20 bg-pebble-grey/15 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : dogs.length === 0 ? (
+                <div className="text-center py-10 space-y-4">
+                  <div className="text-4xl">🐶</div>
+                  <p className="font-fredoka text-xl text-deep-slate">Add a dog first</p>
+                  <p className="text-pebble-grey text-sm font-nunito">
+                    Add your dog&apos;s details to your owner dashboard before booking.
+                  </p>
+                  <Link href="/dashboard/owner" className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring inline-block">
+                    Go to Owner Dashboard
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  {!multiPetMode ? (
+                    // ── Single-pet mode ────────────────────────────────────────
+                    <>
+                      <p className="text-sm text-pebble-grey font-nunito">Which dog is this booking for?</p>
+                      {dogs.map((dog) => (
+                        <button
+                          key={dog.id}
+                          onClick={() => { setSelectedDog(dog); setAdditionalPets([]); setStep(2); }}
+                          className="w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-4 hover:border-deep-slate hover:shadow-sm transition-all focus-ring flex items-center gap-4"
+                        >
+                          {dog.profile_image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={dog.profile_image_url} alt={dog.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0 text-xl">🐾</div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-fredoka text-lg text-deep-slate leading-tight">{dog.name}</p>
+                            <p className="text-xs text-pebble-grey mt-0.5">
+                              {[dog.breed, dog.size].filter(Boolean).join(" · ") || "Dog"}
+                            </p>
+                          </div>
+                          <svg className="w-4 h-4 text-pebble-grey/40 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      ))}
+                      {dogs.length > 1 && (
+                        <button
+                          onClick={() => { setMultiPetMode(true); setSelectedDog(null); setAdditionalPets([]); }}
+                          className="w-full text-center text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors py-2 focus-ring rounded"
+                        >
+                          Bringing more than one dog? →
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    // ── Multi-pet mode ─────────────────────────────────────────
+                    <>
+                      <p className="text-sm text-pebble-grey font-nunito">Select the dogs for this appointment and pick a service for each.</p>
+
+                      {dogs.map((dog) => {
+                        const isSelected = selectedDog?.id === dog.id;
+                        const additionalIdx = additionalPets.findIndex((p) => p.dog.id === dog.id);
+                        const isPrimarySelected = isSelected;
+                        const isAdditional = additionalIdx !== -1;
+                        const isAnySelected = isPrimarySelected || isAdditional;
+
+                        return (
+                          <div key={dog.id} className={`bg-white rounded-xl border-2 transition-all ${isAnySelected ? "border-deep-slate" : "border-pebble-grey/15"}`}>
+                            <button
+                              onClick={() => {
+                                if (isPrimarySelected) {
+                                  setSelectedDog(null);
+                                } else if (isAdditional) {
+                                  setAdditionalPets((prev) => prev.filter((p) => p.dog.id !== dog.id));
+                                } else if (!selectedDog) {
+                                  setSelectedDog(dog);
+                                } else {
+                                  const firstServiceId = services[0]?.id ?? "";
+                                  setAdditionalPets((prev) => [...prev, { dog, serviceId: firstServiceId }]);
+                                }
+                              }}
+                              className="w-full text-left p-4 flex items-center gap-4 focus-ring rounded-xl"
+                            >
+                              <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${isAnySelected ? "bg-deep-slate border-deep-slate" : "border-pebble-grey/40"}`}>
+                                {isAnySelected && <span className="text-alabaster-cream text-xs">✓</span>}
+                              </div>
+                              {dog.profile_image_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={dog.profile_image_url} alt={dog.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0">🐾</div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="font-fredoka text-base text-deep-slate">{dog.name}</p>
+                                <p className="text-xs text-pebble-grey">{[dog.breed, dog.size].filter(Boolean).join(" · ") || "Dog"}</p>
+                              </div>
+                            </button>
+                            {(isPrimarySelected || isAdditional) && (
+                              <div className="px-4 pb-3 pt-0">
+                                <select
+                                  value={isPrimarySelected ? (selectedService?.id ?? "") : additionalPets[additionalIdx].serviceId}
+                                  onChange={(e) => {
+                                    if (isPrimarySelected) {
+                                      const svc = services.find((s) => s.id === e.target.value);
+                                      if (svc) setSelectedService(svc);
+                                    } else {
+                                      setAdditionalPets((prev) =>
+                                        prev.map((p, i) => i === additionalIdx ? { ...p, serviceId: e.target.value } : p)
+                                      );
+                                    }
+                                  }}
+                                  className="field w-full text-sm"
+                                >
+                                  {services.filter((s) => {
+                                    if (!s.id) return false;
+                                    const sizes = s.applicable_sizes;
+                                    if (!sizes || sizes.length === 0) return true;
+                                    if (!dog.size) return true;
+                                    return sizes.includes(dog.size);
+                                  }).map((s) => (
+                                    <option key={s.id} value={s.id!}>{s.name} — £{(s.price_pence / 100).toFixed(0)}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {(selectedDog || additionalPets.length > 0) && (() => {
+                        const totalSelected = (selectedDog ? 1 : 0) + additionalPets.length;
+                        const primaryPrice = selectedDog ? (selectedService?.price_pence ?? 0) : 0;
+                        const additionalPrice = additionalPets.reduce((sum, p) => {
+                          const svc = services.find((s) => s.id === p.serviceId);
+                          return sum + (svc?.price_pence ?? 0);
+                        }, 0);
+                        const totalPrice = primaryPrice + additionalPrice;
+
+                        return (
+                          <div className="space-y-3 pt-1">
+                            <div className="flex items-center justify-between bg-white rounded-xl border border-pebble-grey/15 px-4 py-3">
+                              <span className="text-sm font-bold text-pebble-grey">{totalSelected} dog{totalSelected !== 1 ? "s" : ""} selected</span>
+                              <span className="font-fredoka text-lg text-deep-slate">£{(totalPrice / 100).toFixed(0)}</span>
+                            </div>
+                            {totalSelected >= 2 ? (
+                              <button
+                                onClick={async () => {
+                                  setStep(3);
+                                  if (termsCheckedForGroomer.current !== groomerProfileId) {
+                                    const check = await checkTermsAcceptance(groomerProfileId);
+                                    termsCheckedForGroomer.current = groomerProfileId;
+                                    setTermsNeedAcceptance(check.needsAcceptance);
+                                    setTermsContent(check.content);
+                                    setTermsChecked(false);
+                                  }
+                                }}
+                                className="w-full btn-primary font-nunito font-bold py-3 rounded-full text-sm focus-ring shadow-subtle"
+                              >
+                                Continue with {totalSelected} dogs →
+                              </button>
+                            ) : (
+                              <p className="text-xs text-center text-pebble-grey font-nunito">Select at least 2 dogs to continue in multi-pet mode.</p>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      <button
+                        onClick={() => { setMultiPetMode(false); setSelectedDog(null); setAdditionalPets([]); }}
+                        className="w-full text-center text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors py-1 focus-ring rounded"
+                      >
+                        ← Back to single dog
+                      </button>
+                    </>
+                  )}
+                </>
               )}
             </div>
 
           ) : step === 2 ? (
-            // ── STEP 2: DATE & TIME ─────────────────────────────────────────────
+            // ── STEP 2: SERVICE ──────────────────────────────────────────────────
+            <div className="space-y-3">
+              {selectedDog && (
+                <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 border border-pebble-grey/15 mb-1">
+                  {selectedDog.profile_image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={selectedDog.profile_image_url} alt={selectedDog.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0 text-sm">🐾</div>
+                  )}
+                  <span className="text-sm font-bold text-deep-slate">{selectedDog.name}</span>
+                  {selectedDog.size && (
+                    <span className="text-xs text-pebble-grey capitalize">· {selectedDog.size}</span>
+                  )}
+                </div>
+              )}
+              {(() => {
+                const dogSize = selectedDog?.size ?? null;
+                const filteredServices = services.filter((svc) => {
+                  const sizes = svc.applicable_sizes;
+                  if (!sizes || sizes.length === 0) return true;
+                  if (!dogSize) return true;
+                  return sizes.includes(dogSize);
+                });
+                if (filteredServices.length === 0) {
+                  return (
+                    <p className="text-pebble-grey text-sm font-nunito py-6 text-center">
+                      No services available for this dog&apos;s size.
+                    </p>
+                  );
+                }
+                return filteredServices.map((svc) => {
+                  const sizePrice = dogSize && svc.size_prices?.[dogSize];
+                  const hasSizePrices = svc.size_prices && Object.keys(svc.size_prices).length > 0;
+                  return (
+                    <button
+                      key={svc.id}
+                      onClick={() => { setSelectedService(svc); setStep(3); }}
+                      className="w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-5 hover:border-deep-slate hover:shadow-sm transition-all focus-ring group"
+                    >
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-fredoka text-lg text-deep-slate">{svc.name}</p>
+                          {svc.description && (
+                            <p className="text-xs text-pebble-grey mt-1 leading-relaxed">{svc.description}</p>
+                          )}
+                          {svc.duration_minutes && (
+                            <p className="text-xs font-bold text-sage-leaf mt-2">{svc.duration_minutes} min</p>
+                          )}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          {hasSizePrices ? (
+                            sizePrice ? (
+                              <span className="font-fredoka text-2xl text-deep-slate">
+                                £{(sizePrice / 100).toFixed(0)}
+                              </span>
+                            ) : (
+                              <span className="font-fredoka text-2xl text-deep-slate">
+                                from £{(Math.min(...Object.values(svc.size_prices!)) / 100).toFixed(0)}
+                              </span>
+                            )
+                          ) : (
+                            <span className="font-fredoka text-2xl text-deep-slate">
+                              £{(svc.price_pence / 100).toFixed(0)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+
+          ) : step === 3 ? (
+            // ── STEP 3: DATE & TIME ─────────────────────────────────────────────
             <div className="space-y-6">
               {selectedService && (
                 <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-pebble-grey/15">
                   <span className="font-bold text-sm text-deep-slate">{selectedService.name}</span>
                   <span className="font-fredoka text-deep-slate">
-                    £{(selectedService.price_pence / 100).toFixed(0)}
+                    {(() => {
+                      const dogSize = selectedDog?.size ?? null;
+                      const sizePrice = dogSize && selectedService.size_prices?.[dogSize];
+                      return sizePrice
+                        ? `£${(sizePrice / 100).toFixed(0)}`
+                        : `£${(selectedService.price_pence / 100).toFixed(0)}`;
+                    })()}
                   </span>
                 </div>
               )}
@@ -721,7 +988,7 @@ export function BookingFlow({
                           onClick={() => {
                             setSelectedTime(slot.time);
                             setSelectedTimeLabel(slot.label);
-                            setStep(3);
+                            setStep(4);
                           }}
                           className="py-2.5 rounded-xl text-sm font-bold border transition-all focus-ring bg-white border-pebble-grey/20 text-deep-slate hover:border-deep-slate hover:shadow-sm"
                         >
@@ -731,239 +998,6 @@ export function BookingFlow({
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-
-          ) : step === 3 ? (
-            // ── STEP 3: DOG ─────────────────────────────────────────────────────
-            <div className="space-y-4">
-              {!isLoaded ? (
-                <div className="py-8 text-center">
-                  <p className="text-pebble-grey text-sm font-nunito">Loading…</p>
-                </div>
-              ) : !user ? (
-                <div className="text-center py-10 space-y-4">
-                  <div className="text-4xl">🐾</div>
-                  <p className="font-fredoka text-xl text-deep-slate">Sign in to book</p>
-                  <p className="text-pebble-grey text-sm font-nunito">
-                    You need a Groomr account to request appointments.
-                  </p>
-                  <button
-                    onClick={() => {
-                      sessionStorage.setItem(
-                        SESSION_KEY,
-                        JSON.stringify({
-                          serviceId: selectedService?.id ?? "",
-                          date: selectedDate ?? "",
-                          time: selectedTime ?? "",
-                          timeLabel: selectedTimeLabel ?? "",
-                        }),
-                      );
-                      openSignIn({ forceRedirectUrl: window.location.href });
-                    }}
-                    className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring"
-                  >
-                    Sign In
-                  </button>
-                </div>
-              ) : dogsLoading ? (
-                <div className="space-y-3">
-                  {[0, 1].map((i) => (
-                    <div key={i} className="h-20 bg-pebble-grey/15 rounded-xl animate-pulse" />
-                  ))}
-                </div>
-              ) : dogs.length === 0 ? (
-                <div className="text-center py-10 space-y-4">
-                  <div className="text-4xl">🐶</div>
-                  <p className="font-fredoka text-xl text-deep-slate">Add a dog first</p>
-                  <p className="text-pebble-grey text-sm font-nunito">
-                    Add your dog&apos;s details to your owner dashboard before booking.
-                  </p>
-                  <Link href="/dashboard/owner" className="btn-primary font-nunito font-bold px-6 py-3 rounded-full focus-ring inline-block">
-                    Go to Owner Dashboard
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  {!multiPetMode ? (
-                    // ── Single-pet mode (default) ──────────────────────────────
-                    <>
-                      <p className="text-sm text-pebble-grey font-nunito">Which dog is this booking for?</p>
-                      {dogs.map((dog) => {
-                        const sizes = selectedService?.applicable_sizes;
-                        const incompatible = sizes && sizes.length > 0 && dog.size != null && !sizes.includes(dog.size);
-                        return (
-                        <button
-                          key={dog.id}
-                          disabled={!!incompatible}
-                          onClick={async () => {
-                            setSelectedDog(dog);
-                            setAdditionalPets([]);
-                            setStep(4);
-                            if (termsCheckedForGroomer.current !== groomerProfileId) {
-                              const check = await checkTermsAcceptance(groomerProfileId);
-                              termsCheckedForGroomer.current = groomerProfileId;
-                              setTermsNeedAcceptance(check.needsAcceptance);
-                              setTermsContent(check.content);
-                              setTermsChecked(false);
-                            }
-                          }}
-                          className={`w-full text-left bg-white rounded-xl border border-pebble-grey/15 p-4 transition-all focus-ring flex items-center gap-4 ${incompatible ? "opacity-40 cursor-not-allowed" : "hover:border-deep-slate hover:shadow-sm"}`}
-                        >
-                          {dog.profile_image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={dog.profile_image_url} alt={dog.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0 text-xl">🐾</div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-fredoka text-lg text-deep-slate leading-tight">{dog.name}</p>
-                            <p className="text-xs text-pebble-grey mt-0.5">
-                              {[dog.breed, dog.size].filter(Boolean).join(" · ") || "Dog"}
-                            </p>
-                            {incompatible && (
-                              <p className="text-xs text-muted-terracotta mt-1 font-bold">
-                                Not eligible for {selectedService?.name} (size mismatch)
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                        );
-                      })}
-                      {dogs.length > 1 && (
-                        <button
-                          onClick={() => { setMultiPetMode(true); setSelectedDog(null); setAdditionalPets([]); }}
-                          className="w-full text-center text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors py-2 focus-ring rounded"
-                        >
-                          Bringing more than one dog? →
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    // ── Multi-pet mode ─────────────────────────────────────────
-                    <>
-                      <p className="text-sm text-pebble-grey font-nunito">Select the dogs for this appointment and pick a service for each.</p>
-
-                      {/* Primary dog row */}
-                      {dogs.map((dog) => {
-                        const isSelected = selectedDog?.id === dog.id;
-                        const additionalIdx = additionalPets.findIndex((p) => p.dog.id === dog.id);
-                        const isPrimarySelected = isSelected;
-                        const isAdditional = additionalIdx !== -1;
-                        const isAnySelected = isPrimarySelected || isAdditional;
-
-                        return (
-                          <div key={dog.id} className={`bg-white rounded-xl border-2 transition-all ${isAnySelected ? "border-deep-slate" : "border-pebble-grey/15"}`}>
-                            <button
-                              onClick={() => {
-                                if (isPrimarySelected) {
-                                  setSelectedDog(null);
-                                } else if (isAdditional) {
-                                  setAdditionalPets((prev) => prev.filter((p) => p.dog.id !== dog.id));
-                                } else if (!selectedDog) {
-                                  setSelectedDog(dog);
-                                } else {
-                                  // Add as additional pet
-                                  const firstServiceId = services[0]?.id ?? "";
-                                  setAdditionalPets((prev) => [...prev, { dog, serviceId: firstServiceId }]);
-                                }
-                              }}
-                              className="w-full text-left p-4 flex items-center gap-4 focus-ring rounded-xl"
-                            >
-                              <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${isAnySelected ? "bg-deep-slate border-deep-slate" : "border-pebble-grey/40"}`}>
-                                {isAnySelected && <span className="text-alabaster-cream text-xs">✓</span>}
-                              </div>
-                              {dog.profile_image_url ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={dog.profile_image_url} alt={dog.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-sage-leaf/15 flex items-center justify-center shrink-0">🐾</div>
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <p className="font-fredoka text-base text-deep-slate">{dog.name}</p>
-                                <p className="text-xs text-pebble-grey">{[dog.breed, dog.size].filter(Boolean).join(" · ") || "Dog"}</p>
-                              </div>
-                            </button>
-                            {(isPrimarySelected || isAdditional) && (
-                              <div className="px-4 pb-3 pt-0">
-                                <select
-                                  value={isPrimarySelected ? (selectedService?.id ?? "") : additionalPets[additionalIdx].serviceId}
-                                  onChange={(e) => {
-                                    if (isPrimarySelected) {
-                                      const svc = services.find((s) => s.id === e.target.value);
-                                      if (svc) setSelectedService(svc);
-                                    } else {
-                                      setAdditionalPets((prev) =>
-                                        prev.map((p, i) => i === additionalIdx ? { ...p, serviceId: e.target.value } : p)
-                                      );
-                                    }
-                                  }}
-                                  className="field w-full text-sm"
-                                >
-                                  {services.filter((s) => {
-                                    if (!s.id) return false;
-                                    const sizes = s.applicable_sizes;
-                                    if (!sizes || sizes.length === 0) return true;
-                                    if (!dog.size) return true;
-                                    return sizes.includes(dog.size);
-                                  }).map((s) => (
-                                    <option key={s.id} value={s.id!}>{s.name} — £{(s.price_pence / 100).toFixed(0)}</option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* Total + Continue */}
-                      {(selectedDog || additionalPets.length > 0) && (() => {
-                        const totalSelected = (selectedDog ? 1 : 0) + additionalPets.length;
-                        const primaryPrice = selectedDog ? (selectedService?.price_pence ?? 0) : 0;
-                        const additionalPrice = additionalPets.reduce((sum, p) => {
-                          const svc = services.find((s) => s.id === p.serviceId);
-                          return sum + (svc?.price_pence ?? 0);
-                        }, 0);
-                        const totalPrice = primaryPrice + additionalPrice;
-
-                        return (
-                          <div className="space-y-3 pt-1">
-                            <div className="flex items-center justify-between bg-white rounded-xl border border-pebble-grey/15 px-4 py-3">
-                              <span className="text-sm font-bold text-pebble-grey">{totalSelected} dog{totalSelected !== 1 ? "s" : ""} selected</span>
-                              <span className="font-fredoka text-lg text-deep-slate">£{(totalPrice / 100).toFixed(0)}</span>
-                            </div>
-                            {totalSelected >= 2 ? (
-                              <button
-                                onClick={async () => {
-                                  setStep(4);
-                                  if (termsCheckedForGroomer.current !== groomerProfileId) {
-                                    const check = await checkTermsAcceptance(groomerProfileId);
-                                    termsCheckedForGroomer.current = groomerProfileId;
-                                    setTermsNeedAcceptance(check.needsAcceptance);
-                                    setTermsContent(check.content);
-                                    setTermsChecked(false);
-                                  }
-                                }}
-                                className="w-full btn-primary font-nunito font-bold py-3 rounded-full text-sm focus-ring shadow-subtle"
-                              >
-                                Continue with {totalSelected} dogs →
-                              </button>
-                            ) : (
-                              <p className="text-xs text-center text-pebble-grey font-nunito">Select at least 2 dogs to continue in multi-pet mode.</p>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      <button
-                        onClick={() => { setMultiPetMode(false); setSelectedDog(null); setAdditionalPets([]); }}
-                        className="w-full text-center text-xs font-bold text-pebble-grey hover:text-deep-slate transition-colors py-1 focus-ring rounded"
-                      >
-                        ← Back to single dog
-                      </button>
-                    </>
-                  )}
-                </>
               )}
             </div>
 
@@ -978,7 +1012,11 @@ export function BookingFlow({
                   <>
                     <SummaryRow label="Service" value={selectedService?.name ?? ""} />
                     <SummaryRow label="Dog" value={selectedDog?.name ?? ""} />
-                    <SummaryRow label="Price" value={`£${((selectedService?.price_pence ?? 0) / 100).toFixed(0)}`} bold />
+                    <SummaryRow label="Price" value={`£${((() => {
+                      const dogSize = selectedDog?.size ?? null;
+                      const sizePrice = dogSize && selectedService?.size_prices?.[dogSize];
+                      return sizePrice ?? (selectedService?.price_pence ?? 0);
+                    })() / 100).toFixed(0)}`} bold />
                   </>
                 ) : (
                   // Multi-pet summary
@@ -1106,7 +1144,14 @@ export function BookingFlow({
         {!success && step > 1 && step < 5 && (
           <div className="px-7 py-4 border-t border-pebble-grey/10 shrink-0">
             <button
-              onClick={() => setStep((s) => (s - 1) as Step)}
+              onClick={() => {
+                // Multi-pet skips step 2 (service) — back from date/time returns to dog picker
+                if (step === 3 && multiPetMode) {
+                  setStep(1);
+                } else {
+                  setStep((s) => (s - 1) as Step);
+                }
+              }}
               className="text-sm font-bold text-pebble-grey hover:text-deep-slate transition-colors font-nunito focus-ring rounded-full px-2 py-1"
             >
               ← Back

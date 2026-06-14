@@ -86,9 +86,10 @@ function MetadataCell({ metadata }: { metadata: Record<string, unknown> }) {
 
 interface Props {
   initialEntries: AdminAuditEntry[];
+  loadError: string | null;
 }
 
-export function AuditLogTab({ initialEntries }: Props) {
+export function AuditLogTab({ initialEntries, loadError }: Props) {
   const [entries, setEntries] = useState<AdminAuditEntry[]>(initialEntries);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(initialEntries.length === 50);
@@ -147,7 +148,14 @@ export function AuditLogTab({ initialEntries }: Props) {
 
       {/* Table */}
       <div className="bg-white border border-pebble-grey/20 rounded-[20px] overflow-hidden">
-        {filtered.length === 0 ? (
+        {loadError ? (
+          <div className="py-12 text-center space-y-2">
+            <p className="text-pebble-grey font-bold">Failed to load audit log.</p>
+            <p className="text-xs text-muted-terracotta font-mono bg-muted-terracotta/10 px-3 py-2 rounded-lg inline-block">
+              {loadError}
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-pebble-grey font-bold">No audit entries yet.</p>
             <p className="text-xs text-pebble-grey mt-1">

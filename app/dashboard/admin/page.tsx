@@ -77,6 +77,7 @@ export default async function AdminDashboardPage() {
       initialPlatformSettings={"error" in platformSettings ? null : platformSettings.data}
       platformSettingsError={"error" in platformSettings ? platformSettings.error : null}
       initialAuditLog={"error" in auditLog ? [] : auditLog.data}
+      auditLogError={"error" in auditLog ? auditLog.error : null}
     />
   );
 }

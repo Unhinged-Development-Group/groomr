@@ -93,6 +93,7 @@ interface Props {
   initialPlatformSettings: PlatformSettings | null;
   platformSettingsError: string | null;
   initialAuditLog: AdminAuditEntry[];
+  auditLogError: string | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -111,6 +112,7 @@ export function AdminDashboardClient({
   initialPlatformSettings,
   platformSettingsError,
   initialAuditLog,
+  auditLogError,
 }: Props) {
   const [mode, setMode] = useState<Mode>("overview");
   const [activeUserTab, setActiveUserTab] = useState<UserTab>("groomers");
@@ -315,7 +317,7 @@ export function AdminDashboardClient({
         <PlatformSettingsTab settings={initialPlatformSettings} loadError={platformSettingsError} />
       )}
       {mode === "groomr_management" && activeGroomrTab === "audit_log" && (
-        <AuditLogTab initialEntries={initialAuditLog} />
+        <AuditLogTab initialEntries={initialAuditLog} loadError={auditLogError} />
       )}
       {mode === "groomr_management" && activeGroomrTab === "analytics" && (
         <AnalyticsTab />

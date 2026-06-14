@@ -29,7 +29,7 @@ async function logAdminAction(
   targetId?: string,
   metadata?: Record<string, unknown>
 ): Promise<void> {
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("admin_audit_log")
     .insert({
       admin_profile_id: adminProfileId,
@@ -38,6 +38,7 @@ async function logAdminAction(
       target_id: targetId ?? null,
       metadata: metadata ?? {},
     });
+  if (error) console.error("[audit_log] insert failed:", error.message, { adminProfileId, action });
 }
 
 // ---------------------------------------------------------------------------
@@ -2364,20 +2365,35 @@ export async function adminGetAuditLog(
 
   const { data, error } = await supabaseAdmin
     .from("admin_audit_log")
-    .select(
-      `id, action, target_table, target_id, metadata, created_at,
-       admin:profiles!admin_profile_id ( full_name, email )`
-    )
+    .select("id, action, target_table, target_id, metadata, created_at, admin_profile_id")
     .order("created_at", { ascending: false })
     .range(page * AUDIT_PAGE_SIZE, (page + 1) * AUDIT_PAGE_SIZE - 1);
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[adminGetAuditLog] query failed:", error.message);
+    return { error: error.message };
+  }
+
+  const rows = (data ?? []) as any[];
+
+  // Resolve admin names in a separate query to avoid PostgREST join ambiguity
+  const profileIds = [...new Set(rows.map((r) => r.admin_profile_id).filter(Boolean))];
+  const profileMap = new Map<string, { full_name: string | null; email: string | null }>();
+  if (profileIds.length > 0) {
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", profileIds);
+    for (const p of profiles ?? []) {
+      profileMap.set((p as any).id, { full_name: (p as any).full_name, email: (p as any).email });
+    }
+  }
 
   return {
-    data: (data ?? []).map((e: any) => ({
+    data: rows.map((e) => ({
       id: e.id,
-      admin_name: e.admin?.full_name ?? null,
-      admin_email: e.admin?.email ?? null,
+      admin_name: profileMap.get(e.admin_profile_id)?.full_name ?? null,
+      admin_email: profileMap.get(e.admin_profile_id)?.email ?? null,
       action: e.action,
       target_table: e.target_table,
       target_id: e.target_id,

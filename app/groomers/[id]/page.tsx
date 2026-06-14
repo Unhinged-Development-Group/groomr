@@ -43,6 +43,7 @@ interface Service {
   price_pence: number;
   deposit_pence: number | null;
   applicable_sizes: string[] | null;
+  size_prices: Record<string, number> | null;
   sort_order: number | null;
 }
 
@@ -105,7 +106,7 @@ export default async function GroomerProfilePage({
       supabaseAdmin
         .from("services")
         .select(
-          "id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, sort_order"
+          "id, name, description, duration_minutes, price_pence, deposit_pence, applicable_sizes, size_prices, sort_order"
         )
         .eq("groomer_profile_id", resolvedId)
         .eq("is_active", true)

@@ -16,6 +16,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # start dev server (Turbopack)
 npm run build    # production build + TypeScript check
 npm run lint     # ESLint
+npx react-email dev --dir lib/emails    # preview email templates in browser
+ngrok http 3000                          # expose localhost for Clerk/Stripe webhooks
 ```
 
 No test suite. TypeScript errors surface via `npm run build` — always run it before committing.
@@ -31,7 +33,8 @@ No test suite. TypeScript errors surface via `npm run build` — always run it b
 | **Tailwind CSS** | v4 | `@import "tailwindcss"` in `globals.css` — no `tailwind.config.ts` |
 | **Supabase** | ^2.104.1 | Postgres. `lib/supabase-admin.ts` = service-role client (server only). `lib/supabase.ts` = anon client (Realtime only) |
 | **Clerk** | ^7.2.7 | Auth only (email + Google OAuth) — not using Supabase Auth |
-| **Cloudinary** | ^2.10.0 | Dog/groomer photos. CDN: `res.cloudinary.com/dr8adq7nl` |
+| **Cloudinary** | ^2.10.0 | Dog/groomer photos and portfolio. CDN: `res.cloudinary.com/dr8adq7nl`. **Not used for verification docs** — those go to Supabase Storage. |
+| **Supabase Storage** | (via supabase-js) | Private bucket `verification-docs` for groomer verification documents (insurance, photo ID, etc.). Signed upload URLs (PUT) from server; signed download URLs (1h TTL) generated at load time in `loadProfileEditorData` and `adminGetGroomerFull`. Paths stored in DB, not full URLs. |
 | **Google Maps** | ^1.8.3 | `@vis.gl/react-google-maps` (client, `ssr:false`) + server-side geocoding |
 | **Stripe Connect** | ^22.1.1 | Destination charges, 8% platform fee. `lib/stripe.ts` (server), `lib/stripe-client.ts` (browser). See `documents/stripe-setup.md` |
 | **Resend** | ^6.12.3 | Transactional email. `lib/resend.ts`, templates in `lib/emails/`. FROM: `notifications@groomr.uk` |
@@ -105,273 +108,40 @@ CREATE TYPE verification_status    AS ENUM ('not_submitted', 'awaiting', 'verifi
 
 ### Core Tables
 
-#### `profiles`
-```
-id uuid PK | clerk_id text UNIQUE | full_name text | email text | phone text
-avatar_url text | roles user_role[] DEFAULT '{owner}' | is_admin boolean | is_active boolean
-is_deleted boolean DEFAULT false | deleted_at timestamptz    -- soft-delete (migration 20260607000004)
-anonymised_at timestamptz    -- set by /api/cron/cleanup when PII is scrubbed (migration 20260610000001)
-admin_preferences jsonb                                       -- pinned snapshot config (migration 20260606000001)
-```
-> No FK to `auth.users` — intentional. Clerk is auth source of truth.
+Full column listings: [`documents/database-schema.md`](documents/database-schema.md)
 
-#### `groomer_profiles`
-```
-id uuid PK | user_id uuid → profiles
-business_name text | tagline text | bio text | years_experience smallint
-qualifications text | insurance_provider/policy_ref/doc_url text
-address_line_1/2 text | city text | postcode text
-location geography          -- PostGIS; insert: ST_MakePoint(lng, lat)::geography
-travel_radius_miles smallint | is_mobile boolean
-is_verified boolean DEFAULT false             -- legacy; superseded by verification_status
-is_listed boolean DEFAULT false
-is_accepting_bookings boolean DEFAULT false   -- controls search visibility
-is_founding_groomer boolean DEFAULT false     -- status badge only (no fee implications since v2 incentive)
-founding_until date                           -- LEGACY (migration 20260610000002) — no longer drives fees
-verification_status verification_status DEFAULT 'not_submitted'   -- migration 20260607000001; replaces boolean is_verified
-stripe_account_id text | stripe_charges_enabled boolean | stripe_details_submitted boolean   -- synced by account.updated webhook
-average_rating numeric | total_reviews integer
-profile_image_url text | banner_image_url text | cover_photo_url text
-deposit_type text DEFAULT 'none'              -- 'none' | 'percentage' | 'full'
-deposit_percentage smallint | default_buffer_minutes smallint DEFAULT 0
-bank_account_holder/sort_code/account_number text
-public_slug text UNIQUE                       -- for /groomers/[slug] URLs
-```
-
-#### `dogs`
-```
-id uuid PK | owner_id uuid → profiles
-name text NOT NULL | breed text | date_of_birth date | size dog_size | is_neutered boolean
-coat_type coat_type | coat_notes text | temperament_notes text | health_notes text
-vaccination_doc_url text | profile_image_url text
-```
-
-#### `services`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-name text NOT NULL | description text               -- optional short description shown on public profile
-duration_minutes smallint NOT NULL
-price_pence integer NOT NULL     -- always ÷ 100 for display; pass integer to Stripe; auto-derived as MIN(size_prices) when sizes configured
-deposit_pence integer | applicable_sizes dog_size[] | is_active boolean DEFAULT true | sort_order smallint DEFAULT 0
-size_prices jsonb NOT NULL DEFAULT '{}'      -- migration 20260614000003: {xs,small,medium,large,xl} → pence; key presence = size enabled
-size_durations jsonb NOT NULL DEFAULT '{}'   -- migration 20260614000004: {xs,small,medium,large,xl} → minutes; overrides duration_minutes per size
-created_at timestamptz DEFAULT now() | updated_at timestamptz DEFAULT now()
-```
-> Duration display on public profile: if `size_durations` has entries, show `up to {MAX(size_durations)} min`; otherwise show `duration_minutes` as flat badge. Logic in `app/groomers/[id]/page.tsx` `ServiceCard` and `app/search/_components/GroomerProfileModal.tsx`.
-
-#### `availability`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-day_of_week smallint NOT NULL    -- 0=Sunday … 6=Saturday
-start_time time | end_time time
-break_start_time text | break_end_time text    -- changed time → text (migration 20260614000005); stores JSON array of breaks or legacy plain "HH:MM" string
-is_active boolean DEFAULT true
-```
-
-#### `availability_overrides`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-override_date date NOT NULL | is_available boolean DEFAULT false
-start_time time | end_time time | reason text
-```
-
-#### `appointments`
-```
-id uuid PK | owner_id uuid → profiles | groomer_profile_id uuid → groomer_profiles
-dog_id uuid → dogs (nullable — NULL for multi-pet group header)
-service_id uuid → services
-service_snapshot_name text | service_snapshot_duration smallint | service_snapshot_price integer
-scheduled_at timestamptz NOT NULL | status appointment_status DEFAULT 'pending'
-cancelled_by uuid → profiles | cancellation_reason text
-groomer_notes text | owner_notes text
-assigned_to_team_member_id uuid → team_members ON DELETE SET NULL
-recurring_series_id uuid → recurring_series ON DELETE SET NULL
-booking_group_id uuid    -- shared by all appointments in a group booking
-admin_note_groomer text | admin_note_groomer_author text    -- admin-only notes visible to groomer (migration 20260614000007)
-admin_note_owner text | admin_note_owner_author text        -- admin-only notes visible to owner (migration 20260614000007)
-```
-
-#### `payments`
-```
-id uuid PK | appointment_id uuid → appointments
-stripe_payment_intent_id text | deposit_amount_pence integer | deposit_paid_at timestamptz | deposit_status text
-full_payment_intent_id text | full_amount_pence integer | full_payment_paid_at timestamptz
-platform_fee_pence integer | platform_fee_pct numeric | groomer_payout_amount_pence integer
-stripe_transfer_id text | payout_status payout_status | payout_initiated_at timestamptz
-refund_status refund_status | refund_amount_pence integer | stripe_refund_id text | refunded_at timestamptz
-stripe_fee_pence integer DEFAULT 0    -- Stripe's own processing fee (migration 20260607000002)
-currency char(3) DEFAULT 'gbp'
-payment_method text DEFAULT 'stripe'  -- 'stripe' | 'gocardless' (migration 20260614000002)
-gc_billing_request_id text            -- GoCardless billing request ID (migration 20260614000002)
-gc_mandate_id text                    -- GoCardless mandate ID (migration 20260614000002)
-gc_payment_id text                    -- GoCardless payment ID (migration 20260614000002)
-```
-
-#### `reviews`
-```
-id uuid PK | appointment_id uuid UNIQUE → appointments
-owner_id uuid → profiles | groomer_profile_id uuid → groomer_profiles
-rating smallint NOT NULL CHECK (1–5) | body text | is_visible boolean DEFAULT true
-groomer_reply text | groomer_replied_at timestamptz
-```
-
-#### `messages`
-```
-id uuid PK | appointment_id uuid → appointments
-sender_id uuid → profiles | body text NOT NULL
-is_system boolean DEFAULT false | read_at timestamptz
-```
-
-#### `team_members`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-name text NOT NULL | role text NOT NULL | since_year smallint | public_slug text UNIQUE
-average_rating numeric | total_reviews integer | email text
-user_id uuid → profiles ON DELETE SET NULL
-invite_status text DEFAULT 'pending'    -- pending | accepted | revoked
-invite_token uuid UNIQUE               -- generated server-side, passed in Clerk publicMetadata; matched atomically in user.created webhook
-clerk_invitation_id text | invited_at timestamptz | accepted_at timestamptz
-```
-
-#### `portfolio_photos`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-url text NOT NULL | caption text | sort_order smallint DEFAULT 0
-```
-
-#### `time_blocks`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-start_date date NOT NULL | end_date date NOT NULL
-start_time time | end_time time | all_day boolean DEFAULT true | reason text
-```
-> Groomer-declared unavailability. Wired into `getAvailableSlots()` and `createGroupAppointment()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals.
-
-#### `favourite_groomers`
-```
-id uuid PK | owner_id uuid → profiles | groomer_profile_id uuid → groomer_profiles
-UNIQUE (owner_id, groomer_profile_id)
-```
-
-#### `notifications`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-type text    -- 'new_appointment' | 'cancelled_appointment' | 'rescheduled_appointment'
-             --  | 'new_review' | 'payout_processed' | 'new_client'
-title text NOT NULL | body text NOT NULL | metadata jsonb DEFAULT '{}'
-read_at timestamptz
-```
-
-#### `client_settings`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles | owner_id uuid → profiles
-deposit_override text DEFAULT 'inherit'    -- 'inherit' | 'none'
-discount_percentage smallint (0–100, nullable)
-UNIQUE (groomer_profile_id, owner_id)
-```
-
-#### `client_service_prices`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-owner_id uuid → profiles | service_id uuid → services
-override_price_pence integer NOT NULL
-UNIQUE (groomer_profile_id, owner_id, service_id)
-```
-> Pricing resolution order in `createAppointment`: `client_service_prices` fixed override → `client_settings.discount_percentage` → standard `services.price_pence`.
-
-#### `recurring_series`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles | owner_id uuid → profiles
-dog_id uuid → dogs (nullable) | service_id uuid → services (nullable)
-frequency text    -- 'weekly' | 'bi-weekly' | '4-weekly' | 'monthly'
-preferred_day_of_week smallint (0–6) | preferred_time time
-end_date date (NULL = ongoing rolling 6-month window)
-status text DEFAULT 'pending_approval'    -- 'pending_approval' | 'active' | 'cancelled'
-requested_by text    -- 'owner' | 'groomer'
-service_snapshot_name/duration/price | last_generated_at date
-```
-
-#### `contract_terms`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-version integer NOT NULL | content text NOT NULL | is_current boolean DEFAULT false
-published_at timestamptz
-UNIQUE (groomer_profile_id, version)
-```
-
-#### `contract_acceptances`
-```
-id uuid PK | groomer_profile_id uuid → groomer_profiles
-owner_id uuid → profiles | contract_terms_id uuid → contract_terms
-accepted_at timestamptz
-UNIQUE (groomer_profile_id, owner_id, contract_terms_id)
-```
-
-#### `tips`
-```
-id uuid PK | appointment_id uuid → appointments
-owner_id uuid → profiles | groomer_profile_id uuid → groomer_profiles
-amount_pence integer NOT NULL | stripe_payment_intent_id text UNIQUE
-status text DEFAULT 'pending'    -- 'pending' | 'succeeded' | 'failed'
-```
-
-#### `disputes`
-```
-id uuid PK | owner_id uuid → profiles | groomer_id uuid → profiles
-appointment_id uuid → appointments (nullable)
-subject text | description text
-status dispute_status
-  -- base (migration 20260524): 'open' | 'in_review' | 'resolved'
-  -- extended (migration 20260607000003): + 'pending' | 'awaiting_agreement' | 'awaiting_final_agreement' | 'final_review'
-raised_by text    -- 'owner' | 'groomer'
-owner_comment text | groomer_comment text
-proposed_resolution text | resolution_proposed_at timestamptz
-owner_agreed boolean | groomer_agreed boolean
-final_resolution text | final_resolution_proposed_at timestamptz
-owner_agreed_final boolean | groomer_agreed_final boolean
-```
-> Two-round resolution: admin proposes → parties agree/reject → if rejected, admin sends final resolution.
-> `/disputes/[id]` renders party-scoped view via `getDisputeForParty()` in `app/actions/disputes.ts`.
-
-#### `support_requests`
-```
-id uuid PK | profile_id uuid → profiles (nullable)
-name text | email text | subject text | message text
-status support_request_status DEFAULT 'open' | admin_reply text
-```
-
-#### `admin_audit_log`
-```
-id uuid PK | admin_profile_id uuid → profiles (ON DELETE SET NULL)
-action text NOT NULL    -- e.g. 'verify_groomer' | 'cancel_appointment' | 'grant_admin' | etc.
-target_table text | target_id text
-metadata jsonb DEFAULT '{}'
-created_at timestamptz (indexed DESC)
-```
-> Written by `logAdminAction()` in `app/actions/admin.ts` — fire-and-forget, non-fatal. Read by `adminGetAuditLog()`.
-
-#### `platform_settings`
-```
-id uuid PK
-platform_fee_pct numeric DEFAULT 0.08        -- standard commission rate
-signup_incentive_bookings integer DEFAULT 150 -- commission-free bookings per groomer (migration 20260612000001)
-founding_groomer_fee_pct numeric DEFAULT 0.00 -- LEGACY — no longer drives fees
-founding_groomer_deadline date               -- LEGACY — no longer drives fees
-updated_at timestamptz | updated_by uuid → profiles
-```
-> Singleton table (one row). Seeded by migration. Read/written via `adminGetPlatformSettings` / `adminSavePlatformSettings`. The Stripe payment flow reads rates from this table at charge time via `resolvePlatformFeePct()` in `lib/fees.ts`: 0% while the groomer's completed-booking count (minus full refunds) is below `signup_incentive_bookings`, then `platform_fee_pct` — admin changes apply to new payments immediately, no redeploy. `PLATFORM_FEE_PCT` in `lib/stripe.ts` is only the fallback if the row is unreadable. Each `payments` row records the pct actually charged.
-
-#### `account_export_tokens`
-```
-id uuid PK | profile_id uuid → profiles ON DELETE CASCADE
-token uuid UNIQUE NOT NULL DEFAULT gen_random_uuid()
-expires_at timestamptz NOT NULL | created_at timestamptz DEFAULT now()
-```
-> Short-lived tokens for the account data export flow (migration `20260614000001`). Only accessed via `supabaseAdmin` (service role) — no user-facing RLS policies.
+| Table | Key notes |
+|---|---|
+| `profiles` | `clerk_id` is auth link. No FK to `auth.users`. Soft-delete: `is_deleted`/`deleted_at`. PII scrub: `anonymised_at`. |
+| `groomer_profiles` | `location geography` (PostGIS). `verification_status` enum replaces legacy `is_verified` bool. `is_accepting_bookings` controls search visibility. `public_slug` for URLs. Stripe synced via `account.updated` webhook. |
+| `dogs` | `owner_id → profiles`. Coat/health metadata, vaccination doc URL. |
+| `services` | `size_prices`/`size_durations` jsonb for per-size config. `price_pence` = MIN(size_prices) when sizes set. Duration badge shows `up to {max} min` when `size_durations` has entries. |
+| `availability` | `break_start_time` is `text` (JSON array or legacy `"HH:MM"`), not `time` — migration 20260614000005. |
+| `availability_overrides` | Date-specific overrides; supersede weekly schedule. |
+| `appointments` | `booking_group_id` shared across group bookings. `service_snapshot_*` frozen at booking time. `admin_note_groomer/owner` + author cols (migration 20260614000007). |
+| `payments` | All amounts in pence. `payment_method`: `'stripe'`\|`'gocardless'`. Records `platform_fee_pct` actually charged. GoCardless fields: `gc_billing_request_id`, `gc_mandate_id`, `gc_payment_id`. |
+| `reviews` | `is_visible` for moderation. Groomer can add `groomer_reply`. |
+| `messages` | Real-time via Supabase Realtime. `is_system` for automated messages. |
+| `team_members` | `invite_token uuid UNIQUE` matched atomically in `user.created` webhook. `invite_status`: pending\|accepted\|revoked. |
+| `portfolio_photos` | Cloudinary URLs. `sort_order` for display. |
+| `time_blocks` | Groomer-declared unavailability. All-day → no slots. Partial-day → treated as booked interval. |
+| `favourite_groomers` | UNIQUE (owner_id, groomer_profile_id). |
+| `notifications` | Groomer-only. Types: `new_appointment`, `cancelled_appointment`, `rescheduled_appointment`, `new_review`, `payout_processed`, `new_client`. |
+| `client_settings` | Per-owner deposit override (`inherit`\|`none`) + discount %. |
+| `client_service_prices` | Per-service fixed price per owner. Pricing priority: this → `client_settings.discount_percentage` → `services.price_pence`. |
+| `recurring_series` | frequency: `weekly`\|`bi-weekly`\|`4-weekly`\|`monthly`. Rolling 6-month window when `end_date` is NULL. |
+| `contract_terms` | Versioned; `is_current` = one active version per groomer. |
+| `contract_acceptances` | Owner acceptance per groomer contract version. |
+| `tips` | status: `pending`\|`succeeded`\|`failed`. |
+| `disputes` | Two-round resolution. Extended statuses (migration 20260607000003): `pending`, `awaiting_agreement`, `awaiting_final_agreement`, `final_review`. Party-scoped view via `getDisputeForParty()`. |
+| `support_requests` | `profile_id` nullable (anonymous submissions). |
+| `admin_audit_log` | Append-only. Written by `logAdminAction()` in `app/actions/admin.ts`. Indexed `created_at DESC`. |
+| `platform_settings` | Singleton. `signup_incentive_bookings = 150`. `platform_fee_pct = 0.08`. LEGACY cols: `founding_groomer_fee_pct`, `founding_groomer_deadline`. Rate changes apply immediately — no redeploy needed. |
+| `account_export_tokens` | Short-lived export tokens. Service role only — no user RLS. |
 
 ### Migrations
 
-44 files in `supabase/migrations/`. All must be applied to the remote DB via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
+44 files in `supabase/migrations/`. Apply via the Supabase MCP `apply_migration` tool (always pass `project_id: 'fvbxjwfxcbhjoidrmzgv'` explicitly) or the Supabase Dashboard SQL editor.
 
 ---
 
@@ -524,7 +294,8 @@ GOCARDLESS_WEBHOOK_SECRET=           # Set in GoCardless dashboard → Developer
 | CSS cascade layers | Unlayered CSS beats `@layer utilities` — wrap base/typography rules in `@layer base` in `globals.css` |
 | Next.js 16 proxy | `proxy.ts` not `middleware.ts` — all route protection goes in `proxy.ts`. In Next.js 16, `middleware.ts` is the deprecated name; `proxy.ts` is the correct convention. |
 | Clerk `SignInButton`/`SignUpButton` | Take exactly one child element |
-| Cloudinary in Next.js | `res.cloudinary.com` must be in `remotePatterns` in `next.config.ts` (already configured) |
+| Cloudinary in Next.js | `res.cloudinary.com` must be in `remotePatterns` in `next.config.ts` (already configured). `api.cloudinary.com` must be in CSP `connect-src` for client-side uploads (dog photos, profile image, portfolio, groomer registration). |
+| Verification doc storage | Verification docs (insurance, photo ID, etc.) use **Supabase Storage** (`verification-docs` bucket, private), not Cloudinary. `getVerificationDocUploadUrl` returns a signed PUT URL; client uploads directly via XHR. `saveVerificationDoc` stores the storage path in DB and returns a 1h signed download URL. `resolveVerificationDocUrl` in both `profile-editor.ts` and `admin.ts` converts stored paths → signed URLs at load time. Legacy Cloudinary URLs (starting `https://`) pass through unchanged for backward compat. |
 | `time_blocks` now in booking | `getAvailableSlots` checks `time_blocks` — all-day blocks return `[]`; partial-day blocks are booked intervals |
 | `break_start/end_time` now `text`, not `time` | Migration `20260614000005` changed both columns from `time` to `text` to support JSON array format alongside legacy plain `"HH:MM"` strings. `getAvailableSlots` subtracts break windows; both JSON and legacy plain-string formats are parsed. |
 | Admin UI uses anon client | `supabaseAdmin` bypasses `admin_all` RLS policies — admin pages must use the anon client to trigger those policies correctly |
@@ -606,103 +377,34 @@ Each page has a dedicated reference doc in `documents/pages/`. Read the relevant
 
 ## Feature Status
 
-| Feature | Status |
+All features are live unless listed below.
+
+### Not built
+
+| Feature | Notes |
 |---|---|
-| Dog CRUD (owner dashboard) | Real — Supabase + Cloudinary |
-| Appointments + Favourites (owner) | Real — Supabase |
-| Groomer registration wizard | Real — writes to `groomer_profiles` |
-| Groomer profile editor + team | Real — live Supabase writes |
-| Groomer reviews tab | Real — display + reply wired |
-| Messages (groomer + owner) | Real — Supabase Realtime, direct + appointment threads |
-| Notifications (groomer) | Real — `notifications` table + Realtime badge |
-| Booking flow | Real — 5-step modal, Stripe PaymentElement, group bookings |
-| Stripe Connect | Real — Express onboarding, destination charges, 8% fee |
-| Transactional emails | Real — Resend (6 templates, daily cron) |
-| SMS notifications | Real — Twilio (booking confirmation, reminders) |
-| Recurring bookings | Real — `recurring_series` table, approval workflow |
-| Contract terms | Real — versioned groomer terms + owner acceptance |
-| Client pricing overrides | Real — per-client discount % + per-service fixed price |
-| Tips | Real — `tips` table + Stripe PaymentIntent |
-| Portfolio photos | Real — `app/dashboard/groomer/portfolio/`, Cloudinary |
-| Public groomer profiles | Real — `/groomers/[id]` (slug-based) |
-| Groomer bookings tab | Real — live appointment data |
-| Groomer clients tab | Real — live client data |
-| Groomer earnings tab | Real — live payment data |
-| Team member appointment assignment UI | Real — assignment wired to `assigned_to_team_member_id` |
-| Admin dashboard — User Management | Real — Overview, Groomers (verify/edit/services), Users (edit/dogs), Appointments (cancel), Disputes, Support |
-| Admin dashboard — Groomr Management | Real — Financials (revenue breakdown), Team (grant/revoke admin), Platform Settings (commission rates + integration health), Audit Log (all mutating actions logged), Analytics (revenue + booking charts via Recharts), Support (stats + tickets) |
-| Admin pinned snapshots | Real — 4-slot `SnapshotBar` with dashed empty slots, filled metric circles, category-tabbed picker modal (Users / Bookings / Revenue / Reviews, 20+ metrics). Persists to `profiles.admin_preferences` via `adminSavePreferences` |
-| Dispute workflow | Real — `disputes` table, two-party comment + resolution flow, admin adjudication, `/disputes/[id]` page |
-| Support requests | Real — `support_requests` table, admin replies |
-| `time_blocks` → booking conflicts | Real — wired into `getAvailableSlots()` and `createGroupAppointment()`: all-day blocks return no slots; partial-day blocks are treated as booked intervals. |
-| Break windows in booking | Real — breaks stored as JSON array in `break_start_time`; `getAvailableSlots()` parses both JSON and legacy plain-string formats and subtracts all breaks from available slots. |
-| Discount % capping | `client_settings.discount_percentage` is validated ≤ 100 in `createAppointment` and `createGroupAppointment` (clamped `Math.max(0, Math.min(100, pct))`) |
-| Soft-delete on account close | Real — `profiles.is_deleted` + `profiles.deleted_at` (migration `20260607000004`); `closeOwnerAccount` / `closeGroomerAccount` soft-delete; 30-day cleanup cron at `/api/cron/cleanup` hard-deletes or anonymises (`profiles.anonymised_at`, migration `20260610000001`) |
-| Groomer verification status | Real — `verification_status` enum on `groomer_profiles` (migration `20260607000001`): `not_submitted → awaiting → verified / revoked_temp / revoked_perm`. Replaces the simple boolean `is_verified` |
-| Public support page (`/support`) | Real — FAQ accordion + contact form, wires to `support_requests` table |
-| PostHog analytics | Not built — env vars set but no code integrated |
-| Google Calendar sync (one-way) | Real — iCal subscription feed at `/api/calendar/[groomerProfileId]`. Bookings and `time_blocks` appear in Apple/Google Calendar and auto-refresh. Apple uses `webcal://` link; Google uses `https://calendar.google.com/calendar/render?cid=` with an HTTPS URL. Feed is RFC 5545-compliant (DTSTAMP, VTIMEZONE Europe/London, line folding). |
-| Google Calendar sync (two-way inbound) | Not built — blocking time in an external calendar does **not** block Groomr slots. True two-way requires: (1) **Google Calendar API** — OAuth 2.0 (`googleapis` package, scopes: `calendar.readonly` or `calendar.events`), store `google_refresh_token` on `groomer_profiles`, poll or webhook-subscribe to the groomer's primary calendar, create `time_blocks` rows for busy intervals; (2) **Apple Calendar / CalDAV** — CalDAV server (e.g. `tsdav` package) with Apple ID OAuth, significantly more complex. Groomers can manually block time via Groomr's own time blocks feature in the meantime. |
-| Sign-up incentive (150 free bookings) | Real — `resolvePlatformFeePct()` charges 0% until the groomer's completed-booking count reaches `platform_settings.signup_incentive_bookings`; groomer dashboard shows progress banner; admin Platform Settings shows per-groomer usage |
-| Per-size service pricing | Real — `services.size_prices jsonb` (migration `20260614000003`): groomers set per-size prices (XS/S/M/L/XL); public profile shows inline price grid + "from £X" minimum. `ServiceRow.sizePrices` in `types/groomer-dashboard.ts` |
-| Per-size service durations | Real — `services.size_durations jsonb` (migration `20260614000004`): groomers set per-size durations; public profile and search modal show `up to {max} min` badge when sizes configured, falls back to flat `duration_minutes` badge. `ServiceRow.sizeDurations` |
-| Service descriptions | Real — `services.description text` (column already existed in DB); groomers can now enter a short description (max 200 chars) in the profile editor; displayed on public groomer profile and search modal |
-| GoCardless Direct Debit | Real — `lib/gocardless.ts` thin fetch client; `app/actions/payments-gocardless.ts` server actions; `/api/webhooks/gocardless` webhook handler. `payments` table extended with `payment_method`, `gc_billing_request_id`, `gc_mandate_id`, `gc_payment_id` (migration `20260614000002`). Payments land in Groomr's bank account; groomer payouts tracked in `payments.groomer_payout_amount_pence` and initiated out-of-band |
-| Admin appointment notes | Real — `appointments.admin_note_groomer/owner` + `*_author` columns (migration `20260614000007`); admin can leave separate notes visible to groomer vs. owner, each tagged with the author |
-| Account data export | Real — `account_export_tokens` table (migration `20260614000001`); short-lived tokens generated by `exportAccountData` in `app/actions/close-account.ts`, accessed via service role only |
-| **Incentive threshold notification** (groomer) | Planned — policy §2 promises a notification when approaching the 150-booking threshold; wire into the booking-completion flow or daily cron (e.g. at 140 used and at 150) |
-| **Vaccination & health reminders** (owner) | Planned — store vaccine due-dates on `dogs`, send email/SMS N days before expiry via existing Resend + Twilio stack; needs a `dog_health_reminders` table or date fields on `dogs`, plus a cron job |
-| **Booking receipt download** (owner) | Planned — PDF or formatted HTML email receipt per appointment; server-side render with existing appointment + payment data, send via Resend on demand or post-completion |
-| **Groomer comparison tool** (owner) | Planned — pin 2–3 groomers from search, view side-by-side (price, distance, rating, availability preview); pure UI addition on top of existing search + groomer data |
-| **Waitlist management** (groomer) | Planned — owners join waitlist when groomer is fully booked; cancellation hook notifies groomer who can offer the slot in waitlist order; needs `waitlist_entries` table |
-| **Weekly business summary email** (groomer) | Planned — Monday digest: last week revenue, upcoming bookings, new vs. repeat clients, top services; one Resend template + extension to existing daily cron, no new DB tables |
-| **Per-client groom notes** (groomer) | Planned — structured per-session notes (coat condition, behaviour flags, products used) linked to `appointments`; groomer writes, owner reads summary; needs `groom_notes` table + bookings tab UI |
-| **Revenue forecasting** (admin) | Planned — project GMV for next 30/60/90 days from confirmed upcoming appointments + `service_snapshot_price`; query on existing data, display as card in Analytics or Financials tab |
-| **Groomer onboarding funnel analytics** (admin) | Planned — track step-by-step drop-off through the 6-step registration wizard; needs `registration_events` table (or PostHog when integrated); display funnel in admin Analytics tab |
-| **Fraud / anomaly alerts** (admin) | Planned — flag: owner with >3 cancellations in 30 days, groomer with >20% dispute rate, payment intents never confirmed; runs via existing daily cron, alerts to `notifications@groomr.uk` |
+| PostHog analytics | Env vars set but no code integrated |
+| Google Calendar sync (two-way inbound) | Blocking time in an external calendar does **not** block Groomr slots. Requires Google Calendar API OAuth 2.0 (`googleapis`), store `google_refresh_token` on `groomer_profiles`, poll/webhook the groomer's calendar, create `time_blocks` rows. Apple CalDAV (`tsdav`) is significantly more complex. Groomers can use manual time blocks in the meantime. |
+
+### Planned
+
+| Feature | Notes |
+|---|---|
+| **Incentive threshold notification** (groomer) | Policy §2 promises notification approaching 150-booking threshold; wire into booking-completion flow or daily cron (e.g. at 140 and 150) |
+| **Vaccination & health reminders** (owner) | Store vaccine due-dates on `dogs`, email/SMS N days before expiry via Resend + Twilio; needs `dog_health_reminders` table or date fields on `dogs`, plus a cron job |
+| **Booking receipt download** (owner) | PDF/HTML receipt per appointment via Resend on demand or post-completion |
+| **Groomer comparison tool** (owner) | Pin 2–3 groomers from search, view side-by-side; pure UI on existing search + groomer data |
+| **Waitlist management** (groomer) | `waitlist_entries` table; cancellation hook notifies groomer in slot order |
+| **Weekly business summary email** (groomer) | Monday digest: revenue, bookings, new vs. repeat clients; one Resend template + cron extension, no new DB tables |
+| **Per-client groom notes** (groomer) | Structured per-session notes linked to `appointments`; needs `groom_notes` table + bookings tab UI |
+| **Revenue forecasting** (admin) | Project GMV 30/60/90 days from confirmed appointments + `service_snapshot_price`; card in Analytics or Financials tab |
+| **Groomer onboarding funnel analytics** (admin) | `registration_events` table (or PostHog when integrated); funnel display in admin Analytics tab |
+| **Fraud / anomaly alerts** (admin) | Flag: >3 owner cancellations/30 days, >20% dispute rate, unconfirmed payment intents; daily cron → `notifications@groomr.uk` |
 
 ---
 
 ## Security Backlog
 
-Findings from the June 2026 security audit. Update `Status` as each is resolved.
+> **Launch blocker — S16:** Production currently runs the Clerk **dev** instance (`full-jaguar-15.clerk.accounts.dev`) — strict usage caps + console warning banner. Fix: create a Clerk production instance (needs real domain + DNS), swap `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` / `CLERK_WEBHOOK_SECRET` in Vercel, update CSP hosts in `next.config.ts` to the new production FAPI domain.
 
-### Critical
-
-| # | Status | Issue | Location | Fix |
-|---|---|---|---|---|
-| S1 | ✅ Done | `dangerouslyAllowSVG: true` | [`next.config.ts`](next.config.ts) | Removed — SVGs can contain embedded JS. User-uploaded content never needs SVG. |
-| S2 | ✅ Done | No HTTP security headers | [`next.config.ts`](next.config.ts) | Added `headers()` with `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and CSP. **Notes:** (1) Clerk's FAPI loads JS from `https://full-jaguar-15.clerk.accounts.dev` — this exact host must be in `script-src`, `connect-src`, `img-src`, and `frame-src`; wildcards like `*.clerk.accounts.dev` do not reliably match in Chrome. (2) Clerk also spawns workers from `blob:` — `worker-src 'self' blob:` is required or auth breaks. (3) `connect-src` includes `clerk-telemetry.com` (dev-key telemetry). (4) `img-src` allows `https://*.googleapis.com` + `https://*.gstatic.com` (Maps tiles) and `https://i.pravatar.cc` (placeholder testimonial avatars on `/` — remove when real photos land). (5) CSP is baked into the build manifest — changes require a redeploy. |
-| S3 | ✅ Done | Discount % not clamped server-side | [`app/actions/booking.ts`](app/actions/booking.ts) | `Math.max(0, Math.min(100, pct))` applied in both `createAppointment` and `createGroupAppointment`. Also reflected in Feature Status table. |
-
-### High
-
-| # | Status | Issue | Location | Fix |
-|---|---|---|---|---|
-| S4 | ✅ Done | No rate limiting on public API routes | [`app/api/calendar/[groomerProfileId]/route.ts`](app/api/calendar/[groomerProfileId]/route.ts) | `checkRateLimit()` from `lib/rate-limit.ts` enforces 60 req/hr per IP; returns 429 when exceeded. In-memory sliding window — no new dependencies. |
-
-| S5 | ✅ Done | Cloudinary signature issued without auth (registration) | [`app/actions/groomer-registration.ts:19`](app/actions/groomer-registration.ts) | Intentional — wizard runs before Clerk account exists. Mitigated: `isRateLimited()` in `lib/rate-limit.ts` enforces 20 req/15 min per IP (in-memory sliding window). Cloudinary timestamp TTL already bounds signature lifetime. |
-| S6 | ✅ Done | No file-type restriction in Cloudinary signatures | `dogs.ts`, `portfolio.ts`, `profile-editor.ts` (×3), `groomer-registration.ts` | `allowed_formats` added to all 6 `api_sign_request` calls — images get `jpg,jpeg,png,webp`; verification/insurance docs also allow `pdf`. `allowedFormats` returned to client from each function. |
-| S7 | ✅ Done | Hard-delete on `user.deleted` webhook | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), [`app/actions/close-account.ts`](app/actions/close-account.ts) | Soft-delete added (`is_deleted`, `deleted_at` on `profiles`, migration `20260607000004`). `closeOwnerAccount` retains appointments; `closeGroomerAccount` retains appointments/payments and deactivates groomer listing. |
-| S16 | ⬜ Open | Clerk development keys in production | Clerk dashboard + Vercel | Production runs the Clerk **dev** instance (`full-jaguar-15.clerk.accounts.dev`) — strict usage caps, console warning banner. Create a production instance in the Clerk dashboard (needs real domain + DNS records), swap `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` / `CLERK_WEBHOOK_SECRET` in Vercel, and update the CSP hosts in `next.config.ts` (the `full-jaguar-15.clerk.accounts.dev` entries change to the production FAPI domain). **Launch blocker.** |
-| S7b | ✅ Done | 30-day hard-delete cron missing | [`app/api/cron/cleanup/route.ts`](app/api/cron/cleanup/route.ts) | Daily cron (`vercel.json`: `30 3 * * *`). Profiles soft-deleted >30 days: hard-deleted when no appointments/tips exist (FK cascades clean up the rest); **anonymised** when financial records require retention (PII scrubbed, bank details nulled, `anonymised_at` set — migration `20260610000001`); skipped while a dispute is unresolved. All actions logged to `admin_audit_log`. |
-
-### Medium
-
-| # | Status | Issue | Location | Fix |
-|---|---|---|---|---|
-| S8 | ✅ Done | Google Maps API key not split | GCP Console + Vercel | Two keys now in GCP: browser key (website-referrer restricted, Maps JavaScript API only) in `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`; server key (Geocoding API only, no app restriction — Vercel has no stable outbound IPs) in `GOOGLE_MAPS_API_KEY`. Verified working in production June 2026. |
-| S9 | ✅ Done | SMS phone number not validated | [`lib/sms/send.ts`](lib/sms/send.ts) | `isValidUKPhone()` added — validates E.164 `+44` format (strips spaces) before every Twilio call; invalid numbers are skipped with a warning log |
-| S10 | ✅ Done | Contact form `senderEmail` not validated | [`app/actions/contact.ts`](app/actions/contact.ts) | `isValidEmail()` regex check added before Resend call; returns `{ ok: false, error }` on invalid format |
-| S11 | ✅ Done | Stripe webhook handler errors silent | [`app/api/webhooks/stripe/route.ts`](app/api/webhooks/stripe/route.ts) | Handler errors now inserted into `admin_audit_log` (action `stripe_webhook_error`, `target_id` = Stripe event ID, metadata = event type + error message) before returning 200 — visible in the admin Audit Log tab |
-
-### Low
-
-| # | Status | Issue | Notes |
-|---|---|---|---|
-| S12 | ✅ Done | Two identical Google Maps keys | Resolved with S8 — the two env vars now hold different, separately-restricted keys |
-| S13 | ✅ Done | Admin role enforced in code only | Migration `20260610000001` (applied): added the missing `admin_all` policies (`availability_overrides`, `messages`, `portfolio_photos`, `notifications`, `client_settings`, `client_service_prices`, `recurring_series`, `contract_terms`, `contract_acceptances`, `tips`) and a `protect_is_admin` BEFORE UPDATE trigger on `profiles` that blocks `is_admin` changes from anon/authenticated connections unless the actor is already an admin |
-| S14 | ✅ Done | Cron endpoint leaks raw query results | [`app/api/cron/notifications/route.ts`](app/api/cron/notifications/route.ts) | Send functions already returned `{ sent, errors }` counts (finding was stale); response now maps fields explicitly so a future return-shape change can't leak rows. `/api/cron/cleanup` follows the same counts-only rule. |
-| S15 | ✅ Done | Team member invite matched by email only | [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts) | `invite_token uuid UNIQUE` added to `team_members` (migration `20260609000001`). Token generated in `inviteTeamMember`, stored in DB and passed via Clerk `publicMetadata`. Webhook does atomic `UPDATE … WHERE invite_token = ? AND invite_status = 'pending'` — closes both email-spoof and TOCTOU race |
-
-> **Key:** ⬜ Open · 🔄 In Progress · ✅ Done
+All 15 other findings from the June 2026 security audit are resolved. ✅ See git history for details.

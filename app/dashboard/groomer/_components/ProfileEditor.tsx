@@ -1263,15 +1263,7 @@ export function ProfileEditor({
                     <div className="flex items-center gap-2 shrink-0">
                       {docVerified ? (
                         <span className="text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Verified</span>
-                      ) : uploading ? (
-                        <span className="relative overflow-hidden inline-flex items-center text-[10px] font-bold text-deep-slate border border-pebble-grey/30 px-2 py-0.5 rounded-full min-w-[58px] justify-center bg-pebble-grey/10">
-                          <span
-                            className="absolute left-0 top-0 bottom-0 rounded-full bg-groomr-gold/60 transition-[width] duration-150 ease-out"
-                            style={{ width: `${uploadProgress ?? 0}%` }}
-                          />
-                          <span className="relative">{(uploadProgress ?? 0) < 100 ? `${uploadProgress ?? 0}%` : "Saving…"}</span>
-                        </span>
-                      ) : url ? (
+                      ) : url && !uploading ? (
                         <>
                           <span className="hidden sm:inline text-[10px] font-bold text-sage-leaf bg-sage-leaf/10 border border-sage-leaf/20 px-2 py-0.5 rounded-full">Uploaded</span>
                           <a

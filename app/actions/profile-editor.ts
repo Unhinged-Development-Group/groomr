@@ -297,12 +297,17 @@ export async function loadProfileEditorData(): Promise<ProfileEditorInitialData>
     firstAidDocUrl,
     photoIdDocUrl,
     employersLiabilityDocUrl,
-    hasEmployees:                  (groomerProfile.has_employees                        as boolean | null) ?? null,
-    insuranceVerified:             (groomerProfile.insurance_doc_verified               as boolean) ?? false,
-    qualificationVerified:         (groomerProfile.qualification_doc_verified           as boolean) ?? false,
-    firstAidVerified:              (groomerProfile.first_aid_doc_verified               as boolean) ?? false,
-    photoIdVerified:               (groomerProfile.photo_id_doc_verified                as boolean) ?? false,
-    employersLiabilityVerified:    (groomerProfile.employers_liability_doc_verified     as boolean) ?? false,
+    hasEmployees:                           (groomerProfile.has_employees                                    as boolean | null) ?? null,
+    insuranceVerified:                      (groomerProfile.insurance_doc_verified                          as boolean) ?? false,
+    qualificationVerified:                  (groomerProfile.qualification_doc_verified                      as boolean) ?? false,
+    firstAidVerified:                       (groomerProfile.first_aid_doc_verified                          as boolean) ?? false,
+    photoIdVerified:                        (groomerProfile.photo_id_doc_verified                           as boolean) ?? false,
+    employersLiabilityVerified:             (groomerProfile.employers_liability_doc_verified                as boolean) ?? false,
+    insuranceRejectionReason:               (groomerProfile.insurance_doc_rejection_reason                  as string | null) ?? null,
+    qualificationRejectionReason:           (groomerProfile.qualification_doc_rejection_reason              as string | null) ?? null,
+    firstAidRejectionReason:                (groomerProfile.first_aid_doc_rejection_reason                  as string | null) ?? null,
+    photoIdRejectionReason:                 (groomerProfile.photo_id_doc_rejection_reason                   as string | null) ?? null,
+    employersLiabilityRejectionReason:      (groomerProfile.employers_liability_doc_rejection_reason        as string | null) ?? null,
   };
 
   const publicSlug = (groomerProfile.public_slug as string | null) ?? null;
@@ -709,6 +714,14 @@ const DOC_COLUMN: Record<VerificationDocType, string> = {
   employersLiability: "employers_liability_doc_url",
 };
 
+const DOC_REJECTION_REASON_COLUMN: Record<VerificationDocType, string> = {
+  insurance:          "insurance_doc_rejection_reason",
+  qualification:      "qualification_doc_rejection_reason",
+  firstAid:           "first_aid_doc_rejection_reason",
+  photoId:            "photo_id_doc_rejection_reason",
+  employersLiability: "employers_liability_doc_rejection_reason",
+};
+
 export async function saveVerificationDoc(
   groomerProfileId: string,
   docType: VerificationDocType,
@@ -734,8 +747,10 @@ export async function saveVerificationDoc(
     .eq("user_id", myProfile.id)
     .single();
 
+  const rejectionReasonColumn = DOC_REJECTION_REASON_COLUMN[docType];
   const updatePayload: Record<string, unknown> = {
     [column]: path,
+    [rejectionReasonColumn]: null,
     updated_at: new Date().toISOString(),
   };
   if ((current as any)?.verification_status === "not_submitted") {

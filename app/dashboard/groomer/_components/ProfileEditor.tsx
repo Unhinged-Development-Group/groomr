@@ -234,13 +234,14 @@ const VERIFICATION_DOC_META: Array<{
   hint: string;
   stateKey: keyof VerificationDocs;
   verifiedKey: keyof VerificationDocs;
+  rejectionReasonKey: keyof VerificationDocs;
   required: boolean | "if_employees";
 }> = [
-  { type: "insurance",          label: "Public liability insurance",     hint: "Certificate showing current cover",          stateKey: "insuranceDocUrl",          verifiedKey: "insuranceVerified",          required: true           },
-  { type: "qualification",      label: "Grooming qualifications",        hint: "City & Guilds, iPET, LANTRA, or equivalent", stateKey: "qualificationDocUrl",      verifiedKey: "qualificationVerified",      required: false          },
-  { type: "firstAid",           label: "Pet first aid certificate",      hint: "Must not be expired",                        stateKey: "firstAidDocUrl",           verifiedKey: "firstAidVerified",           required: false          },
-  { type: "photoId",            label: "Photo ID",                       hint: "Passport or driving licence — deleted after verification", stateKey: "photoIdDocUrl", verifiedKey: "photoIdVerified",       required: true           },
-  { type: "employersLiability", label: "Employers' liability insurance", hint: "Required if you employ staff",               stateKey: "employersLiabilityDocUrl", verifiedKey: "employersLiabilityVerified", required: "if_employees" },
+  { type: "insurance",          label: "Public liability insurance",     hint: "Certificate showing current cover",          stateKey: "insuranceDocUrl",          verifiedKey: "insuranceVerified",          rejectionReasonKey: "insuranceRejectionReason",               required: true           },
+  { type: "qualification",      label: "Grooming qualifications",        hint: "City & Guilds, iPET, LANTRA, or equivalent", stateKey: "qualificationDocUrl",      verifiedKey: "qualificationVerified",      rejectionReasonKey: "qualificationRejectionReason",           required: false          },
+  { type: "firstAid",           label: "Pet first aid certificate",      hint: "Must not be expired",                        stateKey: "firstAidDocUrl",           verifiedKey: "firstAidVerified",           rejectionReasonKey: "firstAidRejectionReason",                required: false          },
+  { type: "photoId",            label: "Photo ID",                       hint: "Passport or driving licence — deleted after verification", stateKey: "photoIdDocUrl", verifiedKey: "photoIdVerified",       rejectionReasonKey: "photoIdRejectionReason",                 required: true           },
+  { type: "employersLiability", label: "Employers' liability insurance", hint: "Required if you employ staff",               stateKey: "employersLiabilityDocUrl", verifiedKey: "employersLiabilityVerified", rejectionReasonKey: "employersLiabilityRejectionReason",      required: "if_employees" },
 ];
 
 // Mon-first display order (UK standard): 1,2,3,4,5,6,0
@@ -1244,9 +1245,12 @@ export function ProfileEditor({
                 // Once a doc is verified by admin it is considered final — show Verified and hide upload controls.
                 // For Photo ID the file is also deleted server-side after verification.
                 const docVerified = verificationDocs[meta.verifiedKey] as boolean;
+                const rejectionReason = verificationDocs[meta.rejectionReasonKey] as string | null;
+                const isRejected = !url && !docVerified && !!rejectionReason;
 
                 return (
-                  <div key={meta.type} className="flex items-center gap-3 bg-alabaster-cream border border-pebble-grey/15 rounded-2xl px-4 py-3">
+                  <div key={meta.type} className={`bg-alabaster-cream border rounded-2xl px-4 py-3 ${isRejected ? "border-muted-terracotta/40" : "border-pebble-grey/15"}`}>
+                    <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-bold text-deep-slate">{meta.label}</p>
@@ -1316,6 +1320,16 @@ export function ProfileEditor({
                         </>
                       )}
                     </div>
+                    </div>
+                    {isRejected && (
+                      <div className="mt-2 flex items-start gap-2 rounded-xl bg-muted-terracotta/8 border border-muted-terracotta/25 px-3 py-2">
+                        <span className="text-muted-terracotta text-xs mt-0.5 shrink-0">✗</span>
+                        <div>
+                          <p className="text-[11px] font-bold text-muted-terracotta">Document rejected — please resubmit</p>
+                          {rejectionReason && <p className="text-[11px] text-muted-terracotta/80 mt-0.5">{rejectionReason}</p>}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

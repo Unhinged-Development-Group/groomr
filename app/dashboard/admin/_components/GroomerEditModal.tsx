@@ -131,6 +131,7 @@ export function GroomerEditModal({ groomer, onClose, onSaved, initialSection }: 
   const [availPending, startAvail] = useTransition();
   const [verifyPending, startVerify] = useTransition();
   const [docPending, setDocPending] = useState<Partial<Record<DocVerifyKey, "verifying" | "rejecting">>>({});
+  const [rejectDraft, setRejectDraft] = useState<{ type: DocVerifyKey; reason: string } | null>(null);
 
   useEffect(() => {
     adminGetGroomerFull(groomer.groomer_profile_id).then((res) => {
@@ -281,15 +282,17 @@ export function GroomerEditModal({ groomer, onClose, onSaved, initialSection }: 
     updateProfile(updates);
   }
 
-  async function handleRejectDoc(docType: DocVerifyKey) {
+  async function handleRejectDoc(docType: DocVerifyKey, reason: string) {
     if (!profile) return;
+    setRejectDraft(null);
     setDocPending((p) => ({ ...p, [docType]: "rejecting" }));
-    const res = await adminRejectDoc(profile.id, docType);
+    const res = await adminRejectDoc(profile.id, docType, reason);
     setDocPending((p) => { const next = { ...p }; delete next[docType]; return next; });
     if ("error" in res) { setToast(res.error); return; }
     const urlKey = `${docType}_doc_url` as keyof GroomerFullProfile;
     const verifiedKey = `${docType}_doc_verified` as keyof GroomerFullProfile;
-    updateProfile({ [urlKey]: null, [verifiedKey]: false } as Partial<GroomerFullProfile>);
+    const reasonKey = `${docType}_doc_rejection_reason` as keyof GroomerFullProfile;
+    updateProfile({ [urlKey]: null, [verifiedKey]: false, [reasonKey]: reason.trim() || null } as Partial<GroomerFullProfile>);
     setToast("Document rejected — groomer must resubmit.");
   }
 
@@ -701,24 +704,54 @@ export function GroomerEditModal({ groomer, onClose, onSaved, initialSection }: 
 
                               {/* Actions — only when doc is uploaded and not yet verified */}
                               {url && !verified && (
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleVerifyDoc(type)}
-                                    disabled={!!pending}
-                                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-sage-leaf text-white hover:opacity-80 disabled:opacity-40 transition-opacity"
-                                  >
-                                    {pending === "verifying" ? "Verifying…" : "✓ Verify"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRejectDoc(type)}
-                                    disabled={!!pending}
-                                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-muted-terracotta/10 text-muted-terracotta border border-muted-terracotta/30 hover:bg-muted-terracotta/20 disabled:opacity-40 transition-colors"
-                                  >
-                                    {pending === "rejecting" ? "Rejecting…" : "✗ Reject"}
-                                  </button>
-                                </div>
+                                rejectDraft?.type === type ? (
+                                  <div className="mt-1 space-y-2">
+                                    <textarea
+                                      autoFocus
+                                      rows={2}
+                                      placeholder="Reason for rejection (shown to groomer)…"
+                                      value={rejectDraft.reason}
+                                      onChange={(e) => setRejectDraft({ type, reason: e.target.value })}
+                                      className="field w-full text-xs resize-none"
+                                    />
+                                    <div className="flex gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRejectDoc(type, rejectDraft.reason)}
+                                        disabled={!!pending}
+                                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-muted-terracotta text-white hover:opacity-80 disabled:opacity-40 transition-opacity"
+                                      >
+                                        {pending === "rejecting" ? "Rejecting…" : "Confirm rejection"}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setRejectDraft(null)}
+                                        className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold text-pebble-grey border border-pebble-grey/30 hover:bg-pebble-grey/10 transition-colors"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleVerifyDoc(type)}
+                                      disabled={!!pending}
+                                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-sage-leaf text-white hover:opacity-80 disabled:opacity-40 transition-opacity"
+                                    >
+                                      {pending === "verifying" ? "Verifying…" : "✓ Verify"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setRejectDraft({ type, reason: "" })}
+                                      disabled={!!pending}
+                                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-muted-terracotta/10 text-muted-terracotta border border-muted-terracotta/30 hover:bg-muted-terracotta/20 disabled:opacity-40 transition-colors"
+                                    >
+                                      ✗ Reject
+                                    </button>
+                                  </div>
+                                )
                               )}
                             </div>
                           );

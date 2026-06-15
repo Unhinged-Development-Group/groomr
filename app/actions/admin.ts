@@ -591,8 +591,10 @@ export async function adminVerifyDoc(
   if ("error" in guard) return guard;
 
   const verifiedKey = `${docType}_doc_verified`;
+  const reasonKey = `${docType}_doc_rejection_reason`;
   const updatePayload: Record<string, unknown> = {
     [verifiedKey]: true,
+    [reasonKey]: null,
     updated_at: new Date().toISOString(),
   };
 
@@ -661,13 +663,15 @@ export async function adminVerifyDoc(
 
 export async function adminRejectDoc(
   groomerProfileId: string,
-  docType: DocVerifyKey
+  docType: DocVerifyKey,
+  reason: string
 ): Promise<{ ok: boolean } | { error: string }> {
   const guard = await requireAdmin();
   if ("error" in guard) return guard;
 
   const urlKey = `${docType}_doc_url`;
   const verifiedKey = `${docType}_doc_verified`;
+  const reasonKey = `${docType}_doc_rejection_reason`;
 
   if (docType === "photo_id") {
     const { data: current } = await supabaseAdmin
@@ -683,11 +687,11 @@ export async function adminRejectDoc(
 
   const { error } = await supabaseAdmin
     .from("groomer_profiles")
-    .update({ [urlKey]: null, [verifiedKey]: false, updated_at: new Date().toISOString() })
+    .update({ [urlKey]: null, [verifiedKey]: false, [reasonKey]: reason.trim() || null, updated_at: new Date().toISOString() })
     .eq("id", groomerProfileId);
 
   if (error) return { error: error.message };
-  await logAdminAction(guard.profileId, "reject_doc", "groomer_profiles", groomerProfileId, { doc: docType });
+  await logAdminAction(guard.profileId, "reject_doc", "groomer_profiles", groomerProfileId, { doc: docType, reason: reason.trim() || null });
   return { ok: true };
 }
 
@@ -799,6 +803,11 @@ export interface GroomerFullProfile {
   first_aid_doc_verified: boolean;
   photo_id_doc_verified: boolean;
   employers_liability_doc_verified: boolean;
+  insurance_doc_rejection_reason: string | null;
+  qualification_doc_rejection_reason: string | null;
+  first_aid_doc_rejection_reason: string | null;
+  photo_id_doc_rejection_reason: string | null;
+  employers_liability_doc_rejection_reason: string | null;
   // From profiles join
   phone: string | null;
   email: string | null;
@@ -847,6 +856,9 @@ export async function adminGetGroomerFull(
         photo_id_doc_url, employers_liability_doc_url,
         insurance_doc_verified, qualification_doc_verified, first_aid_doc_verified,
         photo_id_doc_verified, employers_liability_doc_verified,
+        insurance_doc_rejection_reason, qualification_doc_rejection_reason,
+        first_aid_doc_rejection_reason, photo_id_doc_rejection_reason,
+        employers_liability_doc_rejection_reason,
         profiles!groomer_profiles_user_id_fkey ( full_name, email, phone )
       `)
       .eq("id", groomerProfileId)
@@ -920,6 +932,11 @@ export async function adminGetGroomerFull(
     first_aid_doc_verified: raw.first_aid_doc_verified ?? false,
     photo_id_doc_verified: raw.photo_id_doc_verified ?? false,
     employers_liability_doc_verified: raw.employers_liability_doc_verified ?? false,
+    insurance_doc_rejection_reason: raw.insurance_doc_rejection_reason ?? null,
+    qualification_doc_rejection_reason: raw.qualification_doc_rejection_reason ?? null,
+    first_aid_doc_rejection_reason: raw.first_aid_doc_rejection_reason ?? null,
+    photo_id_doc_rejection_reason: raw.photo_id_doc_rejection_reason ?? null,
+    employers_liability_doc_rejection_reason: raw.employers_liability_doc_rejection_reason ?? null,
     phone: raw.profiles?.phone ?? null,
     email: raw.profiles?.email ?? null,
     owner_name: raw.profiles?.full_name ?? null,

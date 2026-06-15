@@ -73,6 +73,11 @@ export interface VerificationDocs {
   firstAidVerified: boolean;
   photoIdVerified: boolean;
   employersLiabilityVerified: boolean;
+  insuranceRejectionReason: string | null;
+  qualificationRejectionReason: string | null;
+  firstAidRejectionReason: string | null;
+  photoIdRejectionReason: string | null;
+  employersLiabilityRejectionReason: string | null;
 }
 
 export interface ProfileEditorInitialData {

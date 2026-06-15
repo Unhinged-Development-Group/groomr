@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, UploadIcon, ChevronDownIcon } from "@/components/ui/GroomrIcons";
-import { cn } from "@/lib/utils";
+import { cn, toCoverPhotoUrl, toProfilePhotoUrl } from "@/lib/utils";
 import { saveProfile, saveServices, saveAvailability, getCoverPhotoSignature, saveCoverPhoto, deleteCoverPhoto, getProfileImageSignature, saveProfileImage, deleteProfileImage, toggleAcceptingBookings, getVerificationDocUploadUrl, saveVerificationDoc, saveHasEmployees } from "@/app/actions/profile-editor";
 import { inviteTeamMember, removeTeamMember } from "@/app/actions/team-members";
 import { CloseAccountModal } from "@/app/_components/CloseAccountModal";
@@ -389,10 +389,9 @@ export function ProfileEditor({
   async function handleCoverPhotoUpload(file: File) {
     setCoverUploading(true);
     try {
-      const resized = await resizeToCoverPhoto(file);
       const sig = await getCoverPhotoSignature(groomerProfileId);
       const form = new FormData();
-      form.append("file", resized);
+      form.append("file", file);
       form.append("api_key", sig.apiKey);
       form.append("timestamp", String(sig.timestamp));
       form.append("signature", sig.signature);
@@ -413,43 +412,6 @@ export function ProfileEditor({
     } finally {
       setCoverUploading(false);
     }
-  }
-
-  function resizeToCoverPhoto(file: File, width = 1200, height = 720): Promise<File> {
-    return new Promise((resolve, reject) => {
-      const img = new window.Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { resolve(file); return; }
-        // Centre-crop to 5:3
-        const targetRatio = width / height;
-        const srcRatio = img.width / img.height;
-        let sx = 0, sy = 0, sw = img.width, sh = img.height;
-        if (srcRatio > targetRatio) {
-          sw = img.height * targetRatio;
-          sx = (img.width - sw) / 2;
-        } else {
-          sh = img.width / targetRatio;
-          sy = (img.height - sh) / 2;
-        }
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) { resolve(file); return; }
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
-          },
-          "image/jpeg",
-          0.9
-        );
-      };
-      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
-      img.src = objectUrl;
-    });
   }
 
   function resizeToSquare(file: File, size = 500): Promise<File> {
@@ -1410,7 +1372,7 @@ export function ProfileEditor({
               aria-label="Upload profile photo"
             >
               {profileImageUrl ? (
-                <Image src={profileImageUrl} alt="Profile photo" fill className="object-cover" sizes="80px" />
+                <Image src={toProfilePhotoUrl(profileImageUrl)!} alt="Profile photo" fill className="object-cover" sizes="80px" />
               ) : (
                 <Image src="/assets/default-profile-photo.svg" alt="" fill className="object-contain p-3" sizes="80px" />
               )}
@@ -1472,7 +1434,7 @@ export function ProfileEditor({
           <div className="mt-3 aspect-[5/3] rounded-xl bg-alabaster-cream overflow-hidden relative">
             {coverPhotoUrl ? (
               <Image
-                src={coverPhotoUrl}
+                src={toCoverPhotoUrl(coverPhotoUrl)!}
                 alt="Cover photo"
                 fill
                 className="object-cover"

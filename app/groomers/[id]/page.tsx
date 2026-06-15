@@ -8,6 +8,7 @@ import { StarRow } from "@/components/ui/StarRow";
 import { LocationPinIcon } from "@/components/ui/GroomrIcons";
 import { ActionBar } from "./_components/ActionBar";
 import { GalleryGrid } from "./_components/GalleryGrid";
+import { toCoverPhotoUrl, toProfilePhotoUrl } from "@/lib/utils";
 import { ReviewsSection } from "./_components/ReviewsSection";
 import { ReportButton } from "./_components/ReportButton";
 import LocationMapWrapper from "./_components/LocationMapWrapper";
@@ -182,8 +183,8 @@ export default async function GroomerProfilePage({
     percentage: groomer.deposit_percentage ?? null,
   };
 
-  const bannerUrl = groomer.cover_photo_url || groomer.banner_image_url || null;
-  const avatarUrl = groomer.profile_image_url || null;
+  const bannerUrl = toCoverPhotoUrl(groomer.cover_photo_url || groomer.banner_image_url || null);
+  const avatarUrl = toProfilePhotoUrl(groomer.profile_image_url || null);
 
   const hoursByDay = UK_DAY_ORDER.reduce<Record<number, AvailabilityRow>>(
     (acc, day) => {
